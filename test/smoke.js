@@ -410,6 +410,15 @@ async function main() {
     const r2 = await call("GET", "/api/me", { user: "test_employee2" });
     assert.strictEqual(r2.status, 200, JSON.stringify(r2.json));
   });
+  await check("fixture: test_employee2'ga loyihaga ruxsat beriladi", async () => {
+    const r = await call("PUT", "/api/permissions", {
+      user: "shaxzodshokirov",
+      body: { test_employee2: [projectSlug] },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    const g = await call("GET", "/api/permissions", { user: "shaxzodshokirov" });
+    assert.ok((g.json.test_employee2 || []).includes(projectSlug), JSON.stringify(g.json));
+  });
   await check("Super Admin userni chiqaradi (remove) — 'ruxsat mavjud emas' xabari bilan", async () => {
     const r = await call("PATCH", "/api/users/test_employee2/access", {
       user: "shaxzodshokirov",
@@ -421,6 +430,10 @@ async function main() {
     assert.strictEqual(r2.status, 403);
     assert.strictEqual(r2.json.code, "NO_ACCESS");
     assert.ok(/ruxsat mavjud emas/i.test(r2.json.error), JSON.stringify(r2.json));
+  });
+  await check("chiqarilgan userning loyiha ruxsatlari ham tozalanadi", async () => {
+    const g = await call("GET", "/api/permissions", { user: "shaxzodshokirov" });
+    assert.ok(!(g.json.test_employee2 || []).length, JSON.stringify(g.json));
   });
   await check("chiqarilgan userga qayta ruxsat berish (Give Access)", async () => {
     const r = await call("PATCH", "/api/users/test_employee2/access", {

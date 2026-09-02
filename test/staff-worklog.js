@@ -34,7 +34,7 @@ function initDataFor(username, id = 111) {
 
 async function cleanupTestData() {
   await db.query(`delete from projects where slug like 'wl_test%'`);
-  await db.query(`delete from staff where full_name like 'TEST %'`);
+  await db.query(`delete from staff where full_name ilike 'test %'`);
 }
 
 process.once("SIGINT", async () => {
@@ -125,7 +125,7 @@ async function main() {
     });
     assert.strictEqual(r.status, 200);
     const l = await call("GET", "/api/staff", { user: ADMIN });
-    assert.ok(l.json.staff.some((s) => s.fullName === "TEST Montajchi 2"));
+    assert.ok(l.json.staff.some((s) => s.fullName === "Test Montajchi 2"), JSON.stringify(l.json.staff));
   });
 
   console.log("── POST TAFSILOTLARI (kim qildi / qaysi kun) ─────");
@@ -166,8 +166,8 @@ async function main() {
     const d = p.checkDetails["k-1"];
     assert.ok(d, "checkDetails yo'q");
     assert.strictEqual(String(d.workDate).slice(0, 10), "2026-08-13");
-    assert.strictEqual(d.editorName, "TEST Montajchi 2");
-    assert.strictEqual(d.videographerName, "TEST Mobilograf");
+    assert.strictEqual(d.editorName, "Test Montajchi 2");
+    assert.strictEqual(d.videographerName, "Test Mobilograf");
     // eski frontend formati buzilmagan bo'lishi kerak
     assert.strictEqual(p.checks["k-1"], true);
   });
@@ -220,7 +220,7 @@ async function main() {
   await check("tabelda qaysi loyiha/post ekani ko'rinadi", async () => {
     const r = await call("GET", "/api/worklog?month=2026-08", { user: ADMIN });
     const all = [...r.json.editors, ...r.json.videographers];
-    const e = all.find((x) => x.name && x.name.startsWith("TEST"));
+    const e = all.find((x) => x.name && /^test/i.test(x.name));
     assert.ok(e, "TEST xodim tabelda yo'q");
     assert.ok(e.items.length >= 1 && e.items[0].project, "items bo'sh");
   });

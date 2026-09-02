@@ -88,6 +88,36 @@ function slugify(label) {
     .replace(/[^a-z0-9_]/g, "");
 }
 
+// Ism/familiya qanday kiritilmasin (KATTA, kichik, aRAlash) — saqlashda
+// "Har bir So'z" formatiga keltiriladi. Frontend'da ham xuddi shu
+// mantiq bor (darhol ko'rsatish uchun) — bu yerdagi nusxa yakuniy,
+// haqiqiy manba bo'lib xizmat qiladi (to'g'ridan-to'g'ri API chaqirilsa
+// ham natija bir xil bo'lishi uchun).
+function titleCaseName(str) {
+  if (str == null) return str;
+  return String(str)
+    .trim()
+    .split(/\s+/)
+    .map((w) => (w.length ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w))
+    .join(" ");
+}
+// Telefon raqamni "+998 99 999 99 99" standart formatiga keltiradi.
+// Bo'sh yoki 9 ta O'zbekiston raqamiga to'liq mos kelmasa, faqat
+// raqamlarni tozalab qaytaradi (majburlab format qo'yilmaydi).
+function formatUzPhone(str) {
+  if (str == null) return str;
+  let digits = String(str).replace(/\D/g, "");
+  if (digits.startsWith("998")) digits = digits.slice(3);
+  digits = digits.slice(0, 9);
+  if (!digits) return "";
+  let out = "+998";
+  if (digits.length) out += " " + digits.slice(0, 2);
+  if (digits.length > 2) out += " " + digits.slice(2, 5);
+  if (digits.length > 5) out += " " + digits.slice(5, 7);
+  if (digits.length > 7) out += " " + digits.slice(7, 9);
+  return out;
+}
+
 function sendAppHtml(res) {
   const appPath = path.join(process.cwd(), "private", "app.html");
   try {
@@ -188,7 +218,10 @@ app.patch("/api/me", auth, async (req, res) => {
     const values = [];
     for (const [bodyKey, column] of Object.entries(fieldMap)) {
       if (typeof req.body[bodyKey] === "undefined") continue;
-      values.push(req.body[bodyKey] || null);
+      let v = req.body[bodyKey] || null;
+      if (bodyKey === "firstName" || bodyKey === "lastName") v = titleCaseName(v) || null;
+      if (bodyKey === "phone") v = formatUzPhone(v) || null;
+      values.push(v);
       sets.push(`${column} = $${values.length}`);
     }
     if (sets.length === 0) return res.status(400).json({ error: "O'zgartiriladigan maydon yo'q" });
@@ -277,10 +310,16 @@ app.patch("/api/users/:username/access", auth, async (req, res) => {
     values.push(uname);
     const r = await db.query(
       `update users set ${sets.join(", ")} where username = $${values.length}
-       returning username, full_name, role, is_active, access_status, access_granted_at, blocked_at`,
+       returning id, username, full_name, role, is_active, access_status, access_granted_at, blocked_at`,
       values,
     );
     if (!r.rows[0]) return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
+    // "Chiqarish" (removed) — botdan chiqarilgan xodim endi hech qaysi
+    // loyihaga ruxsatli bo'lib qolmasin (aks holda "faol xodimlar"
+    // ro'yxatida ishlamaydigan tag sifatida osilib qolardi).
+    if (status === "removed") {
+      await db.query(`delete from permissions where user_id = $1`, [r.rows[0].id]);
+    }
     res.json({ ok: true, user: r.rows[0] });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -306,7 +345,10 @@ app.patch("/api/users/:username", auth, async (req, res) => {
     };
     for (const [bodyKey, column] of Object.entries(profileFieldMap)) {
       if (typeof req.body[bodyKey] === "undefined") continue;
-      values.push(req.body[bodyKey] || null);
+      let v = req.body[bodyKey] || null;
+      if (bodyKey === "firstName" || bodyKey === "lastName") v = titleCaseName(v) || null;
+      if (bodyKey === "phone") v = formatUzPhone(v) || null;
+      values.push(v);
       sets.push(`${column} = $${values.length}`);
     }
     if (sets.length === 0) return res.status(400).json({ error: "O'zgartiriladigan maydon yo'q" });
@@ -409,7 +451,7 @@ app.get("/api/staff", auth, async (req, res) => {
 app.post("/api/staff", auth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
-    const fullName = String(req.body.fullName || "").trim();
+    const fullName = titleCaseName(req.body.fullName || "");
     const position = String(req.body.position || "boshqa").trim().toLowerCase();
     if (!fullName) return res.status(400).json({ error: "Ism kiritilmadi" });
     if (fullName.length > 120) return res.status(400).json({ error: "Ism juda uzun" });
@@ -441,7 +483,7 @@ app.patch("/api/staff/:id", auth, async (req, res) => {
     if (!cur.rows[0]) return res.status(404).json({ error: "Xodim topilmadi" });
     const fullName =
       req.body.fullName !== undefined
-        ? String(req.body.fullName).trim()
+        ? titleCaseName(req.body.fullName)
         : cur.rows[0].full_name;
     const position =
       req.body.position !== undefined

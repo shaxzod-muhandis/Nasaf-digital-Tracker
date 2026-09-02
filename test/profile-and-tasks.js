@@ -74,7 +74,7 @@ async function main() {
   await check("PATCH /api/me profilni to'ldiradi", async () => {
     const r = await call("PATCH", "/api/me", {
       user: "test_profileuser",
-      body: { firstName: "Test", lastName: "User", phone: "+998900000000", jobTitle: "QA" },
+      body: { firstName: "tEST", lastName: "USER", phone: "998900000000", jobTitle: "QA" },
     });
     assert.strictEqual(r.status, 200, JSON.stringify(r.json));
   });
@@ -82,6 +82,15 @@ async function main() {
     const r = await call("GET", "/api/me", { user: "test_profileuser" });
     assert.strictEqual(r.json.profileIncomplete, false);
     assert.strictEqual(r.json.user.jobTitle, "QA");
+  });
+  await check("ism/familiya qanday kiritilmasin 'Har Bir So'z' formatiga keltiriladi", async () => {
+    const r = await call("GET", "/api/me", { user: "test_profileuser" });
+    assert.strictEqual(r.json.user.firstName, "Test", JSON.stringify(r.json.user));
+    assert.strictEqual(r.json.user.lastName, "User", JSON.stringify(r.json.user));
+  });
+  await check("telefon raqam +998 99 999 99 99 formatiga keltiriladi", async () => {
+    const r = await call("GET", "/api/me", { user: "test_profileuser" });
+    assert.strictEqual(r.json.user.phone, "+998 90 000 00 00", JSON.stringify(r.json.user));
   });
   await check("admin PATCH /api/users/:username orqali ham profil maydonlarini tahrirlay oladi", async () => {
     const r = await call("PATCH", "/api/users/test_profileuser", {

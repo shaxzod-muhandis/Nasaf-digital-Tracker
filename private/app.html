@@ -4074,6 +4074,37 @@
           .slice(0, 2)
           .toUpperCase();
       }
+      // "shaxzod SHOKIROV" / "sHaXzOd" kabi qanday yozilishidan qat'i
+      // nazar — "Shaxzod Shokirov" ko'rinishiga keltiradi. Backendda
+      // ham AYNAN shu mantiq bor (saqlashda yakuniy tekshiruv) — bu
+      // yerdagi nusxa faqat foydalanuvchiga darhol (blur'da) ko'rsatish
+      // uchun.
+      function titleCaseName(str) {
+        return String(str || "")
+          .trim()
+          .split(/\s+/)
+          .map((w) => (w.length ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w))
+          .join(" ");
+      }
+      function formatNameInputOnBlur(el) {
+        el.value = titleCaseName(el.value);
+      }
+      // Telefon input — +998 doim ko'rinadi, foydalanuvchi faqat 9 ta
+      // raqam kiritadi ("99 999 99 99"), qolgani avtomatik joylashadi.
+      // Xom (faqat raqamlardan iborat) qiymatni ham qabul qiladi —
+      // "998991234567" yopishtirilsa "998" prefiksi avtomatik olib
+      // tashlanadi.
+      function formatPhoneInput(el) {
+        let digits = el.value.replace(/\D/g, "");
+        if (digits.startsWith("998")) digits = digits.slice(3);
+        digits = digits.slice(0, 9);
+        let out = "+998";
+        if (digits.length) out += " " + digits.slice(0, 2);
+        if (digits.length > 2) out += " " + digits.slice(2, 5);
+        if (digits.length > 5) out += " " + digits.slice(5, 7);
+        if (digits.length > 7) out += " " + digits.slice(7, 9);
+        el.value = out;
+      }
 
       // ── SANA YORDAMCHILARI ────────────────────────────────────────
       function parseISO(s) {
@@ -7130,7 +7161,7 @@
           <div class="list-card" style="padding:14px;margin-bottom:16px">
             <div class="f-group" style="margin-bottom:10px">
               <label class="f-label">Yangi xodim</label>
-              <input class="f-input" id="staff-name" placeholder="Ism familiya"/>
+              <input class="f-input" id="staff-name" placeholder="Ism familiya" onblur="formatNameInputOnBlur(this)"/>
             </div>
             <div style="display:flex;gap:8px">
               <select class="f-input" id="staff-position" style="flex:1">${posOptions}</select>
@@ -7191,7 +7222,10 @@
                 <div class="r-sub"${complete ? "" : ' style="color:var(--red)"'}>${escHtml(sub)}</div>
               </div>
               ${userAccessBadgeHtml(u)}
-              <button class="icon-btn" onclick="openUserEditSheet('${escArg(u.username)}')">${ICON.edit}</button>
+              <div class="m-actions-inline">
+                <button class="icon-btn" onclick="openUserEditSheet('${escArg(u.username)}')">${ICON.edit}</button>
+                ${isSuperAdmin && u.access_status !== "removed" ? `<button class="icon-btn danger" onclick="deleteTelegramUser('${escArg(u.username)}','${escArg(displayName)}')">${ICON.trash}</button>` : ""}
+              </div>
             </div>`;
           })
           .join("");
@@ -7209,7 +7243,10 @@
                   <div class="avatar" style="flex-shrink:0">${u.username.slice(0, 1).toUpperCase()}</div>
                   <div class="r-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(displayName)}</div>
                 </div>
-                <button class="icon-btn" onclick="openUserEditSheet('${escArg(u.username)}')">${ICON.edit}</button>
+                <div class="m-actions-inline">
+                  <button class="icon-btn" onclick="openUserEditSheet('${escArg(u.username)}')">${ICON.edit}</button>
+                  ${isSuperAdmin && u.access_status !== "removed" ? `<button class="icon-btn danger" onclick="deleteTelegramUser('${escArg(u.username)}','${escArg(displayName)}')">${ICON.trash}</button>` : ""}
+                </div>
               </div>
               <div class="r-sub"${complete ? "" : ' style="color:var(--red)"'}>${escHtml(sub)}</div>
               ${userAccessBadgeHtml(u, "margin-top:8px")}
@@ -7251,7 +7288,7 @@
         body.innerHTML = `
           <div class="f-group">
             <label class="f-label">Ism familiya</label>
-            <input class="f-input" id="se-name" value="${escHtml(s.fullName)}"/>
+            <input class="f-input" id="se-name" value="${escHtml(s.fullName)}" onblur="formatNameInputOnBlur(this)"/>
           </div>
           <div class="f-group">
             <label class="f-label">Lavozim</label>
@@ -7294,6 +7331,26 @@
               showToast("⚠ " + e.message);
             }
           },
+        );
+      }
+
+      // Telegram xodimini o'chirish — "Chiqarish" bilan bir xil amal
+      // (setUserAccessStatus), faqat ro'yxatdagi kartadan to'g'ridan
+      // to'g'ri chaqiriladi. Backend shu bilan birga uning barcha
+      // loyiha ruxsatlarini (permissions) ham tozalaydi — shu sabab
+      // "faol xodimlar" ro'yxatida ishlamaydigan tag qolib ketmaydi.
+      function deleteTelegramUser(username, name) {
+        showConfirmModal(
+          `${escHtml(name)} ni o'chirish`,
+          "Xodim botdan chiqariladi, barcha loyihalardagi ruxsatlari olib tashlanadi va yangi vazifaga mas'ul sifatida tanlanmaydi. Keyinchalik qayta ruxsat berish mumkin.",
+          async () => {
+            try {
+              await setUserAccessStatus(username, "removed");
+            } catch (e) {
+              showToast("⚠ " + e.message);
+            }
+          },
+          "O'chirish",
         );
       }
 
@@ -7684,10 +7741,10 @@
         const { body } = makeSheet(`@${escHtml(username)} — profil`);
         body.innerHTML = `
           <div class="f-row f-group">
-            <div style="flex:1"><label class="f-label">Ism</label><input class="f-input" id="ue-first" value="${escHtml(u.first_name || "")}"/></div>
-            <div style="flex:1"><label class="f-label">Familiya</label><input class="f-input" id="ue-last" value="${escHtml(u.last_name || "")}"/></div>
+            <div style="flex:1"><label class="f-label">Ism</label><input class="f-input" id="ue-first" value="${escHtml(u.first_name || "")}" onblur="formatNameInputOnBlur(this)"/></div>
+            <div style="flex:1"><label class="f-label">Familiya</label><input class="f-input" id="ue-last" value="${escHtml(u.last_name || "")}" onblur="formatNameInputOnBlur(this)"/></div>
           </div>
-          <div class="f-group"><label class="f-label">Telefon raqami</label><input class="f-input" id="ue-phone" value="${escHtml(u.phone || "")}"/></div>
+          <div class="f-group"><label class="f-label">Telefon raqami</label><input class="f-input" id="ue-phone" value="${escHtml(u.phone || "")}" placeholder="+998 90 123 45 67" oninput="formatPhoneInput(this)"/></div>
           <div class="f-group"><label class="f-label">Lavozimi</label><input class="f-input" id="ue-job" value="${escHtml(u.job_title || "")}"/></div>
           <div class="f-group"><label class="f-label">Tug'ilgan sana</label><input class="f-input" type="date" id="ue-birth" value="${u.birth_date ? String(u.birth_date).slice(0, 10) : ""}"/></div>
           <button class="btn btn-blue" id="ue-save-btn" onclick="saveUserEdit('${escArg(username)}')" style="margin-bottom:18px">Saqlash</button>
@@ -7940,12 +7997,12 @@
             <span class="debt-badge">${ROLE_LABEL_UZ[p.role] || p.role}</span>
           </div>
           <div class="f-row f-group">
-            <div style="flex:1"><label class="f-label">Ism</label><input class="f-input" id="pf-first" value="${escHtml(p.firstName || "")}"/></div>
-            <div style="flex:1"><label class="f-label">Familiya</label><input class="f-input" id="pf-last" value="${escHtml(p.lastName || "")}"/></div>
+            <div style="flex:1"><label class="f-label">Ism</label><input class="f-input" id="pf-first" value="${escHtml(p.firstName || "")}" onblur="formatNameInputOnBlur(this)"/></div>
+            <div style="flex:1"><label class="f-label">Familiya</label><input class="f-input" id="pf-last" value="${escHtml(p.lastName || "")}" onblur="formatNameInputOnBlur(this)"/></div>
           </div>
           <div class="f-group">
             <label class="f-label">Telefon raqami</label>
-            <input class="f-input" id="pf-phone" value="${escHtml(p.phone || "")}" placeholder="+998 90 123 45 67"/>
+            <input class="f-input" id="pf-phone" value="${escHtml(p.phone || "")}" placeholder="+998 90 123 45 67" oninput="formatPhoneInput(this)"/>
           </div>
           <div class="f-group">
             <label class="f-label">Lavozimi</label>
@@ -8000,10 +8057,10 @@
             <div style="font-size:17px;font-weight:600;margin-bottom:6px">Profilni to'ldiring</div>
             <div style="font-size:12.5px;color:var(--t2);line-height:1.6;margin-bottom:20px">Davom etishdan oldin quyidagi ma'lumotlarni kiriting.</div>
             <div class="f-row f-group">
-              <div style="flex:1"><label class="f-label">Ism</label><input class="f-input" id="ob-first"/></div>
-              <div style="flex:1"><label class="f-label">Familiya</label><input class="f-input" id="ob-last"/></div>
+              <div style="flex:1"><label class="f-label">Ism</label><input class="f-input" id="ob-first" onblur="formatNameInputOnBlur(this)"/></div>
+              <div style="flex:1"><label class="f-label">Familiya</label><input class="f-input" id="ob-last" onblur="formatNameInputOnBlur(this)"/></div>
             </div>
-            <div class="f-group"><label class="f-label">Telefon raqami</label><input class="f-input" id="ob-phone" placeholder="+998 90 123 45 67"/></div>
+            <div class="f-group"><label class="f-label">Telefon raqami</label><input class="f-input" id="ob-phone" placeholder="+998 90 123 45 67" oninput="formatPhoneInput(this)"/></div>
             <div class="f-group"><label class="f-label">Lavozimi</label><input class="f-input" id="ob-job" placeholder="SMM manager"/></div>
             <div class="f-group"><label class="f-label">Tug'ilgan sana (ixtiyoriy)</label><input class="f-input" type="date" id="ob-birth"/></div>
             <div id="ob-err" style="color:var(--red);font-size:12px;margin-bottom:10px"></div>
