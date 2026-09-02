@@ -1615,6 +1615,82 @@ app.post("/api/tasks/:id/comments", auth, async (req, res) => {
   }
 });
 
+// ── VAZIFA CHECKLIST — ko'rish ruxsati vazifaning o'zi bilan bir xil
+// (admin yoki shu vazifaning mas'uli), izoh qoldirish bilan bir xil
+// tekshiruv (canCommentOnTask) — band qo'shish/belgilash/o'chirish.
+app.get("/api/tasks/:id/checklist", auth, async (req, res) => {
+  try {
+    const exists = await db.query(`select 1 from tasks where id = $1`, [req.params.id]);
+    if (!exists.rows[0]) return res.status(404).json({ error: "Vazifa topilmadi" });
+    const r = await db.query(
+      `select id, text, done, position from task_checklist_items where task_id = $1 order by position asc, created_at asc`,
+      [req.params.id],
+    );
+    res.json({ items: r.rows });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/tasks/:id/checklist", auth, async (req, res) => {
+  try {
+    const access = await canCommentOnTask(req, req.params.id);
+    if (!access.ok) return res.status(access.status).json({ error: access.error });
+    const text = (req.body.text || "").trim();
+    if (!text) return res.status(400).json({ error: "Band matni kerak" });
+    const maxR = await db.query(`select coalesce(max(position), -1) as m from task_checklist_items where task_id = $1`, [
+      req.params.id,
+    ]);
+    const r = await db.query(
+      `insert into task_checklist_items (task_id, text, position) values ($1,$2,$3) returning id, text, done, position`,
+      [req.params.id, text, maxR.rows[0].m + 1],
+    );
+    res.json({ ok: true, item: r.rows[0] });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.patch("/api/tasks/:id/checklist/:itemId", auth, async (req, res) => {
+  try {
+    const access = await canCommentOnTask(req, req.params.id);
+    if (!access.ok) return res.status(access.status).json({ error: access.error });
+    const sets = [];
+    const values = [];
+    if (typeof req.body.done !== "undefined") {
+      values.push(!!req.body.done);
+      sets.push(`done = $${values.length}`);
+    }
+    if (typeof req.body.text !== "undefined") {
+      const text = String(req.body.text).trim();
+      if (!text) return res.status(400).json({ error: "Band matni kerak" });
+      values.push(text);
+      sets.push(`text = $${values.length}`);
+    }
+    if (!sets.length) return res.status(400).json({ error: "O'zgartiriladigan maydon yo'q" });
+    values.push(req.params.itemId, req.params.id);
+    const r = await db.query(
+      `update task_checklist_items set ${sets.join(", ")} where id = $${values.length - 1} and task_id = $${values.length} returning id, text, done, position`,
+      values,
+    );
+    if (!r.rows[0]) return res.status(404).json({ error: "Band topilmadi" });
+    res.json({ ok: true, item: r.rows[0] });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete("/api/tasks/:id/checklist/:itemId", auth, async (req, res) => {
+  try {
+    const access = await canCommentOnTask(req, req.params.id);
+    if (!access.ok) return res.status(access.status).json({ error: access.error });
+    await db.query(`delete from task_checklist_items where id = $1 and task_id = $2`, [req.params.itemId, req.params.id]);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── DAVR ROLLOVER (kunlik cron uchun, lekin qo'lda ham chaqirilishi mumkin) ─
 app.post("/api/cycles/rollover", async (req, res) => {
   const access = await resolveCronOrAdminCaller(req);

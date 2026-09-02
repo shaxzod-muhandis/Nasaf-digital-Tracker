@@ -326,6 +326,52 @@ async function main() {
     assert.strictEqual(r.status, 403);
   });
 
+  console.log("── VAZIFA CHECKLIST ──────────────────────────────");
+  let checklistItemId;
+  await check("biriktirilgan xodim checklist bandi qo'sha oladi", async () => {
+    const r = await call("POST", `/api/tasks/${backlogTaskId}/checklist`, {
+      user: "test_profileuser",
+      body: { text: "Sinf xonalari" },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    checklistItemId = r.json.item.id;
+    assert.strictEqual(r.json.item.done, false);
+  });
+  await check("bo'sh matnli band rad etiladi (400)", async () => {
+    const r = await call("POST", `/api/tasks/${backlogTaskId}/checklist`, {
+      user: "test_profileuser",
+      body: { text: "   " },
+    });
+    assert.strictEqual(r.status, 400);
+  });
+  await check("aloqasi yo'q user band qo'sha olmaydi (403)", async () => {
+    const r = await call("POST", `/api/tasks/${backlogTaskId}/checklist`, {
+      user: "test_profileuser2",
+      body: { text: "Ruxsatsiz band" },
+    });
+    assert.strictEqual(r.status, 403);
+  });
+  await check("bandni belgilash (done=true)", async () => {
+    const r = await call("PATCH", `/api/tasks/${backlogTaskId}/checklist/${checklistItemId}`, {
+      user: "test_profileuser",
+      body: { done: true },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.strictEqual(r.json.item.done, true);
+  });
+  await check("GET checklist ro'yxatni qaytaradi", async () => {
+    const r = await call("GET", `/api/tasks/${backlogTaskId}/checklist`, { user: "shaxzodshokirov" });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.strictEqual(r.json.items.length, 1);
+    assert.strictEqual(r.json.items[0].done, true);
+  });
+  await check("bandni o'chirish", async () => {
+    const r = await call("DELETE", `/api/tasks/${backlogTaskId}/checklist/${checklistItemId}`, { user: "test_profileuser" });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    const g = await call("GET", `/api/tasks/${backlogTaskId}/checklist`, { user: "shaxzodshokirov" });
+    assert.strictEqual(g.json.items.length, 0);
+  });
+
   await check("backlog vazifani admin o'chiradi (tozalash)", async () => {
     const r = await call("DELETE", `/api/tasks/${backlogTaskId}`, { user: "shaxzodshokirov" });
     assert.strictEqual(r.status, 200, JSON.stringify(r.json));
