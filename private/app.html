@@ -8135,8 +8135,24 @@
           .addEventListener("change", refreshAllViews);
 
         document.getElementById("loading").remove();
-        if (profileIncomplete) showOnboarding();
-        else showTab("today");
+        if (profileIncomplete) {
+          showOnboarding();
+        } else {
+          // Bildirishnomadagi "Ilovani ochish" tugmasi (web_app URL'ga
+          // qo'shilgan ?openTask=<id> yoki ?tab=<nom>) — bosilganda ilova
+          // to'g'ridan-to'g'ri o'sha vazifaga/bo'limga ochiladi.
+          const params = new URLSearchParams(window.location.search);
+          const openTaskId = params.get("openTask");
+          const tabParam = params.get("tab");
+          if (openTaskId) {
+            showTab("tasks");
+            openTaskActions(openTaskId);
+          } else if (tabParam && ROOT_TABS.includes(tabParam)) {
+            showTab(tabParam);
+          } else {
+            showTab("today");
+          }
+        }
       }
 
       initApp();

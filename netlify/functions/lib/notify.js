@@ -8,15 +8,32 @@
 // ettiriladi.
 // ═══════════════════════════════════════════════════════════════════════
 
-async function sendMsg(db, chatId, text) {
+// Mini App'ning haqiqiy manzili — bildirishnomalardagi "Ilovani ochish"
+// tugmasi va /start javobidagi doimiy menyu shu asosda quriladi. Kerak
+// bo'lsa (masalan custom domen qo'shilsa) Netlify'da APP_URL environment
+// o'zgaruvchisi orqali almashtiriladi.
+const APP_URL = (process.env.APP_URL || "https://nasaf-digital-tracker.netlify.app").replace(/\/$/, "");
+
+// Bitta "Ilovani ochish" tugmasi bo'lgan inline keyboard quradi. `path`
+// berilsa (masalan "?openTask=<id>"), bosilganda ilova to'g'ridan-to'g'ri
+// o'sha ekranga ochiladi (frontend buni window.location.search orqali
+// o'qib, tegishli joyga navigatsiya qiladi).
+function appOpenButton(path = "") {
+  const url = path ? `${APP_URL}/${path}` : APP_URL;
+  return { inline_keyboard: [[{ text: "📱 Ilovani ochish", web_app: { url } }]] };
+}
+
+async function sendMsg(db, chatId, text, opts = {}) {
   const botToken = process.env.BOT_TOKEN || "";
   if (!botToken || !chatId) return { ok: false, reason: "no_token_or_chatid" };
   let result;
   try {
+    const body = { chat_id: chatId, text, parse_mode: "HTML" };
+    if (opts.replyMarkup) body.reply_markup = opts.replyMarkup;
     const r = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" }),
+      body: JSON.stringify(body),
     });
     const b = await r.json().catch(() => ({}));
     if (!r.ok) {
@@ -104,7 +121,7 @@ async function notifyCheckChange(db, { actorUsername, project, cycle, type, seqN
     `📊 Qoldi: ${remParts.join(", ")}`;
 
   const recipients = await resolveRecipients(db, actorUsername, project.id);
-  await Promise.allSettled(recipients.map((r) => sendMsg(db, r.chatId, text)));
+  await Promise.allSettled(recipients.map((r) => sendMsg(db, r.chatId, text, { replyMarkup: appOpenButton() })));
 }
 
 // Vazifa biriktirilganda/qayta biriktirilganda bildirishnoma yuboradi —
@@ -123,7 +140,7 @@ async function notifyTaskAssigned(db, { assigneeUserId, task, actorUsername }) {
   const projLine = task.projectLabel ? `\n📁 ${task.projectLabel}` : "";
   const descLine = task.description ? `\n\n📝 ${task.description}` : "";
   const text = `🆕 <b>Sizga${byLine} yangi vazifa biriktirildi</b>\n${task.title}${projLine}${dueLine}${descLine}`;
-  const result = await sendMsg(db, chatId, text);
+  const result = await sendMsg(db, chatId, text, { replyMarkup: appOpenButton(`?openTask=${task.id}`) });
   return { attempted: true, ok: result.ok, reason: result.ok ? null : result.error || "send_failed" };
 }
 
@@ -133,7 +150,7 @@ async function notifyTaskAssigned(db, { assigneeUserId, task, actorUsername }) {
 // userga, ko'rsatilgan id/username'lardan tashqari (masalan, allaqachon
 // o'zining alohida batafsil xabarini olgan yangi mas'ul, yoki hodisani
 // o'zi qilgan actor).
-async function notifyTeamTaskEvent(db, { excludeUserIds = [], excludeUsernames = [], text }) {
+async function notifyTeamTaskEvent(db, { excludeUserIds = [], excludeUsernames = [], text, taskId }) {
   if (!process.env.BOT_TOKEN) return { attempted: false, ok: false, reason: "no_bot_token" };
   const r = await db.query(
     `select id, username, telegram_chat_id from users
@@ -142,7 +159,8 @@ async function notifyTeamTaskEvent(db, { excludeUserIds = [], excludeUsernames =
        and not (lower(username) = any($2::text[]))`,
     [excludeUserIds, excludeUsernames.map((u) => String(u).toLowerCase())],
   );
-  await Promise.allSettled(r.rows.map((u) => sendMsg(db, u.telegram_chat_id, text)));
+  const replyMarkup = appOpenButton(taskId ? `?openTask=${taskId}` : "");
+  await Promise.allSettled(r.rows.map((u) => sendMsg(db, u.telegram_chat_id, text, { replyMarkup })));
   return { attempted: true, ok: true, recipients: r.rows.length };
 }
 
@@ -155,7 +173,7 @@ async function notifyProjectAssigned(db, { assigneeUserId, actorUsername, projec
   if (!chatId) return;
   const byLine = actorUsername ? ` @${actorUsername} tomonidan` : "";
   const text = `📁 <b>Sizga${byLine} loyihaga ruxsat berildi</b>\n${projectLabel}`;
-  await sendMsg(db, chatId, text);
+  await sendMsg(db, chatId, text, { replyMarkup: appOpenButton() });
 }
 
 function progressEmoji(p) {
@@ -185,6 +203,8 @@ function buildPacingMessage(stats) {
 }
 
 module.exports = {
+  APP_URL,
+  appOpenButton,
   sendMsg,
   resolveRecipients,
   notifyCheckChange,

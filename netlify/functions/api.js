@@ -33,6 +33,8 @@ const {
 } = require("./lib/cycles");
 const { todayTashkent, dayDiff, addMonthsClamped, cycleBounds } = require("./lib/dates");
 const {
+  APP_URL,
+  appOpenButton,
   sendMsg,
   resolveRecipients,
   notifyCheckChange,
@@ -146,6 +148,46 @@ app.post("/api/register-chat", auth, async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
+});
+
+// ── TELEGRAM WEBHOOK — faqat /start buyrug'iga javob beradi ─────────
+// Botning o'zi bilan suhbat (buyruqlar) shu yerda; Mini App ichidagi
+// hamma narsa (loyihalar, vazifalar va h.k.) o'zgarishsiz qoladi — bu
+// yerda FAQAT doimiy pastki menyu (Reply Keyboard) yuborish uchun kerak,
+// boshqa hech qanday suhbat mantiqi yo'q (tugmalar hammasi shunchaki
+// Mini App'ni ochadi, chatda alohida javob yozilmaydi).
+// Telegram bu endpointni imzolamaydi — o'rniga setWebhook chaqirilganda
+// berilgan secret_token har bir so'rovda shu header orqali qaytariladi,
+// shu bilan haqiqiy Telegram serverlaridan kelayotgani tekshiriladi.
+app.post("/api/telegram-webhook", async (req, res) => {
+  const expected = process.env.TELEGRAM_WEBHOOK_SECRET;
+  if (expected && req.headers["x-telegram-bot-api-secret-token"] !== expected) {
+    return res.status(401).json({ error: "invalid secret" });
+  }
+  try {
+    const msg = req.body?.message;
+    if (msg?.text === "/start" && msg.chat?.id) {
+      const keyboard = {
+        keyboard: [
+          [{ text: "📱 Ilovani ochish", web_app: { url: APP_URL } }],
+          [
+            { text: "✅ Vazifalarim", web_app: { url: `${APP_URL}/?tab=tasks` } },
+            { text: "📁 Loyihalarim", web_app: { url: `${APP_URL}/?tab=projects` } },
+          ],
+        ],
+        resize_keyboard: true,
+      };
+      await sendMsg(
+        db,
+        msg.chat.id,
+        "👋 Assalomu alaykum! Pastdagi tugmalar orqali ilovaga kirishingiz mumkin.",
+        { replyMarkup: keyboard },
+      );
+    }
+  } catch (e) {
+    console.error("Telegram webhook xatosi:", e.message);
+  }
+  res.json({ ok: true }); // Telegram qayta urinmasligi uchun doim 200
 });
 
 // ── PROFIL (o'zi haqida ko'rish/tahrirlash) ──────────────────────────
@@ -631,7 +673,7 @@ app.post("/api/announcements", auth, async (req, res) => {
     [...recipients].map(async ([chatId, username]) => ({
       chatId,
       username,
-      result: await sendMsg(db, chatId, text),
+      result: await sendMsg(db, chatId, text, { replyMarkup: appOpenButton() }),
     })),
   );
   res.json({ ok: true, total: results.length, sent: results.filter(({ result }) => result.ok).length });
@@ -1266,6 +1308,7 @@ app.post("/api/tasks", auth, async (req, res) => {
         excludeUserIds: assigneeUserId ? [assigneeUserId] : [],
         excludeUsernames: [req.user.username],
         text: teamText,
+        taskId: task.id,
       }).catch((e) => console.error("Jamoaviy bildirishnoma xatosi:", e.message));
     }
 
@@ -1401,7 +1444,7 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
           `🔄 <b>@${req.user.username}</b>: <b>${task.title}</b>\n` +
           `${TASK_STATUS_LABEL_UZ[before.status] || before.status} → ${TASK_STATUS_LABEL_UZ[task.status] || task.status}` +
           (task.assigneeName ? `\n👤 ${task.assigneeName}` : "");
-        notifyTeamTaskEvent(db, { excludeUsernames: [req.user.username], text: teamText }).catch((e) =>
+        notifyTeamTaskEvent(db, { excludeUsernames: [req.user.username], text: teamText, taskId: task.id }).catch((e) =>
           console.error("Jamoaviy bildirishnoma xatosi:", e.message),
         );
       }
@@ -1442,6 +1485,7 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
         excludeUserIds: [newAssigneeUserId],
         excludeUsernames: [req.user.username],
         text: teamText,
+        taskId: task.id,
       }).catch((e) => console.error("Jamoaviy bildirishnoma xatosi:", e.message));
     }
 
@@ -1626,12 +1670,12 @@ app.post("/api/cycles/rollover", async (req, res) => {
           ? `⚠️ <b>${project.label}</b> — ${closed.cycle_index}-davr yakunlandi, lekin TO'LIQ bajarilmadi (qarz qoldi).`
           : `✅ <b>${project.label}</b> — ${closed.cycle_index}-davr to'liq bajarilgan holda yakunlandi! 🎉`;
         const recipients = await resolveRecipients(db, "__system__", project.id);
-        await Promise.allSettled(recipients.map((r) => sendMsg(db, r.chatId, text)));
+        await Promise.allSettled(recipients.map((r) => sendMsg(db, r.chatId, text, { replyMarkup: appOpenButton() })));
       }
       if (closedNow.length > 0) {
         const newText = `🆕 <b>${project.label}</b> — yangi davr boshlandi (${cycle.period_start} – ${cycle.period_end}).`;
         const recipients = await resolveRecipients(db, "__system__", project.id);
-        await Promise.allSettled(recipients.map((r) => sendMsg(db, r.chatId, newText)));
+        await Promise.allSettled(recipients.map((r) => sendMsg(db, r.chatId, newText, { replyMarkup: appOpenButton() })));
       }
     }
     res.json({ ok: true, caller: access.caller, projectsChecked: projR.rows.length, events });
@@ -1704,7 +1748,7 @@ app.post("/api/reminder/run", async (req, res) => {
       if (stats.length === 0) continue;
       const text = buildPacingMessage(stats);
       sends.push(
-        sendMsg(db, chatId, text)
+        sendMsg(db, chatId, text, { replyMarkup: appOpenButton() })
           .then(() => results.push({ username, status: "sent" }))
           .catch((e) => results.push({ username, status: "error", error: e.message })),
       );
@@ -1715,7 +1759,7 @@ app.post("/api/reminder/run", async (req, res) => {
         .join("\n");
       const text = `📋 <b>Vazifalar bo'yicha eslatma</b>\n─────────────────\n\n${lines}`;
       sends.push(
-        sendMsg(db, chatId, text)
+        sendMsg(db, chatId, text, { replyMarkup: appOpenButton("?tab=tasks") })
           .then(() => results.push({ username, status: "sent", kind: "task" }))
           .catch((e) => results.push({ username, status: "error", error: e.message, kind: "task" })),
       );
@@ -1785,10 +1829,14 @@ app.post("/api/test-notify", auth, async (req, res) => {
   const usersR = await db.query(`select username, telegram_chat_id from users where telegram_chat_id is not null`);
   const sent = [];
   const sends = [];
-  envIds.forEach((id) => sends.push(sendMsg(db, id, text).then(() => sent.push(id))));
+  envIds.forEach((id) => sends.push(sendMsg(db, id, text, { replyMarkup: appOpenButton() }).then(() => sent.push(id))));
   usersR.rows.forEach((u) => {
     if (!envIds.includes(String(u.telegram_chat_id))) {
-      sends.push(sendMsg(db, u.telegram_chat_id, text).then(() => sent.push(`${u.username}:${u.telegram_chat_id}`)));
+      sends.push(
+        sendMsg(db, u.telegram_chat_id, text, { replyMarkup: appOpenButton() }).then(() =>
+          sent.push(`${u.username}:${u.telegram_chat_id}`),
+        ),
+      );
     }
   });
   await Promise.allSettled(sends);
