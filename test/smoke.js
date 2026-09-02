@@ -515,42 +515,6 @@ async function main() {
     assert.ok(parseInt(r.json.counts.projects) >= 2, JSON.stringify(r.json.counts));
   });
 
-  console.log("── TELEGRAM WEBHOOK (/start + doimiy menyu) ──────");
-  await check("/start buyrug'i qabul qilinadi (200, ok:true)", async () => {
-    const r = await call("POST", "/api/telegram-webhook", {
-      body: { message: { text: "/start", chat: { id: 999999999 } } },
-    });
-    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
-    assert.strictEqual(r.json.ok, true);
-  });
-  await check("boshqa (tanish bo'lmagan) xabar ham 200 qaytaradi, lekin hech narsa qilmaydi", async () => {
-    const r = await call("POST", "/api/telegram-webhook", {
-      body: { message: { text: "tasodifiy matn", chat: { id: 999999999 } } },
-    });
-    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
-  });
-  await check("bo'sh/noto'g'ri shakldagi update ham 500 bermaydi", async () => {
-    const r = await call("POST", "/api/telegram-webhook", { body: {} });
-    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
-  });
-  await check("TELEGRAM_WEBHOOK_SECRET o'rnatilgan bo'lsa, noto'g'ri secret rad etiladi (401)", async () => {
-    process.env.TELEGRAM_WEBHOOK_SECRET = "test-secret-123";
-    try {
-      const r = await call("POST", "/api/telegram-webhook", {
-        body: { message: { text: "/start", chat: { id: 999999999 } } },
-        headers: { "X-Telegram-Bot-Api-Secret-Token": "wrong" },
-      });
-      assert.strictEqual(r.status, 401, JSON.stringify(r.json));
-      const r2 = await call("POST", "/api/telegram-webhook", {
-        body: { message: { text: "/start", chat: { id: 999999999 } } },
-        headers: { "X-Telegram-Bot-Api-Secret-Token": "test-secret-123" },
-      });
-      assert.strictEqual(r2.status, 200, JSON.stringify(r2.json));
-    } finally {
-      delete process.env.TELEGRAM_WEBHOOK_SECRET;
-    }
-  });
-
   await cleanupTestData();
   server.close();
   console.log(`\n${passed} ta o'tdi, ${failed} ta xato.`);

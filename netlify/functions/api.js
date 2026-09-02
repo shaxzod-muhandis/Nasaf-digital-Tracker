@@ -150,46 +150,6 @@ app.post("/api/register-chat", auth, async (req, res) => {
   }
 });
 
-// ── TELEGRAM WEBHOOK — faqat /start buyrug'iga javob beradi ─────────
-// Botning o'zi bilan suhbat (buyruqlar) shu yerda; Mini App ichidagi
-// hamma narsa (loyihalar, vazifalar va h.k.) o'zgarishsiz qoladi — bu
-// yerda FAQAT doimiy pastki menyu (Reply Keyboard) yuborish uchun kerak,
-// boshqa hech qanday suhbat mantiqi yo'q (tugmalar hammasi shunchaki
-// Mini App'ni ochadi, chatda alohida javob yozilmaydi).
-// Telegram bu endpointni imzolamaydi — o'rniga setWebhook chaqirilganda
-// berilgan secret_token har bir so'rovda shu header orqali qaytariladi,
-// shu bilan haqiqiy Telegram serverlaridan kelayotgani tekshiriladi.
-app.post("/api/telegram-webhook", async (req, res) => {
-  const expected = process.env.TELEGRAM_WEBHOOK_SECRET;
-  if (expected && req.headers["x-telegram-bot-api-secret-token"] !== expected) {
-    return res.status(401).json({ error: "invalid secret" });
-  }
-  try {
-    const msg = req.body?.message;
-    if (msg?.text === "/start" && msg.chat?.id) {
-      const keyboard = {
-        keyboard: [
-          [{ text: "📱 Ilovani ochish", web_app: { url: APP_URL } }],
-          [
-            { text: "✅ Vazifalarim", web_app: { url: `${APP_URL}/?tab=tasks` } },
-            { text: "📁 Loyihalarim", web_app: { url: `${APP_URL}/?tab=projects` } },
-          ],
-        ],
-        resize_keyboard: true,
-      };
-      await sendMsg(
-        db,
-        msg.chat.id,
-        "👋 Assalomu alaykum! Pastdagi tugmalar orqali ilovaga kirishingiz mumkin.",
-        { replyMarkup: keyboard },
-      );
-    }
-  } catch (e) {
-    console.error("Telegram webhook xatosi:", e.message);
-  }
-  res.json({ ok: true }); // Telegram qayta urinmasligi uchun doim 200
-});
-
 // ── PROFIL (o'zi haqida ko'rish/tahrirlash) ──────────────────────────
 const PROFILE_REQUIRED_FIELDS = ["first_name", "last_name", "phone", "job_title"];
 
