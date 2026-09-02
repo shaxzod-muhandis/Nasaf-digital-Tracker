@@ -432,6 +432,23 @@
       .list-row.clickable {
         cursor: pointer;
       }
+      .list-card.late {
+        border-color: rgba(220, 38, 38, 0.32);
+      }
+      .list-card.late .list-row {
+        background: var(--red-tint);
+      }
+      .emp-bars {
+        display: flex;
+        gap: 3px;
+        margin-right: 4px;
+        flex-shrink: 0;
+      }
+      .emp-bar {
+        width: 5px;
+        height: 16px;
+        border-radius: 2px;
+      }
       .chev {
         font-size: 14px;
         color: var(--chev);
@@ -3850,6 +3867,7 @@
       let tagsList = []; // barcha mavjud taglar ({id,name}) — /api/tags
       let taskBoardFilter = { assignee: "", priority: "", tag: "", q: "" };
       let taskScope = "menda"; // mobil: "menda" | "jamoada" (faqat admin)
+      let taskScopeInitialized = false; // renderTasksScreen()dagi bir martalik aqlli standart uchun
       let taskStatusChip = "all"; // mobil: status-chip filtri
       let taskOpenFilter = "ochiq"; // desktop board: "ochiq" | "barchasi" (Bajarildi/Arxiv ustunlarini ko'rsatish)
       let taskDetailNav = { ids: [], index: -1 }; // detal panelida oldingi/keyingi
@@ -4819,6 +4837,19 @@
           body.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
           return;
         }
+        // Aqlli standart: bo'limga birinchi marta kirilganda, agar
+        // foydalanuvchining o'ziga biriktirilgan OCHIQ vazifasi bo'lmasa,
+        // "Menda" bo'sh ko'rinib "vazifalar yo'qolgandek" taassurot
+        // qoldirmasin deb "Jamoada"dan boshlanadi. Faqat BIR marta (screen
+        // ochilganda) — foydalanuvchi keyin qo'lda "Menda"ni tanlasa, shu
+        // holatda qoladi.
+        if (!taskScopeInitialized) {
+          taskScopeInitialized = true;
+          const hasOwnOpenTask = tasksList.some(
+            (t) => t.assigneeUsername === currentUser && !["done", "failed", "cancelled"].includes(t.status),
+          );
+          if (!hasOwnOpenTask) taskScope = "jamoada";
+        }
         renderTasksBody();
       }
       // Qidiruv (nomi/xodim/tag) + "Filtr" sheet'idagi tanlovlarni qo'llaydi.
@@ -5059,6 +5090,23 @@
           <div style="margin-top:14px">${bodyHtml}</div>
         </div>`;
       }
+      // Har bir ochiq vazifa uchun bitta mini-bar — holatiga qarab rangli
+      // (kechikkan=qizil, jarayonda=ko'k, tekshiruvda=amber, boshqa=kul
+      // rang) — xodim kartasida "kimda qancha va qay holatda" ekanini bir
+      // qarashda ko'rsatadi (dizayndagi sparkline'ga mos).
+      function buildEmpBarsHtml(userTasks) {
+        const today = isoOf(todayDate());
+        const colorFor = (t) => {
+          if (t.dueDate && t.dueDate < today) return "var(--red)";
+          if (t.status === "in_progress") return "var(--brand)";
+          if (t.status === "review") return "var(--amber)";
+          return "var(--nav-off)";
+        };
+        return `<div class="emp-bars">${userTasks
+          .slice(0, 4)
+          .map((t) => `<div class="emp-bar" style="background:${colorFor(t)}"></div>`)
+          .join("")}</div>`;
+      }
       // "Jamoada" — xodim bo'yicha guruhlangan, tap orqali kengaytiriladi.
       function buildTasksByEmployeeHtml(list, workload) {
         if (!workload.length) return `<div class="empty"><div class="empty-s">Hozircha hech kimga vazifa biriktirilmagan.</div></div>`;
@@ -5068,13 +5116,14 @@
             const userTasks = sortTasksForBoard(
               list.filter((t) => t.assigneeUsername === w.username && !["done", "failed", "cancelled"].includes(t.status)),
             );
-            return `<div class="list-card" style="margin-bottom:${expanded ? "0" : "10px"}">
+            return `<div class="list-card${w.late ? " late" : ""}" style="margin-bottom:${expanded ? "0" : "10px"}">
               <div class="list-row clickable" onclick="toggleEmployeeGroup('${escArg(w.username)}')">
                 <div class="avatar">${escHtml(w.name.slice(0, 1).toUpperCase())}</div>
                 <div style="flex:1;min-width:0">
                   <div class="r-name">${escHtml(w.name)}</div>
                   <div class="r-sub" style="${w.late ? "color:var(--red)" : ""}">${w.late ? w.late + " kechikkan · " : ""}${w.open} ochiq</div>
                 </div>
+                ${!expanded ? buildEmpBarsHtml(userTasks) : ""}
                 <div class="chev">${expanded ? "⌃" : "⌄"}</div>
               </div>
             </div>
