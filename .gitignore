@@ -1,0 +1,22 @@
+# Local Netlify folder
+.netlify
+
+# Environment secrets — hech qachon commit qilinmasin
+.env
+.env.local
+web/.env
+web/.env.local
+
+# Dependencies
+node_modules
+web/node_modules
+
+# Build output
+web/dist
+
+# Ishlatilmayotgan eski frontend urinishi (private/app.html bilan
+# almashtirilgan) — production repo'ga kerak emas
+_archived_web_unused
+
+# Claude Code runtime holati
+.claude
