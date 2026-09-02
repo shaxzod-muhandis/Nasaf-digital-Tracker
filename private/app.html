@@ -2143,6 +2143,12 @@
         flex-shrink: 0;
         line-height: 1;
       }
+      .td-check-add-row {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 6px;
+      }
       .task-detail-grid {
         display: grid;
         grid-template-columns: 1fr;
@@ -5324,8 +5330,8 @@
         } else if (canChangeStatus && ["todo", "in_progress"].includes(t.status)) {
           btns = `
             ${t.status !== "in_progress" ? `<button class="td-status-btn tint-blue" onclick="setTaskStatus('${escArg(t.id)}','in_progress')"><span class="dot"></span>Boshladim</button>` : ""}
-            <button class="td-status-btn solid-green" onclick="setTaskStatus('${escArg(t.id)}','done')"><span class="dot"></span>Bajarildi</button>
             <button class="td-status-btn tint-amber" onclick="setTaskStatus('${escArg(t.id)}','review')"><span class="dot"></span>Tekshiruvga yubordim</button>
+            <button class="td-status-btn solid-green" onclick="setTaskStatus('${escArg(t.id)}','done')"><span class="dot"></span>Bajarildi</button>
             <button class="td-status-btn tint-red" onclick="openTaskFailForm('${escArg(t.id)}')"><span class="dot"></span>Bajarilmadi</button>`;
         } else if (isAdmin && t.status === "review") {
           btns = `
@@ -5432,7 +5438,7 @@
               <div class="detail-prop-row"><div class="detail-prop-label">Loyiha</div><div class="detail-prop-val">${escHtml(t.projectLabel || "Umumiy")}</div></div>
               <div class="detail-prop-row"><div class="detail-prop-label">Yaratilgan</div><div class="detail-prop-val">${t.createdAt ? fmtDay(new Date(t.createdAt)) : "—"}</div></div>
               <div class="detail-prop-row"><div class="detail-prop-label">Muddat</div><div class="detail-prop-val">${dueText}</div></div>
-              ${isAdmin ? `<button class="btn btn-soft" style="margin-top:18px" onclick="deleteTask('${escArg(t.id)}','${escArg(t.title)}')">O'chirish</button>` : ""}
+              ${isAdmin ? `<button class="btn btn-danger" style="margin-top:18px" onclick="deleteTask('${escArg(t.id)}','${escArg(t.title)}')">O'chirish</button>` : ""}
             </div>
           </div>`;
         loadTaskActivity(t.id);
