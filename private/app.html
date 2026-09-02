@@ -2892,6 +2892,9 @@
           display: flex;
           flex-direction: column;
           gap: 1px;
+          max-height: 45vh;
+          overflow-y: auto;
+          overflow-x: hidden;
         }
         .sb-proj-row {
           display: flex;
@@ -4255,8 +4258,9 @@
         const today = isoOf(todayDate());
         let rowsHtml;
         if (items.length) {
+          const VISIBLE_CAP = 5;
           rowsHtml = items
-            .slice(0, 6)
+            .slice(0, VISIBLE_CAP)
             .map((t) => {
               const overdue = t.dueDate && t.dueDate < today;
               const who = isAdmin && t.assigneeName ? ` · ${escHtml(t.assigneeName)}` : "";
@@ -4269,8 +4273,8 @@
               </div>`;
             })
             .join("");
-          if (items.length > 6)
-            rowsHtml += `<div class="f-hint" style="margin-top:8px">va yana ${items.length - 6} ta…</div>`;
+          if (items.length > VISIBLE_CAP)
+            rowsHtml += `<div class="stat-foot"><span class="stat-link" onclick="showTab('tasks')">Yana ${items.length - VISIBLE_CAP} ta →</span></div>`;
         } else {
           rowsHtml = `<div style="font-size:12px;color:var(--t3)">Bugun uchun ochiq vazifa yo'q</div>`;
         }
@@ -4338,9 +4342,9 @@
         const list = document.getElementById("sidebar-projects");
         if (!list) return;
         const today = todayDate();
-        const top = [...projects]
-          .sort((a, b) => (b.outstandingDebt ? 1 : 0) - (a.outstandingDebt ? 1 : 0))
-          .slice(0, 6);
+        // Cheklovsiz — hammasi ko'rsatiladi (qarzdorlar birinchi), ro'yxat
+        // uzun bo'lsa .sb-projects o'zi ichida aylanadi (scroll).
+        const top = [...projects].sort((a, b) => (b.outstandingDebt ? 1 : 0) - (a.outstandingDebt ? 1 : 0));
         list.innerHTML = top
           .map((p) => {
             const val = p.outstandingDebt
