@@ -129,6 +129,15 @@ async function main() {
     const r = await call("GET", "/api/projects", { user: "test_employee" });
     assert.strictEqual(r.json.projects.length, 1);
   });
+  await check("GET /api/projects — assignees ro'yxatida ko'rinadi (Trekerdagi 'Mas'ul xodimlar')", async () => {
+    const r = await call("GET", "/api/projects", { user: "shaxzodshokirov" });
+    const p = r.json.projects.find((x) => x.id === projectSlug);
+    assert.ok(Array.isArray(p.assignees), "assignees massiv emas");
+    assert.ok(
+      p.assignees.some((a) => a.username === "test_employee"),
+      JSON.stringify(p.assignees),
+    );
+  });
 
   console.log("── CHECKS ────────────────────────────────────────");
   await check("employee post#1 ni belgilaydi", async () => {

@@ -698,6 +698,28 @@ app.get("/api/projects", auth, async (req, res) => {
           [req.user.id],
         );
 
+    const projectIds = projectsR.rows.map((pr) => pr.id);
+    const assigneesByProject = {};
+    if (projectIds.length) {
+      const assigneesR = await db.query(
+        `select p.project_id, u.username, u.full_name, u.first_name, u.last_name
+           from permissions p
+           join users u on u.id = p.user_id
+          where p.project_id = any($1::uuid[])
+          order by u.full_name`,
+        [projectIds],
+      );
+      assigneesR.rows.forEach((row) => {
+        if (!assigneesByProject[row.project_id]) assigneesByProject[row.project_id] = [];
+        assigneesByProject[row.project_id].push({
+          username: row.username,
+          fullName: row.full_name,
+          firstName: row.first_name,
+          lastName: row.last_name,
+        });
+      });
+    }
+
     const projects = [];
     for (const project of projectsR.rows) {
       const summary = await getProjectCycleSummary(db, project);
@@ -739,6 +761,7 @@ app.get("/api/projects", auth, async (req, res) => {
         periodEnd: summary.cycle.period_end,
         anchorDate: project.anchor_date,
         outstandingDebt: summary.outstandingDebt,
+        assignees: assigneesByProject[project.id] || [],
       });
     }
     res.json({ projects, isAdmin: isAdm });

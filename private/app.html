@@ -849,6 +849,7 @@
       .cal-cell.done {
         background: var(--brand);
         color: #fff;
+        cursor: pointer;
       }
       .cal-cell.done .cn {
         font-weight: 600;
@@ -3166,6 +3167,13 @@
           position: sticky;
           top: 16px;
           padding-top: 16px;
+        }
+        /* Katta ekranda kalendar butun kenglikka cho'zilib, katakchalar
+           haddan tashqari yirik bo'lib ketmasligi uchun ixcham kenglikka
+           qisiladi (mobil o'lchamiga yaqin, faqat o'qilishi qulayroq). */
+        #screen-tracker .cal-week,
+        #screen-tracker .cal-grid {
+          max-width: 400px;
         }
 
         /* ── Umumiy: statistik kartalar, jadval, ikki ustunli maket ──── */
@@ -6236,7 +6244,7 @@
             cls += " pending";
             inner = `<div class="cn">${cur.getDate()}</div>`;
           }
-          cells += `<div class="${cls}"${seqs.length ? ` title="${seqs.map((n) => (trackerType === "k" ? "Post " : "Stories ") + n).join(", ")}"` : ""}>${inner}</div>`;
+          cells += `<div class="${cls}"${seqs.length ? ` title="${seqs.map((n) => (trackerType === "k" ? "Post " : "Stories ") + n).join(", ")}" onclick="openDayCell('${escArg(p.id)}','${trackerType}',[${seqs.join(",")}])"` : ""}>${inner}</div>`;
         }
 
         // ── BUGUN BELGILANGANLAR ────────────────────────────────────
@@ -6427,7 +6435,26 @@
             ? `Qolgan ${remaining} vazifa ${daysLeft} kunga taqsimlansa, haftada ~${weeklyNeed} ta yetarli.`
             : "Barcha vazifalar bajarilgan — davr yakunlanishiga tayyor.";
 
+        const assignees = p.assignees || [];
+        const assigneesHtml = assignees.length
+          ? assignees
+              .map((a) => {
+                const name = a.fullName || (a.firstName ? `${a.firstName} ${a.lastName || ""}`.trim() : `@${a.username}`);
+                return `<div class="rail-item">
+                  <div class="avatar avatar-sm mute">${initials(name)}</div>
+                  <div style="flex:1;min-width:0">
+                    <div class="r-name">${escHtml(name)}</div>
+                  </div>
+                </div>`;
+              })
+              .join("")
+          : `<div style="font-size:12px;color:var(--t3)">Xodim biriktirilmagan</div>`;
+
         return `
+          <div class="rail-card">
+            <div class="rail-title">Mas'ul xodimlar${assignees.length ? " · " + assignees.length : ""}</div>
+            ${assigneesHtml}
+          </div>
           <div class="rail-card">
             <div class="rail-title">${fmtDay(todayDate())} · bugun</div>
             ${todayHtml}
@@ -6443,17 +6470,32 @@
           </div>`;
       }
 
-      // Checkbox bosilishi: BELGILASH → modal ochiladi (post uchun kim
-      // qilgani so'raladi), OLIB TASHLASH → darhol o'chiriladi.
+      // Checkbox bosilishi — ikkala holatda ham (yangi belgilash yoki
+      // allaqachon belgilangan itemni bosish) native checkbox holati
+      // avvalgi holatiga qaytariladi va modal ochiladi: yangi belgilashda
+      // kim qilgani so'raladi, mavjudini bosganda esa tafsilotlarni
+      // tahrirlash yoki "Belgini olib tashlash" tugmasi bilan o'chirish
+      // mumkin bo'ladi — holat faqat shu modal orqali o'zgaradi.
       function onCheckboxToggle(ev, slug, type, num, checked) {
-        if (checked) {
-          ev.target.checked = false; // modal tasdiqlamaguncha belgilanmaydi
-          openCheckModal(slug, type, num);
-        } else {
-          onCheck(slug, type, num, false).catch(() => {
-            ev.target.checked = true;
-          });
-        }
+        ev.target.checked = !checked;
+        openCheckModal(slug, type, num);
+      }
+
+      // Kalendar katakchasi bosilganda — shu kunga tegishli post/stories
+      // tafsilotini tahrirlash modalini ochadi. Bir kunga bir nechta
+      // post/stories to'g'ri kelsa — avval qaysi biri ekanini tanlash
+      // uchun kichik ro'yxat ko'rsatiladi.
+      function openDayCell(slug, type, seqs) {
+        if (!seqs || !seqs.length) return;
+        if (seqs.length === 1) return openCheckModal(slug, type, seqs[0]);
+        const label = type === "k" ? "Post" : "Stories";
+        const { body } = makeSheet(`${label}lar — shu kun`);
+        body.innerHTML = seqs
+          .map(
+            (n) =>
+              `<button class="btn btn-soft" style="margin-bottom:8px" onclick="document.querySelector('.overlay').remove();openCheckModal('${escArg(slug)}','${type}',${n})">${label} ${n}</button>`,
+          )
+          .join("");
       }
 
       // ── BELGILASH MODALI (kim montaj qildi / kim video oldi) ──────
