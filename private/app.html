@@ -7199,13 +7199,23 @@
           wrap.innerHTML = `<div style="padding:16px 14px;font-size:12px;color:var(--red)">⚠ ${escHtml(e.message)}</div>`;
           return;
         }
-        const filtered = allUsers.filter(
+        // Chiqarilgan (o'chirilgan) xodimlar standart ko'rinishda
+        // yashiriladi — ro'yxat faol xodimlar bilan cheklanadi. Kerak
+        // bo'lsa (masalan qayta ruxsat berish uchun) pastdagi havola
+        // orqali ko'rsatish mumkin.
+        const removedCount = allUsers.filter((u) => u.access_status === "removed").length;
+        const base = showRemovedEmployees ? allUsers : allUsers.filter((u) => u.access_status !== "removed");
+        const filtered = base.filter(
           (u) =>
             !q ||
             `${u.first_name || ""} ${u.last_name || ""} ${u.username}`.toLowerCase().includes(q),
         );
+        const toggleHtml =
+          removedCount > 0
+            ? `<div class="stat-foot" style="margin:10px 0 4px"><span class="stat-link" onclick="toggleShowRemovedEmployees()">${showRemovedEmployees ? "Chiqarilganlarni yashirish" : `Chiqarilganlar (${removedCount}) →`}</span></div>`
+            : "";
         if (!filtered.length) {
-          wrap.innerHTML = `<div style="padding:16px 14px;font-size:12.5px;color:var(--t3)">Hali hech kim botga kirmagan</div>`;
+          wrap.innerHTML = `<div style="padding:16px 14px;font-size:12.5px;color:var(--t3)">Hali hech kim botga kirmagan</div>${toggleHtml}`;
           return;
         }
         const mobileRows = filtered
@@ -7255,7 +7265,12 @@
           .join("");
 
         wrap.className = ""; // .list-card emas — endi ikkala variant ham o'z konteynerini olib keladi
-        wrap.innerHTML = `<div class="mobile-only list-card">${mobileRows}</div><div class="desktop-only"><div class="pgrid">${desktopCards}</div></div>`;
+        wrap.innerHTML = `<div class="mobile-only list-card">${mobileRows}</div><div class="desktop-only"><div class="pgrid">${desktopCards}</div></div>${toggleHtml}`;
+      }
+      let showRemovedEmployees = false;
+      function toggleShowRemovedEmployees() {
+        showRemovedEmployees = !showRemovedEmployees;
+        loadAndRenderTelegramStaff(document.getElementById("admin-search")?.value.toLowerCase().trim() || "");
       }
       async function addStaff() {
         const name = document.getElementById("staff-name")?.value.trim();
