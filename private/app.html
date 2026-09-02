@@ -4985,7 +4985,7 @@
           ${noteBox}
           <div class="kcard-foot">
             ${taskAvatarHtml(t, "avatar-sm", muted) || "<span></span>"}
-            <span class="r-sub" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${muted ? "color:var(--chev)" : ""}">${escHtml(t.projectLabel || "Umumiy")}</span>
+            <span class="r-sub" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${muted ? "color:var(--chev)" : ""}">${t.assigneeName ? `<b style="font-weight:600;${muted ? "" : "color:var(--t5)"}">${escHtml(t.assigneeName)}</b> · ` : ""}${escHtml(t.projectLabel || "Umumiy")}</span>
             ${footDate}
           </div>
         </div>`;
