@@ -4184,8 +4184,21 @@
         return map;
       }
 
+      // Post ("kontent") va Stories loyiha progressiga teng og'irlikda
+      // qo'shilmaydi — Post umumiy progressning 70%ini, Stories esa 30%ini
+      // tashkil qiladi. Loyihada faqat bittasi bo'lsa (masalan faqat
+      // Stories), o'sha yagona turning o'zi 100% sifatida hisoblanadi.
+      const PROJ_PCT_WEIGHT_K = 0.7; // post (kontent)
+      const PROJ_PCT_WEIGHT_S = 0.3; // stories
       function projPct(p) {
-        return pct(p.doneK + p.doneS, p.k + p.s);
+        const hasK = p.k > 0,
+          hasS = p.s > 0;
+        if (!hasK && !hasS) return 0;
+        const kFrac = hasK ? p.doneK / p.k : 0;
+        const sFrac = hasS ? p.doneS / p.s : 0;
+        if (hasK && hasS)
+          return Math.round((kFrac * PROJ_PCT_WEIGHT_K + sFrac * PROJ_PCT_WEIGHT_S) * 100);
+        return Math.round((hasK ? kFrac : sFrac) * 100);
       }
       function projElapsedFrac(p) {
         const start = parseISO(p.periodStart);

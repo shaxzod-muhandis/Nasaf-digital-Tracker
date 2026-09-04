@@ -8,6 +8,7 @@ process.env.BOT_TOKEN = "";
 const assert = require("assert");
 const db = require("../netlify/functions/lib/db");
 const { addMonthsClamped, addDays } = require("../netlify/functions/lib/dates");
+const { projectPct } = require("../netlify/functions/lib/notify");
 
 let passed = 0,
   failed = 0;
@@ -76,6 +77,19 @@ async function main() {
   await check("noma'lum user 403", async () => {
     const r = await call("POST", "/api/auth", { user: "notauser_xyz", body: {} });
     assert.strictEqual(r.status, 403);
+  });
+
+  console.log("── LOYIHA PROGRESS % (Post 70% / Stories 30%) ─────");
+  await check("post va stories teng emas — 70/30 og'irlik bilan hisoblanadi", async () => {
+    assert.strictEqual(projectPct(7, 10, 3, 10), 58); // 0.7*0.7 + 0.3*0.3 = 0.58
+    assert.strictEqual(projectPct(0, 10, 10, 10), 30); // faqat stories bajarilgan
+    assert.strictEqual(projectPct(10, 10, 0, 10), 70); // faqat post bajarilgan
+    assert.strictEqual(projectPct(10, 10, 10, 10), 100);
+  });
+  await check("loyihada faqat bitta tur bo'lsa — o'sha yagona 100% deb olinadi", async () => {
+    assert.strictEqual(projectPct(0, 0, 5, 10), 50); // faqat stories rejalashtirilgan
+    assert.strictEqual(projectPct(3, 6, 0, 0), 50); // faqat post rejalashtirilgan
+    assert.strictEqual(projectPct(0, 0, 0, 0), 0);
   });
 
   console.log("── USERS ─────────────────────────────────────────");

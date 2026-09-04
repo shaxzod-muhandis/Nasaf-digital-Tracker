@@ -41,7 +41,7 @@ const {
   notifyTaskAssigned,
   notifyTeamTaskEvent,
   notifyProjectAssigned,
-  pct,
+  projectPct,
   buildPacingMessage,
 } = require("./lib/notify");
 
@@ -1809,7 +1809,7 @@ app.post("/api/reminder/run", async (req, res) => {
       const weeksLeft = Math.max(1, Math.ceil(daysLeft / 7));
       const weekK = Math.ceil(Math.max(0, remK) / weeksLeft);
       const weekS = Math.ceil(Math.max(0, remS) / weeksLeft);
-      const overallP = pct(summary.doneK + summary.doneS, cycle.posts_target + cycle.stories_target);
+      const overallP = projectPct(summary.doneK, cycle.posts_target, summary.doneS, cycle.stories_target);
 
       const permR = await db.query(`select user_id from permissions where project_id = $1`, [project.id]);
       const allowedUserIds = new Set(permR.rows.map((r) => r.user_id));

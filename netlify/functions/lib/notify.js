@@ -186,6 +186,22 @@ function progressEmoji(p) {
 
 const pct = (d, t) => (t === 0 ? 0 : Math.round((d / t) * 100));
 
+// Loyiha progress foizi — Post ("kontent") va Stories teng og'irlikda
+// hisoblanmaydi: Post umumiy progressning 70%ini, Stories 30%ini
+// tashkil qiladi (frontenddagi projPct() bilan bir xil mantiq — shu
+// pacing-eslatmasidagi % ilovada ko'rinadigan % bilan mos kelishi
+// uchun). Loyihada faqat bittasi bo'lsa, o'sha yagona tur 100% sifatida
+// hisoblanadi.
+function projectPct(doneK, k, doneS, s) {
+  const hasK = k > 0,
+    hasS = s > 0;
+  if (!hasK && !hasS) return 0;
+  const kFrac = hasK ? doneK / k : 0;
+  const sFrac = hasS ? doneS / s : 0;
+  if (hasK && hasS) return Math.round((kFrac * 0.7 + sFrac * 0.3) * 100);
+  return Math.round((hasK ? kFrac : sFrac) * 100);
+}
+
 // Xodimga shaxsiy pacing-eslatma matnini quradi (bir nechta loyiha bo'yicha)
 function buildPacingMessage(stats) {
   let text = `📊 <b>Kontent reja bo'yicha holat</b>\n─────────────────\n\n`;
@@ -213,5 +229,6 @@ module.exports = {
   notifyProjectAssigned,
   progressEmoji,
   pct,
+  projectPct,
   buildPacingMessage,
 };
