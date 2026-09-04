@@ -2097,6 +2097,9 @@
       .td-status-btn.tint-blue .dot {
         background: var(--brand);
       }
+      .td-status-btn:disabled {
+        opacity: 0.6;
+      }
       .td-check-row {
         display: flex;
         align-items: center;
@@ -2476,6 +2479,29 @@
       .btn-danger {
         background: var(--red-bg);
         color: var(--red);
+      }
+      .btn-soft:disabled,
+      .btn-danger:disabled {
+        opacity: 0.55;
+      }
+      /* Tugma bosilganda ko'rsatiladigan "aylana" (spinner) — currentColor
+         ishlatilgani uchun har qanday tugma rangiga (ko'k/qizil/yashil/
+         neytral) avtomatik moslashadi, alohida variant kerak emas. */
+      .spinner {
+        display: inline-block;
+        width: 13px;
+        height: 13px;
+        border: 2px solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: btn-spin 0.6s linear infinite;
+        vertical-align: -2px;
+        opacity: 0.85;
+      }
+      @keyframes btn-spin {
+        to {
+          transform: rotate(360deg);
+        }
       }
       .cycle-item {
         border: 1px solid var(--bd2);
@@ -4074,6 +4100,24 @@
         clearTimeout(el._t);
         el._t = setTimeout(() => el.classList.remove("show"), ms);
       }
+      // Tugma bosilganda "aylana" (spinner) bilan yuklanish holatini
+      // ko'rsatadi — asl matn dataset'da saqlanib, xato bo'lganda
+      // qaytariladi (muvaffaqiyatda odatda butun blok qayta render
+      // bo'lgani uchun buni qaytarish shart emas).
+      function setBtnLoading(btn, loading, loadingText) {
+        if (!btn) return;
+        if (loading) {
+          if (btn.dataset.origHtml === undefined) btn.dataset.origHtml = btn.innerHTML;
+          btn.disabled = true;
+          btn.innerHTML = `<span class="spinner"></span>${loadingText ? " " + escHtml(loadingText) : ""}`;
+        } else {
+          btn.disabled = false;
+          if (btn.dataset.origHtml !== undefined) {
+            btn.innerHTML = btn.dataset.origHtml;
+            delete btn.dataset.origHtml;
+          }
+        }
+      }
       function initials(label) {
         return String(label || "?")
           .split(/\s+/)
@@ -5385,14 +5429,14 @@
           btns = `<button class="td-status-btn tint-blue" onclick="openSetDueDateForm('${escArg(t.id)}')"><span class="dot"></span>Navbatga qo'yish</button>`;
         } else if (canChangeStatus && ["todo", "in_progress"].includes(t.status)) {
           btns = `
-            ${t.status !== "in_progress" ? `<button class="td-status-btn tint-blue" onclick="setTaskStatus('${escArg(t.id)}','in_progress')"><span class="dot"></span>Boshladim</button>` : ""}
-            <button class="td-status-btn tint-amber" onclick="setTaskStatus('${escArg(t.id)}','review')"><span class="dot"></span>Tekshiruvga yubordim</button>
-            <button class="td-status-btn solid-green" onclick="setTaskStatus('${escArg(t.id)}','done')"><span class="dot"></span>Bajarildi</button>
+            ${t.status !== "in_progress" ? `<button class="td-status-btn tint-blue" onclick="setTaskStatus('${escArg(t.id)}','in_progress',this)"><span class="dot"></span>Boshladim</button>` : ""}
+            <button class="td-status-btn tint-amber" onclick="setTaskStatus('${escArg(t.id)}','review',this)"><span class="dot"></span>Tekshiruvga yubordim</button>
+            <button class="td-status-btn solid-green" onclick="setTaskStatus('${escArg(t.id)}','done',this)"><span class="dot"></span>Bajarildi</button>
             <button class="td-status-btn tint-red" onclick="openTaskFailForm('${escArg(t.id)}')"><span class="dot"></span>Bajarilmadi</button>`;
         } else if (isAdmin && t.status === "review") {
           btns = `
-            <button class="td-status-btn tint-blue" onclick="setTaskStatus('${escArg(t.id)}','in_progress')"><span class="dot"></span>Qaytarish</button>
-            <button class="td-status-btn solid-green" onclick="setTaskStatus('${escArg(t.id)}','done')"><span class="dot"></span>Tasdiqlash</button>
+            <button class="td-status-btn tint-blue" onclick="setTaskStatus('${escArg(t.id)}','in_progress',this)"><span class="dot"></span>Qaytarish</button>
+            <button class="td-status-btn solid-green" onclick="setTaskStatus('${escArg(t.id)}','done',this)"><span class="dot"></span>Tasdiqlash</button>
             <button class="td-status-btn tint-red" onclick="openTaskFailForm('${escArg(t.id)}')"><span class="dot"></span>Bajarilmadi</button>`;
         }
         const reasonBox =
@@ -5458,7 +5502,7 @@
                 canChangeStatus
                   ? `<div class="comment-composer">
                 <textarea class="f-input" id="comment-input" placeholder="Izoh yozing…"></textarea>
-                <button class="btn btn-blue" style="width:auto;padding:0 16px;flex-shrink:0" onclick="submitTaskComment('${escArg(t.id)}')">Yuborish</button>
+                <button class="btn btn-blue" style="width:auto;padding:0 16px;flex-shrink:0" onclick="submitTaskComment('${escArg(t.id)}', this)">Yuborish</button>
               </div>`
                   : ""
               }
@@ -5541,7 +5585,7 @@
             (it) => `<div class="td-check-row">
               <div class="td-check-box${it.done ? " done" : ""}" ${canEdit ? `onclick="toggleChecklistItem('${escArg(taskId)}','${escArg(it.id)}',${!it.done})"` : ""}>${it.done ? "✓" : ""}</div>
               <div class="td-check-text${it.done ? " done" : ""}">${escHtml(it.text)}</div>
-              ${canEdit ? `<span class="td-check-del" onclick="deleteChecklistItem('${escArg(taskId)}','${escArg(it.id)}')">×</span>` : ""}
+              ${canEdit ? `<span class="td-check-del" onclick="deleteChecklistItem('${escArg(taskId)}','${escArg(it.id)}',this)">×</span>` : ""}
             </div>`,
           )
           .join("");
@@ -5550,8 +5594,8 @@
           ${
             canEdit
               ? `<div class="td-check-add-row">
-                <input class="f-input" id="td-check-new-${escArg(taskId)}" placeholder="Yangi band qo'shish…" onkeydown="if(event.key==='Enter')addChecklistItem('${escArg(taskId)}')"/>
-                <button class="btn btn-soft" style="width:auto;padding:0 16px;flex-shrink:0" onclick="addChecklistItem('${escArg(taskId)}')">+ Qo'shish</button>
+                <input class="f-input" id="td-check-new-${escArg(taskId)}" placeholder="Yangi band qo'shish…" onkeydown="if(event.key==='Enter')addChecklistItem('${escArg(taskId)}', this.nextElementSibling)"/>
+                <button class="btn btn-soft" style="width:auto;padding:0 16px;flex-shrink:0" onclick="addChecklistItem('${escArg(taskId)}', this)">+ Qo'shish</button>
               </div>`
               : ""
           }`;
@@ -5568,10 +5612,11 @@
           showToast("⚠ " + e.message);
         }
       }
-      async function addChecklistItem(taskId) {
+      async function addChecklistItem(taskId, btn) {
         const input = document.getElementById(`td-check-new-${taskId}`);
         const text = input?.value.trim();
         if (!text) return;
+        setBtnLoading(btn, true);
         try {
           const res = await apiFetch(`/api/tasks/${taskId}/checklist`, {
             method: "POST",
@@ -5581,15 +5626,18 @@
           await loadTaskChecklist(taskId, true);
         } catch (e) {
           showToast("⚠ " + e.message);
+          setBtnLoading(btn, false);
         }
       }
-      async function deleteChecklistItem(taskId, itemId) {
+      async function deleteChecklistItem(taskId, itemId, btn) {
+        setBtnLoading(btn, true);
         try {
           const res = await apiFetch(`/api/tasks/${taskId}/checklist/${itemId}`, { method: "DELETE" });
           if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
           await loadTaskChecklist(taskId, true);
         } catch (e) {
           showToast("⚠ " + e.message);
+          setBtnLoading(btn, false);
         }
       }
       function formatActivityDetail(a) {
@@ -5615,10 +5663,11 @@
         const who = a.actorUsername ? "@" + escHtml(a.actorUsername) : "Tizim";
         return `<div class="activity-item system">${who} — ${formatActivityDetail(a)} · ${fmtDay(new Date(a.createdAt))}</div>`;
       }
-      async function submitTaskComment(id) {
+      async function submitTaskComment(id, btn) {
         const input = document.getElementById("comment-input");
         const text = input?.value.trim();
         if (!text) return;
+        setBtnLoading(btn, true);
         try {
           const res = await apiFetch(`/api/tasks/${id}/comments`, { method: "POST", body: JSON.stringify({ text }) });
           if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
@@ -5626,6 +5675,8 @@
           await loadTaskActivity(id);
         } catch (e) {
           showToast("⚠ " + e.message);
+        } finally {
+          setBtnLoading(btn, false);
         }
       }
       async function removeTaskTag(taskId, tagId) {
@@ -5745,7 +5796,8 @@
           showToast("⚠ " + e.message);
         }
       }
-      async function setTaskStatus(id, status) {
+      async function setTaskStatus(id, status, btn) {
+        if (btn) setBtnLoading(btn, true);
         try {
           const res = await apiFetch(`/api/tasks/${id}`, {
             method: "PATCH",
@@ -5759,6 +5811,7 @@
           refreshTaskDetailIfOpen(id);
         } catch (e) {
           showToast("⚠ " + e.message);
+          if (btn) setBtnLoading(btn, false);
         }
       }
       // "Bajarilmadi" — sabab yozmasdan saqlab bo'lmaydi
@@ -5782,10 +5835,7 @@
           return;
         }
         const btn = document.getElementById("task-fail-btn");
-        if (btn) {
-          btn.disabled = true;
-          btn.textContent = "Saqlanmoqda…";
-        }
+        setBtnLoading(btn, true, "Saqlanmoqda…");
         try {
           const res = await apiFetch(`/api/tasks/${id}`, {
             method: "PATCH",
@@ -5800,10 +5850,7 @@
           refreshTaskDetailIfOpen(id);
         } catch (e) {
           if (errEl) errEl.textContent = e.message;
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = "Tasdiqlash";
-          }
+          setBtnLoading(btn, false);
         }
       }
       function deleteTask(id, title) {
@@ -5915,10 +5962,19 @@
         const projectOptions =
           `<option value="">— Umumiy —</option>` +
           projects.map((p) => `<option value="${escArg(p.id)}">${escHtml(p.label)}</option>`).join("");
+        // full_name (eski maydon) ko'pincha bo'sh — xodimning haqiqiy
+        // ism-familiyasi first_name/last_name'da saqlanadi. Ular bo'lmasa
+        // (profil hali to'ldirilmagan), faqat @username ko'rsatiladi —
+        // ikkalasini bir xilda ("username (@username)") qayta ko'rsatib
+        // chalkashtirmaslik uchun.
+        const userDisplayLabel = (u) => {
+          const name = u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : u.full_name;
+          return name ? `${name} (@${u.username})` : `@${u.username}`;
+        };
         const userOptions =
           `<option value="">— Tanlanmagan —</option>` +
           users
-            .map((u) => `<option value="u:${escArg(u.username)}">${escHtml(u.full_name || u.username)} (@${escHtml(u.username)})</option>`)
+            .map((u) => `<option value="u:${escArg(u.username)}">${escHtml(userDisplayLabel(u))}</option>`)
             .join("") +
           staffList
             .map((s) => `<option value="s:${escArg(s.id)}">${escHtml(s.fullName)} — ${POSITION_LABELS[s.position] || s.position}</option>`)
@@ -6010,10 +6066,7 @@
         if (ntStatus !== "backlog") body.dueDate = dueDate;
         if (assignee.startsWith("u:")) body.assigneeUsername = assignee.slice(2);
         else if (assignee.startsWith("s:")) body.assigneeStaffId = assignee.slice(2);
-        if (btn) {
-          btn.disabled = true;
-          btn.textContent = "Yaratilmoqda…";
-        }
+        setBtnLoading(btn, true, "Yaratilmoqda…");
         try {
           const res = await apiFetch("/api/tasks", { method: "POST", body: JSON.stringify(body) });
           const data = await res.json().catch(() => ({}));
@@ -6025,10 +6078,7 @@
           refreshAllViews();
         } catch (e) {
           showToast("⚠ " + e.message);
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = "Yaratish";
-          }
+          setBtnLoading(btn, false);
         }
       }
 
