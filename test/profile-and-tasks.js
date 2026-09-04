@@ -186,6 +186,51 @@ async function main() {
     assert.strictEqual(r.status, 200, JSON.stringify(r.json));
   });
 
+  console.log("── VAZIFA: yaratish hammaga ochiq, 'Bajarildi' faqat admin ──");
+  let permTaskId;
+  await check("oddiy xodim (admin bo'lmagan) vazifa yarata oladi", async () => {
+    const r = await call("POST", "/api/tasks", {
+      user: "test_profileuser",
+      body: { title: "Oddiy xodim yaratgan vazifa", assigneeUsername: "test_profileuser2", dueDate: "2099-01-01" },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    permTaskId = r.json.task.id;
+  });
+  await check("biriktirilgan oddiy xodim statusni 'done'ga o'tkaza olmaydi (403)", async () => {
+    const r = await call("PATCH", `/api/tasks/${permTaskId}`, {
+      user: "test_profileuser2",
+      body: { status: "done" },
+    });
+    assert.strictEqual(r.status, 403);
+  });
+  await check("biriktirilgan oddiy xodim 'in_progress'ga o'tkaza oladi", async () => {
+    const r = await call("PATCH", `/api/tasks/${permTaskId}`, {
+      user: "test_profileuser2",
+      body: { status: "in_progress" },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+  });
+  await check("admin 'done'ga o'tkaza oladi", async () => {
+    const r = await call("PATCH", `/api/tasks/${permTaskId}`, {
+      user: "shaxzodshokirov",
+      body: { status: "done" },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.strictEqual(r.json.task.status, "done");
+  });
+  await check("GET /api/users/directory — oddiy xodim ham ko'radi, shaxsiy maydonlarsiz", async () => {
+    const r = await call("GET", "/api/users/directory", { user: "test_profileuser" });
+    assert.strictEqual(r.status, 200);
+    const u = r.json.users.find((x) => x.username === "test_profileuser2");
+    assert.ok(u, "xodim topilmadi");
+    assert.strictEqual(u.phone, undefined);
+    assert.strictEqual(u.birth_date, undefined);
+  });
+  await check("tozalash: test vazifasi o'chiriladi", async () => {
+    const r = await call("DELETE", `/api/tasks/${permTaskId}`, { user: "shaxzodshokirov" });
+    assert.strictEqual(r.status, 200);
+  });
+
   console.log("── BACKLOG / PRIORITY ────────────────────────────");
   let backlogTaskId;
   await check("backlog vazifa muddatsiz yaratiladi (200)", async () => {

@@ -251,6 +251,21 @@ app.get("/api/users", auth, async (req, res) => {
   }
 });
 
+// Qisqa xodimlar ro'yxati — istalgan autentifikatsiyadan o'tgan
+// foydalanuvchi ko'ra oladi (masalan vazifa yaratishda "Kim bajaradi"
+// tanlovi uchun). Yuqoridagi to'liq /api/users'dan farqli, shaxsiy
+// maydonlar (telefon, tug'ilgan kun va h.k.) qaytarilmaydi.
+app.get("/api/users/directory", auth, async (req, res) => {
+  try {
+    const r = await db.query(
+      `select username, first_name, last_name from users where is_active order by username`,
+    );
+    res.json({ users: r.rows });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Botga kirish huquqini berish (yangi user qo'shish yoki avval "removed"/
 // "blocked" bo'lgan userni qayta faollashtirish) — TZ 3, 13-band: faqat
 // Super Admin.
@@ -1259,8 +1274,10 @@ app.get("/api/tasks", auth, async (req, res) => {
   }
 });
 
+// Har qanday xodim vazifa yaratib, boshqasiga (yoki o'ziga) biriktira
+// oladi — faqat "Bajarildi" deb belgilash (pastdagi PATCH) admin uchun
+// cheklangan.
 app.post("/api/tasks", auth, async (req, res) => {
-  if (!requireAdmin(req, res)) return;
   try {
     const title = (req.body.title || "").trim();
     if (!title) return res.status(400).json({ error: "title kerak" });
@@ -1421,6 +1438,12 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
     if (typeof req.body.status === "string") {
       if (!["backlog", "todo", "in_progress", "review", "done", "failed", "cancelled"].includes(req.body.status)) {
         return res.status(400).json({ error: "Noto'g'ri status" });
+      }
+      // Vazifani "Bajarildi" deb yakuniy tasdiqlash faqat admin huquqi —
+      // oddiy xodim (o'zi biriktirilgan bo'lsa ham) ko'pi bilan
+      // "Tekshiruvga yubordim" holatiga o'tkaza oladi.
+      if (req.body.status === "done" && !isAdm) {
+        return res.status(403).json({ error: "Vazifani faqat admin 'Bajarildi' deb belgilashi mumkin" });
       }
       // Backlog'dan chiqqanda ("bitiruv" — Linear'dagi kabi) muddat shart
       // bo'lib qoladi. Vazifada hali muddat yo'q bo'lsa, shu so'rovda

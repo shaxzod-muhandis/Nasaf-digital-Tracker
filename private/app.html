@@ -5074,11 +5074,12 @@
         renderTasksBody();
       }
       async function renderTasksScreen() {
-        document.getElementById("tasks-fab").style.display = isAdmin
-          ? "flex"
-          : "none";
+        // Vazifa yaratish — har qanday xodim uchun ochiq (faqat "Bajarildi"
+        // deb belgilash admin uchun cheklangan, buttonlar darajasida
+        // buildTaskStatusActionsHtml'da).
+        document.getElementById("tasks-fab").style.display = "flex";
         const newBtn = document.getElementById("tasks-new-btn");
-        if (newBtn) newBtn.style.display = isAdmin ? "flex" : "none";
+        if (newBtn) newBtn.style.display = "flex";
         const body = document.getElementById("tasks-body");
         body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
         try {
@@ -5428,10 +5429,13 @@
         if (canChangeStatus && t.status === "backlog") {
           btns = `<button class="td-status-btn tint-blue" onclick="openSetDueDateForm('${escArg(t.id)}')"><span class="dot"></span>Navbatga qo'yish</button>`;
         } else if (canChangeStatus && ["todo", "in_progress"].includes(t.status)) {
+          // "Bajarildi" — faqat admin to'g'ridan-to'g'ri shu holatdan
+          // yakuniy tasdiqlashi mumkin; oddiy xodim (o'zi biriktirilgan
+          // bo'lsa ham) faqat tekshiruvga yubora oladi.
           btns = `
             ${t.status !== "in_progress" ? `<button class="td-status-btn tint-blue" onclick="setTaskStatus('${escArg(t.id)}','in_progress',this)"><span class="dot"></span>Boshladim</button>` : ""}
             <button class="td-status-btn tint-amber" onclick="setTaskStatus('${escArg(t.id)}','review',this)"><span class="dot"></span>Tekshiruvga yubordim</button>
-            <button class="td-status-btn solid-green" onclick="setTaskStatus('${escArg(t.id)}','done',this)"><span class="dot"></span>Bajarildi</button>
+            ${isAdmin ? `<button class="td-status-btn solid-green" onclick="setTaskStatus('${escArg(t.id)}','done',this)"><span class="dot"></span>Bajarildi</button>` : ""}
             <button class="td-status-btn tint-red" onclick="openTaskFailForm('${escArg(t.id)}')"><span class="dot"></span>Bajarilmadi</button>`;
         } else if (isAdmin && t.status === "review") {
           btns = `
@@ -5956,8 +5960,11 @@
         body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
         let users = [];
         try {
-          const res = await apiFetch("/api/users");
-          if (res.ok) users = ((await res.json()).users || []).filter((u) => u.is_active);
+          // /api/users admin-only (shaxsiy maydonlar bor) — vazifa yaratish
+          // endi har qanday xodim uchun ochiq bo'lgani sabab, shaxsiy
+          // ma'lumotsiz qisqa ro'yxat ishlatiladi.
+          const res = await apiFetch("/api/users/directory");
+          if (res.ok) users = (await res.json()).users || [];
         } catch (e) {}
         const projectOptions =
           `<option value="">— Umumiy —</option>` +
