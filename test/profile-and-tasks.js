@@ -101,6 +101,30 @@ async function main() {
     assert.strictEqual(r.json.user.job_title, "Senior QA");
   });
 
+  console.log("── TUG'ILGAN KUN TABRIGI ──────────────────────────");
+  const pad2 = (n) => String(n).padStart(2, "0");
+  const monthDayOf = (d) => `${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  const todayMD = monthDayOf(new Date());
+  const otherMD = monthDayOf(new Date(Date.now() + 10 * 24 * 3600 * 1000));
+  await check("bugungi kunga mos birthDate — showBirthdayGreeting=true", async () => {
+    const r = await call("PATCH", "/api/me", { user: "test_profileuser", body: { birthDate: `1995-${todayMD}` } });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    const me = await call("GET", "/api/me", { user: "test_profileuser" });
+    assert.strictEqual(me.json.showBirthdayGreeting, true, JSON.stringify(me.json));
+  });
+  await check("/api/me/birthday-ack chaqirilgach showBirthdayGreeting=false bo'ladi", async () => {
+    const ack = await call("POST", "/api/me/birthday-ack", { user: "test_profileuser" });
+    assert.strictEqual(ack.status, 200, JSON.stringify(ack.json));
+    const me = await call("GET", "/api/me", { user: "test_profileuser" });
+    assert.strictEqual(me.json.showBirthdayGreeting, false, JSON.stringify(me.json));
+  });
+  await check("boshqa kunga to'g'ri keladigan birthDate — showBirthdayGreeting=false", async () => {
+    const r = await call("PATCH", "/api/me", { user: "test_profileuser", body: { birthDate: `1995-${otherMD}` } });
+    assert.strictEqual(r.status, 200);
+    const me = await call("GET", "/api/me", { user: "test_profileuser" });
+    assert.strictEqual(me.json.showBirthdayGreeting, false, JSON.stringify(me.json));
+  });
+
   console.log("── TASKS ─────────────────────────────────────────");
   await check("2-test user yaratiladi (topshiriq berilmaydigan)", async () => {
     const r = await call("POST", "/api/users", { user: "shaxzodshokirov", body: { username: "test_profileuser2" } });

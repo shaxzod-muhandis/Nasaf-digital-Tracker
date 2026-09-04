@@ -543,6 +543,17 @@ async function main() {
     const r = await call("POST", "/api/reminder/run", { user: "shaxzodshokirov", body: {} });
     assert.strictEqual(r.status, 200, JSON.stringify(r.json));
   });
+  await check("tug'ilgan kun eslatmasi — 2 kundan keyingi sanani topadi", async () => {
+    const in2Days = new Date(Date.now() + 2 * 24 * 3600 * 1000);
+    const mmdd = `${String(in2Days.getMonth() + 1).padStart(2, "0")}-${String(in2Days.getDate()).padStart(2, "0")}`;
+    await call("PATCH", "/api/users/test_employee", {
+      user: "shaxzodshokirov",
+      body: { birthDate: `1995-${mmdd}` },
+    });
+    const r = await call("POST", "/api/birthdays/run", { user: "shaxzodshokirov", body: {} });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.ok(r.json.birthdays >= 1, JSON.stringify(r.json));
+  });
   await check("debug endpoint", async () => {
     const r = await call("GET", "/api/debug", { user: "shaxzodshokirov" });
     assert.strictEqual(r.status, 200);

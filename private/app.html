@@ -8095,6 +8095,24 @@
         return { ov, body: sh.querySelector(".sheet-body") };
       }
 
+      // Xodim o'z tug'ilgan kunida ilovani ochganda ko'rsatiladi — "×"
+      // tugmasi yoki fonga bosish orqali yopiladi (makeSheet'ning
+      // standart xulq-atvori), showToast kabi avtomatik/vaqt bilan
+      // yo'qolmaydi. Ko'rsatilgan zahoti backend'da "ko'rildi" deb
+      // belgilanadi, shu kun davomida qayta chiqmaydi.
+      function openBirthdayGreetingModal() {
+        const name = myProfile?.firstName || "";
+        const { body } = makeSheet("🎉 Tug'ilgan kuningiz muborak!");
+        body.innerHTML = `
+          <div style="text-align:center;padding:8px 4px 4px">
+            <div style="font-size:44px;margin-bottom:14px">🎂</div>
+            <div style="font-size:15px;line-height:1.7;color:var(--ink)">
+              ${name ? `${escHtml(name)},<br>` : ""}Sizni <b>Nasaf Digital</b> jamoamiz nomidan tug'ilgan kuningiz bilan tabriklaymiz!
+            </div>
+          </div>`;
+        apiFetch("/api/me/birthday-ack", { method: "POST" }).catch(() => {});
+      }
+
       // ── PROFIL (o'zi haqida) ───────────────────────────────────────
       const ROLE_LABEL_UZ = {
         super_admin: "Super admin",
@@ -8596,12 +8614,14 @@
         } catch (e) {}
 
         let profileIncomplete = false;
+        let showBirthdayGreeting = false;
         try {
           const r = await apiFetch("/api/me");
           if (r.ok) {
             const d = await r.json();
             myProfile = d.user;
             profileIncomplete = !!d.profileIncomplete;
+            showBirthdayGreeting = !!d.showBirthdayGreeting;
           }
         } catch (e) {}
 
@@ -8651,6 +8671,7 @@
           } else {
             showTab("today");
           }
+          if (showBirthdayGreeting) openBirthdayGreetingModal();
         }
       }
 

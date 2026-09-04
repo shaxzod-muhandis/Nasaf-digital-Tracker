@@ -189,9 +189,9 @@ So'ng oddiy `git push` (yoki Netlify CLI orqali) deploy qiling.
 
 ## 9. Kunlik/davriy avtomatlashtirish (cron)
 
-Ikkita endpoint tashqi cron xizmati (masalan
+Uchta endpoint tashqi cron xizmati (masalan
 [cron-job.org](https://cron-job.org) — bepul) orqali muntazam
-chaqirilishi kerak. Ikkalasi ham `X-Cron-Secret` header'ida yuqoridagi
+chaqirilishi kerak. Barchasi `X-Cron-Secret` header'ida yuqoridagi
 `CRON_SECRET` qiymatini talab qiladi:
 
 - **`POST /api/cycles/rollover`** — har kuni bir marta (masalan har kuni
@@ -201,9 +201,18 @@ chaqirilishi kerak. Ikkalasi ham `X-Cron-Secret` header'ida yuqoridagi
 - **`POST /api/reminder/run`** — xohlagan chastotada (masalan haftada
   ikki marta) chaqiring. Bu hali to'liq bajarilmagan loyihalarga
   biriktirilgan xodimlarga "necha kun qoldi, haftasiga nechta post/story
-  kerak" tarzidagi eslatma yuboradi.
+  kerak" tarzidagi eslatma, shuningdek muddati o'tgan-u hali "Jarayonda"ga
+  o'tmagan (Biriktirilgan holatidagi) vazifalar uchun to'g'ridan-to'g'ri
+  ohangdagi eslatma yuboradi.
+- **`POST /api/birthdays/run`** — **HAR KUNI** (masalan `/api/cycles/rollover`
+  bilan bir vaqtda) chaqirilishi shart — bu boshqalardan farqli, xohlagan
+  chastota bilan emas, chunki "2 kundan keyin tug'ilgan kun" aynan bitta
+  kunga to'g'ri keladi; kamroq chastota bilan chaqirilsa ba'zi tug'ilgan
+  kunlar butunlay o'tkazib yuborilishi mumkin. Super Adminlarga, tug'ilgan
+  kuni 2 kundan keyin keladigan xodimlar haqida (ism, sana, necha yoshga
+  to'lishi) xabar yuboradi.
 
-Ikkala so'rov ham shunday ko'rinishda bo'lishi kerak:
+Barcha so'rovlar shunday ko'rinishda bo'lishi kerak:
 
 ```
 POST https://SIZNING-SAYTINGIZ.netlify.app/api/cycles/rollover

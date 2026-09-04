@@ -49,7 +49,8 @@ function isAdminRole(role) {
 // select'ga profil maydonlari ham qo'shildi (Profil ekrani uchun) — bundan
 // tashqari hech narsa eski xulq-atvordan farq qilmaydi.
 const USER_ROW_SELECT = `select id, username, full_name, role, is_active, access_status, telegram_chat_id,
-       first_name, last_name, birth_date, phone, job_title, telegram_user_id, avatar_url
+       first_name, last_name, birth_date, phone, job_title, telegram_user_id, avatar_url,
+       birthday_ack_date
        from users`;
 
 // Express middleware factory — `db` bog'lab beriladi (bog'liqlikni

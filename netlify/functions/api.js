@@ -31,7 +31,7 @@ const {
   ensureCurrentCycle,
   getProjectCycleSummary,
 } = require("./lib/cycles");
-const { todayTashkent, dayDiff, addMonthsClamped, cycleBounds } = require("./lib/dates");
+const { todayTashkent, dayDiff, addDays, addMonthsClamped, cycleBounds } = require("./lib/dates");
 const {
   APP_URL,
   appOpenButton,
@@ -186,6 +186,12 @@ const PROFILE_REQUIRED_FIELDS = ["first_name", "last_name", "phone", "job_title"
 app.get("/api/me", auth, (req, res) => {
   const u = req.user;
   const profileIncomplete = PROFILE_REQUIRED_FIELDS.some((f) => !u[f]);
+  // birth_date/birthday_ack_date "YYYY-MM-DD" satr sifatida qaytadi
+  // (lib/pg-types.js — pg'ning Date obyektiga aylantirishi vaqt zonasi
+  // bo'yicha noto'g'ri natija berishi mumkinligi uchun ataylab o'chirilgan).
+  const todayStr = todayTashkent();
+  const isBirthdayToday = u.birth_date && u.birth_date.slice(5) === todayStr.slice(5);
+  const alreadyAcked = u.birthday_ack_date && u.birthday_ack_date === todayStr;
   res.json({
     ok: true,
     user: {
@@ -202,6 +208,11 @@ app.get("/api/me", auth, (req, res) => {
       isSuperAdmin: u.role === "super_admin",
     },
     profileIncomplete,
+    // Xodim o'z tug'ilgan kunida ilovani birinchi ochganda tabrik oynasi
+    // chiqadi (frontend), shu bayroq shuni boshqaradi. Ko'rsatilgach
+    // /api/me/birthday-ack chaqirilib, shu kun uchun "ko'rsatildi" deb
+    // belgilanadi — qayta-qayta chiqib turmasligi uchun.
+    showBirthdayGreeting: !!(isBirthdayToday && !alreadyAcked),
   });
 });
 
@@ -227,6 +238,18 @@ app.patch("/api/me", auth, async (req, res) => {
     if (sets.length === 0) return res.status(400).json({ error: "O'zgartiriladigan maydon yo'q" });
     values.push(req.user.id);
     await db.query(`update users set ${sets.join(", ")} where id = $${values.length}`, values);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Tug'ilgan kun tabrigi ko'rsatilgach chaqiriladi — shu kun uchun qayta
+// chiqmasligi uchun belgilanadi (ertaga /api/me yana showBirthdayGreeting
+// hisoblaganda bugungi sana bilan solishtiradi, demak avtomatik "yangilanadi").
+app.post("/api/me/birthday-ack", auth, async (req, res) => {
+  try {
+    await db.query(`update users set birthday_ack_date = $1 where id = $2`, [todayTashkent(), req.user.id]);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -1907,6 +1930,60 @@ app.post("/api/reminder/run", async (req, res) => {
       total: results.length,
       sent: results.filter((r) => r.status === "sent").length,
       errors: results.filter((r) => r.status === "error").length,
+      results,
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── TUG'ILGAN KUN ESLATMASI (2 kun oldin, Super Adminlarga) ──────────
+// /api/reminder/run'dan farqli — bu HAR KUNI chaqirilishi shart (masalan
+// /api/cycles/rollover kabi kunlik cron orqali), chunki "2 kun qoldi"
+// aniq bitta kunga to'g'ri keladi — haftalik/kamroq chastota bilan
+// chaqirilsa ba'zi tug'ilgan kunlar butunlay o'tkazib yuborilishi mumkin.
+app.post("/api/birthdays/run", async (req, res) => {
+  const access = await resolveCronOrAdminCaller(req, { requireSuper: true });
+  if (!access.ok) return res.status(access.status).json({ error: access.error });
+  try {
+    const target = addDays(todayTashkent(), 2);
+    const targetMD = target.slice(5); // "MM-DD"
+    const targetYear = parseInt(target.slice(0, 4), 10);
+
+    const usersR = await db.query(
+      `select first_name, last_name, username, birth_date from users
+        where is_active and birth_date is not null and to_char(birth_date, 'MM-DD') = $1`,
+      [targetMD],
+    );
+    if (usersR.rows.length === 0) {
+      return res.json({ ok: true, caller: access.caller, birthdays: 0, total: 0, sent: 0 });
+    }
+
+    const lines = usersR.rows.map((u) => {
+      const name = u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : `@${u.username}`;
+      const turning = targetYear - new Date(u.birth_date).getUTCFullYear();
+      return `🎂 <b>${name}</b> (@${u.username}) — tug'ilgan kuni ${target}, shu kuni ${turning} yoshga to'ladi.`;
+    });
+    const text = `🎉 <b>Yaqinlashib kelayotgan tug'ilgan kun (2 kundan keyin)</b>\n─────────────────\n\n${lines.join("\n")}`;
+
+    const adminsR = await db.query(
+      `select telegram_chat_id from users where role = 'super_admin' and is_active and telegram_chat_id is not null`,
+    );
+    const results = [];
+    await Promise.allSettled(
+      adminsR.rows.map((a) =>
+        sendMsg(db, a.telegram_chat_id, text)
+          .then((r) => results.push({ chatId: a.telegram_chat_id, status: r.ok ? "sent" : "error" }))
+          .catch((e) => results.push({ chatId: a.telegram_chat_id, status: "error", error: e.message })),
+      ),
+    );
+
+    res.json({
+      ok: true,
+      caller: access.caller,
+      birthdays: usersR.rows.length,
+      total: results.length,
+      sent: results.filter((r) => r.status === "sent").length,
       results,
     });
   } catch (e) {
