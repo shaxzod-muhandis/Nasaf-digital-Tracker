@@ -5971,14 +5971,14 @@
           const name = u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : u.full_name;
           return name ? `${name} (@${u.username})` : `@${u.username}`;
         };
+        // Vazifa faqat ilovadan foydalanadigan (Telegram orqali ro'yxatdan
+        // o'tgan) xodimlarga biriktiriladi — "staff" (montajchi/mobilograf
+        // kabi, faqat check tafsilotlarida ishlatiladigan) xodimlar bu
+        // yerda ko'rsatilmaydi, chunki ular ilovani ochmaydi va vazifani
+        // ko'ra olmaydi.
         const userOptions =
           `<option value="">— Tanlanmagan —</option>` +
-          users
-            .map((u) => `<option value="u:${escArg(u.username)}">${escHtml(userDisplayLabel(u))}</option>`)
-            .join("") +
-          staffList
-            .map((s) => `<option value="s:${escArg(s.id)}">${escHtml(s.fullName)} — ${POSITION_LABELS[s.position] || s.position}</option>`)
-            .join("");
+          users.map((u) => `<option value="u:${escArg(u.username)}">${escHtml(userDisplayLabel(u))}</option>`).join("");
         body.innerHTML = `
           <div class="f-group">
             <label class="f-label">Nomi</label>
@@ -6065,7 +6065,6 @@
         };
         if (ntStatus !== "backlog") body.dueDate = dueDate;
         if (assignee.startsWith("u:")) body.assigneeUsername = assignee.slice(2);
-        else if (assignee.startsWith("s:")) body.assigneeStaffId = assignee.slice(2);
         setBtnLoading(btn, true, "Yaratilmoqda…");
         try {
           const res = await apiFetch("/api/tasks", { method: "POST", body: JSON.stringify(body) });
