@@ -1853,9 +1853,16 @@ app.post("/api/reminder/run", async (req, res) => {
       }
     }
 
-    // Muddati o'tgan (yoki bugun tugaydigan) vazifalar bo'yicha eslatma
+    // Muddati o'tgan (yoki bugun tugaydigan) vazifalar bo'yicha eslatma.
+    // "todo" (Biriktirilgan, hali "Jarayonda"ga o'tmagan) holatidagilar
+    // uchun alohida, to'g'ridan-to'g'ri ohangdagi xabar — bu holat "ishga
+    // hali qo'l tegmagan" degani, shuning uchun eng ustuvor. Boshqa
+    // holatlar (in_progress/review) uchun yumshoqroq eslatma qoladi.
+    // Chastota (har kuni yoki kamroq) shu endpoint qanchalik tez-tez
+    // chaqirilishiga bog'liq — so'rov har chaqiriqda joriy holatni qayta
+    // hisoblaydi, shuning uchun alohida "yuborilganmi" belgisi kerak emas.
     const overdueR = await db.query(
-      `select t.title, t.due_date, u.username, u.telegram_chat_id
+      `select t.title, t.status, t.due_date, u.username, u.telegram_chat_id
        from tasks t join users u on u.id = t.assignee_user_id
        where t.status not in ('done','cancelled') and t.due_date is not null
          and t.due_date <= $1 and u.telegram_chat_id is not null and u.is_active`,
@@ -1879,7 +1886,11 @@ app.post("/api/reminder/run", async (req, res) => {
     }
     for (const [username, { chatId, items }] of Object.entries(overdueByUser)) {
       const lines = items
-        .map((it) => `⏰ <b>${it.title}</b> — muddati: ${it.due_date} (o'tgan/bugun)`)
+        .map((it) =>
+          it.status === "todo"
+            ? `❗ <b>${it.title}</b> — muddati (${it.due_date}) o'tib ketdi, lekin siz hali boshlamadingiz. Sizga biriktirilgan vazifani nega bajarmadingiz?`
+            : `⏰ <b>${it.title}</b> — muddati: ${it.due_date} (o'tgan/bugun)`,
+        )
         .join("\n");
       const text = `📋 <b>Vazifalar bo'yicha eslatma</b>\n─────────────────\n\n${lines}`;
       sends.push(
