@@ -1876,18 +1876,19 @@ app.post("/api/reminder/run", async (req, res) => {
       }
     }
 
-    // Muddati o'tgan (yoki bugun tugaydigan) vazifalar bo'yicha eslatma.
-    // "todo" (Biriktirilgan, hali "Jarayonda"ga o'tmagan) holatidagilar
-    // uchun alohida, to'g'ridan-to'g'ri ohangdagi xabar — bu holat "ishga
-    // hali qo'l tegmagan" degani, shuning uchun eng ustuvor. Boshqa
-    // holatlar (in_progress/review) uchun yumshoqroq eslatma qoladi.
-    // Chastota (har kuni yoki kamroq) shu endpoint qanchalik tez-tez
-    // chaqirilishiga bog'liq — so'rov har chaqiriqda joriy holatni qayta
-    // hisoblaydi, shuning uchun alohida "yuborilganmi" belgisi kerak emas.
+    // Vazifa "Tekshiruvda"ga o'tmaguncha (ya'ni backlog/todo/in_progress
+    // holatida turar ekan) muddati bugun tugasa yoki o'tib ketgan bo'lsa,
+    // xodimga eslatma boradi — tekshiruvga yuborilgach (yoki
+    // bajarilgan/bekor qilingan/bajarilmagan deb belgilangach) xodimning
+    // qo'lidan chiqqan hisoblanadi, shuning uchun ular bu ro'yxatga
+    // kirmaydi. Chastota (har kuni yoki kamroq) shu endpoint qanchalik
+    // tez-tez chaqirilishiga bog'liq — so'rov har chaqiriqda joriy
+    // holatni qayta hisoblaydi, shuning uchun alohida "yuborilganmi"
+    // belgisi kerak emas (har kuni chaqirilsa — kuniga bir marta boradi).
     const overdueR = await db.query(
-      `select t.title, t.status, t.due_date, u.username, u.telegram_chat_id
+      `select t.title, t.status, t.due_date, u.username, u.first_name, u.telegram_chat_id
        from tasks t join users u on u.id = t.assignee_user_id
-       where t.status not in ('done','cancelled') and t.due_date is not null
+       where t.status not in ('review','done','failed','cancelled') and t.due_date is not null
          and t.due_date <= $1 and u.telegram_chat_id is not null and u.is_active`,
       [today],
     );
@@ -1910,12 +1911,14 @@ app.post("/api/reminder/run", async (req, res) => {
     for (const [username, { chatId, items }] of Object.entries(overdueByUser)) {
       const lines = items
         .map((it) =>
-          it.status === "todo"
-            ? `❗ <b>${it.title}</b> — muddati (${it.due_date}) o'tib ketdi, lekin siz hali boshlamadingiz. Sizga biriktirilgan vazifani nega bajarmadingiz?`
-            : `⏰ <b>${it.title}</b> — muddati: ${it.due_date} (o'tgan/bugun)`,
+          it.due_date === today
+            ? `📌 <b>${it.title}</b> — bugun tugaydi. Iltimos, bajarib qo'ying.`
+            : `❗ <b>${it.title}</b> — muddati (${it.due_date}) o'tib ketdi. Nima sababdan bajarilmadi? Vazifani yoping yoki uning holatini aniqlang.`,
         )
         .join("\n");
-      const text = `📋 <b>Vazifalar bo'yicha eslatma</b>\n─────────────────\n\n${lines}`;
+      const name = items[0]?.first_name;
+      const greeting = name ? `${name}, sizga` : "Sizga";
+      const text = `📋 <b>${greeting} biriktirilgan vazifalar bo'yicha eslatma</b>\n─────────────────\n\n${lines}`;
       sends.push(
         sendMsg(db, chatId, text, { replyMarkup: appOpenButton("?tab=tasks") })
           .then(() => results.push({ username, status: "sent", kind: "task" }))
