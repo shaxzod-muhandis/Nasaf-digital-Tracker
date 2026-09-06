@@ -189,10 +189,18 @@ So'ng oddiy `git push` (yoki Netlify CLI orqali) deploy qiling.
 
 ## 9. Kunlik/davriy avtomatlashtirish (cron)
 
-Uchta endpoint tashqi cron xizmati (masalan
-[cron-job.org](https://cron-job.org) — bepul) orqali muntazam
-chaqirilishi kerak. Barchasi `X-Cron-Secret` header'ida yuqoridagi
-`CRON_SECRET` qiymatini talab qiladi:
+**Tashqi xizmat sozlash shart emas** — `netlify/functions/scheduled-daily.js`
+Netlify'ning o'z ichki "Scheduled Functions" imkoniyati orqali (bu
+fayldagi `netlify.toml`da `schedule = "0 3 * * *"` — har kuni 03:00 UTC,
+ya'ni 08:00 Toshkent vaqtida) avtomatik ishga tushadi va quyidagi uchta
+endpoint'ni ketma-ket, o'zi chaqiradi. Deploy qilinganidan keyin hech
+kim qo'lda hech narsa sozlashi shart emas.
+
+Har bir endpoint alohida ham (masalan tekshirish uchun qo'lda, yoki
+zaxira sifatida tashqi cron xizmati — masalan
+[cron-job.org](https://cron-job.org) — orqali) chaqirilishi mumkin.
+Barchasi `X-Cron-Secret` header'ida yuqoridagi `CRON_SECRET` qiymatini
+talab qiladi:
 
 - **`POST /api/cycles/rollover`** — har kuni bir marta (masalan har kuni
   ertalab soat 06:00'da) chaqiring. Bu barcha loyihalarning davrini

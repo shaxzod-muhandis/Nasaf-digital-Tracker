@@ -4,6 +4,13 @@
 [functions]
   included_files = ["private/app.html"]
 
+# Kunlik avtomatlashtirish (rollover, vazifa/tug'ilgan kun eslatmalari) —
+# tashqi cron xizmati kerak emas, Netlify o'zi har kuni 03:00 UTC
+# (08:00 Toshkent) da shu funksiyani chaqiradi. Batafsil:
+# netlify/functions/scheduled-daily.js va docs/SETUP.md.
+[functions."scheduled-daily"]
+  schedule = "0 3 * * *"
+
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/api/api/:splat"
