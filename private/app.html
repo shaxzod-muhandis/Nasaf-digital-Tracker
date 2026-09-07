@@ -2004,6 +2004,13 @@
         color: var(--ink);
         font-weight: 600;
       }
+      .detail-breadcrumb .bc-link {
+        cursor: pointer;
+      }
+      .detail-breadcrumb .bc-link:hover {
+        color: var(--brand);
+        text-decoration: underline;
+      }
       .detail-nav-btn {
         width: 26px;
         height: 26px;
@@ -5460,7 +5467,8 @@
         const nav = taskDetailNav;
 
         const bc = document.getElementById("td-breadcrumb");
-        if (bc) bc.innerHTML = `<span>Vazifalar</span> / <span>${escHtml(TASK_STATUS_LABEL[t.status])}</span> / <b>${taskShortRef(t.id)}</b>`;
+        if (bc)
+          bc.innerHTML = `<span class="bc-link" onclick="showTab('tasks')">Vazifalar</span> / <span class="bc-link" onclick="showTab('tasks')">${escHtml(TASK_STATUS_LABEL[t.status])}</span> / <b>${taskShortRef(t.id)}</b>`;
         const prevBtn = document.getElementById("td-prev-btn");
         const nextBtn = document.getElementById("td-next-btn");
         if (prevBtn) prevBtn.disabled = nav.index <= 0;
