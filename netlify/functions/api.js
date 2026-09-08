@@ -1836,43 +1836,52 @@ app.post("/api/reminder/run", async (req, res) => {
   const access = await resolveCronOrAdminCaller(req, { requireSuper: true });
   if (!access.ok) return res.status(access.status).json({ error: access.error });
   try {
-    const projR = await db.query(`select * from projects where is_active = true`);
     const today = todayTashkent();
-    const allUsersR = await db.query(
-      `select id, username, role, telegram_chat_id from users where telegram_chat_id is not null and is_active`,
-    );
+    // Haftalik "Kontent reja bo'yicha holat" xabari (loyihalar progressi,
+    // shu haftaga rejalashtirilgan hajm) faqat DUSHANBA kuni yuboriladi —
+    // bu haftaning umumiy hisoboti, har kuni takrorlanishi shart emas.
+    // Pastdagi vazifa (muddat) eslatmalari esa alohida narsa — ular
+    // har kuni davom etadi.
+    const isMonday = new Date(today).getUTCDay() === 1;
 
     const perUser = {}; // username -> { chatId, stats: [] }
 
-    for (const project of projR.rows) {
-      const summary = await getProjectCycleSummary(db, project);
-      const cycle = summary.cycle;
-      const remK = cycle.posts_target - summary.doneK;
-      const remS = cycle.stories_target - summary.doneS;
-      if (remK <= 0 && remS <= 0) continue; // bu loyiha to'liq — eslatma shart emas
+    if (isMonday) {
+      const projR = await db.query(`select * from projects where is_active = true`);
+      const allUsersR = await db.query(
+        `select id, username, role, telegram_chat_id from users where telegram_chat_id is not null and is_active`,
+      );
 
-      const daysLeft = Math.max(1, dayDiff(today, cycle.period_end) + 1);
-      const weeksLeft = Math.max(1, Math.ceil(daysLeft / 7));
-      const weekK = Math.ceil(Math.max(0, remK) / weeksLeft);
-      const weekS = Math.ceil(Math.max(0, remS) / weeksLeft);
-      const overallP = projectPct(summary.doneK, cycle.posts_target, summary.doneS, cycle.stories_target);
+      for (const project of projR.rows) {
+        const summary = await getProjectCycleSummary(db, project);
+        const cycle = summary.cycle;
+        const remK = cycle.posts_target - summary.doneK;
+        const remS = cycle.stories_target - summary.doneS;
+        if (remK <= 0 && remS <= 0) continue; // bu loyiha to'liq — eslatma shart emas
 
-      const permR = await db.query(`select user_id from permissions where project_id = $1`, [project.id]);
-      const allowedUserIds = new Set(permR.rows.map((r) => r.user_id));
+        const daysLeft = Math.max(1, dayDiff(today, cycle.period_end) + 1);
+        const weeksLeft = Math.max(1, Math.ceil(daysLeft / 7));
+        const weekK = Math.ceil(Math.max(0, remK) / weeksLeft);
+        const weekS = Math.ceil(Math.max(0, remS) / weeksLeft);
+        const overallP = projectPct(summary.doneK, cycle.posts_target, summary.doneS, cycle.stories_target);
 
-      for (const u of allUsersR.rows) {
-        const isAdm = u.role === "super_admin" || u.role === "admin";
-        if (!isAdm && !allowedUserIds.has(u.id)) continue;
-        if (!perUser[u.username]) perUser[u.username] = { chatId: u.telegram_chat_id, stats: [] };
-        perUser[u.username].stats.push({
-          label: project.label,
-          remK,
-          remS,
-          weekK,
-          weekS,
-          overallP,
-          periodEnd: cycle.period_end,
-        });
+        const permR = await db.query(`select user_id from permissions where project_id = $1`, [project.id]);
+        const allowedUserIds = new Set(permR.rows.map((r) => r.user_id));
+
+        for (const u of allUsersR.rows) {
+          const isAdm = u.role === "super_admin" || u.role === "admin";
+          if (!isAdm && !allowedUserIds.has(u.id)) continue;
+          if (!perUser[u.username]) perUser[u.username] = { chatId: u.telegram_chat_id, stats: [] };
+          perUser[u.username].stats.push({
+            label: project.label,
+            remK,
+            remS,
+            weekK,
+            weekS,
+            overallP,
+            periodEnd: cycle.period_end,
+          });
+        }
       }
     }
 
