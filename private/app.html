@@ -5592,6 +5592,14 @@
       function renderTaskChecklist(taskId, items, canEdit) {
         const target = document.getElementById("td-checklist");
         if (!target) return;
+        // Bandlar ham, qo'shish imkoniyati ham bo'lmasa (masalan o'zgartira
+        // olmaydigan kishi ochgan bo'sh checklist) — butunlay bo'sh qoldiramiz,
+        // aks holda sarlavha ostida hech narsa ko'rinmay g'alati bo'lib qolardi.
+        if (!items.length && !canEdit) {
+          target.innerHTML = "";
+          return;
+        }
+        const doneCount = items.filter((it) => it.done).length;
         const rows = items
           .map(
             (it) => `<div class="td-check-row">
@@ -5602,6 +5610,7 @@
           )
           .join("");
         target.innerHTML = `
+          <div class="rail-title">Checklist${items.length ? ` · ${doneCount}/${items.length}` : ""}</div>
           ${rows}
           ${
             canEdit
