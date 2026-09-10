@@ -39,7 +39,7 @@ const {
   resolveRecipients,
   notifyCheckChange,
   notifyTaskAssigned,
-  notifyTeamTaskEvent,
+  notifyTaskEvent,
   notifyProjectAssigned,
   projectPct,
   buildPacingMessage,
@@ -1359,22 +1359,21 @@ app.post("/api/tasks", auth, async (req, res) => {
       });
     }
 
-    // Jamoaviy bildirishnoma — Vazifalar bo'limidagi barcha o'zgarishlar
-    // hammaga ko'rinishi kerak degan talab bo'yicha, yangi vazifa
-    // yaratilgani haqida (mas'uldan tashqari — u yuqorida o'zining
-    // batafsil xabarini oldi).
+    // Nazorat xabari — faqat adminlarga, yangi vazifa yaratilgani haqida
+    // (mas'ul bunga kirmaydi, u yuqorida o'zining batafsil shaxsiy
+    // xabarini oldi — hammaga yubormaymiz, aks holda daxldor bo'lmagan
+    // xodimlar oqimida yo'qolib ketadi).
     if (req.body.notifyTelegram !== false) {
-      const teamText =
+      const overviewText =
         `📋 <b>@${req.user.username}</b> yangi vazifa yaratdi` +
         (task.assigneeName ? ` — <b>${task.assigneeName}</b>ga` : "") +
         `\n${task.title}` +
         (task.dueDate ? `\n📅 Muddat: ${task.dueDate}` : "");
-      notifyTeamTaskEvent(db, {
-        excludeUserIds: assigneeUserId ? [assigneeUserId] : [],
-        excludeUsernames: [req.user.username],
-        text: teamText,
+      notifyTaskEvent(db, {
+        actorUserId: req.user.id,
+        overviewText,
         taskId: task.id,
-      }).catch((e) => console.error("Jamoaviy bildirishnoma xatosi:", e.message));
+      }).catch((e) => console.error("Nazorat bildirishnomasi xatosi:", e.message));
     }
 
     res.json({ ok: true, task, notify });
@@ -1508,16 +1507,25 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
       await logTaskActivity(req.params.id, req.user.id, "status_change", {
         detail: `${before.status}:${task.status}`,
       });
-      // Jamoaviy bildirishnoma — status o'zgarishi ham hammaga ko'rinishi
-      // kerak degan talab bo'yicha (o'zgartirgan kishidan tashqari).
+      // Bildirishnoma — endi faqat tegishli odamlarga: mas'ulga shaxsiy
+      // shaklda ("Vazifangiz holati o'zgardi"), yaratuvchi va
+      // adminlarga esa nazorat shaklida. Boshqa xodimlarga yubormaymiz —
+      // bu ularning ishi emas.
       if (req.body.notifyTelegram !== false) {
-        const teamText =
-          `🔄 <b>@${req.user.username}</b>: <b>${task.title}</b>\n` +
-          `${TASK_STATUS_LABEL_UZ[before.status] || before.status} → ${TASK_STATUS_LABEL_UZ[task.status] || task.status}` +
+        const statusLine =
+          `${TASK_STATUS_LABEL_UZ[before.status] || before.status} → ${TASK_STATUS_LABEL_UZ[task.status] || task.status}`;
+        const personalText = `🔄 <b>Vazifangiz holati o'zgardi</b>\n${task.title}\n${statusLine}`;
+        const overviewText =
+          `🔄 <b>@${req.user.username}</b>: <b>${task.title}</b>\n${statusLine}` +
           (task.assigneeName ? `\n👤 ${task.assigneeName}` : "");
-        notifyTeamTaskEvent(db, { excludeUsernames: [req.user.username], text: teamText, taskId: task.id }).catch((e) =>
-          console.error("Jamoaviy bildirishnoma xatosi:", e.message),
-        );
+        notifyTaskEvent(db, {
+          actorUserId: req.user.id,
+          assigneeUserId: existing.assignee_user_id,
+          createdByUserId: existing.created_by,
+          personalText,
+          overviewText,
+          taskId: task.id,
+        }).catch((e) => console.error("Vazifa bildirishnomasi xatosi:", e.message));
       }
     }
     if (task.priority !== before.priority) {
@@ -1551,13 +1559,16 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
         console.error("Task bildirishnomasi xatosi:", e.message);
         return { attempted: true, ok: false, reason: e.message };
       });
-      const teamText = `👤 <b>@${req.user.username}</b>: <b>${task.title}</b> vazifasi ${task.assigneeName || "boshqa xodim"}ga qayta biriktirildi`;
-      notifyTeamTaskEvent(db, {
-        excludeUserIds: [newAssigneeUserId],
-        excludeUsernames: [req.user.username],
-        text: teamText,
+      // Yangi mas'ul allaqachon shaxsiy xabar oldi (yuqorida) — bu esa
+      // faqat yaratuvchi va adminlar uchun nazorat xabari.
+      const overviewText = `👤 <b>@${req.user.username}</b>: <b>${task.title}</b> vazifasi ${task.assigneeName || "boshqa xodim"}ga qayta biriktirildi`;
+      notifyTaskEvent(db, {
+        actorUserId: req.user.id,
+        createdByUserId: existing.created_by,
+        overviewText,
         taskId: task.id,
-      }).catch((e) => console.error("Jamoaviy bildirishnoma xatosi:", e.message));
+        excludeUserIds: [newAssigneeUserId],
+      }).catch((e) => console.error("Vazifa bildirishnomasi xatosi:", e.message));
     }
 
     res.json({ ok: true, task, notify });

@@ -4076,7 +4076,7 @@
       let dashProjFilter = "all"; // faqat katta ekran — Boshqaruv paneli jadvali
       let tagsList = []; // barcha mavjud taglar ({id,name}) — /api/tags
       let taskBoardFilter = { assignee: "", priority: "", tag: "", q: "" };
-      let taskScope = "menda"; // mobil: "menda" | "jamoada" (faqat admin)
+      let taskScope = "menda"; // mobil va desktop: "menda" | "jamoada" — ikkalasida ham baravar
       let taskScopeInitialized = false; // renderTasksScreen()dagi bir martalik aqlli standart uchun
       let taskStatusChip = "all"; // mobil: status-chip filtri
       let taskOpenFilter = "ochiq"; // desktop board: "ochiq" | "barchasi" (Bajarildi/Arxiv ustunlarini ko'rsatish)
@@ -5287,10 +5287,11 @@
       // — Bajarildi/Arxiv ustunlarini yashirish/ko'rsatish (faqat vizual,
       // backend so'rovi o'zgarmaydi).
       function buildTasksDesktopHtml(allTasks, workload) {
+        const scoped = taskScope === "menda" ? allTasks.filter((t) => t.assigneeUsername === currentUser) : allTasks;
         const cols = taskOpenFilter === "barchasi" ? TASK_BOARD_COLUMNS : TASK_BOARD_COLUMNS.filter((c) => c.key !== "done" && c.key !== "archive");
         const colsHtml = cols
           .map((col) => {
-            const items = sortTasksForBoard(allTasks.filter((t) => taskBoardColumn(t) === col.key));
+            const items = sortTasksForBoard(scoped.filter((t) => taskBoardColumn(t) === col.key));
             // Bo'sh ustunda "Bo'sh" deb yozilmaydi — shunchaki jim turadi.
             const cards = items.map(buildTaskCardHtml).join("");
             const addBtn = col.key === "archive" ? "" : `<button class="kanban-add" onclick="openNewTaskSheet()" title="Yangi vazifa">+</button>`;
@@ -5314,23 +5315,33 @@
           })
           .join("");
         return `<div class="desktop-only">
-          <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap">
+            <div class="seg" style="margin-top:0;width:180px">
+              <button class="seg-btn${taskScope === "menda" ? " active" : ""}" onclick="setTaskScope('menda')">Menda</button>
+              <button class="seg-btn${taskScope === "jamoada" ? " active" : ""}" onclick="setTaskScope('jamoada')">Jamoada</button>
+            </div>
             <div class="chip-group">
               <button class="chip-btn${taskOpenFilter === "ochiq" ? " active" : ""}" onclick="setTaskOpenFilter('ochiq')">Ochiq</button>
               <button class="chip-btn${taskOpenFilter === "barchasi" ? " active" : ""}" onclick="setTaskOpenFilter('barchasi')">Barchasi</button>
             </div>
           </div>
           ${buildWorkloadRowHtml(workload)}
-          <div class="kanban" style="grid-template-columns:repeat(${cols.length},1fr);margin-top:${workload.length ? "16px" : "0"}">${colsHtml}</div>
+          ${
+            taskScope === "menda" && !scoped.length
+              ? `<div class="empty"><div class="empty-ico">✓</div><div class="empty-t">Sizga biriktirilgan vazifa yo'q</div><div class="empty-s">"Jamoada" tugmasi orqali boshqa xodimlarning vazifalarini ko'rishingiz mumkin.</div></div>`
+              : `<div class="kanban" style="grid-template-columns:repeat(${cols.length},1fr);margin-top:${workload.length ? "16px" : "0"}">${colsHtml}</div>`
+          }
         </div>`;
       }
       function setTaskOpenFilter(v) {
         taskOpenFilter = v;
         renderTasksBody();
       }
-      // Mobil: status-chip filtri + (admin uchun) Menda/Jamoada almashtirgich.
-      // "Jamoada"da xodim bo'yicha guruhlangan ko'rinish — oddiy xodimga
-      // ko'rsatilmaydi, chunki /api/tasks ularga faqat o'z vazifalarini beradi.
+      // Mobil: status-chip filtri + Menda/Jamoada almashtirgich (hammaga
+      // ochiq). /api/tasks HAR BIR foydalanuvchiga barcha vazifalarni
+      // qaytaradi (backendda scope yo'q) — "Menda" filtri shu list ustida
+      // faqat frontendda qo'llanadi, "Jamoada"da esa xodim bo'yicha
+      // guruhlangan ko'rinishga o'tadi.
       function buildTasksMobileHtml(allTasks, workload) {
         const chipsHtml = TASK_BOARD_COLUMNS.map((col) => {
           const count = allTasks.filter((t) => taskBoardColumn(t) === col.key).length;

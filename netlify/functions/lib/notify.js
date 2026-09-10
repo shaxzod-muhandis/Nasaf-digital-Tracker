@@ -144,24 +144,53 @@ async function notifyTaskAssigned(db, { assigneeUserId, task, actorUsername }) {
   return { attempted: true, ok: result.ok, reason: result.ok ? null : result.error || "send_failed" };
 }
 
-// Butun jamoaga vazifa hodisasi haqida qisqa xabar yuboradi (Vazifalar
-// bo'limidagi barcha o'zgarishlar hammaga ko'rinishi kerak degan talab
-// bo'yicha) — faol (is_active) va Telegram chat ID'si saqlangan HAR BIR
-// userga, ko'rsatilgan id/username'lardan tashqari (masalan, allaqachon
-// o'zining alohida batafsil xabarini olgan yangi mas'ul, yoki hodisani
-// o'zi qilgan actor).
-async function notifyTeamTaskEvent(db, { excludeUserIds = [], excludeUsernames = [], text, taskId }) {
+// Vazifa hodisasi (status o'zgarishi, qayta biriktirilishi, yangi
+// vazifa) haqida — endi HAMMAGA emas, faqat tegishli odamlarga:
+//   - mas'ulga (`assigneeUserId`) — `personalText` bilan ("Sizning
+//     vazifangiz..."), chunki bu haqiqatan HAM uning ishi;
+//   - vazifani yaratganga (`createdByUserId`) va barcha admin/super
+//     admin'larga — `overviewText` bilan (nazorat uchun umumiy shakl).
+// Actor va `excludeUserIds` (masalan, allaqachon notifyTaskAssigned
+// orqali shaxsiy xabar olgan yangi mas'ul) har doim chetlab o'tiladi.
+// Ilgari bu joyda har bir vazifa hodisasi FAOL bo'lgan HAR BIR xodimga
+// yuborilardi — shu sabab xodimlar o'zlariga tegishli xabarni boshqalar
+// haqidagi oqim ichida topa olmay qiynalishgan (2026-09-10 fikr-mulohaza).
+async function notifyTaskEvent(
+  db,
+  { actorUserId, assigneeUserId, createdByUserId, personalText, overviewText, taskId, excludeUserIds = [] },
+) {
   if (!process.env.BOT_TOKEN) return { attempted: false, ok: false, reason: "no_bot_token" };
-  const r = await db.query(
-    `select id, username, telegram_chat_id from users
-     where is_active = true and telegram_chat_id is not null
-       and not (id = any($1::uuid[]))
-       and not (lower(username) = any($2::text[]))`,
-    [excludeUserIds, excludeUsernames.map((u) => String(u).toLowerCase())],
-  );
+  const excluded = new Set([actorUserId, ...excludeUserIds].filter(Boolean).map(String));
   const replyMarkup = appOpenButton(taskId ? `?openTask=${taskId}` : "");
-  await Promise.allSettled(r.rows.map((u) => sendMsg(db, u.telegram_chat_id, text, { replyMarkup })));
-  return { attempted: true, ok: true, recipients: r.rows.length };
+  const sentTo = new Set();
+  const jobs = [];
+
+  if (assigneeUserId && personalText && !excluded.has(String(assigneeUserId))) {
+    const ur = await db.query(`select telegram_chat_id from users where id = $1`, [assigneeUserId]);
+    const chatId = ur.rows[0]?.telegram_chat_id;
+    if (chatId) {
+      sentTo.add(String(assigneeUserId));
+      jobs.push(sendMsg(db, chatId, personalText, { replyMarkup }));
+    }
+  }
+
+  if (overviewText) {
+    const r = await db.query(
+      `select id, telegram_chat_id from users
+       where is_active = true and telegram_chat_id is not null
+         and (role in ('super_admin','admin') or id = $1)`,
+      [createdByUserId || null],
+    );
+    r.rows.forEach((u) => {
+      const id = String(u.id);
+      if (excluded.has(id) || sentTo.has(id)) return;
+      sentTo.add(id);
+      jobs.push(sendMsg(db, u.telegram_chat_id, overviewText, { replyMarkup }));
+    });
+  }
+
+  await Promise.allSettled(jobs);
+  return { attempted: true, ok: true, recipients: sentTo.size };
 }
 
 // Loyihaga ruxsat berilganda bildirishnoma yuboradi (kim berganini
@@ -225,7 +254,7 @@ module.exports = {
   resolveRecipients,
   notifyCheckChange,
   notifyTaskAssigned,
-  notifyTeamTaskEvent,
+  notifyTaskEvent,
   notifyProjectAssigned,
   progressEmoji,
   pct,
