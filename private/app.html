@@ -3377,6 +3377,13 @@
           align-items: center;
           justify-content: flex-end;
           height: 100%;
+          cursor: pointer;
+          padding: 6px 2px 0;
+          border-radius: 8px;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .wk-bar-col:active {
+          background: var(--surf2);
         }
         .wk-bar-track {
           position: relative;
@@ -3385,7 +3392,6 @@
           border-radius: 4px;
           background: var(--chip3);
           overflow: visible;
-          cursor: default;
         }
         .wk-bar-fill {
           position: absolute;
@@ -3394,23 +3400,32 @@
           bottom: 0;
           border-radius: 4px;
           background: var(--brand);
+          opacity: 0.45;
         }
-        .wk-bar-drop {
-          position: absolute;
-          left: 50%;
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          background: var(--brand);
-          border: 2px solid #fff;
-          box-shadow: 0 0 0 1px var(--bd2);
-          transform: translate(-50%, 50%);
+        .wk-bar-col.active .wk-bar-fill {
+          opacity: 1;
+        }
+        .wk-bar-col.active .wk-bar-track {
+          box-shadow: 0 0 0 2px var(--brand);
         }
         .wk-bar-lbl {
           font-size: 9.5px;
           color: var(--t3);
           text-align: center;
           margin-top: 6px;
+        }
+        .wk-bar-col.active .wk-bar-lbl {
+          color: var(--brand);
+          font-weight: 700;
+        }
+        .wk-detail {
+          margin-top: 10px;
+        }
+        .wk-detail-title {
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--t3);
+          margin-bottom: 6px;
         }
 
         /* ── Loyihalar/Vazifalar: kartochka to'ri va kanban ──────────── */
@@ -6455,29 +6470,62 @@
       }
       // Haftalik progress grafigi: ustun balandligi shu haftadagi umumiy
       // hajmni (post+stories), to'ldirilgan qism esa bajarilish foizini
-      // bildiradi. Ustiga qo'yilgan "tomchi" belgisi to'ldirilgan chegara
-      // — hover qilinganda aniq raqamlar (rejalashtirilgan/bajarilgan)
-      // ko'rsatiladi.
+      // bildiradi. Tafsilot hover orqali emas — ustunning o'ziga
+      // bosish/tegish orqali pastdagi doimiy ko'rinadigan panelda
+      // ochiladi (mobilda hover ishlamaydi, nuqtaga aniq tegish qiyin
+      // edi — endi butun ustun bitta katta bosish nishoni).
       function buildWeeklyProgressHtml(p) {
         const weekly = computeWeeklyProgress(p);
         const volumes = weekly.map((r) => Math.max(r.plannedK + r.plannedS, r.doneK + r.doneS));
         const maxVolume = Math.max(1, ...volumes);
-        return weekly
+
+        // Standart tanlangan hafta — bugungi kun tushadigan hafta.
+        const start = parseISO(p.periodStart);
+        const end = parseISO(p.periodEnd);
+        const totalDays = daysBetween(start, end) + 1;
+        let elapsedIdx = daysBetween(start, todayDate());
+        if (elapsedIdx < 0) elapsedIdx = 0;
+        if (elapsedIdx > totalDays - 1) elapsedIdx = totalDays - 1;
+        const defaultWeek = Math.min(
+          weekly.length - 1,
+          Math.floor((elapsedIdx / totalDays) * weekly.length),
+        );
+
+        const barsHtml = weekly
           .map((r, w) => {
             const planned = r.plannedK + r.plannedS;
             const done = r.doneK + r.doneS;
             const fillPct = planned > 0 ? Math.min(100, Math.round((done / planned) * 100)) : done > 0 ? 100 : 0;
             const trackH = Math.max(10, Math.round((volumes[w] / maxVolume) * 52));
-            const tip = `Post: ${r.plannedK}/${r.doneK}\nStories: ${r.plannedS}/${r.doneS}`;
-            return `<div class="wk-bar-col">
-              <div class="wk-bar-track" style="height:${trackH}px" title="${escHtml(tip)}">
+            return `<div class="wk-bar-col${w === defaultWeek ? " active" : ""}" onclick="showWeekDetail(this,'${escArg(p.id)}',${w})">
+              <div class="wk-bar-track" style="height:${trackH}px">
                 <div class="wk-bar-fill" style="height:${fillPct}%"></div>
-                <div class="wk-bar-drop" style="bottom:${fillPct}%"></div>
               </div>
               <div class="wk-bar-lbl">${w + 1}-h</div>
             </div>`;
           })
           .join("");
+
+        return `<div class="wk-bars">${barsHtml}</div>
+          <div class="wk-detail" id="wk-detail">${weekDetailHtml(weekly[defaultWeek], defaultWeek)}</div>`;
+      }
+      function weekDetailHtml(r, w) {
+        return `<div class="wk-detail-title">${w + 1}-hafta</div>
+          <div class="mini-stat-row">
+            <div class="mini-stat"><div class="mini-stat-val">${r.doneK}/${r.plannedK}</div><div class="mini-stat-lbl">Post</div></div>
+            <div class="mini-stat"><div class="mini-stat-val">${r.doneS}/${r.plannedS}</div><div class="mini-stat-lbl">Stories</div></div>
+          </div>`;
+      }
+      function showWeekDetail(el, projectId, w) {
+        const p = projects.find((pr) => pr.id === projectId);
+        if (!p) return;
+        const weekly = computeWeeklyProgress(p);
+        if (!weekly[w]) return;
+        el.parentElement
+          .querySelectorAll(".wk-bar-col")
+          .forEach((c) => c.classList.toggle("active", c === el));
+        const detailEl = el.closest(".rail-card")?.querySelector("#wk-detail");
+        if (detailEl) detailEl.innerHTML = weekDetailHtml(weekly[w], w);
       }
 
       function buildTrackerRailHtml(p) {
@@ -6556,7 +6604,7 @@
           </div>
           <div class="rail-card">
             <div class="rail-title">Haftalik progress</div>
-            <div class="wk-bars">${barsHtml}</div>
+            ${barsHtml}
             <div class="f-hint">${advisory}</div>
           </div>`;
       }
