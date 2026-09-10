@@ -6337,23 +6337,24 @@
         const todayKey = isoOf(today);
         const kToday = buildDayMap(p, "k")[todayKey] || [];
         const sToday = buildDayMap(p, "s")[todayKey] || [];
-        const doneRow = (type, n, label) => {
+        const doneRow = (type, n, idx) => {
           const info = det[`${type}-${n}`] || {};
           const who = [info.editorName, info.videographerName]
             .filter(Boolean)
             .join(" · ");
+          const label = `${idx}-${type === "k" ? "post" : "stories"}`;
           return `<div class="today-task done" onclick="openCheckModal('${escArg(p.id)}','${type}',${n})">
             <div class="today-box checked">✓</div>
             <div style="flex:1;min-width:0">
-              <div class="today-lbl" style="text-decoration:none">${label} ${n}</div>
+              <div class="today-lbl" style="text-decoration:none">${label}</div>
               ${who ? `<div class="r-sub">${escHtml(who)}</div>` : ""}
             </div>
             <div class="chev">›</div>
           </div>`;
         };
         let todayHtml = "";
-        kToday.forEach((n) => (todayHtml += doneRow("k", n, "Post")));
-        sToday.forEach((n) => (todayHtml += doneRow("s", n, "Stories")));
+        kToday.forEach((n, i) => (todayHtml += doneRow("k", n, i + 1)));
+        sToday.forEach((n, i) => (todayHtml += doneRow("s", n, i + 1)));
         if (!todayHtml)
           todayHtml = `<div style="padding:16px 14px;font-size:12.5px;color:var(--t3)">Bugun hali hech narsa belgilanmagan</div>`;
 
@@ -6481,15 +6482,19 @@
 
       function buildTrackerRailHtml(p) {
         const todayItems = buildTodayItems(p);
+        let kTodayIdx = 0,
+          sTodayIdx = 0;
         const todayHtml = todayItems.length
           ? todayItems
-              .map(
-                (it) => `<div class="rail-item">
+              .map((it) => {
+                const idx = it.type === "k" ? ++kTodayIdx : ++sTodayIdx;
+                const label = `${idx}-${it.type === "k" ? "post" : "stories"}`;
+                return `<div class="rail-item">
                   <div style="flex:1;min-width:0">
-                    <div class="r-name">${it.type === "k" ? "Post" : "Stories"} ${it.n}</div>
+                    <div class="r-name">${label}</div>
                   </div>
-                </div>`,
-              )
+                </div>`;
+              })
               .join("")
           : `<div style="font-size:12px;color:var(--t3)">Bugun hali hech narsa belgilanmagan</div>`;
 
