@@ -8,6 +8,18 @@
     />
     <meta name="format-detection" content="telephone=no" />
     <title>Nasaf Digital — Tracker</title>
+    <script>
+      // Saqlangan tema (agar bo'lsa) CSS chizishdan OLDIN qo'llanadi —
+      // aks holda sahifa avval yorug' holatda chaqnab, keyin qorong'iga
+      // o'tib qolardi (FOUC).
+      (function () {
+        try {
+          if (localStorage.getItem("nasaf_theme") === "dark") {
+            document.documentElement.setAttribute("data-theme", "dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -31,6 +43,13 @@
         --surf2: #fafbfc;
         --brand: #2f7ab9;
         --ink: #0f172a;
+        /* --ink matn rangi — temaga qarab o'zgaradi. --inkfill esa
+           "to'liq to'q fon + ustida oq matn" elementlari (toast, faol
+           chip, avatar, tugma) uchun — bu ATAYLAB ikkala temada ham
+           bir xil qoladi (pastda qorong'i tema blokida qayta
+           yozilmaydi), aks holda qorong'i temada bu fon ham
+           yorishib, ustidagi oq matn/harflar ko'rinmay qolardi. */
+        --inkfill: #0f172a;
         --t2: #6b7280;
         --t3: #8b929c;
         --t4: #9aa1ac;
@@ -70,6 +89,50 @@
            Telegram.WebApp.safeAreaInset/contentSafeAreaInset'dan
            to'ldiradi (initApp, applyTelegramSafeArea). */
         --tg-safe-top: 0px;
+      }
+
+      /* ── DARK TEMA — Profil ekranidagi "Ilova ko'rinishi" tugmasi
+         orqali tanlanadi (setTheme(), localStorage'da saqlanadi).
+         Har bir token o'zining yorug' ma'nosini saqlab qoladi (masalan
+         --surf hamon "karta yuzasi" degani), faqat rang qorong'i
+         fonga mos qilib qayta hisoblangan. ────────────────────────── */
+      :root[data-theme="dark"] {
+        --bg: #0e1116;
+        --surf: #171b22;
+        --surf2: #1c212a;
+        --brand: #5aa3dd;
+        --ink: #eceef1;
+        --t2: #9aa3b0;
+        --t3: #7d8590;
+        --t4: #6b7280;
+        --t5: #c7ccd4;
+        --chev: #5b6270;
+        --red: #f0554a;
+        --red-bg: rgba(240, 85, 74, 0.16);
+        --red-bd: rgba(240, 85, 74, 0.4);
+        --red-bd2: rgba(240, 85, 74, 0.45);
+        --bd1: rgba(255, 255, 255, 0.08);
+        --bd2: rgba(255, 255, 255, 0.1);
+        --bd3: rgba(255, 255, 255, 0.12);
+        --bd4: rgba(255, 255, 255, 0.18);
+        --chip: #232833;
+        --chip2: #272d38;
+        --chip3: #2b313d;
+        --sw-off: #3a4048;
+        --nav-off: #5b6270;
+        --amber: #f0a836;
+        --amber-bg: rgba(217, 119, 6, 0.18);
+        --amber-ink: #f0c479;
+        --teal: #34d3a8;
+        --teal-bg: rgba(30, 107, 87, 0.22);
+        --tagblue: #6db3ea;
+        --tagblue-bg: rgba(35, 96, 143, 0.22);
+        --purple: #a89bf0;
+        --purple-bg: rgba(75, 65, 168, 0.22);
+        --pink: #e39cbe;
+        --pink-bg: rgba(146, 52, 95, 0.22);
+        --green: #34d066;
+        --red-tint: rgba(240, 85, 74, 0.08);
       }
 
       html {
@@ -151,7 +214,7 @@
         left: 50%;
         bottom: calc(96px + env(safe-area-inset-bottom, 0px));
         transform: translate(-50%, 12px);
-        background: var(--ink);
+        background: var(--inkfill);
         color: #fff;
         font-size: 12.5px;
         font-weight: 500;
@@ -188,7 +251,7 @@
       }
       .hdr {
         background: var(--surf);
-        border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+        border-bottom: 1px solid var(--bd1);
         padding: calc(14px + var(--tg-safe-top)) 20px 14px;
         flex-shrink: 0;
       }
@@ -322,7 +385,7 @@
         background: rgba(255, 255, 255, 0.22);
       }
       .tempo-seg.done {
-        background: #fff;
+        background: var(--surf);
       }
       .tempo-seg.now {
         outline: 1.5px solid var(--red);
@@ -342,7 +405,7 @@
       /* ── QARZ OGOHLANTIRISHI ────────────────────────────────────── */
       .debt-card {
         margin-top: 14px;
-        background: #fff;
+        background: var(--surf);
         border: 1px solid var(--red-bd2);
         border-radius: 14px;
         padding: 14px 15px;
@@ -378,7 +441,7 @@
         height: 32px;
         padding: 0 12px;
         border-radius: 9px;
-        background: var(--ink);
+        background: var(--inkfill);
         color: #fff;
         font-weight: 600;
         font-size: 12px;
@@ -414,7 +477,7 @@
 
       /* ── RO'YXAT KARTASI ────────────────────────────────────────── */
       .list-card {
-        background: #fff;
+        background: var(--surf);
         border: 1px solid var(--bd2);
         border-radius: 14px;
         overflow: hidden;
@@ -467,7 +530,7 @@
         width: 28px;
         height: 28px;
         border-radius: 99px;
-        background: #fff;
+        background: var(--surf);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -507,7 +570,7 @@
 
       /* ── XULOSA KARTASI (bosh sahifa: vazifalar, progress) ───────── */
       .rail-card {
-        background: #fff;
+        background: var(--surf);
         border: 1px solid var(--bd2);
         border-radius: 14px;
         padding: 16px;
@@ -630,7 +693,7 @@
         cursor: pointer;
       }
       .chip-btn.active {
-        background: var(--ink);
+        background: var(--inkfill);
         color: #fff;
         font-weight: 600;
       }
@@ -692,7 +755,7 @@
       /* ── TRACKER ────────────────────────────────────────────────── */
       .trk-hdr {
         background: var(--surf);
-        border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+        border-bottom: 1px solid var(--bd1);
         padding: calc(10px + var(--tg-safe-top)) 20px 13px;
         flex-shrink: 0;
       }
@@ -755,7 +818,7 @@
         cursor: pointer;
       }
       .seg-btn.active {
-        background: #fff;
+        background: var(--surf);
         color: var(--ink);
         font-weight: 600;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07);
@@ -843,7 +906,7 @@
         opacity: 0.7;
       }
       .cal-cell.pending {
-        background: #fff;
+        background: var(--surf);
         border: 1px solid var(--bd2);
       }
       .cal-cell.done {
@@ -866,7 +929,7 @@
         font-weight: 700;
       }
       .cal-cell.today {
-        background: #fff;
+        background: var(--surf);
         border: 2px solid var(--brand);
       }
       .cal-cell.today .cn {
@@ -960,7 +1023,7 @@
         height: 32px;
         border-radius: 8px;
         border: 1.5px solid var(--bd4);
-        background: #fff;
+        background: var(--surf);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1587,7 +1650,7 @@
         width: 32px;
         height: 32px;
         border-radius: 9px;
-        background: var(--ink);
+        background: var(--inkfill);
         color: #fff;
         display: flex;
         align-items: center;
@@ -1651,7 +1714,7 @@
         flex-shrink: 0;
       }
       .tglsw.on {
-        background: var(--ink);
+        background: var(--inkfill);
         justify-content: flex-end;
       }
       .tglsw.brand.on {
@@ -1661,7 +1724,7 @@
         width: 20px;
         height: 20px;
         border-radius: 99px;
-        background: #fff;
+        background: var(--surf);
       }
       .m-item {
         padding: 12px 14px;
@@ -1671,7 +1734,7 @@
         align-items: center;
         gap: 10px;
         margin-bottom: 8px;
-        background: #fff;
+        background: var(--surf);
       }
       .m-item-info {
         flex: 1;
@@ -1809,7 +1872,7 @@
         border-radius: 9px;
       }
       .kcard {
-        background: #fff;
+        background: var(--surf);
         border: 1px solid var(--bd3);
         border-radius: 12px;
         padding: 13px;
@@ -1953,7 +2016,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        background: #fff;
+        background: var(--surf);
         border: 1px solid var(--bd2);
         border-radius: 12px;
         padding: 8px 12px;
@@ -1981,7 +2044,7 @@
       /* ── VAZIFA DETALI PANELI ───────────────────────────────────────── */
       .td-hdr {
         background: var(--surf);
-        border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+        border-bottom: 1px solid var(--bd1);
         padding: calc(10px + var(--tg-safe-top)) 20px 10px;
         flex-shrink: 0;
         display: flex;
@@ -2078,7 +2141,7 @@
         color: #fff;
       }
       .td-status-btn.solid-green .dot {
-        background: #fff;
+        background: var(--surf);
       }
       .td-status-btn.tint-amber {
         background: var(--amber-bg);
@@ -2114,7 +2177,7 @@
         padding: 11px 13px;
         border: 1px solid var(--bd2);
         border-radius: 11px;
-        background: #fff;
+        background: var(--surf);
         margin-bottom: 10px;
       }
       .td-check-box {
@@ -2258,7 +2321,7 @@
         white-space: nowrap;
       }
       .atab.active {
-        background: #fff;
+        background: var(--surf);
         color: var(--ink);
         font-weight: 600;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07);
@@ -2266,7 +2329,7 @@
 
       /* ── TARIX ──────────────────────────────────────────────────── */
       .hist-card {
-        background: #fff;
+        background: var(--surf);
         border: 1px solid var(--bd2);
         border-radius: 14px;
         margin-bottom: 8px;
@@ -2351,7 +2414,7 @@
         height: 34px;
         border-radius: 9px;
         border: 1px solid var(--bd4);
-        background: #fff;
+        background: var(--surf);
         color: var(--t5);
         font-size: 12.5px;
         padding: 0 10px;
@@ -2437,7 +2500,7 @@
         padding: 0 13px;
         font-size: 14px;
         color: var(--ink);
-        background: #fff;
+        background: var(--surf);
         outline: none;
       }
       .f-input:focus {
@@ -2515,7 +2578,7 @@
         border-radius: 12px;
         margin-bottom: 8px;
         overflow: hidden;
-        background: #fff;
+        background: var(--surf);
       }
       .cycle-item-top {
         padding: 12px 14px;
@@ -2575,7 +2638,7 @@
       }
       .ptag {
         border: 1px solid var(--bd4);
-        background: #fff;
+        background: var(--surf);
         color: var(--t5);
         border-radius: 8px;
         padding: 6px 10px;
@@ -2606,7 +2669,7 @@
         padding: 0 13px;
         font-size: 14px;
         color: var(--ink);
-        background: #fff;
+        background: var(--surf);
         display: flex;
         align-items: center;
         gap: 9px;
@@ -2633,7 +2696,7 @@
         position: fixed;
         z-index: 850;
         width: 280px;
-        background: #fff;
+        background: var(--surf);
         border-radius: 14px;
         box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18), 0 2px 8px rgba(15, 23, 42, 0.08);
         border: 1px solid var(--bd2);
@@ -2796,7 +2859,7 @@
           width: 24px;
           height: 24px;
           border-radius: 50%;
-          background: #fff;
+          background: var(--surf);
           border: 1px solid var(--bd2);
           display: flex;
           align-items: center;
@@ -3223,7 +3286,7 @@
           margin-bottom: 20px;
         }
         .stat-card {
-          background: #fff;
+          background: var(--surf);
           border: 1px solid var(--bd2);
           border-radius: 14px;
           padding: 18px;
@@ -3259,7 +3322,7 @@
         }
         .stat-bar-fill {
           height: 100%;
-          background: #fff;
+          background: var(--surf);
           border-radius: 99px;
         }
         .stat-lbl {
@@ -3293,7 +3356,7 @@
           cursor: pointer;
         }
         .dtbl-wrap {
-          background: #fff;
+          background: var(--surf);
           border: 1px solid var(--bd2);
           border-radius: 14px;
           overflow: hidden;
@@ -3435,7 +3498,7 @@
           gap: 14px;
         }
         .pcard {
-          background: #fff;
+          background: var(--surf);
           border: 1px solid var(--bd2);
           border-radius: 14px;
           padding: 16px;
@@ -3473,7 +3536,7 @@
 
         /* ── Ruxsatlar matritsasi ─────────────────────────────────────── */
         .pmx-wrap {
-          background: #fff;
+          background: var(--surf);
           border: 1px solid var(--bd2);
           border-radius: 14px;
           overflow: auto;
@@ -3495,7 +3558,7 @@
           text-align: left;
           position: sticky;
           left: 0;
-          background: #fff;
+          background: var(--surf);
           z-index: 1;
           min-width: 190px;
         }
@@ -4090,6 +4153,25 @@
         kopirayter: "Kopirayter",
         boshqa: "Boshqa",
       };
+
+      // ── TEMA (Light/Dark) ────────────────────────────────────────
+      // Sahifa boshida (<head>dagi kichik inline skript) FOUC'siz
+      // qo'llash uchun localStorage'dan o'qilgan — shu yerdagi
+      // funksiyalar Profil ekranidagi tugma bosilganda ishlatiladi.
+      function getTheme() {
+        try {
+          return localStorage.getItem("nasaf_theme") === "dark" ? "dark" : "light";
+        } catch (e) {
+          return "light";
+        }
+      }
+      function setTheme(theme) {
+        if (theme === "dark") document.documentElement.setAttribute("data-theme", "dark");
+        else document.documentElement.removeAttribute("data-theme");
+        try {
+          localStorage.setItem("nasaf_theme", theme);
+        } catch (e) {}
+      }
 
       // ── UTILS ─────────────────────────────────────────────────────
       const getInitData = () => window.Telegram?.WebApp?.initData || "";
@@ -8234,7 +8316,20 @@
             <label class="f-label">Tug'ilgan sana</label>
             <input class="f-input" type="date" id="pf-birth" value="${p.birthDate ? String(p.birthDate).slice(0, 10) : ""}"/>
           </div>
+          <div class="f-group">
+            <label class="f-label">Ilova ko'rinishi</label>
+            <div class="seg" style="margin-top:0">
+              <button type="button" class="seg-btn pf-theme-btn${getTheme() === "light" ? " active" : ""}" data-theme="light" onclick="pfSetTheme('light')">Light (White)</button>
+              <button type="button" class="seg-btn pf-theme-btn${getTheme() === "dark" ? " active" : ""}" data-theme="dark" onclick="pfSetTheme('dark')">Dark</button>
+            </div>
+          </div>
           <button class="btn btn-blue" id="pf-save-btn" onclick="saveProfile()">Saqlash</button>`;
+      }
+      function pfSetTheme(theme) {
+        setTheme(theme);
+        document.querySelectorAll(".pf-theme-btn").forEach((b) => {
+          b.classList.toggle("active", b.dataset.theme === theme);
+        });
       }
       async function saveProfile() {
         const btn = document.getElementById("pf-save-btn");
@@ -8271,7 +8366,7 @@
         ov.style.cssText =
           "position:fixed;inset:0;z-index:550;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto";
         ov.innerHTML = `
-          <div style="background:#fff;border:1px solid var(--bd2);border-radius:16px;padding:28px 22px;max-width:360px;width:100%">
+          <div style="background:var(--surf);border:1px solid var(--bd2);border-radius:16px;padding:28px 22px;max-width:360px;width:100%">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
               <div style="width:28px;height:28px;border-radius:8px;background:var(--brand);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:11px">ND</div>
               <span style="font-size:13px;font-weight:600">Nasaf Digital</span>
@@ -8601,7 +8696,7 @@
             : "Faqat Nasaf Digital jamoasi kirishi mumkin";
         document.body.innerHTML = `
           <div style="min-height:100vh;min-height:100dvh;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px">
-            <div style="background:#fff;border:1px solid var(--bd2);border-radius:16px;padding:36px 24px;max-width:320px;width:100%;text-align:center">
+            <div style="background:var(--surf);border:1px solid var(--bd2);border-radius:16px;padding:36px 24px;max-width:320px;width:100%;text-align:center">
               <div style="width:52px;height:52px;border-radius:99px;background:var(--red-bg);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--red);font-weight:700">!</div>
               <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px">
                 <div style="width:28px;height:28px;border-radius:8px;background:var(--brand);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:11px">ND</div>
