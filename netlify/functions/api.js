@@ -1897,20 +1897,22 @@ app.post("/api/reminder/run", async (req, res) => {
     }
 
     // Vazifa "Tekshiruvda"ga o'tmaguncha (ya'ni backlog/todo/in_progress
-    // holatida turar ekan) muddati bugun tugasa yoki o'tib ketgan bo'lsa,
-    // xodimga eslatma boradi — tekshiruvga yuborilgach (yoki
-    // bajarilgan/bekor qilingan/bajarilmagan deb belgilangach) xodimning
-    // qo'lidan chiqqan hisoblanadi, shuning uchun ular bu ro'yxatga
-    // kirmaydi. Chastota (har kuni yoki kamroq) shu endpoint qanchalik
-    // tez-tez chaqirilishiga bog'liq — so'rov har chaqiriqda joriy
-    // holatni qayta hisoblaydi, shuning uchun alohida "yuborilganmi"
-    // belgisi kerak emas (har kuni chaqirilsa — kuniga bir marta boradi).
+    // holatida turar ekan) muddati YAQINLASHGANDA (2 kun qolganda),
+    // bugun tugaganda yoki o'tib ketganda xodimga eslatma boradi —
+    // tekshiruvga yuborilgach (yoki bajarilgan/bekor qilingan/
+    // bajarilmagan deb belgilangach) xodimning qo'lidan chiqqan
+    // hisoblanadi, shuning uchun ular bu ro'yxatga kirmaydi. Chastota
+    // (har kuni yoki kamroq) shu endpoint qanchalik tez-tez
+    // chaqirilishiga bog'liq — so'rov har chaqiriqda joriy holatni
+    // qayta hisoblaydi, shuning uchun alohida "yuborilganmi" belgisi
+    // kerak emas (har kuni chaqirilsa — kuniga bir marta boradi).
+    const REMINDER_LEAD_DAYS = 2;
     const overdueR = await db.query(
       `select t.title, t.status, t.due_date, u.username, u.first_name, u.telegram_chat_id
        from tasks t join users u on u.id = t.assignee_user_id
        where t.status not in ('review','done','failed','cancelled') and t.due_date is not null
          and t.due_date <= $1 and u.telegram_chat_id is not null and u.is_active`,
-      [today],
+      [addDays(today, REMINDER_LEAD_DAYS)],
     );
     const overdueByUser = {};
     overdueR.rows.forEach((row) => {
@@ -1930,11 +1932,14 @@ app.post("/api/reminder/run", async (req, res) => {
     }
     for (const [username, { chatId, items }] of Object.entries(overdueByUser)) {
       const lines = items
-        .map((it) =>
-          it.due_date === today
-            ? `📌 <b>${it.title}</b> — bugun tugaydi. Iltimos, bajarib qo'ying.`
-            : `❗ <b>${it.title}</b> — muddati (${it.due_date}) o'tib ketdi. Nima sababdan bajarilmadi? Vazifani yoping yoki uning holatini aniqlang.`,
-        )
+        .map((it) => {
+          const daysLeft = dayDiff(today, it.due_date); // musbat = hali oldinda, manfiy = o'tib ketgan
+          if (daysLeft < 0)
+            return `❗ <b>${it.title}</b> — muddati (${it.due_date}) o'tib ketdi. Nima sababdan bajarilmadi? Vazifani yoping yoki uning holatini aniqlang.`;
+          if (daysLeft === 0) return `📌 <b>${it.title}</b> — bugun tugaydi. Iltimos, bajarib qo'ying.`;
+          if (daysLeft === 1) return `⏰ <b>${it.title}</b> — ertaga tugaydi.`;
+          return `⏰ <b>${it.title}</b> — muddatiga ${daysLeft} kun qoldi.`;
+        })
         .join("\n");
       const name = items[0]?.first_name;
       const greeting = name ? `${name}, sizga` : "Sizga";

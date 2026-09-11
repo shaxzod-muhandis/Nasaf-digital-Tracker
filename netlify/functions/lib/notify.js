@@ -9,10 +9,15 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 // Mini App'ning haqiqiy manzili — bildirishnomalardagi "Ilovani ochish"
-// tugmasi va /start javobidagi doimiy menyu shu asosda quriladi. Kerak
-// bo'lsa (masalan custom domen qo'shilsa) Netlify'da APP_URL environment
-// o'zgaruvchisi orqali almashtiriladi.
-const APP_URL = (process.env.APP_URL || "https://nasaf-digital-tracker.netlify.app").replace(/\/$/, "");
+// tugmasi shu asosda quriladi. TO'G'RI YECHIM — Vercel'da APP_URL
+// environment o'zgaruvchisini o'zini sozlash (Netlify'dan Vercel'ga
+// ko'chgach, bu hech qachon sozlanmagan edi — natijada HAR BIR
+// bildirishnomadagi tugma pastdagi eski, endi muzlab qolgan Netlify
+// manziliga olib borar edi, real xodimlar o'sha yerdagi eski koddan
+// "hammaga umumiy xabar" muammosiga qayta-qayta duch kelishardi,
+// 2026-09-11). Shu yerdagi qiymat faqat oxirgi chora — ENV o'rnatilgan
+// bo'lsa, u ustun keladi.
+const APP_URL = (process.env.APP_URL || "https://nasaf-digital-tracker.vercel.app").replace(/\/$/, "");
 
 // Bitta "Ilovani ochish" tugmasi bo'lgan inline keyboard quradi. `path`
 // berilsa (masalan "?openTask=<id>"), bosilganda ilova to'g'ridan-to'g'ri
