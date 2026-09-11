@@ -5113,18 +5113,15 @@
           body.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
           return;
         }
-        // Aqlli standart: bo'limga birinchi marta kirilganda, agar
-        // foydalanuvchining o'ziga biriktirilgan OCHIQ vazifasi bo'lmasa,
-        // "Menda" bo'sh ko'rinib "vazifalar yo'qolgandek" taassurot
-        // qoldirmasin deb "Jamoada"dan boshlanadi. Faqat BIR marta (screen
-        // ochilganda) — foydalanuvchi keyin qo'lda "Menda"ni tanlasa, shu
-        // holatda qoladi.
+        // Standart holat — rolga qarab: oddiy xodim avval o'ziga
+        // tegishli vazifalarni ("Menda") ko'radi; admin/super admin esa
+        // odatda o'ziga vazifa biriktirmaydi (u boshqalarniki bilan
+        // shug'ullanadi), shuning uchun "Jamoada"dan boshlanadi. Faqat
+        // BIR marta (screen birinchi ochilganda) — foydalanuvchi keyin
+        // qo'lda boshqasini tanlasa, shu holatda qoladi.
         if (!taskScopeInitialized) {
           taskScopeInitialized = true;
-          const hasOwnOpenTask = tasksList.some(
-            (t) => t.assigneeUsername === currentUser && !["done", "failed", "cancelled"].includes(t.status),
-          );
-          if (!hasOwnOpenTask) taskScope = "jamoada";
+          taskScope = isAdmin ? "jamoada" : "menda";
         }
         renderTasksBody();
       }
