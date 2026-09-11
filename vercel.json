@@ -1,9 +1,10 @@
 {
-  "rewrites": [{ "source": "/", "destination": "/api/index" }],
+  "rewrites": [
+    { "source": "/", "destination": "/api/index" },
+    { "source": "/api/(.*)", "destination": "/api/index" }
+  ],
   "functions": {
-    "api/index.js": { "includeFiles": "private/**", "maxDuration": 60 },
-    "api/[...path].js": { "includeFiles": "private/**", "maxDuration": 60 },
-    "api/cron-daily.js": { "maxDuration": 60 }
+    "api/index.js": { "includeFiles": "private/**", "maxDuration": 60 }
   },
   "crons": [{ "path": "/api/cron-daily", "schedule": "0 3 * * *" }]
 }

@@ -2019,6 +2019,45 @@ app.post("/api/birthdays/run", async (req, res) => {
   }
 });
 
+// ── KUNLIK CRON (Vercel Cron Jobs) ────────────────────────────────────
+// Ilgari alohida `api/cron-daily.js` Vercel funksiyasi edi — bitta
+// Express ilovaga ko'chirildi, chunki Vercel'da `api/[...path].js`
+// catch-all funksiyasi ko'p segmentli yo'llarni (masalan
+// `/api/users/directory`, `/api/tasks/:id`) noto'g'ri ishlatgani
+// aniqlandi (2026-09-11, real xodimlar buni sezgan). Endi HAMMA
+// `/api/*` so'rovi bitta funksiyaga (`api/index.js`) yo'naltiriladi
+// (vercel.json'dagi rewrite orqali) — ikkinchi, alohida funksiya
+// umuman yo'q, shuning uchun bu turdagi nomuvofiqlik endi mumkin emas.
+// Vercel Cron o'zi GET so'rov yuboradi va (CRON_SECRET mavjud bo'lsa)
+// "Authorization: Bearer <secret>" header'ini avtomatik qo'shadi —
+// qo'lda tekshirish uchun eski "X-Cron-Secret" header'i ham qabul
+// qilinadi.
+app.all("/api/cron-daily", async (req, res) => {
+  const secret = process.env.CRON_SECRET || "";
+  const authHeader = req.headers["authorization"] || "";
+  const legacyHeader = req.headers["x-cron-secret"] || "";
+  const authorized = !!secret && (authHeader === `Bearer ${secret}` || legacyHeader === secret);
+  if (!authorized) return res.status(401).json({ error: "Ruxsatsiz" });
+
+  const base = process.env.APP_URL || `https://${req.headers.host}`;
+  const endpoints = ["/api/cycles/rollover", "/api/reminder/run", "/api/birthdays/run"];
+  const results = [];
+  for (const path of endpoints) {
+    try {
+      const r = await fetch(`${base}${path}`, {
+        method: "POST",
+        headers: { "X-Cron-Secret": secret, "Content-Type": "application/json" },
+        body: "{}",
+      });
+      const body = await r.json().catch(() => ({}));
+      results.push({ path, status: r.status, body });
+    } catch (e) {
+      results.push({ path, error: e.message });
+    }
+  }
+  res.status(200).json({ ok: true, ranAt: new Date().toISOString(), results });
+});
+
 // ── BILDIRISHNOMALAR JURNALI (admin, faqat o'qish) ───────────────────
 app.get("/api/notifications", auth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
