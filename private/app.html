@@ -625,6 +625,42 @@
         color: var(--t3);
         margin-top: 3px;
       }
+      /* ── FAOLLIK HEATMAP (Profil "Faolligim" / Ruxsatlar > xodim) ─── */
+      .act-heatmap-wrap {
+        overflow-x: auto;
+        padding-bottom: 6px;
+      }
+      .act-heatmap {
+        display: grid;
+        grid-template-rows: repeat(7, 1fr);
+        grid-auto-flow: column;
+        gap: 3px;
+        width: max-content;
+      }
+      .act-cell {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+      }
+      .act-cell.act-empty {
+        background: transparent;
+      }
+      .act-legend {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+        font-size: 11.5px;
+        color: var(--t3);
+      }
+      .act-legend-dot {
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        border-radius: 2px;
+        margin-right: 5px;
+        vertical-align: middle;
+      }
       .task-dot {
         width: 9px;
         height: 9px;
@@ -7871,7 +7907,7 @@
               })
               .join("");
             return `<tr>
-              <td class="pmx-emp">
+              <td class="pmx-emp" style="cursor:pointer" onclick="openActivityStats('${escArg(u.username)}')" title="Faolligini ko'rish">
                 <div style="display:flex;align-items:center;gap:11px">
                   <div class="avatar" style="width:30px;height:30px;border-radius:9px;font-size:11.5px">${u.username.slice(0, 1).toUpperCase()}</div>
                   <div style="min-width:0">
@@ -8299,6 +8335,7 @@
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
             <span class="debt-badge" style="color:var(--brand);background:rgba(47,122,185,.12)">@${escHtml(p.username || currentUser)}</span>
             <span class="debt-badge">${ROLE_LABEL_UZ[p.role] || p.role}</span>
+            <button type="button" class="btn btn-soft" style="width:auto;height:auto;padding:6px 12px;font-size:12px;margin-left:auto" onclick="openActivityStats()">📊 Faolligim</button>
           </div>
           <div class="f-row f-group">
             <div style="flex:1"><label class="f-label">Ism</label><input class="f-input" id="pf-first" value="${escHtml(p.firstName || "")}" onblur="formatNameInputOnBlur(this)"/></div>
@@ -8330,6 +8367,149 @@
         document.querySelectorAll(".pf-theme-btn").forEach((b) => {
           b.classList.toggle("active", b.dataset.theme === theme);
         });
+      }
+
+      // ── FAOLLIK STATISTIKASI (GitHub/Claude uslubidagi "heatmap") ──
+      // `username` berilmasa — o'zining faolligi (Profil'dan). Berilsa
+      // — boshqa xodimning faolligi (faqat admin, Ruxsatlar jadvalidagi
+      // xodim qatoridan). Kunlar, streak, eng faol soat/loyiha —
+      // hammasi shu yerda (frontendda) xom vaqt-belgilardan hisoblanadi,
+      // chunki sana yordamchilari (isoOf/todayDate/parseISO) allaqachon
+      // shu faylda bor — backendda ikkinchi marta yozmaslik uchun.
+      async function openActivityStats(username) {
+        const { body } = makeSheet(username ? "Faollik" : "Mening faolligim", { wide: true });
+        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        let data;
+        try {
+          const qs = username ? `?username=${encodeURIComponent(username)}` : "";
+          const res = await apiFetch(`/api/activity-stats${qs}`);
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
+          data = await res.json();
+        } catch (e) {
+          body.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
+          return;
+        }
+        renderActivityStats(body, data);
+      }
+      function renderActivityStats(body, data) {
+        // 1) Har bir faoliyat vaqt-belgisi shu yerdagi sana yordamchilari
+        // bilan bir xil qoidada (brauzer mahalliy vaqti) "kun"ga
+        // aylantiriladi — todayDate() ham xuddi shunday ishlaydi.
+        const dayMap = {};
+        data.checks.forEach((c) => {
+          const key = isoOf(new Date(c.doneAt));
+          (dayMap[key] ||= { post: false, task: false }).post = true;
+        });
+        data.taskEvents.forEach((t) => {
+          const key = isoOf(new Date(t.createdAt));
+          (dayMap[key] ||= { post: false, task: false }).task = true;
+        });
+
+        const joined = parseISO(isoOf(new Date(data.user.joinedAt)));
+        const today = todayDate();
+        const totalDays = Math.max(0, daysBetween(joined, today)) + 1;
+        const days = [];
+        for (let i = 0; i < totalDays; i++) {
+          const d = new Date(joined);
+          d.setDate(d.getDate() + i);
+          const key = isoOf(d);
+          const info = dayMap[key];
+          const level = !info ? 0 : info.post && info.task ? 3 : info.post ? 1 : 2;
+          days.push({ date: d, level });
+        }
+
+        const activeDays = days.filter((d) => d.level > 0).length;
+
+        let longest = 0,
+          run = 0;
+        days.forEach((d) => {
+          if (d.level > 0) {
+            run++;
+            longest = Math.max(longest, run);
+          } else run = 0;
+        });
+        // Joriy streak — bugundan orqaga. Bugun hali faoliyat yo'q bo'lsa,
+        // kun hali tugamagan deb hisoblanadi va kechadan boshlanadi.
+        let current = 0;
+        {
+          let idx = days.length - 1;
+          if (days[idx] && days[idx].level === 0) idx--;
+          while (idx >= 0 && days[idx].level > 0) {
+            current++;
+            idx--;
+          }
+        }
+
+        const hourCounts = new Array(24).fill(0);
+        data.checks.forEach((c) => hourCounts[new Date(c.doneAt).getHours()]++);
+        data.taskEvents.forEach((t) => hourCounts[new Date(t.createdAt).getHours()]++);
+        let peakHour = -1,
+          peakCount = 0;
+        hourCounts.forEach((c, h) => {
+          if (c > peakCount) {
+            peakCount = c;
+            peakHour = h;
+          }
+        });
+        const peakHourLabel = peakHour < 0 ? "—" : `${String(peakHour).padStart(2, "0")}:00`;
+
+        const projCounts = {};
+        data.checks.forEach((c) => {
+          if (c.projectLabel) projCounts[c.projectLabel] = (projCounts[c.projectLabel] || 0) + 1;
+        });
+        let favProject = "—",
+          favCount = 0;
+        Object.entries(projCounts).forEach(([label, n]) => {
+          if (n > favCount) {
+            favCount = n;
+            favProject = label;
+          }
+        });
+
+        // 2) Heatmap — CSS grid "grid-auto-flow:column" bilan avtomatik
+        // ustunlarga bo'linadi (har ustun — bitta hafta, 7 qator — hafta
+        // kunlari), shuning uchun bu yerda kunlarni faqat KETMA-KET
+        // chiqarish kifoya (GitHub ham xuddi shu texnika bilan quriladi).
+        const LEVEL_COLOR = { 0: "var(--chip3)", 1: "var(--brand)", 2: "var(--teal)", 3: "var(--purple)" };
+        const LEVEL_LABEL = { 0: "faoliyat yo'q", 1: "Post/Stories", 2: "Vazifa", 3: "Post/Stories + Vazifa" };
+        const firstDow = (joined.getDay() + 6) % 7; // 0 = Dushanba
+        let cellsHtml = "";
+        for (let i = 0; i < firstDow; i++) cellsHtml += `<div class="act-cell act-empty"></div>`;
+        days.forEach((d) => {
+          const tip = `${fmtDay(d.date)}: ${LEVEL_LABEL[d.level]}`;
+          cellsHtml += `<div class="act-cell" style="background:${LEVEL_COLOR[d.level]}" title="${escHtml(tip)}"></div>`;
+        });
+
+        const statHtml = (lbl, val, unit) =>
+          `<div class="mini-stat"><div class="mini-stat-val">${val}${unit ? `<span style="font-size:12px;font-weight:500"> ${unit}</span>` : ""}</div><div class="mini-stat-lbl">${lbl}</div></div>`;
+
+        body.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+            <div class="avatar" style="width:38px;height:38px;border-radius:11px;font-size:13px">${initials(data.user.name)}</div>
+            <div style="min-width:0">
+              <div style="font-weight:600;font-size:15px">${escHtml(data.user.name)}</div>
+              <div style="font-size:12px;color:var(--t3)">@${escHtml(data.user.username)} · ${totalDays} kundan beri jamoada</div>
+            </div>
+          </div>
+          <div class="mini-stat-row" style="margin-bottom:8px">
+            ${statHtml("Faol kunlar", activeDays)}
+            ${statHtml("Post/Stories", data.checks.length)}
+            ${statHtml("Vazifa harakatlari", data.taskEvents.length)}
+            ${statHtml("Joriy streak", current, "kun")}
+          </div>
+          <div class="mini-stat-row" style="margin-bottom:18px">
+            ${statHtml("Eng uzun streak", longest, "kun")}
+            ${statHtml("Eng faol soat", peakHourLabel)}
+            <div class="mini-stat"><div class="mini-stat-val" style="font-size:14px;line-height:1.3">${escHtml(favProject)}</div><div class="mini-stat-lbl">Eng faol loyiha</div></div>
+            ${statHtml("Jamoada", totalDays, "kun")}
+          </div>
+          <div class="act-heatmap-wrap"><div class="act-heatmap">${cellsHtml}</div></div>
+          <div class="act-legend">
+            <span><span class="act-legend-dot" style="background:var(--chip3)"></span>Faoliyat yo'q</span>
+            <span><span class="act-legend-dot" style="background:var(--brand)"></span>Post/Stories</span>
+            <span><span class="act-legend-dot" style="background:var(--teal)"></span>Vazifa</span>
+            <span><span class="act-legend-dot" style="background:var(--purple)"></span>Ikkalasi ham</span>
+          </div>`;
       }
       async function saveProfile() {
         const btn = document.getElementById("pf-save-btn");

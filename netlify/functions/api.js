@@ -256,6 +256,54 @@ app.post("/api/me/birthday-ack", auth, async (req, res) => {
   }
 });
 
+// ── FAOLLIK STATISTIKASI ("faollik" grafigi — Profil va Boshqaruv) ──
+// O'zining faolligini har kim ko'radi; boshqa xodimning faolligini
+// faqat admin/super_admin ko'ra oladi. Kunlarga bo'lish, streak,
+// eng faol soat va h.k. — hammasi frontendda hisoblanadi (xom
+// vaqt-belgilar shu yerdan qaytariladi), chunki frontendda allaqachon
+// "Tashkent kuni"ga mos sana yordamchilari bor (isoOf/todayDate) —
+// backendda alohida vaqt zonasi mantiqini takrorlamaslik uchun.
+app.get("/api/activity-stats", auth, async (req, res) => {
+  try {
+    const targetUsername = String(req.query.username || req.user.username).toLowerCase();
+    if (targetUsername !== req.user.username && !isAdminRole(req.user.role)) {
+      return res.status(403).json({ error: "Faqat admin boshqa xodimning faolligini ko'rishi mumkin" });
+    }
+    const ur = await db.query(
+      `select id, username, first_name, last_name, full_name, created_at from users where username = $1`,
+      [targetUsername],
+    );
+    const user = ur.rows[0];
+    if (!user) return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
+
+    const checksR = await db.query(
+      `select c.done_at, c.type, p.label as project_label
+       from checks c
+       join project_cycles pc on pc.id = c.cycle_id
+       join projects p on p.id = pc.project_id
+       where c.done_by = $1
+       order by c.done_at`,
+      [user.id],
+    );
+    const taskR = await db.query(
+      `select created_at, kind from task_activity where actor_user_id = $1 order by created_at`,
+      [user.id],
+    );
+
+    res.json({
+      user: {
+        username: user.username,
+        name: user.first_name ? `${user.first_name} ${user.last_name || ""}`.trim() : user.full_name || user.username,
+        joinedAt: user.created_at,
+      },
+      checks: checksR.rows.map((r) => ({ doneAt: r.done_at, type: r.type, projectLabel: r.project_label })),
+      taskEvents: taskR.rows.map((r) => ({ createdAt: r.created_at, kind: r.kind })),
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── FOYDALANUVCHILAR (admin) ─────────────────────────────────────────
 // Eski tizimda MANAGED_USERS frontend kodida qattiq yozilgan edi — endi
 // bu yerdan dinamik olinadi, yangi xodim qo'shish uchun deploy shart emas.
