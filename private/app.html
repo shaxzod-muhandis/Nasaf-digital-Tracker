@@ -5019,7 +5019,8 @@
 
         body.innerHTML = `
           <div class="mobile-only">
-            <div class="tempo">
+            ${buildActivityPanelCardHtml(true)}
+            <div class="tempo" style="margin-top:14px">
               <div class="tempo-top">
                 <div>
                   <div class="tempo-lbl">Umumiy bajarilish</div>
@@ -5034,7 +5035,6 @@
               <div class="tempo-foot">${t.doneAll}/${t.totalTasks} vazifa bajarildi${t.behind > 0 ? ` · ${t.behind} ta muddatga nisbatan orqada` : ""}</div>
               <div class="tempo-note">Loyihalar muddatiga (boshlanish–tugash sanasi) asosan hisoblanadi</div>
             </div>
-            ${buildActivityPanelCardHtml(true)}
             ${debtHtml}
             <div style="margin-top:14px">
               ${buildAssignedTasksCardHtml()}
@@ -5127,7 +5127,8 @@
 
         return `
           <div class="desktop-only">
-            <div class="stat-grid">
+            ${buildActivityPanelCardHtml(false)}
+            <div class="stat-grid" style="margin-top:18px">
               <div class="stat-card tempo">
                 <div class="stat-lbl">Bajarilish darajasi</div>
                 <div style="display:flex;align-items:baseline;gap:8px">
@@ -5152,7 +5153,6 @@
                 <div class="stat-foot"><span class="stat-link" onclick="showTab('projects');setProjFilter('debt')">Ko'rish →</span></div>
               </div>
             </div>
-            ${buildActivityPanelCardHtml(false)}
             <div class="dash-cols">
               <div>
                 <div class="dtbl-wrap">
