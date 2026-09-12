@@ -270,7 +270,7 @@ app.get("/api/activity-stats", auth, async (req, res) => {
       return res.status(403).json({ error: "Faqat admin boshqa xodimning faolligini ko'rishi mumkin" });
     }
     const ur = await db.query(
-      `select id, username, first_name, last_name, full_name, created_at from users where username = $1`,
+      `select id, username, first_name, last_name, full_name, job_title, created_at from users where username = $1`,
       [targetUsername],
     );
     const user = ur.rows[0];
@@ -290,14 +290,34 @@ app.get("/api/activity-stats", auth, async (req, res) => {
       [user.id],
     );
 
+    // Yangi xodim (kam tarixi bor) uchun shaxsiy o'rtacha ma'noga ega
+    // emas — shuning uchun butun jamoaning "faol kundagi o'rtacha
+    // harakat soni" hisoblab qo'yiladi, frontend faqat faol kunlar
+    // 14 tadan kam bo'lgandagina shundan foydalanadi (dizayner TZ'i,
+    // 3.2-band).
+    const teamAvgR = await db.query(`
+      select avg(day_count)::float as avg from (
+        select count(*) as day_count from (
+          select done_by as user_id, (done_at + interval '5 hours')::date as day
+            from checks where done_by is not null
+          union all
+          select actor_user_id as user_id, (created_at + interval '5 hours')::date as day
+            from task_activity where actor_user_id is not null
+        ) x
+        group by user_id, day
+      ) y
+    `);
+
     res.json({
       user: {
         username: user.username,
         name: user.first_name ? `${user.first_name} ${user.last_name || ""}`.trim() : user.full_name || user.username,
+        jobTitle: user.job_title,
         joinedAt: user.created_at,
       },
       checks: checksR.rows.map((r) => ({ doneAt: r.done_at, type: r.type, projectLabel: r.project_label })),
       taskEvents: taskR.rows.map((r) => ({ createdAt: r.created_at, kind: r.kind })),
+      teamAvgDailyActivity: teamAvgR.rows[0]?.avg || 1,
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
