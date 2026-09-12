@@ -2795,6 +2795,25 @@
         margin-top: 6px;
         line-height: 1.6;
       }
+      .announcement-user-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--bd1);
+        font-size: 13px;
+        color: var(--ink);
+        cursor: pointer;
+      }
+      .announcement-user-row:last-child {
+        border-bottom: none;
+      }
+      .announcement-user-row input {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+        accent-color: var(--brand);
+      }
       .btn {
         width: 100%;
         height: 46px;
@@ -4413,6 +4432,9 @@
       let tagsList = []; // barcha mavjud taglar ({id,name}) — /api/tags
       let myActivity = null; // o'zining faollik xom ma'lumoti — /api/activity-stats (Panel qisqa kartasi uchun)
       let activityPanelYear = null; // Panel qisqa kartasidagi tanlangan yil (null = joriy yil)
+      let announcementUsersList = null; // xodimlar ro'yxati (E'lon tabida "Tanlangan xodimlarga" uchun) — birinchi ochilganda yuklanadi
+      let announcementMode = "all"; // "all" | "selected"
+      let announcementSelected = new Set(); // tanlangan xodim username'lari
       let taskBoardFilter = { assignee: "", priority: "", tag: "", q: "" };
       let taskScope = "menda"; // mobil va desktop: "menda" | "jamoada" — ikkalasida ham baravar
       let taskScopeInitialized = false; // renderTasksScreen()dagi bir martalik aqlli standart uchun
@@ -8477,16 +8499,102 @@
       }
 
       // ── E'LON (faqat super admin) ─────────────────────────────────
-      function renderAnnouncementTab(c) {
+      // Ikki rejim: "Barchaga" (eski xatti-harakat — barcha faol
+      // foydalanuvchi + ENV admin ro'yxati) va "Tanlangan xodimlarga"
+      // (aniq belgilangan userlar). Xodimlar ro'yxati /api/users/directory
+      // orqali — bu tab birinchi ochilganda bir marta yuklanadi.
+      async function renderAnnouncementTab(c) {
+        c.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        if (!announcementUsersList) {
+          try {
+            const res = await apiFetch("/api/users/directory");
+            announcementUsersList = res.ok ? (await res.json()).users || [] : [];
+          } catch (e) {
+            announcementUsersList = [];
+          }
+        }
+        renderAnnouncementBody(c);
+      }
+      // Matn maydonidagi yozilayotgan xabar yo'qolib qolmasin deb, qayta
+      // chizishdan oldin qiymati saqlanadi va keyin tiklanadi.
+      function renderAnnouncementBody(c) {
+        const prevMessage = document.getElementById("announcement-message")?.value || "";
+        const userRowsHtml = announcementUsersList.length
+          ? announcementUsersList
+              .map((u) => {
+                const name = u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : u.full_name || `@${u.username}`;
+                const checked = announcementSelected.has(u.username);
+                return `<label class="announcement-user-row">
+                  <input type="checkbox" class="announcement-user-cb" data-username="${escArg(u.username)}" ${checked ? "checked" : ""} onchange="toggleAnnouncementUser('${escArg(u.username)}',this.checked)"/>
+                  <span>${escHtml(name)} <span style="color:var(--t3)">@${escHtml(u.username)}</span></span>
+                </label>`;
+              })
+              .join("")
+          : `<div class="f-hint" style="padding:10px 0">Faol xodim topilmadi</div>`;
+
         c.innerHTML = `
           <div style="max-width:520px">
             <div class="f-group">
+              <label class="f-label">Kimga yuborilsin</label>
+              <div class="seg" style="margin-top:0">
+                <button type="button" class="seg-btn${announcementMode === "all" ? " active" : ""}" onclick="setAnnouncementMode('all')">Barchaga</button>
+                <button type="button" class="seg-btn${announcementMode === "selected" ? " active" : ""}" onclick="setAnnouncementMode('selected')">Tanlangan xodimlarga</button>
+              </div>
+            </div>
+            <div class="f-group" id="announcement-userlist-group" style="${announcementMode === "selected" ? "" : "display:none"}">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <label class="f-label" style="margin:0">Xodimlar<span id="announcement-count-lbl">${announcementSelected.size ? ` · ${announcementSelected.size} tanlangan` : ""}</span></label>
+                <button type="button" id="announcement-toggle-all-btn" class="act-card-link" style="height:26px;padding:0 9px;font-size:11px" onclick="toggleAllAnnouncementUsers()">${announcementSelected.size && announcementSelected.size === announcementUsersList.length ? "Hech kimni tanlamaslik" : "Hammasini tanlash"}</button>
+              </div>
+              <div class="list-card" style="max-height:260px;overflow-y:auto;padding:4px 14px">${userRowsHtml}</div>
+            </div>
+            <div class="f-group">
               <label class="f-label" for="announcement-message">Xabar matni</label>
               <textarea class="f-input" id="announcement-message" rows="7" maxlength="4000" placeholder="Jamoaga yuboriladigan xabarni yozing..."></textarea>
-              <div class="f-hint">Xabar Telegram chat ID'si ro'yxatdan o'tgan boshqa faol foydalanuvchilarga yuboriladi.</div>
+              <div class="f-hint">${announcementMode === "all" ? "Xabar Telegram chat ID'si ro'yxatdan o'tgan boshqa faol foydalanuvchilarga yuboriladi." : "Xabar faqat yuqorida tanlangan xodimlarga yuboriladi."}</div>
             </div>
-            <button class="btn btn-blue" id="announcement-send-btn" onclick="sendAnnouncement()">Barchaga yuborish</button>
+            <button class="btn btn-blue" id="announcement-send-btn" onclick="sendAnnouncement()">${announcementSendLabel()}</button>
           </div>`;
+        const ta = document.getElementById("announcement-message");
+        if (ta) ta.value = prevMessage;
+      }
+      function announcementSendLabel() {
+        if (announcementMode === "all") return "Barchaga yuborish";
+        return announcementSelected.size ? `${announcementSelected.size} kishiga yuborish` : "Xodim tanlang";
+      }
+      function setAnnouncementMode(mode) {
+        announcementMode = mode;
+        renderAnnouncementBody(document.getElementById("admin-body"));
+      }
+      // Checkbox bosilganda butun panelni qayta chizmaydi (ro'yxat scroll
+      // holati va matn maydoni buzilmasin deb) — faqat sanoq va tugma
+      // matnlarini yangilaydi.
+      function toggleAnnouncementUser(username, checked) {
+        if (checked) announcementSelected.add(username);
+        else announcementSelected.delete(username);
+        updateAnnouncementCounters();
+      }
+      function toggleAllAnnouncementUsers() {
+        const allSelected = announcementSelected.size === announcementUsersList.length && announcementUsersList.length > 0;
+        if (allSelected) announcementSelected.clear();
+        else announcementUsersList.forEach((u) => announcementSelected.add(u.username));
+        document.querySelectorAll(".announcement-user-cb").forEach((cb) => {
+          cb.checked = announcementSelected.has(cb.dataset.username);
+        });
+        updateAnnouncementCounters();
+      }
+      function updateAnnouncementCounters() {
+        const countLbl = document.getElementById("announcement-count-lbl");
+        if (countLbl) countLbl.textContent = announcementSelected.size ? ` · ${announcementSelected.size} tanlangan` : "";
+        const toggleAllBtn = document.getElementById("announcement-toggle-all-btn");
+        if (toggleAllBtn) {
+          toggleAllBtn.textContent =
+            announcementSelected.size && announcementSelected.size === announcementUsersList.length
+              ? "Hech kimni tanlamaslik"
+              : "Hammasini tanlash";
+        }
+        const sendBtn = document.getElementById("announcement-send-btn");
+        if (sendBtn && !sendBtn.disabled) sendBtn.textContent = announcementSendLabel();
       }
       async function sendAnnouncement() {
         const input = document.getElementById("announcement-message");
@@ -8496,12 +8604,19 @@
           showToast("⚠ Xabar matnini yozing");
           return;
         }
+        if (announcementMode === "selected" && announcementSelected.size === 0) {
+          showToast("⚠ Kamida bitta xodim tanlang");
+          return;
+        }
+        const doneLabel = announcementSendLabel();
         button.disabled = true;
         button.textContent = "Yuborilmoqda...";
         try {
+          const body = { message };
+          if (announcementMode === "selected") body.usernames = [...announcementSelected];
           const response = await apiFetch("/api/announcements", {
             method: "POST",
-            body: JSON.stringify({ message }),
+            body: JSON.stringify(body),
           });
           const data = await response.json().catch(() => ({}));
           if (!response.ok) throw new Error(data.error || "Xatolik");
@@ -8511,7 +8626,7 @@
           showToast("⚠ " + error.message);
         }
         button.disabled = false;
-        button.textContent = "Barchaga yuborish";
+        button.textContent = doneLabel;
       }
 
       // ── SHEET / MODAL ─────────────────────────────────────────────

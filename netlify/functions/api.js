@@ -169,6 +169,9 @@ app.post("/api/register-chat", auth, async (req, res) => {
   try {
     const { chatId } = req.body;
     if (!chatId) return res.status(400).json({ error: "chatId kerak" });
+    if (!/^\d{6,}$/.test(String(chatId))) {
+      return res.status(400).json({ error: "chatId noto'g'ri formatda" });
+    }
     await db.query(
       `update users set telegram_chat_id = $1, telegram_user_id = coalesce(telegram_user_id, $2::bigint)
        where id = $3`,
@@ -763,25 +766,46 @@ app.post("/api/announcements", auth, async (req, res) => {
   if (message.length > 4000) return res.status(400).json({ error: "Xabar 4000 belgidan oshmasin" });
   if (!process.env.BOT_TOKEN) return res.status(500).json({ error: "BOT_TOKEN yo'q" });
 
+  // `usernames` berilsa — faqat o'sha xodimlarga (ENV admin ro'yxati
+  // bu holatda qo'shilmaydi, chunki tanlov ANIQ shu odamlar deb
+  // bildirilgan). Berilmasa — eski xatti-harakat: barcha faol
+  // foydalanuvchi + ENV admin ro'yxati.
+  const usernames = Array.isArray(req.body.usernames)
+    ? req.body.usernames.map((u) => String(u).toLowerCase().replace("@", "")).filter(Boolean)
+    : null;
+
   const escapeHtml = (value) => value.replace(/[&<>]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[char]));
-  const envIds = (process.env.ADMIN_CHAT_IDS || process.env.ALL_CHAT_IDS || "")
-    .replace(/[\'\"]/g, "")
-    .split(",")
-    .map((id) => id.trim())
-    .filter((id) => /^\d+$/.test(id) && id !== String(req.user.telegram_chat_id || ""));
-  const usersR = await db.query(
-    `select username, telegram_chat_id from users
-     where is_active and telegram_chat_id is not null and id <> $1`,
-    [req.user.id],
-  );
-  const recipients = new Map(envIds.map((chatId) => [chatId, null]));
-  usersR.rows.forEach((user) => recipients.set(String(user.telegram_chat_id), user.username));
   const text = `📣 <b>@${escapeHtml(req.user.username)} e’loni</b>\n\n${escapeHtml(message)}`;
+  const replyMarkup = appOpenButton();
+
+  let recipients; // Map<chatId, username|null>
+  if (usernames && usernames.length) {
+    const usersR = await db.query(
+      `select username, telegram_chat_id from users
+       where is_active and telegram_chat_id is not null and id <> $1 and username = any($2::text[])`,
+      [req.user.id, usernames],
+    );
+    recipients = new Map(usersR.rows.map((u) => [String(u.telegram_chat_id), u.username]));
+  } else {
+    const envIds = (process.env.ADMIN_CHAT_IDS || process.env.ALL_CHAT_IDS || "")
+      .replace(/[\'\"]/g, "")
+      .split(",")
+      .map((id) => id.trim())
+      .filter((id) => /^\d+$/.test(id) && id !== String(req.user.telegram_chat_id || ""));
+    const usersR = await db.query(
+      `select username, telegram_chat_id from users
+       where is_active and telegram_chat_id is not null and id <> $1`,
+      [req.user.id],
+    );
+    recipients = new Map(envIds.map((chatId) => [chatId, null]));
+    usersR.rows.forEach((user) => recipients.set(String(user.telegram_chat_id), user.username));
+  }
+
   const results = await Promise.all(
     [...recipients].map(async ([chatId, username]) => ({
       chatId,
       username,
-      result: await sendMsg(db, chatId, text, { replyMarkup: appOpenButton() }),
+      result: await sendMsg(db, chatId, text, { replyMarkup }),
     })),
   );
   res.json({ ok: true, total: results.length, sent: results.filter(({ result }) => result.ok).length });
