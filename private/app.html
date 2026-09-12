@@ -93,6 +93,7 @@
         --act-lvl-2: #9cc3e3;
         --act-lvl-3: #5795c6;
         --act-lvl-4: #2f7ab9;
+        --act-icon-bg: #ebf3fa;
         /* Telegram to'liq ekran rejimida o'zining sarlavha/yopish
            tugmalarini kontent ustiga chizadi — JS shu qiymatni
            Telegram.WebApp.safeAreaInset/contentSafeAreaInset'dan
@@ -147,6 +148,7 @@
         --act-lvl-2: #355c7d;
         --act-lvl-3: #4180ad;
         --act-lvl-4: #5aa3dd;
+        --act-icon-bg: rgba(90, 163, 221, 0.16);
       }
 
       html {
@@ -643,21 +645,22 @@
       .act-card {
         background: var(--surf);
         border: 1px solid var(--bd2);
-        border-radius: 14px;
-        padding: 16px;
-        margin-top: 14px;
+        border-radius: 16px;
+        overflow: hidden;
+        margin-top: 18px;
       }
       .act-card-hdr {
+        padding: 18px 22px;
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
-        gap: 10px;
-        margin-bottom: 14px;
+        gap: 14px;
         flex-wrap: wrap;
+        border-bottom: 1px solid var(--bd1);
       }
       .act-card-title {
         font-weight: 600;
-        font-size: 14px;
+        font-size: 14.5px;
         color: var(--ink);
       }
       .act-card-sub {
@@ -666,78 +669,143 @@
         margin-top: 2px;
       }
       .act-card-link {
-        height: 30px;
-        padding: 0 11px;
-        border-radius: 8px;
-        background: var(--chip);
-        color: var(--t5);
-        font-size: 12px;
-        font-weight: 500;
-        border: none;
+        height: 34px;
+        padding: 0 13px;
+        border-radius: 10px;
+        background: none;
+        border: 1px solid var(--bd4);
+        color: var(--ink);
+        font-size: 12.5px;
+        font-weight: 600;
         cursor: pointer;
         white-space: nowrap;
       }
       .act-card-toggle {
-        width: 30px;
-        height: 30px;
-        border-radius: 8px;
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
         background: var(--chip);
-        color: var(--t3);
         border: none;
-        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
         flex-shrink: 0;
       }
-      .act-card-stats {
-        margin-bottom: 14px;
+      .act-chevron-icon {
+        width: 8px;
+        height: 8px;
+        border-left: 1.8px solid var(--t2);
+        border-bottom: 1.8px solid var(--t2);
       }
       .act-year-select {
-        height: 30px;
-        border-radius: 8px;
+        height: 34px;
+        border-radius: 9px;
         border: 1px solid var(--bd2);
         background: var(--surf);
         color: var(--ink);
         font-size: 12px;
-        padding: 0 6px;
+        padding: 0 8px;
       }
-      /* Yig'ilgan holat — bitta ~62px qator (position:absolute ishlatilmaydi,
+      /* Tana — desktopda heatmap (1fr) + statistika panjarasi (232px,
+         o'ngda); mobilda oddiy ustun (panjara emas, alohida qator). */
+      .act-card-body-split {
+        display: grid;
+        grid-template-columns: 1fr 232px;
+        align-items: start;
+      }
+      .act-card-heat-col {
+        padding: 20px 22px 18px;
+        position: relative;
+        min-width: 0;
+      }
+      .act-card-heat-foot {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid var(--bd1);
+        flex-wrap: wrap;
+      }
+      .act-card-stats-col {
+        border-left: 1px solid var(--bd1);
+        background: var(--surf2);
+      }
+      .act-stat-row {
+        padding: 13px 15px;
+        border-bottom: 1px solid var(--bd1);
+      }
+      .act-stat-row:last-child {
+        border-bottom: none;
+      }
+      .act-stat-row-lbl {
+        font-size: 11px;
+        color: var(--t3);
+      }
+      .act-stat-row-val {
+        display: flex;
+        align-items: baseline;
+        gap: 7px;
+        margin-top: 5px;
+        font-weight: 600;
+        font-size: 21px;
+        color: var(--ink);
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+      }
+      .act-stat-row-cap {
+        font-size: 11px;
+        font-weight: 400;
+        color: var(--t4);
+      }
+      .act-card-stats-mobile {
+        padding: 0 16px 14px;
+      }
+      /* Yig'ilgan holat — bitta qator (position:absolute ishlatilmaydi,
          atrofdagi bloklar oddiy oqim bilan yuqoriga suriladi). */
       .act-card-collapsed {
         display: flex;
         align-items: center;
-        gap: 10px;
-        min-height: 62px;
+        gap: 16px;
+        padding: 15px 22px;
         cursor: pointer;
-        overflow: hidden;
       }
-      .act-card-ico {
-        font-size: 15px;
+      .act-card-mini-ico {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        background: var(--act-icon-bg);
+        display: grid;
+        grid-template-columns: repeat(2, 5px);
+        gap: 2px;
+        align-content: center;
+        justify-content: center;
         flex-shrink: 0;
       }
-      .act-card-collapsed-title {
-        font-weight: 600;
-        font-size: 13px;
-        color: var(--ink);
-        flex-shrink: 0;
+      .act-mini-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 1.5px;
       }
-      .act-card-collapsed-stats {
-        font-size: 11.5px;
-        color: var(--t3);
+      .act-card-collapsed-spark {
+        flex: 1 1 40px;
+        display: flex;
+        justify-content: center;
+        min-width: 40px;
         overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        flex: 1;
-        min-width: 0;
       }
       .act-heat-mini {
         display: flex;
         gap: 2px;
         flex-shrink: 0;
       }
-      .act-card-chevron {
-        color: var(--t3);
-        font-size: 13px;
+      .act-card-period-lbl {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--t2);
         flex-shrink: 0;
+        white-space: nowrap;
       }
 
       /* ── Heatmap to'ri (oy/hafta-kuni yorliqlari bilan) ──────────── */
@@ -759,8 +827,7 @@
       .act-heat-monthrow {
         grid-column: 2;
         grid-row: 1;
-        display: grid;
-        grid-auto-flow: column;
+        display: flex;
       }
       .act-heat-monthcell {
         font-size: 10px;
@@ -822,9 +889,9 @@
         display: flex;
         align-items: center;
         gap: 5px;
-        margin-top: 12px;
         font-size: 11px;
         color: var(--t3);
+        flex-shrink: 0;
       }
       .act-legend-swatch {
         width: 11px;
@@ -4967,7 +5034,7 @@
               <div class="tempo-foot">${t.doneAll}/${t.totalTasks} vazifa bajarildi${t.behind > 0 ? ` · ${t.behind} ta muddatga nisbatan orqada` : ""}</div>
               <div class="tempo-note">Loyihalar muddatiga (boshlanish–tugash sanasi) asosan hisoblanadi</div>
             </div>
-            ${buildActivityPanelCardHtml()}
+            ${buildActivityPanelCardHtml(true)}
             ${debtHtml}
             <div style="margin-top:14px">
               ${buildAssignedTasksCardHtml()}
@@ -5085,7 +5152,7 @@
                 <div class="stat-foot"><span class="stat-link" onclick="showTab('projects');setProjFilter('debt')">Ko'rish →</span></div>
               </div>
             </div>
-            ${buildActivityPanelCardHtml()}
+            ${buildActivityPanelCardHtml(false)}
             <div class="dash-cols">
               <div>
                 <div class="dtbl-wrap">
@@ -8768,7 +8835,11 @@
         const cellStyle = `width:${cellSize}px;height:${cellSize}px;border-radius:${Math.max(2, Math.round(cellSize * 0.22))}px`;
 
         if (opts.mini) {
-          const strip = days.slice(-36);
+          // "year" ko'rinishi kelajak (hali kelmagan) kunlar bilan
+          // Dekabrgacha to'ldirilgan bo'lishi mumkin — sparklineda
+          // ENG SO'NGGI HAQIQIY (o'tgan) kunlar ko'rinishi kerak, aks
+          // holda oxirgi N kun bo'sh (kelajak) chiqib qolardi.
+          const strip = days.filter((d) => !d.future).slice(-21);
           const cells = strip
             .map((d) => `<div class="act-cell${d.future ? " act-future" : ""}" style="width:7px;height:7px;border-radius:2px;background:${d.future ? "transparent" : `var(--act-lvl-${d.level})`}"></div>`)
             .join("");
@@ -8782,11 +8853,23 @@
         const weeks = [];
         for (let i = 0; i < padded.length; i += 7) weeks.push(padded.slice(i, i + 7));
 
-        const monthCellsHtml = weeks
-          .map((week) => {
-            const firstOfMonth = week.find((d) => d && d.date.getDate() === 1);
-            const label = firstOfMonth ? MONTHS[firstOfMonth.date.getMonth()].slice(0, 3) : "";
-            return `<div class="act-heat-monthcell">${label}</div>`;
+        // Oy yorlig'i — har hafta ustuniga bittadan tor yorliq emas,
+        // dizayn namunasidagi kabi: har oyga tegishli barcha hafta
+        // ustunlari kengligicha BITTA CHO'ZILGAN yorliq (o'sha oyning
+        // kataklari ustida to'liq turadi, o'qish osonroq).
+        const weekStep = cellSize + gap;
+        const monthSegments = [];
+        weeks.forEach((week) => {
+          const firstReal = week.find((d) => d);
+          const monthIdx = firstReal ? firstReal.date.getMonth() : null;
+          const last = monthSegments[monthSegments.length - 1];
+          if (last && last.monthIdx === monthIdx) last.count++;
+          else monthSegments.push({ monthIdx, count: 1 });
+        });
+        const monthCellsHtml = monthSegments
+          .map((seg) => {
+            const label = seg.monthIdx != null ? MONTHS[seg.monthIdx].slice(0, 3) : "";
+            return `<div class="act-heat-monthcell" style="width:${seg.count * weekStep}px">${label}</div>`;
           })
           .join("");
         const weekdayColHtml = weekdayFull
@@ -8807,7 +8890,7 @@
         return `<div class="act-heat-scroll">
           <div class="act-heat-wrap" style="grid-template-columns:auto 1fr">
             <div class="act-heat-corner"></div>
-            <div class="act-heat-monthrow" style="grid-auto-columns:${cellSize}px;gap:${gap}px">${monthCellsHtml}</div>
+            <div class="act-heat-monthrow">${monthCellsHtml}</div>
             <div class="act-heat-wdcol" style="gap:${gap}px">${weekdayColHtml}</div>
             <div class="act-heat-grid" style="grid-template-rows:repeat(7,${cellSize}px);gap:${gap}px">${cellsHtml}</div>
           </div>
@@ -8868,7 +8951,29 @@
         activityPanelYear = parseInt(y, 10);
         renderToday();
       }
-      function buildActivityPanelCardHtml() {
+      // Yig'ish/kengaytirish tugmasidagi burchak ikonka — dizayn
+      // namunasidagi texnika (chiziq-burchak, rotate bilan yo'nalish
+      // beriladi), matn belgisi emas.
+      function activityChevronIconHtml(direction) {
+        const deg = direction === "up" ? 135 : -45;
+        const mt = direction === "up" ? 2 : -2;
+        return `<div class="act-chevron-icon" style="transform:rotate(${deg}deg);margin-top:${mt}px"></div>`;
+      }
+      // Yig'ilgan qatordagi ikonka — 2×2 rangli nuqtalar (heatmap
+      // g'oyasining o'zi, emoji emas).
+      function activityMiniIconHtml() {
+        return `<div class="act-card-mini-ico">
+          <div class="act-mini-dot" style="background:var(--act-lvl-4)"></div>
+          <div class="act-mini-dot" style="background:var(--act-lvl-2)"></div>
+          <div class="act-mini-dot" style="background:var(--act-lvl-3)"></div>
+          <div class="act-mini-dot" style="background:var(--act-lvl-4)"></div>
+        </div>`;
+      }
+      // `mobile` — chaqiruvchi kontekst (mobile-only yoki desktop-only
+      // blokdan) aniq beriladi, funksiya ikkalasini ham qurib CSS bilan
+      // yashirmaydi — chunki joylashuvning o'zi (heatmap yonida vertikal
+      // panjara / mobilda alohida qator) tubdan farq qiladi.
+      function buildActivityPanelCardHtml(mobile) {
         if (!myActivity) return "";
         const today = todayDate();
         const year = activityPanelYear || today.getFullYear();
@@ -8878,14 +8983,18 @@
         const isNewEmployee = lifetimeActiveDays > 0 && lifetimeActiveDays < 14;
         const yearOptions = [];
         for (let y = today.getFullYear(); y >= joined.getFullYear(); y--) yearOptions.push(y);
+        const periodLabel = isCurrentYear ? `Oxirgi ${today.getMonth() + 1} oy` : `${year}`;
 
         if (getActivityCollapsed()) {
           return `<div class="act-card act-card-collapsed" onclick="toggleActivityCard()">
-            <span class="act-card-ico">📊</span>
-            <span class="act-card-collapsed-title">Mening faolligim</span>
-            <span class="act-card-collapsed-stats">${stats.activeDays} faol kun · streak ${stats.currentStreak ?? 0} kun · ${stats.contentDone} belgilangan</span>
-            ${buildActivityHeatmapHtml(days, { mini: true })}
-            <span class="act-card-chevron">⌄</span>
+            ${activityMiniIconHtml()}
+            <div style="min-width:0">
+              <div class="act-card-title" style="font-size:14px">Mening faolligim</div>
+              <div class="act-card-sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px">${stats.activeDays} faol kun · streak ${stats.currentStreak ?? 0} kun · ${stats.contentDone} belgilangan</div>
+            </div>
+            <div class="act-card-collapsed-spark">${buildActivityHeatmapHtml(days, { mini: true })}</div>
+            <div class="act-card-period-lbl">${periodLabel}</div>
+            <button type="button" class="act-card-toggle" title="Kengaytirish">${activityChevronIconHtml("down")}</button>
           </div>`;
         }
 
@@ -8893,53 +9002,70 @@
           return `<div class="act-card">
             <div class="act-card-hdr">
               <div class="act-card-title">Mening faolligim</div>
-              <button type="button" class="act-card-toggle" onclick="toggleActivityCard()" title="Yig'ish">⌃</button>
+              <button type="button" class="act-card-toggle" onclick="toggleActivityCard()" title="Yig'ish">${activityChevronIconHtml("up")}</button>
             </div>
-            <div class="f-hint">Hali faollik yo'q — birinchi harakatingiz shu yerda ko'rinadi.</div>
+            <div class="f-hint" style="padding:0 22px 18px">Hali faollik yo'q — birinchi harakatingiz shu yerda ko'rinadi.</div>
           </div>`;
         }
 
-        const subLabel = isCurrentYear
-          ? `Oxirgi ${today.getMonth() + 1} oy · ${stats.activeDays} faol kun`
-          : `${year} · ${stats.activeDays} faol kun`;
-        const subLabelMobile = isCurrentYear ? `Oxirgi ${today.getMonth() + 1} oy` : `${year}`;
+        const yearSwitcherHtml = mobile
+          ? `<select class="act-year-select" onchange="setActivityPanelYear(this.value)">${yearOptions.map((y) => `<option value="${y}"${y === year ? " selected" : ""}>${y}</option>`).join("")}</select>`
+          : `<div class="seg" style="margin-top:0;width:${Math.max(1, yearOptions.length) * 52}px">${yearOptions.map((y) => `<button type="button" class="seg-btn${y === year ? " active" : ""}" onclick="setActivityPanelYear(${y})">${y}</button>`).join("")}</div>`;
 
-        const yearSegDesktop = yearOptions
-          .map((y) => `<button type="button" class="seg-btn${y === year ? " active" : ""}" onclick="setActivityPanelYear(${y})">${y}</button>`)
-          .join("");
-        const yearSelectMobile = yearOptions.map((y) => `<option value="${y}"${y === year ? " selected" : ""}>${y}</option>`).join("");
+        const heatHtml = buildActivityHeatmapHtml(
+          days,
+          mobile
+            ? { cellSize: 11, gap: 3, mobile: true, peakKey: stats.peakDay?.key }
+            : { cellSize: 16, gap: 4, mobile: false, peakKey: stats.peakDay?.key },
+        );
+        const footHtml = `<div class="act-card-heat-foot">
+          <div class="f-hint" style="margin:0;flex:1;min-width:140px">Har bir katak — bir kun. To'qligi shu kundagi harakatlar soni.</div>
+          ${activityLegendScaleHtml()}
+        </div>`;
+        const newEmployeeNote = isNewEmployee
+          ? `<div class="f-hint" style="margin-top:8px">Grafik ${fmtDay(joined)}dan boshlanadi. Bir-ikki haftadan keyin tendensiya ko'rinadi.</div>`
+          : "";
 
-        const statVal = (v, unit) => `${v}${unit ? `<span style="font-size:11px;font-weight:500"> ${unit}</span>` : ""}`;
+        const statVal = (v, unit) => `${v}${unit ? ` ${unit}` : ""}`;
+        const bodyHtml = mobile
+          ? `<div>
+              <div class="mini-stat-row act-card-stats-mobile">
+                <div class="mini-stat"><div class="mini-stat-val">${stats.activeDays}</div><div class="mini-stat-lbl">Faol kunlar</div></div>
+                <div class="mini-stat"><div class="mini-stat-val">${statVal(stats.currentStreak ?? "—", stats.currentStreak != null ? "kun" : "")}</div><div class="mini-stat-lbl">Joriy streak</div></div>
+              </div>
+              <div class="act-card-heat-col" style="padding:0 16px 16px">
+                ${heatHtml}
+                ${newEmployeeNote}
+                ${footHtml}
+              </div>
+            </div>`
+          : `<div class="act-card-body-split">
+              <div class="act-card-heat-col">
+                ${heatHtml}
+                ${newEmployeeNote}
+                ${footHtml}
+              </div>
+              <div class="act-card-stats-col">
+                <div class="act-stat-row"><div class="act-stat-row-lbl">Joriy streak</div><div class="act-stat-row-val">${statVal(stats.currentStreak ?? "—", stats.currentStreak != null ? "kun" : "")}</div></div>
+                <div class="act-stat-row"><div class="act-stat-row-lbl">Eng uzun streak</div><div class="act-stat-row-val">${isNewEmployee ? "—" : statVal(stats.longestStreak, "kun")}${!isNewEmployee && stats.longestStreakMonth ? `<span class="act-stat-row-cap">${stats.longestStreakMonth}</span>` : ""}</div></div>
+                <div class="act-stat-row"><div class="act-stat-row-lbl">Belgilangan</div><div class="act-stat-row-val">${stats.contentDone}<span class="act-stat-row-cap">post, stories</span></div></div>
+                <div class="act-stat-row"><div class="act-stat-row-lbl">Eng faol soat</div><div class="act-stat-row-val">${isNewEmployee ? "—" : stats.peakHourLabel}</div></div>
+              </div>
+            </div>`;
 
         return `<div class="act-card">
           <div class="act-card-hdr">
             <div style="min-width:0">
               <div class="act-card-title">Mening faolligim</div>
-              <div class="act-card-sub desktop-only">${subLabel}</div>
-              <div class="act-card-sub mobile-only">${subLabelMobile}</div>
+              <div class="act-card-sub">${periodLabel}${!mobile ? ` · ${stats.activeDays} faol kun` : ""}</div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-              <div class="seg desktop-only" style="margin-top:0;width:${Math.max(1, yearOptions.length) * 52}px">${yearSegDesktop}</div>
-              <select class="act-year-select mobile-only" onchange="setActivityPanelYear(this.value)">${yearSelectMobile}</select>
+              ${yearSwitcherHtml}
               <button type="button" class="act-card-link" onclick="openActivityStats()">To'liq ko'rish</button>
-              <button type="button" class="act-card-toggle" onclick="toggleActivityCard()" title="Yig'ish">⌃</button>
+              <button type="button" class="act-card-toggle" onclick="toggleActivityCard()" title="Yig'ish">${activityChevronIconHtml("up")}</button>
             </div>
           </div>
-          <div class="mini-stat-row act-card-stats desktop-only">
-            <div class="mini-stat"><div class="mini-stat-val">${statVal(stats.currentStreak ?? "—", stats.currentStreak != null ? "kun" : "")}</div><div class="mini-stat-lbl">Joriy streak</div></div>
-            <div class="mini-stat"><div class="mini-stat-val">${statVal(isNewEmployee ? "—" : stats.longestStreak, !isNewEmployee ? "kun" : "")}</div><div class="mini-stat-lbl">Eng uzun streak</div></div>
-            <div class="mini-stat"><div class="mini-stat-val">${stats.contentDone}</div><div class="mini-stat-lbl">Belgilangan</div></div>
-            <div class="mini-stat"><div class="mini-stat-val" style="font-size:16px">${isNewEmployee ? "—" : stats.peakHourLabel}</div><div class="mini-stat-lbl">Eng faol soat</div></div>
-          </div>
-          <div class="mini-stat-row act-card-stats mobile-only">
-            <div class="mini-stat"><div class="mini-stat-val">${stats.activeDays}</div><div class="mini-stat-lbl">Faol kunlar</div></div>
-            <div class="mini-stat"><div class="mini-stat-val">${statVal(stats.currentStreak ?? "—", stats.currentStreak != null ? "kun" : "")}</div><div class="mini-stat-lbl">Joriy streak</div></div>
-          </div>
-          <div class="desktop-only">${buildActivityHeatmapHtml(days, { cellSize: 14, gap: 4, mobile: false, peakKey: stats.peakDay?.key })}</div>
-          <div class="mobile-only">${buildActivityHeatmapHtml(days, { cellSize: 11, gap: 3, mobile: true, peakKey: stats.peakDay?.key })}</div>
-          ${isNewEmployee ? `<div class="f-hint" style="margin-top:8px">Grafik ${fmtDay(joined)}dan boshlanadi. Bir-ikki haftadan keyin tendensiya ko'rinadi.</div>` : ""}
-          ${activityLegendScaleHtml()}
-          <div class="f-hint">Har bir katak — bir kun. To'qligi shu kundagi harakatlar soni.</div>
+          ${bodyHtml}
         </div>`;
       }
 
@@ -9021,8 +9147,10 @@
           </div>
           ${buildActivityHeatmapHtml(days, { cellSize: 14, gap: 3, mobile: false, peakKey: stats.peakDay?.key })}
           ${isNewEmployee ? `<div class="f-hint" style="margin-top:10px">Grafik ${fmtDay(joined)}dan boshlanadi. Bir-ikki haftadan keyin tendensiya ko'rinadi.</div>` : ""}
-          ${activityLegendScaleHtml()}
-          <div class="f-hint">Katak to'qligi — shu kundagi harakatlar soni.</div>`;
+          <div style="display:flex;align-items:center;gap:18px;margin-top:16px;padding-top:14px;border-top:1px solid var(--bd1);flex-wrap:wrap">
+            <div class="f-hint" style="margin:0;flex:1;min-width:140px">Katak to'qligi — shu kundagi harakatlar soni.</div>
+            ${activityLegendScaleHtml()}
+          </div>`;
         body.innerHTML = html;
         scrollActivityToEnd(body);
       }
