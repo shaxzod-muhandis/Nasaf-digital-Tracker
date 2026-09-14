@@ -1267,6 +1267,7 @@ app.patch("/api/checks", auth, async (req, res) => {
 
     // Bildirishnoma javob bilan BIRGA kutiladi (serverless'da yo'qolmasligi uchun)
     await notifyCheckChange(db, {
+      actorUserId: req.user.id,
       actorUsername: req.user.username,
       project,
       cycle,
@@ -1464,6 +1465,10 @@ app.post("/api/tasks", auth, async (req, res) => {
       notifyTaskEvent(db, {
         actorUserId: req.user.id,
         overviewText,
+        // O'zi ham yaratganini bilib tursin — agar o'ziga biriktirmagan
+        // bo'lsa (o'ziga biriktirgan bo'lsa, yuqorida notifyTaskAssigned
+        // orqali allaqachon shaxsiy xabar oldi, qayta yubormaymiz).
+        selfText: assigneeUserId !== req.user.id ? overviewText : null,
         taskId: task.id,
       }).catch((e) => console.error("Nazorat bildirishnomasi xatosi:", e.message));
     }
@@ -1616,6 +1621,12 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
           createdByUserId: existing.created_by,
           personalText,
           overviewText,
+          // O'zi bajargan/o'zgartirgan ishini o'ziga ham tasdiqlab
+          // qo'yish — faqat aynan o'zining vazifasi bo'lsa (personalText
+          // "Vazifangiz..." deb boshlanadi, shu sabab boshqa birovning
+          // vazifasini o'zgartirgan admin'ga yubormaymiz — matn noto'g'ri
+          // bo'lib qoladi).
+          selfText: existing.assignee_user_id === req.user.id ? personalText : null,
           taskId: task.id,
         }).catch((e) => console.error("Vazifa bildirishnomasi xatosi:", e.message));
       }

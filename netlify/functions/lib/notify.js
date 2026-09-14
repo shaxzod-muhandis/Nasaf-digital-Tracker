@@ -106,7 +106,7 @@ async function resolveRecipients(db, actorUsername, projectId) {
 }
 
 // Bitta checkbox o'zgarishi haqida xabar quradi va yuboradi
-async function notifyCheckChange(db, { actorUsername, project, cycle, type, seqNumber, checked, doneK, doneS }) {
+async function notifyCheckChange(db, { actorUserId, actorUsername, project, cycle, type, seqNumber, checked, doneK, doneS }) {
   if (!process.env.BOT_TOKEN) return;
   const kind = type === "k" ? "Post" : "Stories";
   const actionLine = checked
@@ -126,7 +126,20 @@ async function notifyCheckChange(db, { actorUsername, project, cycle, type, seqN
     `📊 Qoldi: ${remParts.join(", ")}`;
 
   const recipients = await resolveRecipients(db, actorUsername, project.id);
-  await Promise.allSettled(recipients.map((r) => sendMsg(db, r.chatId, text, { replyMarkup: appOpenButton() })));
+  const jobs = recipients.map((r) => sendMsg(db, r.chatId, text, { replyMarkup: appOpenButton() }));
+
+  // O'zi bajargan ishini o'ziga ham tasdiqlab qo'yamiz — resolveRecipients
+  // ataylab actor'ni chetlab o'tadi (u boshqalarga ketadigan oqim), shu
+  // sabab bu alohida, to'g'ridan-to'g'ri actor'ning o'z chat_id'siga
+  // yuboriladi (2026-09-14, foydalanuvchi so'rovi: "o'zi ham shu ishni
+  // qilganini bilish uchun").
+  if (actorUserId) {
+    const ur = await db.query(`select telegram_chat_id from users where id = $1`, [actorUserId]);
+    const chatId = ur.rows[0]?.telegram_chat_id;
+    if (chatId) jobs.push(sendMsg(db, chatId, text, { replyMarkup: appOpenButton() }));
+  }
+
+  await Promise.allSettled(jobs);
 }
 
 // Vazifa biriktirilganda/qayta biriktirilganda bildirishnoma yuboradi —
@@ -162,7 +175,7 @@ async function notifyTaskAssigned(db, { assigneeUserId, task, actorUsername }) {
 // haqidagi oqim ichida topa olmay qiynalishgan (2026-09-10 fikr-mulohaza).
 async function notifyTaskEvent(
   db,
-  { actorUserId, assigneeUserId, createdByUserId, personalText, overviewText, taskId, excludeUserIds = [] },
+  { actorUserId, assigneeUserId, createdByUserId, personalText, overviewText, selfText, taskId, excludeUserIds = [] },
 ) {
   if (!process.env.BOT_TOKEN) return { attempted: false, ok: false, reason: "no_bot_token" };
   const excluded = new Set([actorUserId, ...excludeUserIds].filter(Boolean).map(String));
@@ -192,6 +205,18 @@ async function notifyTaskEvent(
       sentTo.add(id);
       jobs.push(sendMsg(db, u.telegram_chat_id, overviewText, { replyMarkup }));
     });
+  }
+
+  // Actor'ning o'ziga — shu ishni qilgani (yaratgani/bajargani) haqida
+  // tasdiq. Yuqoridagi `excluded` ataylab actor'ni boshqalarga ketadigan
+  // oqimdan chetlab o'tadi — bu esa shundan mustasno, alohida shaxsiy
+  // tasdiqlash xabari (chaqiruvchi tomon `selfText` orqali beradi, faqat
+  // matn to'g'ri bo'ladigan holatlarda — masalan "Vazifangiz..." matni
+  // faqat actor haqiqatan ham mas'ul bo'lgandagina beriladi).
+  if (actorUserId && selfText) {
+    const ur = await db.query(`select telegram_chat_id from users where id = $1`, [actorUserId]);
+    const chatId = ur.rows[0]?.telegram_chat_id;
+    if (chatId) jobs.push(sendMsg(db, chatId, selfText, { replyMarkup }));
   }
 
   await Promise.allSettled(jobs);
