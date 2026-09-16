@@ -44,6 +44,7 @@ const {
   projectPct,
   buildPacingMessage,
 } = require("./lib/notify");
+const { getBalance, awardNcoin, reverseNcoin } = require("./lib/ncoin");
 
 // Faqat Telegram bildirishnoma matnlarini tuzish uchun (Vazifalar
 // ekranidagi TASK_STATUS_LABEL bilan bir xil) — front-end'ga ulanmagan
@@ -1231,15 +1232,21 @@ app.patch("/api/checks", auth, async (req, res) => {
       return res.status(400).json({ error: "seqNumber chegaradan tashqarida" });
     }
 
+    const ncoinRef = `${cycle.id}:${type}:${seq}`;
     if (checked) {
-      // Qayta belgilanganda ham tafsilotlar yangilanadi (modal qayta ochilsa)
-      await db.query(
+      // Qayta belgilanganda ham tafsilotlar yangilanadi (modal qayta ochilsa).
+      // `xmax = 0` — Postgres'ning haqiqatan yangi qator INSERT qilingani
+      // (ON CONFLICT orqali eski qator yangilanmagani) haqidagi standart
+      // belgisi — shu orqali Ncoin faqat HAQIQIY yangi bajarilishda
+      // beriladi, tafsilot yangilanganda qayta berilmaydi.
+      const insR = await db.query(
         `insert into checks (cycle_id, type, seq_number, done_by, editor_id, videographer_id, work_date)
          values ($1,$2,$3,$4,$5,$6, coalesce($7::date, $8::date))
          on conflict (cycle_id, type, seq_number) do update
            set editor_id       = excluded.editor_id,
                videographer_id = excluded.videographer_id,
-               work_date       = excluded.work_date`,
+               work_date       = excluded.work_date
+         returning (xmax = 0) as inserted`,
         [
           cycle.id,
           type,
@@ -1251,12 +1258,27 @@ app.patch("/api/checks", auth, async (req, res) => {
           todayTashkent(),
         ],
       );
+      if (insR.rows[0]?.inserted) {
+        await awardNcoin(db, {
+          userId: req.user.id,
+          amount: 0.5,
+          reason: "check_completed",
+          referenceType: "check",
+          referenceId: ncoinRef,
+        }).catch((e) => console.error("Ncoin berish xatosi:", e.message));
+      }
     } else {
-      await db.query(`delete from checks where cycle_id = $1 and type = $2 and seq_number = $3`, [
-        cycle.id,
-        type,
-        seq,
-      ]);
+      const delR = await db.query(
+        `delete from checks where cycle_id = $1 and type = $2 and seq_number = $3 returning cycle_id`,
+        [cycle.id, type, seq],
+      );
+      if (delR.rows[0]) {
+        await reverseNcoin(db, {
+          referenceType: "check",
+          referenceId: ncoinRef,
+          reason: "check_reversed",
+        }).catch((e) => console.error("Ncoin qaytarish xatosi:", e.message));
+      }
     }
 
     if (cycle.status === "closed") {
@@ -1630,6 +1652,28 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
           taskId: task.id,
         }).catch((e) => console.error("Vazifa bildirishnomasi xatosi:", e.message));
       }
+      // Ncoin — mukofot ishni bajargan mas'ulga boradi, holatni
+      // o'zgartirgan odamga emas (admin boshqa birovning vazifasini ham
+      // "bajarildi" deb belgilashi mumkin). Holat "bajarildi"dan
+      // chiqarilsa (masalan xato bilan belgilangan bo'lsa) — mukofot
+      // qaytarib olinadi.
+      if (existing.assignee_user_id) {
+        if (task.status === "done" && before.status !== "done") {
+          await awardNcoin(db, {
+            userId: existing.assignee_user_id,
+            amount: 0.5,
+            reason: "task_completed",
+            referenceType: "task",
+            referenceId: task.id,
+          }).catch((e) => console.error("Ncoin berish xatosi:", e.message));
+        } else if (before.status === "done" && task.status !== "done") {
+          await reverseNcoin(db, {
+            referenceType: "task",
+            referenceId: task.id,
+            reason: "task_reversed",
+          }).catch((e) => console.error("Ncoin qaytarish xatosi:", e.message));
+        }
+      }
     }
     if (task.priority !== before.priority) {
       await logTaskActivity(req.params.id, req.user.id, "priority_change", {
@@ -1685,6 +1729,170 @@ app.delete("/api/tasks/:id", auth, async (req, res) => {
   try {
     await db.query(`delete from tasks where id = $1`, [req.params.id]);
     res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── NCOIN / NSHOP ─────────────────────────────────────────────────
+// `pg` Postgres'ning `numeric` ustunini standart holatda JS satr
+// sifatida qaytaradi (aniqlik yo'qolmasin deb) — xuddi `date` uchun
+// pg-types.js'da hal qilingani kabi, bu yerda ham `price`ni har doim
+// aniq Number'ga o'tkazamiz, front-end tasodifiy JS coercion'iga
+// tayanib qolmasin deb.
+function normalizeProduct(row) {
+  return row && { ...row, price: Number(row.price) };
+}
+
+app.get("/api/ncoin/me", auth, async (req, res) => {
+  try {
+    const balance = await getBalance(db, req.user.id);
+    const txR = await db.query(
+      `select amount, reason, reference_type, created_at from ncoin_transactions
+       where user_id = $1 order by created_at desc limit 50`,
+      [req.user.id],
+    );
+    res.json({
+      ok: true,
+      balance,
+      transactions: txR.rows.map((row) => ({
+        amount: Number(row.amount),
+        reason: row.reason,
+        referenceType: row.reference_type,
+        at: row.created_at,
+      })),
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/ncoin/products", auth, async (req, res) => {
+  try {
+    const r = await db.query(
+      `select id, name, description, price, stock from ncoin_products
+       where is_visible = true order by price asc, name asc`,
+    );
+    res.json({ ok: true, products: r.rows.map(normalizeProduct) });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/ncoin/purchase", auth, async (req, res) => {
+  try {
+    const { productId } = req.body;
+    if (!productId) return res.status(400).json({ error: "productId kerak" });
+
+    const result = await db.withTransaction(async (client) => {
+      const prR = await client.query(
+        `select * from ncoin_products where id = $1 for update`,
+        [productId],
+      );
+      const product = normalizeProduct(prR.rows[0]);
+      if (!product || !product.is_visible) {
+        throw Object.assign(new Error("Mahsulot topilmadi"), { status: 404 });
+      }
+      if (product.stock <= 0) {
+        throw Object.assign(new Error("Mahsulot tugagan"), { status: 400 });
+      }
+      const balR = await client.query(
+        `select coalesce(sum(amount), 0)::float as balance from ncoin_transactions where user_id = $1`,
+        [req.user.id],
+      );
+      const balance = balR.rows[0].balance;
+      if (balance < product.price) {
+        throw Object.assign(new Error("Balansingiz yetarli emas"), { status: 400 });
+      }
+      await client.query(`update ncoin_products set stock = stock - 1 where id = $1`, [productId]);
+      await client.query(
+        `insert into ncoin_transactions (user_id, amount, reason, reference_type, reference_id)
+         values ($1, $2, 'purchase', 'product', $3)`,
+        [req.user.id, -product.price, productId],
+      );
+      return { newBalance: balance - product.price, product };
+    });
+
+    res.json({
+      ok: true,
+      balance: result.newBalance,
+      product: { id: result.product.id, name: result.product.name },
+    });
+  } catch (e) {
+    res.status(e.status || 500).json({ error: e.message });
+  }
+});
+
+app.get("/api/ncoin/admin/products", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const r = await db.query(`select * from ncoin_products order by created_at asc`);
+    res.json({ ok: true, products: r.rows.map(normalizeProduct) });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/ncoin/admin/products", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const name = String(req.body.name || "").trim();
+    if (!name) return res.status(400).json({ error: "Mahsulot nomi kerak" });
+    const description = req.body.description ? String(req.body.description).trim() : null;
+    const price = Math.max(0, parseFloat(req.body.price) || 0);
+    const stock = Math.max(0, parseInt(req.body.stock, 10) || 0);
+    const isVisible = req.body.isVisible !== false;
+    const r = await db.query(
+      `insert into ncoin_products (name, description, price, stock, is_visible)
+       values ($1,$2,$3,$4,$5) returning *`,
+      [name, description, price, stock, isVisible],
+    );
+    res.json({ ok: true, product: normalizeProduct(r.rows[0]) });
+  } catch (e) {
+    if (e.code === "23505") return res.status(409).json({ error: "Shu nomli mahsulot allaqachon bor" });
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.patch("/api/ncoin/admin/products/:id", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const sets = [];
+    const values = [];
+    const fieldMap = { name: "name", description: "description", price: "price", stock: "stock", isVisible: "is_visible" };
+    Object.entries(fieldMap).forEach(([bodyKey, col]) => {
+      if (typeof req.body[bodyKey] === "undefined") return;
+      values.push(req.body[bodyKey]);
+      sets.push(`${col} = $${values.length}`);
+    });
+    if (!sets.length) return res.status(400).json({ error: "O'zgartiriladigan maydon yo'q" });
+    values.push(req.params.id);
+    const r = await db.query(
+      `update ncoin_products set ${sets.join(", ")} where id = $${values.length} returning *`,
+      values,
+    );
+    if (!r.rows[0]) return res.status(404).json({ error: "Mahsulot topilmadi" });
+    res.json({ ok: true, product: normalizeProduct(r.rows[0]) });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/ncoin/admin/purchases", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const r = await db.query(
+      `select t.created_at, t.amount,
+              coalesce(nullif(trim(concat(u.first_name,' ',u.last_name)), ''), u.username) as user_name,
+              p.name as product_name
+       from ncoin_transactions t
+       join users u on u.id = t.user_id
+       left join ncoin_products p on p.id::text = t.reference_id and t.reference_type = 'product'
+       where t.reason = 'purchase'
+       order by t.created_at desc
+       limit 100`,
+    );
+    res.json({ ok: true, purchases: r.rows.map((row) => ({ ...row, amount: Number(row.amount) })) });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

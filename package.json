@@ -9,7 +9,8 @@
     "migrate:jsonbin": "node scripts/migrate-from-jsonbin.js",
     "test": "node test/smoke.js",
     "test:staff": "node test/staff-worklog.js",
-    "test:profile": "node test/profile-and-tasks.js"
+    "test:profile": "node test/profile-and-tasks.js",
+    "test:ncoin": "node test/ncoin.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
