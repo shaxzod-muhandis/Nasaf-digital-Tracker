@@ -1747,18 +1747,32 @@ function normalizeProduct(row) {
 app.get("/api/ncoin/me", auth, async (req, res) => {
   try {
     const balance = await getBalance(db, req.user.id);
+    const statsR = await db.query(
+      `select
+         coalesce(sum(amount) filter (where amount > 0), 0)::float as earned,
+         coalesce(-sum(amount) filter (where amount < 0), 0)::float as spent,
+         count(*) filter (where reason = 'purchase') as purchase_count
+       from ncoin_transactions where user_id = $1`,
+      [req.user.id],
+    );
     const txR = await db.query(
-      `select amount, reason, reference_type, created_at from ncoin_transactions
-       where user_id = $1 order by created_at desc limit 50`,
+      `select t.amount, t.reason, t.reference_type, t.created_at, p.name as product_name
+       from ncoin_transactions t
+       left join ncoin_products p on p.id::text = t.reference_id and t.reference_type = 'product'
+       where t.user_id = $1 order by t.created_at desc limit 50`,
       [req.user.id],
     );
     res.json({
       ok: true,
       balance,
+      earned: Number(statsR.rows[0].earned),
+      spent: Number(statsR.rows[0].spent),
+      purchaseCount: Number(statsR.rows[0].purchase_count),
       transactions: txR.rows.map((row) => ({
         amount: Number(row.amount),
         reason: row.reason,
         referenceType: row.reference_type,
+        productName: row.product_name,
         at: row.created_at,
       })),
     });

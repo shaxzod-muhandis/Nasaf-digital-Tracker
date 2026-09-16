@@ -566,9 +566,108 @@
         font-weight: 600;
         color: var(--ink);
       }
+      .nshop-balance-bar {
+        background: var(--inkfill);
+        border-radius: 15px;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        margin-bottom: 14px;
+      }
+      .nshop-balance-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        background: #d97706;
+        color: #fff;
+        font-weight: 700;
+        font-size: 17px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+      }
+      .nshop-balance-label {
+        font-size: 10.5px;
+        color: rgba(255, 255, 255, 0.62);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .nshop-balance-value {
+        font-size: 21px;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: -0.02em;
+        margin-top: 3px;
+      }
+      .nshop-balance-history-btn {
+        height: 32px;
+        padding: 0 13px;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.14);
+        font-size: 12px;
+        font-weight: 600;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        flex: none;
+        border: none;
+        cursor: pointer;
+      }
+      .nshop-stats-card {
+        background: var(--inkfill);
+        border-radius: 14px;
+        padding: 18px;
+      }
+      .nshop-stats-label {
+        font-size: 10.5px;
+        color: rgba(255, 255, 255, 0.62);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .nshop-stats-value {
+        font-size: 30px;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: -0.02em;
+        margin-top: 10px;
+      }
+      .nshop-stats-row {
+        display: flex;
+        margin-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        padding-top: 13px;
+      }
+      .nshop-stats-item {
+        flex: 1;
+        text-align: left;
+      }
+      .nshop-stats-item b {
+        display: block;
+        font-size: 15px;
+        font-weight: 700;
+        color: #fff;
+      }
+      .nshop-stats-item span {
+        display: block;
+        font-size: 10.5px;
+        color: rgba(255, 255, 255, 0.55);
+        margin-top: 4px;
+      }
+      .nshop-bottom-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-top: 16px;
+      }
       @media (min-width: 860px) {
         .nshop-grid {
           grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        }
+        .nshop-bottom-grid {
+          display: grid;
+          grid-template-columns: 1fr 320px;
         }
       }
       .emp-bars {
@@ -4084,15 +4183,12 @@
 
     <!-- ── NSHOP ───────────────────────────────────────────────────── -->
     <div class="screen" id="screen-nshop">
-      <div class="hdr" style="display: flex; align-items: center; gap: 12px">
-        <div style="flex: 1; min-width: 0">
-          <div class="hdr-title" style="display: flex; align-items: center; gap: 8px">
-            NShop
-            <span class="debt-badge" style="color: var(--t3); background: var(--chip); font-weight: 500">Test rejimi</span>
-          </div>
-          <div class="hdr-sub" id="nshop-summary">—</div>
+      <div class="hdr">
+        <div class="hdr-title" style="display: flex; align-items: center; gap: 8px">
+          NShop
+          <span class="debt-badge" style="color: var(--t3); background: var(--chip); font-weight: 500">Test rejimi</span>
         </div>
-        <button class="btn btn-soft" style="width: auto; height: 36px; padding: 0 14px; white-space: nowrap" onclick="openNcoinHistorySheet()">Tarix</button>
+        <div class="hdr-sub" id="nshop-summary">—</div>
       </div>
       <div class="scroll" id="nshop-body"></div>
     </div>
@@ -8933,6 +9029,7 @@
       // backend'da (ledger, netlify/functions/lib/ncoin.js).
       let nshopProducts = [];
       let nshopBalance = 0;
+      let nshopMe = null;
 
       async function renderNShopScreen() {
         const c = document.getElementById("nshop-body");
@@ -8948,6 +9045,7 @@
           if (!meRes.ok) throw new Error(meData.error || "Xatolik");
           nshopProducts = prodData.products || [];
           nshopBalance = meData.balance || 0;
+          nshopMe = meData;
         } catch (e) {
           c.innerHTML = `<div style="color:var(--red);font-size:12px;padding:16px">⚠ ${escHtml(e.message)}</div>`;
           return;
@@ -8956,13 +9054,63 @@
       }
 
       function renderNShopBody() {
-        document.getElementById("nshop-summary").innerHTML =
-          `Balansingiz: <b style="color:var(--ink)">${fmtNcoin(nshopBalance)} Ncoin</b> · ${nshopProducts.length} mahsulot`;
+        document.getElementById("nshop-summary").innerHTML = `${nshopProducts.length} mahsulot mavjud`;
         const c = document.getElementById("nshop-body");
-        c.innerHTML = nshopProducts.length
-          ? `<div class="nshop-grid">${nshopProducts.map(nshopCardHtml).join("")}</div>
-             <div class="f-hint" style="margin-top:14px;padding:0 2px">Ncoin post/stories va vazifalarni bajarganingiz uchun avtomatik beriladi. Mahsulotni ofis oshxonasidan olib ketasiz.</div>`
-          : `<div class="empty"><div class="empty-s">Hozircha mahsulot yo'q</div></div>`;
+        c.innerHTML = `
+          <div class="nshop-balance-bar">
+            <div class="nshop-balance-icon">N</div>
+            <div style="flex:1;min-width:0">
+              <div class="nshop-balance-label">Balansingiz</div>
+              <div class="nshop-balance-value">${fmtNcoin(nshopBalance)} Ncoin</div>
+            </div>
+            <button type="button" class="nshop-balance-history-btn" onclick="openNcoinHistorySheet()">Tarix</button>
+          </div>
+          ${
+            nshopProducts.length
+              ? `<div class="nshop-grid">${nshopProducts.map(nshopCardHtml).join("")}</div>
+                 <div class="f-hint" style="margin-top:14px;padding:0 2px">Ncoin post/stories va vazifalarni bajarganingiz uchun avtomatik beriladi. Mahsulotni ofis oshxonasidan olib ketasiz.</div>`
+              : `<div class="empty"><div class="empty-s">Hozircha mahsulot yo'q</div></div>`
+          }
+          ${nshopRecentSectionHtml()}`;
+      }
+
+      function nshopRecentSectionHtml() {
+        const purchases = (nshopMe?.transactions || []).filter((t) => t.reason === "purchase").slice(0, 6);
+        return `
+          <div class="nshop-bottom-grid">
+            <div class="nshop-recent-panel">
+              <div class="sec-upper" style="display:flex;align-items:center">
+                <span style="flex:1">Oxirgi xaridlarim</span><span>${purchases.length} ta</span>
+              </div>
+              <div class="list-card">
+                ${
+                  purchases.length
+                    ? purchases
+                        .map(
+                          (t) => `<div class="list-row" style="padding:11px 13px">
+                            <div class="nshop-card-img" style="width:36px;height:36px;border-radius:9px;font-size:13px;flex:none">${escHtml((t.productName || "?").slice(0, 1).toUpperCase())}</div>
+                            <div style="flex:1;min-width:0">
+                              <div style="font-size:13px;font-weight:600;color:var(--ink)">${escHtml(t.productName || "Mahsulot")}</div>
+                              <div class="f-hint" style="margin:2px 0 0">${fmtDay(new Date(t.at))}</div>
+                            </div>
+                            <div style="font-weight:600;font-size:13px;color:var(--red)">−${fmtNcoin(-t.amount)}</div>
+                          </div>`,
+                        )
+                        .join("")
+                    : `<div class="list-row" style="padding:16px 13px"><div class="f-hint" style="margin:0">Hali xarid qilmagansiz</div></div>`
+                }
+              </div>
+            </div>
+            <div class="nshop-stats-card">
+              <div class="nshop-stats-label">Ncoin balansi</div>
+              <div class="nshop-stats-value">${fmtNcoin(nshopBalance)}</div>
+              <div class="nshop-stats-row">
+                <div class="nshop-stats-item"><b>${fmtNcoin(nshopMe?.earned || 0)}</b><span>Topilgan</span></div>
+                <div class="nshop-stats-item"><b>${fmtNcoin(nshopMe?.spent || 0)}</b><span>Ishlatilgan</span></div>
+                <div class="nshop-stats-item"><b>${nshopMe?.purchaseCount || 0}</b><span>Xarid</span></div>
+              </div>
+            </div>
+          </div>`;
       }
 
       function fmtNcoin(n) {
