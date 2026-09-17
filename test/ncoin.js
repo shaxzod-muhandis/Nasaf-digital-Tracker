@@ -418,6 +418,78 @@ async function main() {
     assert.ok(reasons.includes("purchase"), JSON.stringify(reasons));
   });
 
+  console.log("── NSHOP BOSHQARUVI (qoldiq/arxiv/o'chirish) ────────");
+  await check("xarid stock_capacity'ga tegmaydi (faqat stock kamayadi)", async () => {
+    const prods = await call("GET", "/api/ncoin/admin/products", { user: "shaxzodshokirov" });
+    const p = prods.json.products.find((x) => x.id === productId);
+    assert.strictEqual(p.stock, 1);
+    assert.strictEqual(p.stock_capacity, 2);
+    assert.strictEqual(p.sold_count, 1);
+  });
+  await check("qoldiq oshirilsa — to'liq zaxira ham ko'tariladi", async () => {
+    const r = await call("PATCH", `/api/ncoin/admin/products/${productId}`, {
+      user: "shaxzodshokirov",
+      body: { stock: 10 },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.strictEqual(r.json.product.stock, 10);
+    assert.strictEqual(r.json.product.stock_capacity, 10);
+  });
+  await check("qoldiq pasaytirilsa — to'liq zaxira o'zgarmaydi", async () => {
+    const r = await call("PATCH", `/api/ncoin/admin/products/${productId}`, {
+      user: "shaxzodshokirov",
+      body: { stock: 3 },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.strictEqual(r.json.product.stock, 3);
+    assert.strictEqual(r.json.product.stock_capacity, 10);
+  });
+  await check("xarid qilingan mahsulot o'chirilmaydi (400)", async () => {
+    const r = await call("DELETE", `/api/ncoin/admin/products/${productId}`, { user: "shaxzodshokirov" });
+    assert.strictEqual(r.status, 400);
+  });
+  await check("mahsulot arxivlansa — asosiy ro'yxatdan yashiriladi", async () => {
+    const arch = await call("PATCH", `/api/ncoin/admin/products/${productId}`, {
+      user: "shaxzodshokirov",
+      body: { isArchived: true },
+    });
+    assert.strictEqual(arch.status, 200, JSON.stringify(arch.json));
+    const list = await call("GET", "/api/ncoin/admin/products", { user: "shaxzodshokirov" });
+    assert.ok(!list.json.products.some((x) => x.id === productId));
+    const withArchived = await call("GET", "/api/ncoin/admin/products?includeArchived=1", { user: "shaxzodshokirov" });
+    assert.ok(withArchived.json.products.some((x) => x.id === productId && x.is_archived));
+  });
+  await check("arxivlangan mahsulot NShopda ham ko'rinmaydi", async () => {
+    const r = await call("GET", "/api/ncoin/products", { user: EMP });
+    assert.ok(!r.json.products.some((p) => p.id === productId));
+  });
+  await check("arxivdan qaytarilsa — asosiy ro'yxatda qayta ko'rinadi", async () => {
+    const r = await call("PATCH", `/api/ncoin/admin/products/${productId}`, {
+      user: "shaxzodshokirov",
+      body: { isArchived: false },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    const list = await call("GET", "/api/ncoin/admin/products", { user: "shaxzodshokirov" });
+    assert.ok(list.json.products.some((x) => x.id === productId));
+  });
+  await check("hech qachon sotib olinmagan mahsulot o'chiriladi", async () => {
+    const r = await call("DELETE", `/api/ncoin/admin/products/${hiddenProductId}`, { user: "shaxzodshokirov" });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    const list = await call("GET", "/api/ncoin/admin/products", { user: "shaxzodshokirov" });
+    assert.ok(!list.json.products.some((x) => x.id === hiddenProductId));
+  });
+  await check("statistika endpointi ishlaydi (admin)", async () => {
+    const r = await call("GET", "/api/ncoin/admin/nshop-stats", { user: "shaxzodshokirov" });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.ok(typeof r.json.productCount === "number");
+    assert.ok(Array.isArray(r.json.lowStock));
+    assert.ok(Array.isArray(r.json.recentPurchases));
+  });
+  await check("statistika endpointi oddiy xodimga yopiq (403)", async () => {
+    const r = await call("GET", "/api/ncoin/admin/nshop-stats", { user: EMP });
+    assert.strictEqual(r.status, 403);
+  });
+
   await cleanupTestData();
   server.close();
   console.log(`\n${passed} ta o'tdi, ${failed} ta xato.\n`);

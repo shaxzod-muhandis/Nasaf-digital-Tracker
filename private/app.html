@@ -787,6 +787,10 @@
         color: rgba(255, 255, 255, 0.55);
         margin-top: 5px;
       }
+      .dtbl tbody tr.flash td {
+        background: var(--amber-bg) !important;
+        transition: background 0.15s ease;
+      }
       @media (min-width: 860px) {
         .nshop-grid {
           grid-template-columns: repeat(4, 1fr);
@@ -9380,7 +9384,15 @@
       }
 
       // ── NSHOP BOSHQARUVI (admin) ────────────────────────────────────
+      // Mobilda — ixcham kartalar ro'yxati. Desktopda — statistika
+      // kartochkalari + to'liq jadval ("Qoldiq" progress-bar
+      // `stock_capacity`ga nisbatan — bu "to'liq zaxira", mahsulot
+      // yaratilganda yoki qoldiq oshirilganda ko'tariladi, faqat xarid
+      // kamaytirganda o'zgarmaydi) + "e'tibor talab qiladi"/"oxirgi
+      // xaridlar" panellari (/api/ncoin/admin/nshop-stats).
       let nshopAdminProducts = [];
+      let nshopAdminStats = null;
+      let nshopAdminSearch = "";
       async function renderNShopAdminTab(c) {
         c.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
         await refreshNShopAdminList(c);
@@ -9389,33 +9401,199 @@
         c = c || document.getElementById("admin-body");
         if (!c) return;
         try {
-          const res = await apiFetch("/api/ncoin/admin/products");
-          const d = await res.json();
-          if (!res.ok) throw new Error(d.error || "Xato");
-          nshopAdminProducts = d.products || [];
+          const [prodRes, statsRes] = await Promise.all([
+            apiFetch("/api/ncoin/admin/products"),
+            apiFetch("/api/ncoin/admin/nshop-stats"),
+          ]);
+          const prodData = await prodRes.json();
+          if (!prodRes.ok) throw new Error(prodData.error || "Xato");
+          nshopAdminProducts = prodData.products || [];
+          nshopAdminStats = statsRes.ok ? await statsRes.json() : null;
         } catch (e) {
           c.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
           return;
         }
-        c.innerHTML = `
-          <div style="max-width:640px">
-            <button class="btn btn-blue btn-sm" style="width:auto;padding:0 16px;margin-bottom:14px" onclick="openNShopProductSheet()">+ Mahsulot qo'shish</button>
-            <div id="nshop-admin-list">${
-              nshopAdminProducts.length
-                ? nshopAdminProducts.map(nshopAdminRowHtml).join("")
-                : `<div class="empty"><div class="empty-s">Hali mahsulot yo'q</div></div>`
-            }</div>
-          </div>`;
+        renderNShopAdminBody(c);
       }
-      function nshopAdminRowHtml(p) {
+      function nshopAdminOnSearch(v) {
+        nshopAdminSearch = v;
+        renderNShopAdminBody();
+      }
+      function renderNShopAdminBody(c) {
+        c = c || document.getElementById("admin-body");
+        if (!c) return;
+        const q = nshopAdminSearch.trim().toLowerCase();
+        const list = nshopAdminProducts.filter((p) => !q || p.name.toLowerCase().includes(q));
+        const s = nshopAdminStats;
+
+        const mobileHtml = `<div class="mobile-only">
+          <button class="btn btn-blue btn-sm" style="width:auto;padding:0 16px;margin-bottom:14px" onclick="openNShopProductSheet()">+ Mahsulot qo'shish</button>
+          <div class="f-group">
+            <input class="f-input" placeholder="Mahsulot qidirish" value="${escHtml(nshopAdminSearch)}" oninput="nshopAdminOnSearch(this.value)"/>
+          </div>
+          <div id="nshop-admin-list">${
+            list.length
+              ? list.map(nshopAdminMobileRowHtml).join("")
+              : `<div class="empty"><div class="empty-s">Mahsulot topilmadi</div></div>`
+          }</div>
+        </div>`;
+
+        const desktopHtml = `<div class="desktop-only">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+            <div style="flex:1">
+              <div style="font:600 19px inherit;color:var(--ink);letter-spacing:-0.02em">NShop boshqaruvi</div>
+              <div style="font-size:12px;color:var(--t2);margin-top:1px">${s ? `${s.productCount} mahsulot · ${s.totalStock} dona qoldiq · ${s.soldThisMonth} xarid` : ""}</div>
+            </div>
+            <div class="search-box" style="width:220px;margin-top:0">
+              <div class="search-ico">${ICON.search}</div>
+              <input placeholder="Mahsulot qidirish" value="${escHtml(nshopAdminSearch)}" oninput="nshopAdminOnSearch(this.value)"/>
+            </div>
+            <span class="stat-link" onclick="openNShopArchivedSheet()">Arxiv</span>
+            <button type="button" class="btn btn-blue btn-sm" style="width:auto;padding:0 15px" onclick="openNShopProductSheet()">+ Mahsulot qo'shish</button>
+          </div>
+          ${s ? nshopAdminStatsGridHtml(s) : ""}
+          <div class="dtbl-wrap">
+            <table class="dtbl">
+              <thead><tr>
+                <th>Mahsulot</th><th style="width:90px">Narxi</th><th style="width:170px">Qoldiq</th><th style="width:70px">Sotildi</th><th style="width:80px">Ko'rinsin</th><th style="width:84px;text-align:right">Amal</th>
+              </tr></thead>
+              <tbody>${
+                list.length
+                  ? list.map(nshopAdminDesktopRowHtml).join("")
+                  : `<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:24px">Mahsulot topilmadi</td></tr>`
+              }</tbody>
+            </table>
+          </div>
+          ${s ? nshopAdminBottomGridHtml(s) : ""}
+        </div>`;
+
+        c.innerHTML = mobileHtml + desktopHtml;
+      }
+      function nshopAdminStatsGridHtml(s) {
+        return `<div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-lbl">Mahsulot turi</div>
+            <div class="stat-val">${s.productCount}</div>
+            <div class="stat-foot">${s.visibleCount} tasi ko'rinadi</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">Umumiy qoldiq</div>
+            <div class="stat-val">${s.totalStock}</div>
+            <div class="stat-foot">${s.totalCapacity} tadan</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">Bu oy sotildi</div>
+            <div class="stat-val">${s.soldThisMonth}</div>
+            <div class="stat-foot">${fmtNcoin(s.revenueThisMonth)} Ncoin</div>
+          </div>
+          <div class="stat-card danger">
+            <div class="stat-lbl">Qoldiq kam</div>
+            <div class="stat-val">${s.lowStockCount}</div>
+            <div class="stat-foot">to'liq zaxiraning 25%idan kam</div>
+          </div>
+        </div>`;
+      }
+      function nshopAdminMobileRowHtml(p) {
         return `<div class="m-item">
           <div class="m-item-info">
             <div class="m-item-label">${escHtml(p.name)}</div>
-            <div class="f-hint" style="margin:2px 0 0">🪙 ${fmtNcoin(p.price)} · ${p.stock} ta · ${p.is_visible ? "Ko'rinadi" : "Yashirilgan"}</div>
+            <div class="f-hint" style="margin:2px 0 0">🪙 ${fmtNcoin(p.price)} · qoldiq ${p.stock}/${p.stock_capacity} · ${p.sold_count} sotildi · ${p.is_visible ? "Ko'rinadi" : "Yashirilgan"}</div>
           </div>
+          <button type="button" class="icon-btn" onclick="openNShopProductMenu('${escArg(p.id)}')">⋯</button>
           <button type="button" class="btn btn-sm btn-soft" style="width:auto;padding:0 12px" onclick="toggleNShopVisible('${escArg(p.id)}',${p.is_visible})">${p.is_visible ? "Yashirish" : "Ko'rsatish"}</button>
           <button type="button" class="btn btn-sm btn-soft" style="width:auto;padding:0 12px" onclick="openNShopProductSheet('${escArg(p.id)}')">Tahrirlash</button>
         </div>`;
+      }
+      function nshopAdminDesktopRowHtml(p) {
+        const cap = p.stock_capacity || 0;
+        const pct = cap > 0 ? Math.max(0, Math.min(100, Math.round((p.stock / cap) * 100))) : 0;
+        return `<tr id="nshop-row-${p.id}"${p.is_visible ? "" : ' style="background:var(--surf2)"'}>
+          <td>
+            <div style="display:flex;align-items:center;gap:13px">
+              <div class="nshop-purchase-thumb" style="width:44px;height:44px;border-radius:11px"><span>rasm</span></div>
+              <div>
+                <div class="dtbl-name"${p.is_visible ? "" : ' style="color:var(--t2)"'}>${escHtml(p.name)}</div>
+                <div style="font-size:11.5px;color:var(--t3);margin-top:2px">${p.is_visible ? "Ko'rinadi" : "Yashirilgan"}</div>
+              </div>
+            </div>
+          </td>
+          <td><div style="display:flex;align-items:center;gap:5px"><span class="n-badge" style="width:18px;height:18px;font-size:11px">N</span>${fmtNcoin(p.price)}</div></td>
+          <td>
+            <div class="dtbl-bar-wrap">
+              <div class="hist-track"><div class="hist-fill" style="width:${pct}%;background:${p.is_visible ? "var(--brand)" : "var(--amber)"}"></div></div>
+              <span style="font-size:12.5px;color:var(--t5);white-space:nowrap">${p.stock}/${cap}</span>
+            </div>
+          </td>
+          <td>${p.sold_count}</td>
+          <td><button type="button" class="tglsw brand ${p.is_visible ? "on" : ""}" onclick="toggleNShopVisible('${escArg(p.id)}',${p.is_visible})"><div class="knob"></div></button></td>
+          <td style="text-align:right">
+            <div style="display:flex;gap:6px;justify-content:flex-end">
+              <button type="button" class="icon-btn" onclick="openNShopProductSheet('${escArg(p.id)}')" title="Tahrirlash">✎</button>
+              <button type="button" class="icon-btn" onclick="openNShopProductMenu('${escArg(p.id)}')" title="Ko'proq">⋯</button>
+            </div>
+          </td>
+        </tr>`;
+      }
+      function nshopAdminBottomGridHtml(s) {
+        const alertsHtml = s.lowStock.length
+          ? s.lowStock
+              .map((p) => {
+                const urgent = !p.isVisible;
+                const desc = urgent
+                  ? `${p.stock} ta qoldi · hozir yashirilgan`
+                  : `${p.stock} ta qoldi · ${p.weeklySales > 0 ? `haftada ~${p.weeklySales} sotiladi` : "kam sotilmoqda"}`;
+                const actionHtml = urgent
+                  ? `<button type="button" class="btn btn-sm btn-soft" style="width:auto;padding:0 14px;flex:none" onclick="promptAddStock('${escArg(p.id)}','${escArg(p.name)}')">Qoldiq qo'shish</button>`
+                  : `<button type="button" class="btn btn-sm btn-soft" style="width:auto;padding:0 14px;flex:none" onclick="scrollToNShopProduct('${escArg(p.id)}')">Ko'rish</button>`;
+                return `<div style="display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid ${urgent ? "var(--red-bd)" : "var(--bd2)"};border-radius:11px;${urgent ? "background:var(--red-tint)" : ""}">
+                  <div style="flex:1;min-width:0">
+                    <div style="font-weight:600;font-size:13px;color:var(--ink)">${escHtml(p.name)}</div>
+                    <div style="font-size:11.5px;color:var(--t2);margin-top:2px">${desc}</div>
+                  </div>
+                  ${actionHtml}
+                </div>`;
+              })
+              .join("")
+          : `<div class="f-hint" style="padding:6px 0">Hammasi yetarli — kam qoldiq yo'q ✅</div>`;
+        const purchasesHtml = s.recentPurchases.length
+          ? s.recentPurchases
+              .map(
+                (t) => `<div class="nshop-purchase-row">
+                  <div class="avatar mute" style="width:28px;height:28px;border-radius:9px;font-size:11px">${escHtml((t.user_name || "?").slice(0, 1).toUpperCase())}</div>
+                  <div style="flex:1;min-width:0;font-size:12.5px;color:var(--t5)"><b style="color:var(--ink);font-weight:600">${escHtml(t.user_name)}</b> · ${escHtml(t.product_name || "Mahsulot")}</div>
+                  <div style="font-size:11px;color:var(--t4);flex:none">${nshopPurchaseTimeLabel(t.created_at)}</div>
+                  <div class="nshop-purchase-amt" style="width:44px;text-align:right;flex:none">−${fmtNcoin(-t.amount)}</div>
+                </div>`,
+              )
+              .join("")
+          : `<div class="nshop-purchase-row"><div class="f-hint" style="margin:0">Hali xarid bo'lmagan</div></div>`;
+        return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px">
+          <div class="rail-card" style="margin-bottom:0;border-color:var(--red-bd)">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px">
+              <span style="width:7px;height:7px;border-radius:99px;background:var(--red);flex:none"></span>
+              <div class="rail-title" style="margin:0;flex:1">E'tibor talab qiladi</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">${alertsHtml}</div>
+          </div>
+          <div class="nshop-panel">
+            <div class="nshop-panel-hdr"><div class="nshop-panel-title">Oxirgi xaridlar</div></div>
+            ${purchasesHtml}
+          </div>
+        </div>`;
+      }
+      function nshopPurchaseTimeLabel(iso) {
+        const d = new Date(iso);
+        const diff = daysBetween(new Date(d.getFullYear(), d.getMonth(), d.getDate()), todayDate());
+        if (diff === 0) return fmtTime(d);
+        if (diff === 1) return "kecha";
+        return fmtDay(d);
+      }
+      function scrollToNShopProduct(productId) {
+        const el = document.getElementById("nshop-row-" + productId);
+        if (!el) return;
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("flash");
+        setTimeout(() => el.classList.remove("flash"), 1500);
       }
       function openNShopProductSheet(productId) {
         const p = productId ? nshopAdminProducts.find((x) => x.id === productId) : null;
@@ -9433,6 +9611,7 @@
             <div style="flex:1"><label class="f-label">Ncoin narxi</label><input class="f-input" type="number" min="0" step="0.5" id="np-price" value="${p ? p.price : ""}" placeholder="0"/></div>
             <div style="flex:1"><label class="f-label">Zaxira soni</label><input class="f-input" type="number" min="0" id="np-stock" value="${p ? p.stock : ""}" placeholder="0"/></div>
           </div>
+          ${p ? `<div class="f-hint" style="margin-top:-8px">To'liq zaxira (progress-bar uchun): ${p.stock_capacity}. Zaxira sonini oshirsangiz, shu ham ko'tariladi.</div>` : ""}
           <div class="f-group" style="display:flex;align-items:center;gap:10px">
             <input type="checkbox" id="np-visible" ${!p || p.is_visible ? "checked" : ""} style="width:18px;height:18px"/>
             <label class="f-label" style="margin:0" for="np-visible">NShopda ko'rinsin</label>
@@ -9473,6 +9652,118 @@
             body: JSON.stringify({ isVisible: !currentlyVisible }),
           });
           if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
+          refreshNShopAdminList();
+        } catch (e) {
+          showToast("⚠ " + e.message);
+        }
+      }
+      function promptAddStock(productId, name) {
+        const { body } = makeSheet(`${escHtml(name)} — qoldiq qo'shish`);
+        body.innerHTML = `
+          <div class="f-group">
+            <label class="f-label">Necha dona qo'shilsin?</label>
+            <input class="f-input" type="number" min="1" id="as-qty" placeholder="masalan: 20"/>
+          </div>
+          <button class="btn btn-blue" id="as-save-btn" onclick="submitAddStock('${escArg(productId)}')">Qo'shish</button>`;
+      }
+      async function submitAddStock(productId) {
+        const qty = parseInt(document.getElementById("as-qty").value, 10);
+        if (!qty || qty <= 0) return showToast("⚠ Sonni kiriting");
+        const btn = document.getElementById("as-save-btn");
+        btn.disabled = true;
+        btn.textContent = "Saqlanmoqda...";
+        try {
+          const current = nshopAdminProducts.find((x) => x.id === productId);
+          const newStock = (current ? current.stock : 0) + qty;
+          const res = await apiFetch(`/api/ncoin/admin/products/${productId}`, {
+            method: "PATCH",
+            body: JSON.stringify({ stock: newStock }),
+          });
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
+          document.querySelector(".overlay")?.remove();
+          showToast(`✅ ${qty} dona qo'shildi`);
+          refreshNShopAdminList();
+        } catch (e) {
+          showToast("⚠ " + e.message);
+          btn.disabled = false;
+          btn.textContent = "Qo'shish";
+        }
+      }
+      // "⋯" — arxivlash (yumshoq, tarix saqlanadi) yoki butunlay
+      // o'chirish (faqat hech qachon sotib olinmagan bo'lsa xavfsiz).
+      function openNShopProductMenu(productId) {
+        const p = nshopAdminProducts.find((x) => x.id === productId);
+        if (!p) return;
+        const hasSales = p.sold_count > 0;
+        const { body } = makeSheet(p.name);
+        body.innerHTML = `
+          <button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="document.querySelector('.overlay')?.remove();archiveNShopProduct('${escArg(p.id)}')">📦 Arxivlash</button>
+          <button type="button" class="btn ${hasSales ? "btn-soft" : "btn-danger"}" ${hasSales ? "disabled" : ""} onclick="document.querySelector('.overlay')?.remove();confirmDeleteNShopProduct('${escArg(p.id)}','${escArg(p.name)}')">🗑 O'chirish${hasSales ? " (xarid qilingan — avval arxivlang)" : ""}</button>`;
+      }
+      async function archiveNShopProduct(productId) {
+        try {
+          const res = await apiFetch(`/api/ncoin/admin/products/${productId}`, {
+            method: "PATCH",
+            body: JSON.stringify({ isArchived: true }),
+          });
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
+          showToast("✅ Arxivlandi");
+          refreshNShopAdminList();
+        } catch (e) {
+          showToast("⚠ " + e.message);
+        }
+      }
+      function confirmDeleteNShopProduct(productId, name) {
+        showConfirmModal(
+          `${escHtml(name)} ni o'chirish`,
+          `Bu amalni ortga qaytarib bo'lmaydi — mahsulot butunlay bazadan o'chiriladi.`,
+          async () => {
+            try {
+              const res = await apiFetch(`/api/ncoin/admin/products/${productId}`, { method: "DELETE" });
+              if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
+              showToast("✅ O'chirildi");
+              refreshNShopAdminList();
+            } catch (e) {
+              showToast("⚠ " + e.message);
+            }
+          },
+          "O'chirish",
+        );
+      }
+      async function openNShopArchivedSheet() {
+        const { body } = makeSheet("Arxivlangan mahsulotlar");
+        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        try {
+          const res = await apiFetch("/api/ncoin/admin/products?includeArchived=1");
+          const d = await res.json();
+          if (!res.ok) throw new Error(d.error || "Xato");
+          const archived = (d.products || []).filter((p) => p.is_archived);
+          body.innerHTML = archived.length
+            ? archived
+                .map(
+                  (p) => `<div class="m-item">
+                    <div class="m-item-info">
+                      <div class="m-item-label">${escHtml(p.name)}</div>
+                      <div class="f-hint" style="margin:2px 0 0">🪙 ${fmtNcoin(p.price)} · ${p.stock} ta</div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-soft" style="width:auto;padding:0 12px" onclick="restoreNShopProduct('${escArg(p.id)}')">Qaytarish</button>
+                  </div>`,
+                )
+                .join("")
+            : `<div class="empty"><div class="empty-s">Arxivlangan mahsulot yo'q</div></div>`;
+        } catch (e) {
+          body.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
+        }
+      }
+      async function restoreNShopProduct(productId) {
+        try {
+          const res = await apiFetch(`/api/ncoin/admin/products/${productId}`, {
+            method: "PATCH",
+            body: JSON.stringify({ isArchived: false }),
+          });
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
+          showToast("✅ Qaytarildi");
+          document.querySelector(".overlay")?.remove();
           refreshNShopAdminList();
         } catch (e) {
           showToast("⚠ " + e.message);

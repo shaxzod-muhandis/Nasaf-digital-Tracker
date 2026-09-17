@@ -2027,7 +2027,7 @@ app.get("/api/ncoin/products", auth, async (req, res) => {
   try {
     const r = await db.query(
       `select id, name, description, price, stock from ncoin_products
-       where is_visible = true order by price asc, name asc`,
+       where is_visible = true and is_archived = false order by price asc, name asc`,
     );
     res.json({ ok: true, products: r.rows.map(normalizeProduct) });
   } catch (e) {
@@ -2092,8 +2092,19 @@ app.post("/api/ncoin/purchase", auth, async (req, res) => {
 app.get("/api/ncoin/admin/products", auth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
-    const r = await db.query(`select * from ncoin_products order by created_at asc`);
-    res.json({ ok: true, products: r.rows.map(normalizeProduct) });
+    const includeArchived = req.query.includeArchived === "1";
+    const r = await db.query(
+      `select p.*,
+              (select count(*) from ncoin_transactions t
+                where t.reason = 'purchase' and t.reference_type = 'product' and t.reference_id = p.id::text) as sold_count
+       from ncoin_products p
+       ${includeArchived ? "" : "where p.is_archived = false"}
+       order by p.created_at asc`,
+    );
+    res.json({
+      ok: true,
+      products: r.rows.map((row) => ({ ...normalizeProduct(row), sold_count: Number(row.sold_count) })),
+    });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -2109,8 +2120,8 @@ app.post("/api/ncoin/admin/products", auth, async (req, res) => {
     const stock = Math.max(0, parseInt(req.body.stock, 10) || 0);
     const isVisible = req.body.isVisible !== false;
     const r = await db.query(
-      `insert into ncoin_products (name, description, price, stock, is_visible)
-       values ($1,$2,$3,$4,$5) returning *`,
+      `insert into ncoin_products (name, description, price, stock, stock_capacity, is_visible)
+       values ($1,$2,$3,$4,$4,$5) returning *`,
       [name, description, price, stock, isVisible],
     );
     res.json({ ok: true, product: normalizeProduct(r.rows[0]) });
@@ -2125,13 +2136,23 @@ app.patch("/api/ncoin/admin/products/:id", auth, async (req, res) => {
   try {
     const sets = [];
     const values = [];
-    const fieldMap = { name: "name", description: "description", price: "price", stock: "stock", isVisible: "is_visible" };
+    const fieldMap = { name: "name", description: "description", price: "price", stock: "stock", isVisible: "is_visible", isArchived: "is_archived" };
+    let stockPlaceholder = null;
     Object.entries(fieldMap).forEach(([bodyKey, col]) => {
       if (typeof req.body[bodyKey] === "undefined") return;
       values.push(req.body[bodyKey]);
       sets.push(`${col} = $${values.length}`);
+      if (bodyKey === "stock") stockPlaceholder = values.length;
     });
     if (!sets.length) return res.status(400).json({ error: "O'zgartiriladigan maydon yo'q" });
+    // `stock` qo'lda oshirilsa ("to'liq zaxira"ni yangilash uchun) yoki
+    // "Qoldiq qo'shish" orqali to'ldirilsa — `stock_capacity` (progress-bar
+    // uchun "to'liq" chegara) ham shunga ko'tariladi. Faqat XARID kamaytirsa
+    // (`/api/ncoin/purchase`) `stock_capacity`ga tegilmaydi — bar shunga
+    // nisbatan pasayadi.
+    if (stockPlaceholder) {
+      sets.push(`stock_capacity = greatest(stock_capacity, $${stockPlaceholder})`);
+    }
     values.push(req.params.id);
     const r = await db.query(
       `update ncoin_products set ${sets.join(", ")} where id = $${values.length} returning *`,
@@ -2144,9 +2165,28 @@ app.patch("/api/ncoin/admin/products/:id", auth, async (req, res) => {
   }
 });
 
+app.delete("/api/ncoin/admin/products/:id", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const usedR = await db.query(
+      `select 1 from ncoin_transactions where reference_type = 'product' and reference_id = $1 limit 1`,
+      [req.params.id],
+    );
+    if (usedR.rows.length) {
+      return res.status(400).json({ error: "Bu mahsulot xarid qilingan — o'chirib bo'lmaydi, arxivlang" });
+    }
+    const r = await db.query(`delete from ncoin_products where id = $1 returning id`, [req.params.id]);
+    if (!r.rows[0]) return res.status(404).json({ error: "Mahsulot topilmadi" });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get("/api/ncoin/admin/purchases", auth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
+    const limit = Math.min(100, parseInt(req.query.limit, 10) || 100);
     const r = await db.query(
       `select t.created_at, t.amount,
               coalesce(nullif(trim(concat(u.first_name,' ',u.last_name)), ''), u.username) as user_name,
@@ -2156,9 +2196,74 @@ app.get("/api/ncoin/admin/purchases", auth, async (req, res) => {
        left join ncoin_products p on p.id::text = t.reference_id and t.reference_type = 'product'
        where t.reason = 'purchase'
        order by t.created_at desc
-       limit 100`,
+       limit $1`,
+      [limit],
     );
     res.json({ ok: true, purchases: r.rows.map((row) => ({ ...row, amount: Number(row.amount) })) });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// NShop boshqaruvi paneli — statistika kartochkalari + "e'tibor talab
+// qiladi" ro'yxati (kam qoldiq: to'liq zaxiraning 25% yoki undan kami,
+// arxivlanmagan mahsulotlar orasidan) + "bu oy sotildi" (Toshkent oyi).
+app.get("/api/ncoin/admin/nshop-stats", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const month = todayTashkent().slice(0, 7);
+    const totalsR = await db.query(
+      `select count(*) as product_count,
+              count(*) filter (where is_visible) as visible_count,
+              coalesce(sum(stock), 0) as total_stock,
+              coalesce(sum(stock_capacity), 0) as total_capacity,
+              count(*) filter (where stock_capacity > 0 and stock <= stock_capacity * 0.25) as low_stock_count
+       from ncoin_products where is_archived = false`,
+    );
+    const soldR = await db.query(
+      `select count(*) as sold_count, coalesce(-sum(amount), 0)::float as revenue
+       from ncoin_transactions
+       where reason = 'purchase' and to_char(created_at at time zone 'Asia/Tashkent', 'YYYY-MM') = $1`,
+      [month],
+    );
+    const lowStockR = await db.query(
+      `select p.id, p.name, p.stock, p.stock_capacity, p.is_visible,
+              (select count(*) from ncoin_transactions t
+                where t.reason = 'purchase' and t.reference_type = 'product' and t.reference_id = p.id::text
+                  and t.created_at > now() - interval '7 days') as weekly_sales
+       from ncoin_products p
+       where p.is_archived = false and p.stock_capacity > 0 and p.stock <= p.stock_capacity * 0.25
+       order by p.stock asc limit 6`,
+    );
+    const recentR = await db.query(
+      `select t.created_at, t.amount,
+              coalesce(nullif(trim(concat(u.first_name,' ',u.last_name)), ''), u.username) as user_name,
+              p.name as product_name
+       from ncoin_transactions t
+       join users u on u.id = t.user_id
+       left join ncoin_products p on p.id::text = t.reference_id and t.reference_type = 'product'
+       where t.reason = 'purchase'
+       order by t.created_at desc limit 5`,
+    );
+    res.json({
+      ok: true,
+      productCount: Number(totalsR.rows[0].product_count),
+      visibleCount: Number(totalsR.rows[0].visible_count),
+      totalStock: Number(totalsR.rows[0].total_stock),
+      totalCapacity: Number(totalsR.rows[0].total_capacity),
+      lowStockCount: Number(totalsR.rows[0].low_stock_count),
+      soldThisMonth: Number(soldR.rows[0].sold_count),
+      revenueThisMonth: Number(soldR.rows[0].revenue),
+      lowStock: lowStockR.rows.map((row) => ({
+        id: row.id,
+        name: row.name,
+        stock: row.stock,
+        capacity: row.stock_capacity,
+        isVisible: row.is_visible,
+        weeklySales: Number(row.weekly_sales),
+      })),
+      recentPurchases: recentR.rows.map((row) => ({ ...row, amount: Number(row.amount) })),
+    });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
