@@ -10024,30 +10024,29 @@
           .map(([f, lbl]) => `<button type="button" class="chip-btn${filter === f ? " active" : ""}" onclick="setNcoinHistoryFilter('${f}')">${lbl}</button>`)
           .join("");
 
-        // "Barchasi"da umumiy raqam (balans) tepada, uchta quticha
-        // (Topilgan/Ishlatilgan/Xarid) esa ro'yxatdan KEYIN — pastki
-        // "jami hisob-kitob" sifatida (ro'yxat ustidan diqqatni tortib
-        // ketmasligi uchun). Bitta sabab bo'yicha filtrlanganda esa
-        // faqat o'sha turdagi jami summa yetarli.
-        let topSummaryHtml;
-        let footerStatsHtml = "";
+        // Tartib: raqamlar (balans + "Barchasi"da uchta quticha) eng
+        // tepada, filtr tugmalari ular ostida — ro'yxatga bevosita
+        // yopishib, "shu tugmalar ro'yxatni boshqaradi" aniq ko'rinishi
+        // uchun. Bitta sabab bo'yicha filtrlanganda faqat o'sha turdagi
+        // jami summa yetarli (uchta quticha shart emas).
+        let summaryHtml;
         if (filter === "earned") {
-          topSummaryHtml = `<div style="text-align:center;padding:4px 0 20px">
+          summaryHtml = `<div style="text-align:center;padding:4px 0 20px">
             <div class="f-hint" style="margin:0">Jami ishlab topilgan</div>
             <div style="font-size:26px;font-weight:700;color:#16a34a;margin-top:4px">+${fmtNcoin(data.earned)} Ncoin</div>
           </div>`;
         } else if (filter === "spent") {
-          topSummaryHtml = `<div style="text-align:center;padding:4px 0 20px">
+          summaryHtml = `<div style="text-align:center;padding:4px 0 20px">
             <div class="f-hint" style="margin:0">Jami xarajat</div>
             <div style="font-size:26px;font-weight:700;color:var(--red);margin-top:4px">−${fmtNcoin(data.spent)} Ncoin</div>
           </div>`;
         } else {
-          topSummaryHtml = `<div style="text-align:center;padding:4px 0 20px">
-            <div class="f-hint" style="margin:0">Joriy balans</div>
-            <div style="font-size:26px;font-weight:700;color:var(--ink);margin-top:4px">${fmtNcoin(data.balance)} Ncoin</div>
-          </div>`;
-          footerStatsHtml = `
-            <div class="mini-stat-row" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--bd1)">
+          summaryHtml = `
+            <div style="text-align:center;padding:4px 0 4px">
+              <div class="f-hint" style="margin:0">Joriy balans</div>
+              <div style="font-size:26px;font-weight:700;color:var(--ink);margin-top:4px">${fmtNcoin(data.balance)} Ncoin</div>
+            </div>
+            <div class="mini-stat-row" style="margin:14px 0 20px">
               <div class="mini-stat"><div class="mini-stat-val" style="color:#16a34a">${fmtNcoin(data.earned)}</div><div class="mini-stat-lbl">Topilgan</div></div>
               <div class="mini-stat"><div class="mini-stat-val" style="color:var(--red)">${fmtNcoin(data.spent)}</div><div class="mini-stat-lbl">Ishlatilgan</div></div>
               <div class="mini-stat"><div class="mini-stat-val">${data.purchaseCount}</div><div class="mini-stat-lbl">Xarid</div></div>
@@ -10058,14 +10057,13 @@
           filter === "earned" ? "Hali coin topilmagan" : filter === "spent" ? "Hali xarajat yo'q" : "Hali harakat yo'q";
 
         body.innerHTML = `
-          <div class="chip-group" style="margin-bottom:20px">${filterChips}</div>
-          ${topSummaryHtml}
+          ${summaryHtml}
+          <div class="chip-group" style="margin-bottom:16px">${filterChips}</div>
           ${
             shown.length
               ? `<div class="list-card">${shown.map((t) => ncoinHistoryRowHtml(t)).join("")}</div>`
               : `<div class="empty"><div class="empty-s">${emptyLabel}</div></div>`
-          }
-          ${footerStatsHtml}`;
+          }`;
       }
 
       // ── FAOLLIK — umumiy hisob-kitob ─────────────────────────────
