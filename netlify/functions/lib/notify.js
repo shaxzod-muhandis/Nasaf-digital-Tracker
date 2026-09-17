@@ -142,6 +142,23 @@ async function notifyCheckChange(db, { actorUserId, actorUsername, project, cycl
   await Promise.allSettled(jobs);
 }
 
+// Ncoin balansi o'zgarganda (topilgan/sarflangan) — shaxsiy, o'ziga
+// xos bildirishnoma. Reversal (xatoni tuzatish) uchun ATAYLAB
+// chaqirilmaydi — chaqiruvchi tomon buni ta'minlaydi, chunki bu
+// haqiqiy ishlab topish/sarflash hodisasi emas.
+async function notifyNcoinChange(db, userId, amountSigned, text) {
+  if (!process.env.BOT_TOKEN || !userId) return;
+  const ur = await db.query(`select telegram_chat_id from users where id = $1`, [userId]);
+  const chatId = ur.rows[0]?.telegram_chat_id;
+  if (!chatId) return;
+  const amt = Number(amountSigned);
+  const sign = amt > 0 ? "+" : "";
+  const fmt = Number.isInteger(amt) ? String(amt) : amt.toFixed(1);
+  await sendMsg(db, chatId, `🪙 <b>${sign}${fmt} Ncoin</b>\n${text}`, { replyMarkup: appOpenButton() }).catch(
+    (e) => console.error("Ncoin bildirishnomasi xatosi:", e.message),
+  );
+}
+
 // Vazifa biriktirilganda/qayta biriktirilganda bildirishnoma yuboradi —
 // kim biriktirganini va (bo'lsa) vazifa izohini ham ko'rsatadi.
 // Natija obyektini qaytaradi ({attempted, ok, reason}) — chaqiruvchi
@@ -282,6 +299,7 @@ module.exports = {
   appOpenButton,
   sendMsg,
   resolveRecipients,
+  notifyNcoinChange,
   notifyCheckChange,
   notifyTaskAssigned,
   notifyTaskEvent,

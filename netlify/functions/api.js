@@ -41,6 +41,7 @@ const {
   notifyTaskAssigned,
   notifyTaskEvent,
   notifyProjectAssigned,
+  notifyNcoinChange,
   projectPct,
   buildPacingMessage,
 } = require("./lib/notify");
@@ -643,25 +644,42 @@ app.get("/api/worklog", auth, async (req, res) => {
               c.editor_id, c.videographer_id,
               e.full_name as editor_name,
               v.full_name as videographer_name,
+              c.editor_user_id, c.videographer_user_id,
+              coalesce(eu.full_name, eu.username) as editor_user_name,
+              coalesce(vu.full_name, vu.username) as videographer_user_name,
               pr.label as project_label, pr.slug as project_slug
          from checks c
          join project_cycles pc on pc.id = c.cycle_id
          join projects pr       on pr.id = pc.project_id
          left join staff e      on e.id = c.editor_id
          left join staff v      on v.id = c.videographer_id
+         left join users eu     on eu.id = c.editor_user_id
+         left join users vu     on vu.id = c.videographer_user_id
         where c.work_date >= $1 and c.work_date < $2
         order by c.work_date desc, pr.label`,
       [from, to],
     );
 
-    // Xodim bo'yicha guruhlash: montaj qilganlar va video olganlar alohida
-    const group = (idField, nameField) => {
+    // Xodim bo'yicha guruhlash: montaj qilganlar va video olganlar
+    // alohida. Eski (staff-based) va yangi (user-based) tanlovlar
+    // parallel ustunlarda saqlanadi — bitta qatorda ikkalasidan biri
+    // bo'ladi (staff — eski tarix, user — yangi checklar), shu sabab
+    // staff ustuni bo'lsa o'sha, bo'lmasa user ustuni ishlatiladi.
+    const group = (staffIdField, staffNameField, userIdField, userNameField) => {
       const map = new Map();
       r.rows.forEach((row) => {
-        if (!row[idField]) return;
-        const key = row[idField];
+        const staffId = row[staffIdField];
+        const userId = row[userIdField];
+        const key = staffId ? `s:${staffId}` : userId ? `u:${userId}` : null;
+        if (!key) return;
         if (!map.has(key)) {
-          map.set(key, { staffId: key, name: row[nameField], count: 0, items: [] });
+          map.set(key, {
+            staffId: staffId || null,
+            userId: userId || null,
+            name: staffId ? row[staffNameField] : row[userNameField],
+            count: 0,
+            items: [],
+          });
         }
         const g = map.get(key);
         g.count++;
@@ -678,8 +696,8 @@ app.get("/api/worklog", auth, async (req, res) => {
 
     res.json({
       month,
-      editors: group("editor_id", "editor_name"),
-      videographers: group("videographer_id", "videographer_name"),
+      editors: group("editor_id", "editor_name", "editor_user_id", "editor_user_name"),
+      videographers: group("videographer_id", "videographer_name", "videographer_user_id", "videographer_user_name"),
       totalMarked: r.rows.length,
     });
   } catch (e) {
@@ -717,10 +735,13 @@ app.put("/api/permissions", auth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
     const payload = req.body || {};
-    // Har bir user uchun eski ruxsatlar to'liq almashtiriladi (bulk
-    // replace) — shu sababli YANGI berilgan loyihalarni bilish uchun
-    // eski to'plamni o'chirishdan OLDIN saqlab qo'yamiz va farqini
-    // topamiz (faqat haqiqatan YANGI qo'shilganlar haqida xabar boradi).
+    // Har bir user uchun eski ruxsatlar bilan yangi ro'yxat SOLISHTIRILADI
+    // — faqat farq (olib tashlanganlar o'chiriladi, yangi qo'shilganlar
+    // insert qilinadi). O'ZGARMAGAN juftliklarga TEGILMAYDI — muhim,
+    // chunki permissions.role (loyiha-ichidagi rol) shu qatorda saqlanadi;
+    // avvalgi "har safar hammasini o'chirib qayta yozish" xulq-atvori
+    // bo'lganida, bitta loyihani yoqib/o'chirish o'sha userning BOSHQA
+    // barcha loyihalaridagi rolini ham 0'lab qo'yardi.
     const toNotify = [];
     await db.withTransaction(async (client) => {
       for (const uname of Object.keys(payload)) {
@@ -732,17 +753,27 @@ app.put("/api/permissions", auth, async (req, res) => {
         const oldR = await client.query(`select project_id from permissions where user_id = $1`, [userId]);
         const oldSet = new Set(oldR.rows.map((r) => r.project_id));
 
-        await client.query(`delete from permissions where user_id = $1`, [userId]);
-        if (slugs.length > 0) {
-          const pr = await client.query(`select id, label from projects where slug = any($1::text[])`, [slugs]);
-          for (const proj of pr.rows) {
-            await client.query(
-              `insert into permissions (user_id, project_id) values ($1,$2) on conflict do nothing`,
-              [userId, proj.id],
-            );
-            if (!oldSet.has(proj.id) && uname !== req.user.username) {
-              toNotify.push({ assigneeUserId: userId, projectLabel: proj.label });
-            }
+        const pr =
+          slugs.length > 0
+            ? await client.query(`select id, label from projects where slug = any($1::text[])`, [slugs])
+            : { rows: [] };
+        const newIds = new Set(pr.rows.map((p) => p.id));
+
+        const toRemove = [...oldSet].filter((id) => !newIds.has(id));
+        if (toRemove.length) {
+          await client.query(`delete from permissions where user_id = $1 and project_id = any($2::uuid[])`, [
+            userId,
+            toRemove,
+          ]);
+        }
+        for (const proj of pr.rows) {
+          if (oldSet.has(proj.id)) continue; // allaqachon biriktirilgan — roli (bo'lsa) saqlanib qoladi
+          await client.query(
+            `insert into permissions (user_id, project_id) values ($1,$2) on conflict do nothing`,
+            [userId, proj.id],
+          );
+          if (uname !== req.user.username) {
+            toNotify.push({ assigneeUserId: userId, projectLabel: proj.label });
           }
         }
       }
@@ -754,6 +785,55 @@ app.put("/api/permissions", auth, async (req, res) => {
     await Promise.allSettled(
       toNotify.map((n) => notifyProjectAssigned(db, { ...n, actorUsername: req.user.username })),
     );
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── LOYIHA-ICHIDAGI ROL (permissions.role) ───────────────────────────
+// Xodim loyihaga ruxsat berilgandan KEYIN, o'sha loyihadagi rolini
+// (SMM menejer, montajchi, mobilograf, ...) belgilash uchun — post/
+// stories mukofoti (Ncoin) shu rolga qarab kimga necha coin berishni
+// aniqlaydi (masalan loyihaning SMM menejeri har post uchun +1 oladi).
+app.get("/api/permissions/roles", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const r = await db.query(
+      `select u.username, pr.slug, p.role
+       from permissions p
+       join users u on u.id = p.user_id
+       join projects pr on pr.id = p.project_id
+       where p.role is not null`,
+    );
+    const out = {};
+    r.rows.forEach((row) => {
+      (out[row.username] ||= {})[row.slug] = row.role;
+    });
+    res.json({ roles: out });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.patch("/api/permissions/role", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const { username, projectSlug, role } = req.body;
+    if (role !== null && role !== undefined && !STAFF_POSITIONS.includes(role)) {
+      return res.status(400).json({ error: "Noto'g'ri rol" });
+    }
+    const ur = await db.query(`select id from users where username = $1`, [
+      String(username || "").toLowerCase(),
+    ]);
+    if (!ur.rows[0]) return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
+    const pr = await db.query(`select id from projects where slug = $1`, [projectSlug]);
+    if (!pr.rows[0]) return res.status(404).json({ error: "Loyiha topilmadi" });
+    const r = await db.query(
+      `update permissions set role = $1 where user_id = $2 and project_id = $3 returning user_id`,
+      [role || null, ur.rows[0].id, pr.rows[0].id],
+    );
+    if (!r.rows[0]) return res.status(400).json({ error: "Avval loyihaga ruxsat bering" });
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -833,7 +913,7 @@ app.get("/api/projects", auth, async (req, res) => {
     const assigneesByProject = {};
     if (projectIds.length) {
       const assigneesR = await db.query(
-        `select p.project_id, u.username, u.full_name, u.first_name, u.last_name
+        `select p.project_id, p.role, u.id as user_id, u.username, u.full_name, u.first_name, u.last_name
            from permissions p
            join users u on u.id = p.user_id
           where p.project_id = any($1::uuid[])
@@ -843,10 +923,12 @@ app.get("/api/projects", auth, async (req, res) => {
       assigneesR.rows.forEach((row) => {
         if (!assigneesByProject[row.project_id]) assigneesByProject[row.project_id] = [];
         assigneesByProject[row.project_id].push({
+          userId: row.user_id,
           username: row.username,
           fullName: row.full_name,
           firstName: row.first_name,
           lastName: row.last_name,
+          role: row.role,
         });
       });
     }
@@ -856,10 +938,15 @@ app.get("/api/projects", auth, async (req, res) => {
       const summary = await getProjectCycleSummary(db, project);
       const checksR = await db.query(
         `select c.type, c.seq_number, c.work_date, c.editor_id, c.videographer_id,
-                e.full_name as editor_name, v.full_name as videographer_name
+                c.editor_user_id, c.videographer_user_id, c.story_kind,
+                e.full_name as editor_name, v.full_name as videographer_name,
+                coalesce(eu.full_name, eu.username) as editor_user_name,
+                coalesce(vu.full_name, vu.username) as videographer_user_name
            from checks c
            left join staff e on e.id = c.editor_id
            left join staff v on v.id = c.videographer_id
+           left join users eu on eu.id = c.editor_user_id
+           left join users vu on vu.id = c.videographer_user_id
           where c.cycle_id = $1`,
         [summary.cycle.id],
       );
@@ -875,6 +962,11 @@ app.get("/api/projects", auth, async (req, res) => {
           editorName: c.editor_name,
           videographerId: c.videographer_id,
           videographerName: c.videographer_name,
+          editorUserId: c.editor_user_id,
+          editorUserName: c.editor_user_name,
+          videographerUserId: c.videographer_user_id,
+          videographerUserName: c.videographer_user_name,
+          storyKind: c.story_kind,
         };
       });
       projects.push({
@@ -1189,9 +1281,21 @@ app.patch("/api/checks", auth, async (req, res) => {
     const { projectSlug, type, seqNumber, checked, cycleId } = req.body;
     // Yangi (ixtiyoriy) maydonlar: kim montaj qildi, kim video oldi,
     // va ish qaysi kuni bajarildi (kalendar shu sana bo'yicha chiziladi).
+    // editorId/videographerId — ESKI, staff-based tanlov (endi faqat
+    // ko'rsatish uchun saqlanadi, Ncoin bermaydi). editorUserId/
+    // videographerUserId — YANGI, loyihaga biriktirilgan USERlardan
+    // tanlov — Ncoin shu ikkalasiga (va SMM roliga) qarab beriladi.
     const editorId = req.body.editorId || null;
     const videographerId = req.body.videographerId || null;
+    const editorUserId = req.body.editorUserId || null;
+    const videographerUserId = req.body.videographerUserId || null;
     const workDate = req.body.workDate || null;
+    // storyKind faqat stories (type='s') uchun ma'noli — "info"
+    // (gapirib beriladigan, standart) yoki "atmospheric" (atmosferali).
+    const storyKind = type === "s" ? req.body.storyKind || "info" : null;
+    if (storyKind && !["info", "atmospheric"].includes(storyKind)) {
+      return res.status(400).json({ error: "Noto'g'ri stories turi" });
+    }
     if (workDate && !/^\d{4}-\d{2}-\d{2}$/.test(String(workDate))) {
       return res.status(400).json({ error: "workDate formati: YYYY-MM-DD" });
     }
@@ -1240,12 +1344,15 @@ app.patch("/api/checks", auth, async (req, res) => {
       // belgisi — shu orqali Ncoin faqat HAQIQIY yangi bajarilishda
       // beriladi, tafsilot yangilanganda qayta berilmaydi.
       const insR = await db.query(
-        `insert into checks (cycle_id, type, seq_number, done_by, editor_id, videographer_id, work_date)
-         values ($1,$2,$3,$4,$5,$6, coalesce($7::date, $8::date))
+        `insert into checks (cycle_id, type, seq_number, done_by, editor_id, videographer_id, work_date, editor_user_id, videographer_user_id, story_kind)
+         values ($1,$2,$3,$4,$5,$6, coalesce($7::date, $8::date), $9, $10, $11)
          on conflict (cycle_id, type, seq_number) do update
-           set editor_id       = excluded.editor_id,
-               videographer_id = excluded.videographer_id,
-               work_date       = excluded.work_date
+           set editor_id           = excluded.editor_id,
+               videographer_id     = excluded.videographer_id,
+               work_date           = excluded.work_date,
+               editor_user_id      = excluded.editor_user_id,
+               videographer_user_id = excluded.videographer_user_id,
+               story_kind          = excluded.story_kind
          returning (xmax = 0) as inserted`,
         [
           cycle.id,
@@ -1256,16 +1363,89 @@ app.patch("/api/checks", auth, async (req, res) => {
           videographerId,
           workDate,
           todayTashkent(),
+          editorUserId,
+          videographerUserId,
+          storyKind,
         ],
       );
       if (insR.rows[0]?.inserted) {
-        await awardNcoin(db, {
-          userId: req.user.id,
-          amount: 0.5,
-          reason: "check_completed",
-          referenceType: "check",
-          referenceId: ncoinRef,
-        }).catch((e) => console.error("Ncoin berish xatosi:", e.message));
+        // Rol-asosli Ncoin taqsimoti — bitta post/stories bir nechta
+        // odamga (video oluvchi, montaj qiluvchi, SMM menejer) coin
+        // berishi mumkin. Har biriga alohida award + shaxsiy Telegram
+        // xabari (fire-and-forget, xatolar boshqalarni to'xtatmaydi).
+        const recipients = [];
+        if (type === "k") {
+          if (videographerUserId) {
+            recipients.push({
+              userId: videographerUserId,
+              amount: 1,
+              reason: "post_video",
+              text: `"${project.label}" loyihasida post uchun video olganingiz uchun 1 Ncoin qo'shildi.`,
+            });
+          }
+          if (editorUserId) {
+            recipients.push({
+              userId: editorUserId,
+              amount: 1,
+              reason: "post_edit",
+              text: `"${project.label}" loyihasida post uchun video montaj qilganingiz uchun 1 Ncoin qo'shildi.`,
+            });
+          }
+          const smmR = await db.query(`select user_id from permissions where project_id = $1 and role = 'smm'`, [
+            project.id,
+          ]);
+          smmR.rows.forEach((r) =>
+            recipients.push({
+              userId: r.user_id,
+              amount: 1,
+              reason: "post_smm",
+              text: `"${project.label}" loyihasida yangi post chiqdi — 1 Ncoin qo'shildi.`,
+            }),
+          );
+        } else if (storyKind === "atmospheric") {
+          if (videographerUserId) {
+            recipients.push({
+              userId: videographerUserId,
+              amount: 0.1,
+              reason: "story_video",
+              text: `"${project.label}" loyihasida atmosferali stories uchun video olganingiz uchun 0.1 Ncoin qo'shildi.`,
+            });
+          }
+          if (editorUserId) {
+            recipients.push({
+              userId: editorUserId,
+              amount: 0.1,
+              reason: "story_edit",
+              text: `"${project.label}" loyihasida atmosferali stories uchun video montaj qilganingiz uchun 0.1 Ncoin qo'shildi.`,
+            });
+          }
+        } else {
+          const smmR = await db.query(`select user_id from permissions where project_id = $1 and role = 'smm'`, [
+            project.id,
+          ]);
+          smmR.rows.forEach((r) =>
+            recipients.push({
+              userId: r.user_id,
+              amount: 0.2,
+              reason: "story_smm",
+              text: `"${project.label}" loyihasida yangi stories chiqdi — 0.2 Ncoin qo'shildi.`,
+            }),
+          );
+        }
+        for (const rcp of recipients) {
+          try {
+            await awardNcoin(db, {
+              userId: rcp.userId,
+              amount: rcp.amount,
+              reason: rcp.reason,
+              referenceType: "check",
+              referenceId: ncoinRef,
+            });
+            await notifyNcoinChange(db, rcp.userId, rcp.amount, rcp.text);
+          } catch (e) {
+            console.error("Ncoin berish xatosi:", rcp.reason, e.message);
+          }
+        }
       }
     } else {
       const delR = await db.query(
@@ -1653,19 +1833,33 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
         }).catch((e) => console.error("Vazifa bildirishnomasi xatosi:", e.message));
       }
       // Ncoin — mukofot ishni bajargan mas'ulga boradi, holatni
-      // o'zgartirgan odamga emas (admin boshqa birovning vazifasini ham
-      // "bajarildi" deb belgilashi mumkin). Holat "bajarildi"dan
-      // chiqarilsa (masalan xato bilan belgilangan bo'lsa) — mukofot
-      // qaytarib olinadi.
+      // o'zgartirgan odamga emas. Endi FAQAT "Tekshiruvda" (review)
+      // holatidan "Bajarildi"ga o'tganda VA admin shu aniq vazifa
+      // uchun coin berishga qaror qilganda (req.body.awardNcoin===true,
+      // frontend'dagi tasdiqlash so'rovidan keladi) — to'g'ridan-to'g'ri
+      // boshqa holatdan (masalan "Boshlanmagan"dan) "Bajarildi"ga
+      // o'tkazilsa, coin berilmaydi. Holat "bajarildi"dan chiqarilsa
+      // (masalan xato bilan belgilangan bo'lsa) — avval berilgan bo'lsa,
+      // mukofot qaytarib olinadi.
       if (existing.assignee_user_id) {
-        if (task.status === "done" && before.status !== "done") {
-          await awardNcoin(db, {
-            userId: existing.assignee_user_id,
-            amount: 0.5,
-            reason: "task_completed",
-            referenceType: "task",
-            referenceId: task.id,
-          }).catch((e) => console.error("Ncoin berish xatosi:", e.message));
+        if (before.status === "review" && task.status === "done" && req.body.awardNcoin === true) {
+          try {
+            await awardNcoin(db, {
+              userId: existing.assignee_user_id,
+              amount: 0.2,
+              reason: "task_completed",
+              referenceType: "task",
+              referenceId: task.id,
+            });
+            await notifyNcoinChange(
+              db,
+              existing.assignee_user_id,
+              0.2,
+              `Siz "${task.title}" vazifasini bajarganingiz uchun 0.2 Ncoin ishlab topdingiz.`,
+            );
+          } catch (e) {
+            console.error("Ncoin berish xatosi:", e.message);
+          }
         } else if (before.status === "done" && task.status !== "done") {
           await reverseNcoin(db, {
             referenceType: "task",
@@ -1766,12 +1960,15 @@ app.get("/api/ncoin/me", auth, async (req, res) => {
               tk.title as task_title,
               pr.label as project_label,
               split_part(t.reference_id, ':', 2) as check_type,
-              split_part(t.reference_id, ':', 3) as check_seq
+              split_part(t.reference_id, ':', 3) as check_seq,
+              pr2.label as bonus_project_label
        from ncoin_transactions t
        left join ncoin_products p on p.id::text = t.reference_id and t.reference_type = 'product'
        left join tasks tk on tk.id::text = t.reference_id and t.reference_type = 'task'
        left join project_cycles pc on pc.id::text = split_part(t.reference_id, ':', 1) and t.reference_type = 'check'
        left join projects pr on pr.id = pc.project_id
+       left join project_cycles pc2 on pc2.id::text = t.reference_id and t.reference_type = 'cycle'
+       left join projects pr2 on pr2.id = pc2.project_id
        where t.user_id = $1 order by t.created_at desc limit 50`,
       [req.user.id],
     );
@@ -1787,6 +1984,8 @@ app.get("/api/ncoin/me", auth, async (req, res) => {
         else if (row.reference_type === "task") detail = row.task_title;
         else if (row.reference_type === "check" && row.project_label) {
           detail = `${row.project_label} — ${row.check_type === "k" ? "Post" : "Stories"} #${row.check_seq}`;
+        } else if (row.reference_type === "cycle" && row.bonus_project_label) {
+          detail = row.bonus_project_label;
         }
         return {
           amount: Number(row.amount),
@@ -1848,6 +2047,16 @@ app.post("/api/ncoin/purchase", auth, async (req, res) => {
       );
       return { newBalance: balance - product.price, product };
     });
+
+    const priceLabel = Number.isInteger(result.product.price)
+      ? String(result.product.price)
+      : result.product.price.toFixed(1);
+    await notifyNcoinChange(
+      db,
+      req.user.id,
+      -result.product.price,
+      `Siz "${result.product.name}" uchun ${priceLabel} Ncoin sarfladingiz.`,
+    ).catch((e) => console.error("Ncoin bildirishnomasi xatosi:", e.message));
 
     res.json({
       ok: true,

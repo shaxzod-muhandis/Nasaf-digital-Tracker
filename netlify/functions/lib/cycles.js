@@ -16,6 +16,8 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 const { cycleBounds, todayTashkent, addMonthsClamped } = require("./dates");
+const { awardNcoin } = require("./ncoin");
+const { notifyNcoinChange } = require("./notify");
 
 async function getActiveCycle(db, projectId) {
   const r = await db.query(
@@ -54,7 +56,49 @@ async function closeCycle(db, cycleId) {
      where id = $1 returning *`,
     [cycleId, isDebt],
   );
-  return r.rows[0];
+  const closed = r.rows[0];
+  if (!isDebt) {
+    await maybeAwardProjectBonus(db, closed).catch((e) => console.error("Loyiha bonusi xatosi:", e.message));
+  }
+  return closed;
+}
+
+// Loyiha bonusi — davr TO'LIQ (is_debt=false) yopilganda, HAQIQIY ish
+// sanalari (work_date, yoki eski yozuvlar uchun done_at) davr
+// muddatidan (period_end) oshib ketmagan bo'lsa, loyihaga biriktirilgan
+// har bir xodimga +2 Ncoin. `closed_at` emas — u faqat "kimdir keyingi
+// safar ochganda yopilgan" degan lazy-yopilish vaqti, deadline bilan
+// hech qanday aloqasi yo'q (yuqoridagi modul izohiga qarang).
+async function maybeAwardProjectBonus(db, cycle) {
+  const compR = await db.query(
+    `select max(coalesce(work_date, (done_at at time zone 'utc' at time zone 'Asia/Tashkent')::date)) as completion_date
+     from checks where cycle_id = $1`,
+    [cycle.id],
+  );
+  // pg-types.js tufayli `date` ustunlari (va shu ustundagi coalesce/cast
+  // natijalari) allaqachon "YYYY-MM-DD" satr sifatida qaytadi — Date
+  // obyektiga aylantirish shart emas, to'g'ridan-to'g'ri solishtiriladi.
+  const completionDate = compR.rows[0]?.completion_date;
+  if (!completionDate || completionDate > cycle.period_end) return;
+
+  const projR = await db.query(`select label from projects where id = $1`, [cycle.project_id]);
+  const label = projR.rows[0]?.label || "Loyiha";
+  const permR = await db.query(`select user_id from permissions where project_id = $1`, [cycle.project_id]);
+
+  for (const row of permR.rows) {
+    try {
+      await awardNcoin(db, {
+        userId: row.user_id,
+        amount: 2,
+        reason: "project_bonus",
+        referenceType: "cycle",
+        referenceId: cycle.id,
+      });
+      await notifyNcoinChange(db, row.user_id, 2, `🏆 "${label}" loyihasi muddatida yakunlandi!`);
+    } catch (e) {
+      console.error("project_bonus xatosi:", row.user_id, e.message);
+    }
+  }
 }
 
 // Yopilgan davrda checkbox orqaga qaytarilib bosilganda (qarz to'lash),

@@ -4586,9 +4586,28 @@
           justify-content: center;
         }
         .pmx-cell.on {
+          width: auto;
+          min-width: 108px;
+          height: 30px;
+          padding: 0 3px;
           background: var(--brand);
           border-color: var(--brand);
           color: #fff;
+        }
+        .perm-role-select {
+          width: 100%;
+          height: 100%;
+          border: none;
+          background: none;
+          color: inherit;
+          font-size: 11.5px;
+          font-weight: 600;
+          font-family: inherit;
+          cursor: pointer;
+          outline: none;
+        }
+        .perm-role-select option {
+          color: var(--ink);
         }
         .pmx-total {
           font-weight: 600;
@@ -5153,6 +5172,7 @@
         userRole = "employee";
       let perms = {},
         allUsers = [];
+      let permRoles = {}; // { username: { projectSlug: role } } — loyiha-ichidagi rol (Ncoin taqsimoti uchun)
       let projects = [];
       let activeTab = "today";
       let projFilter = "all";
@@ -6969,16 +6989,50 @@
           showToast("⚠ " + e.message);
         }
       }
+      // Vazifa "Bajarildi"ga o'tkazilganda — agar u aynan "Tekshiruvda"
+      // holatidan bo'lsa, admin'dan "shu vazifa uchun 0.2 Ncoin
+      // berilsinmi?" deb so'raladi (boshqa holatdan, masalan to'g'ridan-
+      // to'g'ri "Jarayonda"dan, "Bajarildi" qilinsa — bu so'rov chiqmaydi,
+      // coin berilmaydi, avvalgidek oddiy).
       async function setTaskStatus(id, status, btn) {
+        if (status === "done") {
+          const t = tasksList.find((x) => x.id === id);
+          if (t && t.status === "review") {
+            promptTaskDoneCoin(id, btn);
+            return;
+          }
+        }
+        await applyTaskStatus(id, status, btn);
+      }
+      function promptTaskDoneCoin(id, btn) {
+        const { body } = makeSheet("Vazifani bajarildi deb belgilash");
+        body.innerHTML = `
+          <div class="f-hint" style="margin-bottom:16px;font-size:13px;line-height:1.6">Bu vazifa uchun xodimga 0.2 Ncoin berilsinmi?</div>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <button class="btn btn-blue" id="tdc-yes">🪙 Ha, 0.2 Ncoin berilsin</button>
+            <button class="btn btn-soft" id="tdc-no">Yo'q, faqat bajarildi deb belgilash</button>
+          </div>`;
+        document.getElementById("tdc-yes").onclick = () => {
+          document.querySelector(".overlay")?.remove();
+          applyTaskStatus(id, "done", btn, true);
+        };
+        document.getElementById("tdc-no").onclick = () => {
+          document.querySelector(".overlay")?.remove();
+          applyTaskStatus(id, "done", btn, false);
+        };
+      }
+      async function applyTaskStatus(id, status, btn, awardNcoin) {
         if (btn) setBtnLoading(btn, true);
         try {
+          const body = { status };
+          if (status === "done" && typeof awardNcoin === "boolean") body.awardNcoin = awardNcoin;
           const res = await apiFetch(`/api/tasks/${id}`, {
             method: "PATCH",
-            body: JSON.stringify({ status }),
+            body: JSON.stringify(body),
           });
           if (!res.ok)
             throw new Error((await res.json().catch(() => ({}))).error || "Xato");
-          showToast("✅ Yangilandi");
+          showToast(awardNcoin ? "✅ Yangilandi — 0.2 Ncoin berildi" : "✅ Yangilandi");
           await loadTasks();
           refreshAllViews();
           refreshTaskDetailIfOpen(id);
@@ -7776,17 +7830,19 @@
 
       // ── BELGILASH MODALI (kim montaj qildi / kim video oldi) ──────
       // Post uchun ikkala select ham so'raladi; stories uchun faqat sana.
-      function staffOptions(selectedId, mainPosition) {
-        const main = staffList.filter((s) => s.position === mainPosition);
-        const rest = staffList.filter((s) => s.position !== mainPosition);
-        const opt = (s) =>
-          `<option value="${escHtml(s.id)}"${s.id === selectedId ? " selected" : ""}>${escHtml(s.fullName)}</option>`;
-        let html = `<option value=""${!selectedId ? " selected" : ""}>— tanlanmagan —</option>`;
-        if (main.length)
-          html += `<optgroup label="${POSITION_LABELS[mainPosition] || mainPosition}">${main.map(opt).join("")}</optgroup>`;
-        if (rest.length)
-          html += `<optgroup label="Boshqa xodimlar">${rest.map(opt).join("")}</optgroup>`;
-        return html;
+      // Loyihaga biriktirilgan, berilgan rolga ega userlardan <option>
+      // ro'yxati quradi (masalan "montajchi" roli — video montaj qilgan
+      // kishi tanlovi). `count` — ushbu loyihada shu rolga ega odam
+      // borligini bildiradi (majburiylikni aniqlash uchun).
+      function projectRoleUserOptions(selectedUserId, role, assignees) {
+        const matches = (assignees || []).filter((a) => a.role === role);
+        const opt = (a) => {
+          const name = a.fullName || [a.firstName, a.lastName].filter(Boolean).join(" ") || `@${a.username}`;
+          return `<option value="${escHtml(a.userId)}"${a.userId === selectedUserId ? " selected" : ""}>${escHtml(name)}</option>`;
+        };
+        let html = `<option value=""${!selectedUserId ? " selected" : ""}>— tanlanmagan —</option>`;
+        html += matches.map(opt).join("");
+        return { html, count: matches.length };
       }
 
       function openCheckModal(slug, type, num) {
@@ -7799,27 +7855,44 @@
         const workDate = info.workDate
           ? String(info.workDate).slice(0, 10)
           : isoOf(todayDate());
+        const storyKind = info.storyKind || "info";
 
-        const { body } = makeSheet(`${label} ${num} — ${escHtml(p.label)}`);
-        const staffPart =
-          type === "k"
+        const editorOpts = projectRoleUserOptions(info.editorUserId, "montajchi", p.assignees);
+        const videoOpts = projectRoleUserOptions(info.videographerUserId, "mobilograf", p.assignees);
+        const noRoleHint =
+          editorOpts.count === 0 && videoOpts.count === 0
+            ? `<div class="f-hint" style="color:var(--red);margin-top:-6px;margin-bottom:14px">Bu loyihada montajchi/mobilograf roli hali biriktirilmagan — Boshqaruv → Ruxsatlar'dan tayinlang.</div>`
+            : "";
+        const pickerPart = `
+          <div class="f-group">
+            <label class="f-label">Video montajini kim qildi?</label>
+            <select class="f-input" id="cm-editor">${editorOpts.html}</select>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Videoni kim oldi?</label>
+            <select class="f-input" id="cm-videographer">${videoOpts.html}</select>
+          </div>
+          ${noRoleHint}`;
+
+        // Stories ikki xil: "gapirib beriladigan" (faqat SMM menejerga
+        // Ncoin) yoki "atmosferali" (video/montajga Ncoin, postdagi kabi
+        // tanlovlar bilan). Post uchun bu tanlov shart emas — har doim
+        // video+montaj ko'rsatiladi.
+        const storyTypePart =
+          type === "s"
             ? `<div class="f-group">
-                 <label class="f-label">Video montajini kim qildi?</label>
-                 <select class="f-input" id="cm-editor">${staffOptions(info.editorId, "montajchi")}</select>
+                 <label class="f-label">Stories turi</label>
+                 <div class="seg" style="margin-top:0">
+                   <button type="button" class="seg-btn cm-story-kind-btn${storyKind === "info" ? " active" : ""}" data-kind="info" onclick="setCheckModalStoryKind('info')">Gapirib beriladigan</button>
+                   <button type="button" class="seg-btn cm-story-kind-btn${storyKind === "atmospheric" ? " active" : ""}" data-kind="atmospheric" onclick="setCheckModalStoryKind('atmospheric')">Atmosferali video</button>
+                 </div>
                </div>
-               <div class="f-group">
-                 <label class="f-label">Videoni kim oldi?</label>
-                 <select class="f-input" id="cm-videographer">${staffOptions(info.videographerId, "mobilograf")}</select>
-               </div>
-               ${
-                 staffList.length === 0
-                   ? `<div class="f-hint" style="color:var(--red);margin-top:-6px;margin-bottom:14px">Xodimlar ro'yxati bo'sh. Boshqaruv → Xodimlar bo'limidan qo'shing.</div>`
-                   : ""
-               }`
+               <div id="cm-atmo-fields" style="display:${storyKind === "atmospheric" ? "" : "none"}">${pickerPart}</div>`
             : "";
 
+        const { body } = makeSheet(`${label} ${num} — ${escHtml(p.label)}`);
         body.innerHTML = `
-          ${staffPart}
+          ${type === "k" ? pickerPart : storyTypePart}
           <div class="f-group">
             <label class="f-label">Qaysi kuni chiqdi?</label>
             <input type="date" class="f-input" id="cm-date" value="${workDate}"/>
@@ -7833,25 +7906,39 @@
           }`;
       }
 
+      function setCheckModalStoryKind(kind) {
+        document.querySelectorAll(".cm-story-kind-btn").forEach((b) => b.classList.toggle("active", b.dataset.kind === kind));
+        const atmoFields = document.getElementById("cm-atmo-fields");
+        if (atmoFields) atmoFields.style.display = kind === "atmospheric" ? "" : "none";
+      }
+
       async function saveCheckModal(slug, type, num) {
         const btn = document.getElementById("cm-save");
-        const editorId = document.getElementById("cm-editor")?.value || null;
-        const videographerId =
-          document.getElementById("cm-videographer")?.value || null;
+        const storyKind = type === "s" ? document.querySelector(".cm-story-kind-btn.active")?.dataset.kind || "info" : undefined;
+        // Video/montaj tanlovlari faqat post'da yoki "atmosferali"
+        // stories'da ma'noli — boshqa holatda (masalan "gapirib
+        // beriladigan" stories) hatto DOM'da qolgan eski qiymat bo'lsa
+        // ham yubormaymiz.
+        const showsPickers = type === "k" || storyKind === "atmospheric";
+        const editorUserId = showsPickers ? document.getElementById("cm-editor")?.value || null : null;
+        const videographerUserId = showsPickers ? document.getElementById("cm-videographer")?.value || null : null;
         const workDate = document.getElementById("cm-date")?.value || null;
-        // Xodimlar kiritilgan bo'lsa — post uchun ikkalasi ham majburiy
-        if (type === "k" && staffList.length > 0) {
-          if (!editorId) return showToast("⚠ Montaj qilgan xodimni tanlang");
-          if (!videographerId) return showToast("⚠ Video olgan xodimni tanlang");
+        if (showsPickers) {
+          const p = projects.find((x) => x.id === slug);
+          const editorCount = (p?.assignees || []).filter((a) => a.role === "montajchi").length;
+          const videoCount = (p?.assignees || []).filter((a) => a.role === "mobilograf").length;
+          if (editorCount > 0 && !editorUserId) return showToast("⚠ Montaj qilgan xodimni tanlang");
+          if (videoCount > 0 && !videographerUserId) return showToast("⚠ Video olgan xodimni tanlang");
         }
         if (!workDate) return showToast("⚠ Sanani tanlang");
         btn.disabled = true;
         btn.textContent = "Saqlanmoqda…";
         try {
           await onCheck(slug, type, num, true, null, {
-            editorId,
-            videographerId,
+            editorUserId,
+            videographerUserId,
             workDate,
+            storyKind,
           });
           document.querySelector(".overlay")?.remove();
           showToast("✅ Belgilandi");
@@ -8835,17 +8922,50 @@
         const wrap = document.getElementById("perm-list");
         if (!wrap) return;
         try {
-          const res = await apiFetch("/api/users");
-          if (!res.ok)
-            throw new Error((await res.json().catch(() => ({}))).error || "Xato");
-          const d = await res.json();
+          const [usersRes, rolesRes] = await Promise.all([
+            apiFetch("/api/users"),
+            apiFetch("/api/permissions/roles"),
+          ]);
+          if (!usersRes.ok)
+            throw new Error((await usersRes.json().catch(() => ({}))).error || "Xato");
+          const d = await usersRes.json();
           allUsers = (d.users || []).filter(
             (u) => u.role === "employee" && u.is_active,
           );
+          permRoles = rolesRes.ok ? (await rolesRes.json()).roles || {} : {};
           renderPermList();
         } catch (e) {
           wrap.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
         }
+      }
+      // Loyihaga ruxsat berilgan xodimning shu loyihadagi rolini
+      // o'zgartiradi (SMM menejer/montajchi/mobilograf/...) — post/
+      // stories Ncoin taqsimoti shu rolga qarab ishlaydi.
+      async function setPermissionRole(username, projectSlug, role) {
+        const prevRole = permRoles[username]?.[projectSlug] || "";
+        (permRoles[username] ||= {})[projectSlug] = role || undefined;
+        try {
+          const res = await apiFetch("/api/permissions/role", {
+            method: "PATCH",
+            body: JSON.stringify({ username, projectSlug, role: role || null }),
+          });
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
+        } catch (e) {
+          showToast("⚠ " + e.message);
+          if (prevRole) permRoles[username][projectSlug] = prevRole;
+          else delete permRoles[username][projectSlug];
+          renderPermList();
+        }
+      }
+      function permRoleSelectHtml(username, projectSlug) {
+        const current = permRoles[username]?.[projectSlug] || "";
+        const opts = Object.keys(POSITION_LABELS)
+          .map((k) => `<option value="${k}"${k === current ? " selected" : ""}>${POSITION_LABELS[k]}</option>`)
+          .join("");
+        return `<select class="perm-role-select" onclick="event.stopPropagation()" onchange="setPermissionRole('${escArg(username)}','${escArg(projectSlug)}',this.value)">
+          <option value=""${current ? "" : " selected"}>— rol yo'q —</option>
+          ${opts}
+        </select>`;
       }
       function renderPermList() {
         const wrap = document.getElementById("perm-list");
@@ -8873,7 +8993,7 @@
                 return "";
               return `<div class="toggle-row">
                 <div class="toggle-name">${escHtml(p.label)}</div>
-                <div class="toggle-hint">${on ? "to'liq" : "yopiq"}</div>
+                ${on ? permRoleSelectHtml(u.username, p.id) : `<div class="toggle-hint">yopiq</div>`}
                 <button class="tglsw ${on ? "on" : ""}" onclick="togglePermission('${escArg(u.username)}','${escArg(p.id)}',this)"><div class="knob"></div></button>
               </div>`;
             })
@@ -8916,7 +9036,7 @@
             const cells = projects
               .map((p) => {
                 const on = assigned.includes(p.id);
-                return `<td><div class="pmx-cell${on ? " on" : ""}" onclick="togglePermission('${escArg(u.username)}','${escArg(p.id)}',this)">${on ? "✓" : ""}</div></td>`;
+                return `<td><div class="pmx-cell${on ? " on" : ""}" onclick="togglePermission('${escArg(u.username)}','${escArg(p.id)}',this)">${on ? permRoleSelectHtml(u.username, p.id) : ""}</div></td>`;
               })
               .join("");
             return `<tr>
@@ -8995,7 +9115,14 @@
         const idx = list.indexOf(projectId);
         const turningOn = idx === -1;
         if (turningOn) list.push(projectId);
-        else list.splice(idx, 1);
+        else {
+          list.splice(idx, 1);
+          // Ruxsat o'chirilsa — roli ham (backendda qator butunlay
+          // o'chgani uchun) yo'qoladi; mahalliy keshni ham tozalab
+          // qo'yamiz, aks holda keyinroq qayta yoqilganda eski rol
+          // vaqtincha (yangilanguncha) noto'g'ri ko'rinib turadi.
+          if (permRoles[username]) delete permRoles[username][projectId];
+        }
         btnEl.classList.toggle("on", turningOn);
         btnEl.textContent = turningOn ? "✓" : "";
         try {
@@ -9957,10 +10084,17 @@
       }
 
       const NCOIN_REASON_LABEL = {
-        check_completed: "Post/Stories bajarildi",
+        check_completed: "Post/Stories bajarildi", // eski, faqat tarixda
         check_reversed: "Belgi bekor qilindi",
+        post_video: "Video olish (post)",
+        post_edit: "Video montaj (post)",
+        post_smm: "Post joylandi (SMM)",
+        story_smm: "Stories (ma'lumot beruvchi)",
+        story_video: "Video olish (stories)",
+        story_edit: "Video montaj (stories)",
         task_completed: "Vazifa bajarildi",
         task_reversed: "Vazifa holati qaytarildi",
+        project_bonus: "Loyiha bonusi",
         purchase: "NShopdan xarid",
         purchase_refund: "Xarid qaytarildi",
       };
