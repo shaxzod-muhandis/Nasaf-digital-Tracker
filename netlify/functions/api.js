@@ -1972,12 +1972,21 @@ app.get("/api/ncoin/me", auth, async (req, res) => {
        where t.user_id = $1 order by t.created_at desc limit 50`,
       [req.user.id],
     );
+    const unseenR = await db.query(
+      `select exists(
+         select 1 from ncoin_transactions t
+         where t.user_id = $1 and t.amount > 0
+           and t.created_at > coalesce((select ncoin_seen_at from users where id = $1), '-infinity')
+       ) as has_unseen`,
+      [req.user.id],
+    );
     res.json({
       ok: true,
       balance,
       earned: Number(statsR.rows[0].earned),
       spent: Number(statsR.rows[0].spent),
       purchaseCount: Number(statsR.rows[0].purchase_count),
+      hasUnseen: unseenR.rows[0].has_unseen,
       transactions: txR.rows.map((row) => {
         let detail = null;
         if (row.reference_type === "product") detail = row.product_name;
@@ -1997,6 +2006,18 @@ app.get("/api/ncoin/me", auth, async (req, res) => {
         };
       }),
     });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Xodim "Ncoin tarixi"ni ochganda chaqiriladi — shu vaqtgacha bo'lgan
+// barcha tranzaksiyalar "ko'rilgan" deb belgilanadi, Profildagi "yangi"
+// nuqta shundan keyin faqat YANGI tranzaksiya kelsa qayta chiqadi.
+app.post("/api/ncoin/ack", auth, async (req, res) => {
+  try {
+    await db.query(`update users set ncoin_seen_at = now() where id = $1`, [req.user.id]);
+    res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

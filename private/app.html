@@ -1040,6 +1040,16 @@
         border: none;
         cursor: pointer;
       }
+      .pf-ncoin-dot {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 11px;
+        height: 11px;
+        border-radius: 99px;
+        background: var(--red);
+        border: 2px solid var(--inkfill);
+      }
       .pf-tasks-stats {
         display: flex;
       }
@@ -9777,7 +9787,7 @@
             <div class="pf-col-right" style="display:flex;flex-direction:column;gap:18px">
               <div class="pf-ncoin-card">
                 <div class="pf-ncoin-blob"></div>
-                <div class="pf-ncoin-icon">N</div>
+                <div class="pf-ncoin-icon">N${pfNcoinData?.hasUnseen ? `<span class="pf-ncoin-dot" id="pf-ncoin-badge"></span>` : ""}</div>
                 <div style="flex:1;position:relative">
                   <div class="pf-ncoin-label">Ncoin balansim</div>
                   <div class="pf-ncoin-value">${fmtNcoin(pfNcoinData?.balance || 0)}</div>
@@ -10136,6 +10146,9 @@
           if (!res.ok) throw new Error(data.error || "Xatolik");
           ncoinHistoryState = { body, data, filter: "all" };
           renderNcoinHistorySheet();
+          if (pfNcoinData) pfNcoinData.hasUnseen = false;
+          document.getElementById("pf-ncoin-badge")?.remove();
+          apiFetch("/api/ncoin/ack", { method: "POST" }).catch(() => {});
         } catch (e) {
           body.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
         }
