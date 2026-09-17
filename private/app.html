@@ -3787,6 +3787,17 @@
         .sheet.wide {
           max-width: 920px;
         }
+        .sheet-handle {
+          /* Pastdan tortib yopish ishorasi — faqat mobil bottom-sheet
+             uchun ma'noli. Desktopda sheet markazlashgan modal bo'lgani
+             uchun bu chiziqcha hech narsani anglatmaydi. */
+          display: none;
+        }
+        .sheet-hdr {
+          /* Chiziqcha olib tashlangach sarlavha tepaga juda yaqinlashib
+             qolmasligi uchun bo'shliq bir oz kattalashtiriladi. */
+          padding-top: 20px;
+        }
 
         /* ── Chap sidebar ─────────────────────────────────────────── */
         #sidebar {
@@ -10013,24 +10024,30 @@
           .map(([f, lbl]) => `<button type="button" class="chip-btn${filter === f ? " active" : ""}" onclick="setNcoinHistoryFilter('${f}')">${lbl}</button>`)
           .join("");
 
-        let summaryHtml;
+        // "Barchasi"da umumiy raqam (balans) tepada, uchta quticha
+        // (Topilgan/Ishlatilgan/Xarid) esa ro'yxatdan KEYIN — pastki
+        // "jami hisob-kitob" sifatida (ro'yxat ustidan diqqatni tortib
+        // ketmasligi uchun). Bitta sabab bo'yicha filtrlanganda esa
+        // faqat o'sha turdagi jami summa yetarli.
+        let topSummaryHtml;
+        let footerStatsHtml = "";
         if (filter === "earned") {
-          summaryHtml = `<div style="text-align:center;padding:6px 0 18px">
+          topSummaryHtml = `<div style="text-align:center;padding:4px 0 20px">
             <div class="f-hint" style="margin:0">Jami ishlab topilgan</div>
             <div style="font-size:26px;font-weight:700;color:#16a34a;margin-top:4px">+${fmtNcoin(data.earned)} Ncoin</div>
           </div>`;
         } else if (filter === "spent") {
-          summaryHtml = `<div style="text-align:center;padding:6px 0 18px">
+          topSummaryHtml = `<div style="text-align:center;padding:4px 0 20px">
             <div class="f-hint" style="margin:0">Jami xarajat</div>
             <div style="font-size:26px;font-weight:700;color:var(--red);margin-top:4px">−${fmtNcoin(data.spent)} Ncoin</div>
           </div>`;
         } else {
-          summaryHtml = `
-            <div style="text-align:center;padding:6px 0 4px">
-              <div class="f-hint" style="margin:0">Joriy balans</div>
-              <div style="font-size:26px;font-weight:700;color:var(--ink);margin-top:4px">${fmtNcoin(data.balance)} Ncoin</div>
-            </div>
-            <div class="mini-stat-row" style="margin:14px 0 18px">
+          topSummaryHtml = `<div style="text-align:center;padding:4px 0 20px">
+            <div class="f-hint" style="margin:0">Joriy balans</div>
+            <div style="font-size:26px;font-weight:700;color:var(--ink);margin-top:4px">${fmtNcoin(data.balance)} Ncoin</div>
+          </div>`;
+          footerStatsHtml = `
+            <div class="mini-stat-row" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--bd1)">
               <div class="mini-stat"><div class="mini-stat-val" style="color:#16a34a">${fmtNcoin(data.earned)}</div><div class="mini-stat-lbl">Topilgan</div></div>
               <div class="mini-stat"><div class="mini-stat-val" style="color:var(--red)">${fmtNcoin(data.spent)}</div><div class="mini-stat-lbl">Ishlatilgan</div></div>
               <div class="mini-stat"><div class="mini-stat-val">${data.purchaseCount}</div><div class="mini-stat-lbl">Xarid</div></div>
@@ -10041,13 +10058,14 @@
           filter === "earned" ? "Hali coin topilmagan" : filter === "spent" ? "Hali xarajat yo'q" : "Hali harakat yo'q";
 
         body.innerHTML = `
-          <div class="chip-group">${filterChips}</div>
-          ${summaryHtml}
+          <div class="chip-group" style="margin-bottom:20px">${filterChips}</div>
+          ${topSummaryHtml}
           ${
             shown.length
               ? `<div class="list-card">${shown.map((t) => ncoinHistoryRowHtml(t)).join("")}</div>`
               : `<div class="empty"><div class="empty-s">${emptyLabel}</div></div>`
-          }`;
+          }
+          ${footerStatsHtml}`;
       }
 
       // ── FAOLLIK — umumiy hisob-kitob ─────────────────────────────
