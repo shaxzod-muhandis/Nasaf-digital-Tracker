@@ -1755,10 +1755,23 @@ app.get("/api/ncoin/me", auth, async (req, res) => {
        from ncoin_transactions where user_id = $1`,
       [req.user.id],
     );
+    // `detail` — tranzaksiya nimaga tegishli ekani (mahsulot nomi /
+    // vazifa nomi / loyiha + post-stories raqami) — xodimning o'z
+    // tarixida "nimaga sarflandi" va "qaysi ish uchun berildi" aniq
+    // ko'rinishi uchun. `reference_id` format: mahsulot/vazifa uchun
+    // oddiy uuid, check uchun `${cycleId}:${type}:${seq}`.
     const txR = await db.query(
-      `select t.amount, t.reason, t.reference_type, t.created_at, p.name as product_name
+      `select t.amount, t.reason, t.reference_type, t.created_at,
+              p.name as product_name,
+              tk.title as task_title,
+              pr.label as project_label,
+              split_part(t.reference_id, ':', 2) as check_type,
+              split_part(t.reference_id, ':', 3) as check_seq
        from ncoin_transactions t
        left join ncoin_products p on p.id::text = t.reference_id and t.reference_type = 'product'
+       left join tasks tk on tk.id::text = t.reference_id and t.reference_type = 'task'
+       left join project_cycles pc on pc.id::text = split_part(t.reference_id, ':', 1) and t.reference_type = 'check'
+       left join projects pr on pr.id = pc.project_id
        where t.user_id = $1 order by t.created_at desc limit 50`,
       [req.user.id],
     );
@@ -1768,13 +1781,22 @@ app.get("/api/ncoin/me", auth, async (req, res) => {
       earned: Number(statsR.rows[0].earned),
       spent: Number(statsR.rows[0].spent),
       purchaseCount: Number(statsR.rows[0].purchase_count),
-      transactions: txR.rows.map((row) => ({
-        amount: Number(row.amount),
-        reason: row.reason,
-        referenceType: row.reference_type,
-        productName: row.product_name,
-        at: row.created_at,
-      })),
+      transactions: txR.rows.map((row) => {
+        let detail = null;
+        if (row.reference_type === "product") detail = row.product_name;
+        else if (row.reference_type === "task") detail = row.task_title;
+        else if (row.reference_type === "check" && row.project_label) {
+          detail = `${row.project_label} — ${row.check_type === "k" ? "Post" : "Stories"} #${row.check_seq}`;
+        }
+        return {
+          amount: Number(row.amount),
+          reason: row.reason,
+          referenceType: row.reference_type,
+          productName: row.product_name,
+          detail,
+          at: row.created_at,
+        };
+      }),
     });
   } catch (e) {
     res.status(500).json({ error: e.message });

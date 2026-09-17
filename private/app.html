@@ -4148,7 +4148,8 @@
           padding-left: 20px;
         }
         #screen-history .hdr,
-        #screen-history .scroll {
+        #screen-history .scroll,
+        #screen-profile .scroll {
           max-width: 1400px;
         }
 
@@ -5302,6 +5303,9 @@
       }
       function fmtDay(d) {
         return `${d.getDate()}-${MONTHS[d.getMonth()].toLowerCase()}`;
+      }
+      function fmtTime(d) {
+        return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
       }
       // Backenddagi addMonthsClamped() bilan bir xil: N oy qo'shadi, kun
       // clamp bilan (masalan 31-yanvar + 1 oy = 28/29-fevral). "Yangi
@@ -9642,12 +9646,28 @@
                 </div>
                 <button type="button" class="pf-ncoin-btn" onclick="pfGoToNShop()">NShop</button>
               </div>
+              ${pfNcoinHistoryCardHtml()}
               ${pfTasksCardHtml()}
               <div class="desktop-only">${buildActivityPanelCardHtml(false)}</div>
             </div>
           </div>`;
         pfOriginalValues = pfCollectValues();
         pfUpdateSaveBar([]);
+      }
+
+      function pfNcoinHistoryCardHtml() {
+        const rows = (pfNcoinData?.transactions || []).slice(0, 5);
+        return `<div class="pf-card">
+          <div class="pf-card-hdr" style="display:flex;align-items:center;gap:10px">
+            <span style="flex:1">Ncoin tarixi</span>
+            <button type="button" class="act-card-link" style="height:28px;padding:0 10px;font-size:11.5px" onclick="openNcoinHistorySheet()">Barchasi</button>
+          </div>
+          ${
+            rows.length
+              ? rows.map((t) => ncoinHistoryRowHtml(t, "12px 20px")).join("")
+              : `<div style="padding:16px 20px"><div class="f-hint" style="margin:0">Hali harakat yo'q</div></div>`
+          }
+        </div>`;
       }
 
       function pfTasksCardHtml() {
@@ -9933,6 +9953,27 @@
         purchase: "NShopdan xarid",
         purchase_refund: "Xarid qaytarildi",
       };
+      // Nima uchun/nimaga sarflangan yoki qaysi ish uchun berilgan —
+      // backend `detail` maydonida (mahsulot nomi / vazifa nomi /
+      // loyiha+post raqami) qaytaradi, shu yerda sabab bilan birlashtiriladi.
+      function ncoinLineLabel(t) {
+        const base = NCOIN_REASON_LABEL[t.reason] || t.reason;
+        return t.detail ? `${base} — ${t.detail}` : base;
+      }
+      // Ncoin tarixi qatori — Profil sahifasidagi ixcham karta va to'liq
+      // "Ncoin tarixi" sheet ikkalasida ham AYNAN shu markup ishlatiladi.
+      function ncoinHistoryRowHtml(t, padding) {
+        const positive = t.amount > 0;
+        const d = new Date(t.at);
+        return `<div class="list-row" style="padding:${padding || "11px 4px"}">
+          <div style="width:30px;height:30px;border-radius:9px;background:${positive ? "var(--inkfill)" : "var(--surf2)"};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:${positive ? "#16a34a" : "var(--red)"};flex:none">${positive ? "↑" : "↓"}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;color:var(--ink);line-height:1.4">${escHtml(ncoinLineLabel(t))}</div>
+            <div class="f-hint" style="margin:2px 0 0">${fmtDay(d)}, ${fmtTime(d)}</div>
+          </div>
+          <div style="font-weight:600;font-size:13.5px;color:${positive ? "#16a34a" : "var(--red)"};flex:none">${positive ? "+" : ""}${fmtNcoin(t.amount)}</div>
+        </div>`;
+      }
       async function openNcoinHistorySheet() {
         const { body } = makeSheet("Ncoin tarixi");
         body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
@@ -9948,19 +9989,7 @@
             </div>
             ${
               rows.length
-                ? `<div class="list-card">${rows
-                    .map((t) => {
-                      const positive = t.amount > 0;
-                      return `<div class="list-row" style="padding:11px 4px">
-                        <div style="width:30px;height:30px;border-radius:9px;background:${positive ? "var(--inkfill)" : "var(--surf2)"};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:${positive ? "#16a34a" : "var(--red)"};flex:none">${positive ? "↑" : "↓"}</div>
-                        <div style="flex:1;min-width:0">
-                          <div style="font-size:13px;color:var(--ink)">${escHtml(NCOIN_REASON_LABEL[t.reason] || t.reason)}</div>
-                          <div class="f-hint" style="margin:2px 0 0">${fmtDay(new Date(t.at))}</div>
-                        </div>
-                        <div style="font-weight:600;font-size:13.5px;color:${positive ? "#16a34a" : "var(--red)"}">${positive ? "+" : ""}${fmtNcoin(t.amount)}</div>
-                      </div>`;
-                    })
-                    .join("")}</div>`
+                ? `<div class="list-card">${rows.map((t) => ncoinHistoryRowHtml(t)).join("")}</div>`
                 : `<div class="empty"><div class="empty-s">Hali harakat yo'q</div></div>`
             }`;
         } catch (e) {
