@@ -9962,18 +9962,26 @@
       }
       // Ncoin tarixi qatori — Profil sahifasidagi ixcham karta va to'liq
       // "Ncoin tarixi" sheet ikkalasida ham AYNAN shu markup ishlatiladi.
+      // `padding` berilmasa — `.list-row`ning standart (14px 15px)
+      // bo'shlig'i ishlatiladi, raqamlar chekkaga yopishib qolmasligi uchun.
       function ncoinHistoryRowHtml(t, padding) {
         const positive = t.amount > 0;
         const d = new Date(t.at);
-        return `<div class="list-row" style="padding:${padding || "11px 4px"}">
+        return `<div class="list-row"${padding ? ` style="padding:${padding}"` : ""}>
           <div style="width:30px;height:30px;border-radius:9px;background:${positive ? "var(--inkfill)" : "var(--surf2)"};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:${positive ? "#16a34a" : "var(--red)"};flex:none">${positive ? "↑" : "↓"}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;color:var(--ink);line-height:1.4">${escHtml(ncoinLineLabel(t))}</div>
-            <div class="f-hint" style="margin:2px 0 0">${fmtDay(d)}, ${fmtTime(d)}</div>
+            <div class="f-hint" style="margin:3px 0 0">${fmtDay(d)}, ${fmtTime(d)}</div>
           </div>
-          <div style="font-weight:600;font-size:13.5px;color:${positive ? "#16a34a" : "var(--red)"};flex:none">${positive ? "+" : ""}${fmtNcoin(t.amount)}</div>
+          <div style="font-weight:600;font-size:13.5px;color:${positive ? "#16a34a" : "var(--red)"};flex:none;margin-left:8px">${positive ? "+" : ""}${fmtNcoin(t.amount)}</div>
         </div>`;
       }
+
+      // `filter`: "all" | "earned" (faqat topilgan) | "spent" (faqat
+      // sarflangan) — bitta sheet ichida almashtiriladi, ma'lumot bir
+      // marta yuklanadi (ncoinHistoryState.data), faqat ro'yxat va
+      // yuqoridagi summary filtrga qarab qayta chiziladi.
+      let ncoinHistoryState = null;
       async function openNcoinHistorySheet() {
         const { body } = makeSheet("Ncoin tarixi");
         body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
@@ -9981,20 +9989,65 @@
           const res = await apiFetch("/api/ncoin/me");
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || "Xatolik");
-          const rows = data.transactions || [];
-          body.innerHTML = `
-            <div style="text-align:center;padding:6px 0 16px">
-              <div class="f-hint" style="margin:0">Joriy balans</div>
-              <div style="font-size:26px;font-weight:700;color:var(--ink);margin-top:4px">${fmtNcoin(data.balance)} Ncoin</div>
-            </div>
-            ${
-              rows.length
-                ? `<div class="list-card">${rows.map((t) => ncoinHistoryRowHtml(t)).join("")}</div>`
-                : `<div class="empty"><div class="empty-s">Hali harakat yo'q</div></div>`
-            }`;
+          ncoinHistoryState = { body, data, filter: "all" };
+          renderNcoinHistorySheet();
         } catch (e) {
           body.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
         }
+      }
+      function setNcoinHistoryFilter(filter) {
+        if (!ncoinHistoryState) return;
+        ncoinHistoryState.filter = filter;
+        renderNcoinHistorySheet();
+      }
+      function renderNcoinHistorySheet() {
+        const { body, data, filter } = ncoinHistoryState;
+        const rows = data.transactions || [];
+        const shown = filter === "earned" ? rows.filter((t) => t.amount > 0) : filter === "spent" ? rows.filter((t) => t.amount < 0) : rows;
+
+        const filterChips = [
+          ["all", "Barchasi"],
+          ["earned", "Ishlab topilgan"],
+          ["spent", "Xarajatlar"],
+        ]
+          .map(([f, lbl]) => `<button type="button" class="chip-btn${filter === f ? " active" : ""}" onclick="setNcoinHistoryFilter('${f}')">${lbl}</button>`)
+          .join("");
+
+        let summaryHtml;
+        if (filter === "earned") {
+          summaryHtml = `<div style="text-align:center;padding:6px 0 18px">
+            <div class="f-hint" style="margin:0">Jami ishlab topilgan</div>
+            <div style="font-size:26px;font-weight:700;color:#16a34a;margin-top:4px">+${fmtNcoin(data.earned)} Ncoin</div>
+          </div>`;
+        } else if (filter === "spent") {
+          summaryHtml = `<div style="text-align:center;padding:6px 0 18px">
+            <div class="f-hint" style="margin:0">Jami xarajat</div>
+            <div style="font-size:26px;font-weight:700;color:var(--red);margin-top:4px">−${fmtNcoin(data.spent)} Ncoin</div>
+          </div>`;
+        } else {
+          summaryHtml = `
+            <div style="text-align:center;padding:6px 0 4px">
+              <div class="f-hint" style="margin:0">Joriy balans</div>
+              <div style="font-size:26px;font-weight:700;color:var(--ink);margin-top:4px">${fmtNcoin(data.balance)} Ncoin</div>
+            </div>
+            <div class="mini-stat-row" style="margin:14px 0 18px">
+              <div class="mini-stat"><div class="mini-stat-val" style="color:#16a34a">${fmtNcoin(data.earned)}</div><div class="mini-stat-lbl">Topilgan</div></div>
+              <div class="mini-stat"><div class="mini-stat-val" style="color:var(--red)">${fmtNcoin(data.spent)}</div><div class="mini-stat-lbl">Ishlatilgan</div></div>
+              <div class="mini-stat"><div class="mini-stat-val">${data.purchaseCount}</div><div class="mini-stat-lbl">Xarid</div></div>
+            </div>`;
+        }
+
+        const emptyLabel =
+          filter === "earned" ? "Hali coin topilmagan" : filter === "spent" ? "Hali xarajat yo'q" : "Hali harakat yo'q";
+
+        body.innerHTML = `
+          <div class="chip-group">${filterChips}</div>
+          ${summaryHtml}
+          ${
+            shown.length
+              ? `<div class="list-card">${shown.map((t) => ncoinHistoryRowHtml(t)).join("")}</div>`
+              : `<div class="empty"><div class="empty-s">${emptyLabel}</div></div>`
+          }`;
       }
 
       // ── FAOLLIK — umumiy hisob-kitob ─────────────────────────────
