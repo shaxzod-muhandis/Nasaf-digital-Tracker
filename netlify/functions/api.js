@@ -354,7 +354,7 @@ app.get("/api/users", auth, async (req, res) => {
 app.get("/api/users/directory", auth, async (req, res) => {
   try {
     const r = await db.query(
-      `select username, first_name, last_name from users where is_active order by username`,
+      `select id, username, first_name, last_name, job_title from users where is_active order by username`,
     );
     res.json({ users: r.rows });
   } catch (e) {

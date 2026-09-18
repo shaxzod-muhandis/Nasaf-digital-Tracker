@@ -7844,22 +7844,36 @@
 
       // ── BELGILASH MODALI (kim montaj qildi / kim video oldi) ──────
       // Post uchun ikkala select ham so'raladi; stories uchun faqat sana.
-      // Loyihaga biriktirilgan, berilgan rolga ega userlardan <option>
-      // ro'yxati quradi (masalan "montajchi" roli — video montaj qilgan
-      // kishi tanlovi). `count` — ushbu loyihada shu rolga ega odam
-      // borligini bildiradi (majburiylikni aniqlash uchun).
-      function projectRoleUserOptions(selectedUserId, role, assignees) {
-        const matches = (assignees || []).filter((a) => a.role === role);
-        const opt = (a) => {
+      // Tanlov ikki guruhga bo'linadi: "Loyihaga biriktirilgan" (berilgan
+      // rolga ega — masalan "montajchi") va "Boshqa xodimlar" (loyihaga
+      // biriktirilmagan bo'lsa ham, ishni bajargan bo'lishi mumkin —
+      // masalan asosiy montajchi ishga chiqolmay qolsa, uni o'rniga
+      // ishlagan boshqa xodim tanlanadi; bu Ncoin va oylik/Tabel
+      // hisobotida AYNAN shu odamga tegishli bo'lib qoladi). SMM
+      // menejer bunga kirmaydi — u har doim loyihaning o'z rolidan
+      // avtomatik aniqlanadi, qo'lda tanlanmaydi.
+      function checkPersonOptionsHtml(selectedUserId, role, assignees, directory) {
+        const assigned = (assignees || []).filter((a) => a.role === role);
+        const assignedIds = new Set(assigned.map((a) => a.userId));
+        const assignedOpt = (a) => {
           const name = a.fullName || [a.firstName, a.lastName].filter(Boolean).join(" ") || `@${a.username}`;
           return `<option value="${escHtml(a.userId)}"${a.userId === selectedUserId ? " selected" : ""}>${escHtml(name)}</option>`;
         };
+        const otherOpt = (u) => {
+          const name = u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : `@${u.username}`;
+          const hint = u.job_title ? ` (${u.job_title})` : "";
+          return `<option value="${escHtml(u.id)}"${u.id === selectedUserId ? " selected" : ""}>${escHtml(name)}${escHtml(hint)}</option>`;
+        };
+        const others = (directory || [])
+          .filter((u) => !assignedIds.has(u.id))
+          .sort((a, b) => (a.first_name || a.username).localeCompare(b.first_name || b.username));
         let html = `<option value=""${!selectedUserId ? " selected" : ""}>— tanlanmagan —</option>`;
-        html += matches.map(opt).join("");
-        return { html, count: matches.length };
+        if (assigned.length) html += `<optgroup label="Loyihaga biriktirilgan">${assigned.map(assignedOpt).join("")}</optgroup>`;
+        if (others.length) html += `<optgroup label="Boshqa xodimlar">${others.map(otherOpt).join("")}</optgroup>`;
+        return html;
       }
 
-      function openCheckModal(slug, type, num) {
+      async function openCheckModal(slug, type, num) {
         const p = projects.find((x) => x.id === slug);
         if (!p) return;
         const key = `${type}-${num}`;
@@ -7871,22 +7885,28 @@
           : isoOf(todayDate());
         const storyKind = info.storyKind || "info";
 
-        const editorOpts = projectRoleUserOptions(info.editorUserId, "montajchi", p.assignees);
-        const videoOpts = projectRoleUserOptions(info.videographerUserId, "mobilograf", p.assignees);
-        const noRoleHint =
-          editorOpts.count === 0 && videoOpts.count === 0
-            ? `<div class="f-hint" style="color:var(--red);margin-top:-6px;margin-bottom:14px">Bu loyihada montajchi/mobilograf roli hali biriktirilmagan — Boshqaruv → Ruxsatlar'dan tayinlang.</div>`
-            : "";
+        const { body } = makeSheet(`${label} ${num} — ${escHtml(p.label)}`);
+        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        let directory = [];
+        try {
+          const res = await apiFetch("/api/users/directory");
+          if (res.ok) directory = (await res.json()).users || [];
+        } catch (e) {}
+        // Sheet ochiq turgan paytda foydalanuvchi yopib qo'ygan bo'lishi
+        // mumkin — shu holatda endi mavjud bo'lmagan body'ga yozmaymiz.
+        if (!document.body.contains(body)) return;
+
+        const editorHtml = checkPersonOptionsHtml(info.editorUserId, "montajchi", p.assignees, directory);
+        const videoHtml = checkPersonOptionsHtml(info.videographerUserId, "mobilograf", p.assignees, directory);
         const pickerPart = `
           <div class="f-group">
             <label class="f-label">Video montajini kim qildi?</label>
-            <select class="f-input" id="cm-editor">${editorOpts.html}</select>
+            <select class="f-input" id="cm-editor">${editorHtml}</select>
           </div>
           <div class="f-group">
             <label class="f-label">Videoni kim oldi?</label>
-            <select class="f-input" id="cm-videographer">${videoOpts.html}</select>
-          </div>
-          ${noRoleHint}`;
+            <select class="f-input" id="cm-videographer">${videoHtml}</select>
+          </div>`;
 
         // Stories ikki xil: "gapirib beriladigan" (faqat SMM menejerga
         // Ncoin) yoki "atmosferali" (video/montajga Ncoin, postdagi kabi
@@ -7904,7 +7924,6 @@
                <div id="cm-atmo-fields" style="display:${storyKind === "atmospheric" ? "" : "none"}">${pickerPart}</div>`
             : "";
 
-        const { body } = makeSheet(`${label} ${num} — ${escHtml(p.label)}`);
         body.innerHTML = `
           ${type === "k" ? pickerPart : storyTypePart}
           <div class="f-group">
@@ -7937,12 +7956,13 @@
         const editorUserId = showsPickers ? document.getElementById("cm-editor")?.value || null : null;
         const videographerUserId = showsPickers ? document.getElementById("cm-videographer")?.value || null : null;
         const workDate = document.getElementById("cm-date")?.value || null;
+        // Endi loyihaga biriktirilmagan xodim ham tanlanishi mumkin
+        // bo'lgani sabab (butun kompaniya ro'yxati doim mavjud), tanlov
+        // har doim majburiy — kim ishni bajargani Ncoin va oylik/Tabel
+        // hisobotida aniq qayd etilishi shart.
         if (showsPickers) {
-          const p = projects.find((x) => x.id === slug);
-          const editorCount = (p?.assignees || []).filter((a) => a.role === "montajchi").length;
-          const videoCount = (p?.assignees || []).filter((a) => a.role === "mobilograf").length;
-          if (editorCount > 0 && !editorUserId) return showToast("⚠ Montaj qilgan xodimni tanlang");
-          if (videoCount > 0 && !videographerUserId) return showToast("⚠ Video olgan xodimni tanlang");
+          if (!editorUserId) return showToast("⚠ Montaj qilgan xodimni tanlang");
+          if (!videographerUserId) return showToast("⚠ Video olgan xodimni tanlang");
         }
         if (!workDate) return showToast("⚠ Sanani tanlang");
         btn.disabled = true;
