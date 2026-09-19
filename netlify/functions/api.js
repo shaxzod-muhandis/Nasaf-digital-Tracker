@@ -2632,6 +2632,39 @@ app.post("/api/reminder/run", async (req, res) => {
           .catch((e) => results.push({ username, status: "error", error: e.message, kind: "task" })),
       );
     }
+
+    // Xodimning o'ziga yuqorida har kuni eslatma boradi — bundan tashqari,
+    // vazifa 2 kun yoki undan ko'proq muddatidan o'tib ketgan bo'lsa,
+    // adminlarga ALOHIDA xabar boradi (xodim bilan shaxsan — masalan
+    // qo'ng'iroq qilib — bog'lanish uchun). Bot orqali haqiqiy qo'ng'iroq
+    // qilib bo'lmaydi (Telegram Bot API buni qo'llab-quvvatlamaydi),
+    // shuning uchun bu yerda odamni ogohlantirib, real qo'ng'iroqni admin
+    // o'zi qiladi. Xuddi yuqoridagi kabi, har kuni qayta hisoblanadi —
+    // vazifa hal bo'lmaguncha admin har kuni eslatib turiladi.
+    const ESCALATE_OVERDUE_DAYS = 2;
+    const escalated = overdueR.rows.filter((row) => dayDiff(today, row.due_date) <= -ESCALATE_OVERDUE_DAYS);
+    if (escalated.length) {
+      const adminR = await db.query(
+        `select username, telegram_chat_id from users
+         where role in ('admin','super_admin') and is_active and telegram_chat_id is not null`,
+      );
+      const escLines = escalated
+        .map((row) => {
+          const overdueDays = -dayDiff(today, row.due_date);
+          const empName = row.first_name || row.username;
+          return `📵 <b>${row.title}</b> — ${empName} (@${row.username}), muddatidan ${overdueDays} kun o'tdi (${row.due_date}). Shaxsan bog'laning.`;
+        })
+        .join("\n");
+      const adminText = `🚨 <b>E'tibor: ${escalated.length} ta vazifa 2+ kundan beri kechikmoqda</b>\n─────────────────\n\n${escLines}`;
+      for (const admin of adminR.rows) {
+        sends.push(
+          sendMsg(db, admin.telegram_chat_id, adminText, { replyMarkup: appOpenButton("?tab=tasks") })
+            .then(() => results.push({ username: admin.username, status: "sent", kind: "admin_escalation" }))
+            .catch((e) => results.push({ username: admin.username, status: "error", error: e.message, kind: "admin_escalation" })),
+        );
+      }
+    }
+
     await Promise.allSettled(sends);
 
     res.json({

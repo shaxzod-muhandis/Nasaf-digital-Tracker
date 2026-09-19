@@ -29,7 +29,7 @@ function initDataFor(username, id = 111) {
 
 async function cleanupTestData() {
   await db.query(`delete from tasks where title like 'Test vazifa%'`);
-  await db.query(`delete from users where username in ('test_profileuser', 'test_profileuser2')`);
+  await db.query(`delete from users where username in ('test_profileuser', 'test_profileuser2') or username like 'test_escalate_%'`);
   await db.query(`delete from tags where name like 'TestTag%'`);
 }
 
@@ -464,6 +464,57 @@ async function main() {
   await check("oddiy user jurnalni ko'ra olmaydi (403)", async () => {
     const r = await call("GET", "/api/notifications", { user: "test_profileuser" });
     assert.strictEqual(r.status, 403);
+  });
+
+  console.log("── MUDDATI O'TGAN VAZIFA — ADMINGA ESKALATSIYA ───");
+  let escAdminId, escEmpId, escOnTimeTaskId, escOverdueTaskId;
+  const isoDaysAgo = (n) => new Date(Date.now() - n * 24 * 3600 * 1000).toISOString().slice(0, 10);
+  await check("eskalatsiya uchun admin va xodim yaratiladi", async () => {
+    const a = await db.query(
+      `insert into users (username, role, telegram_user_id, telegram_chat_id, first_name, is_active)
+       values ('test_escalate_admin','admin',900101,'900101','TestEscalateAdmin',true) returning id`,
+    );
+    escAdminId = a.rows[0].id;
+    const e = await db.query(
+      `insert into users (username, role, telegram_user_id, telegram_chat_id, first_name, is_active)
+       values ('test_escalate_emp','employee',900102,'900102','TestEscalateEmp',true) returning id`,
+    );
+    escEmpId = e.rows[0].id;
+  });
+  // Eslatma: "1 kun kechikkanda eskalatsiya YO'Q" holatini shu yerda
+  // to'g'ridan-to'g'ri sinab bo'lmaydi — bu real production bazasiga
+  // qarshi ishlaydigan test (alohida test bazasi yo'q), va tizimda
+  // hozir ham real 2+ kun kechikkan boshqa vazifalar bor (adminlar
+  // ularning digestini baribir oladi) — shu sabab "hech qanday
+  // eskalatsiya kelmadi" ni ishonchli tekshirib bo'lmaydi. Chegara
+  // mantig'i (`ESCALATE_OVERDUE_DAYS = 2`, api.js) kod ko'rinishidan
+  // tasdiqlangan; bu yerda faqat ijobiy holatni (3 kunlik vazifa
+  // eskalatsiyani chaqirishini) tekshiramiz.
+  await check("1 kun o'tgan vazifa yaratiladi (fon uchun, eskalatsiyaga tegishli emas)", async () => {
+    const created = await call("POST", "/api/tasks", {
+      user: "shaxzodshokirov",
+      body: { title: "Test vazifa (1 kun kechikkan)", assigneeUsername: "test_escalate_emp", dueDate: isoDaysAgo(1), notifyTelegram: false },
+    });
+    assert.strictEqual(created.status, 200, JSON.stringify(created.json));
+    escOnTimeTaskId = created.json.task.id;
+  });
+  await check("3+ kun o'tgan vazifa uchun admin(lar)ga eskalatsiya xabari boradi", async () => {
+    const created = await call("POST", "/api/tasks", {
+      user: "shaxzodshokirov",
+      body: { title: "Test vazifa (3 kun kechikkan)", assigneeUsername: "test_escalate_emp", dueDate: isoDaysAgo(3), notifyTelegram: false },
+    });
+    assert.strictEqual(created.status, 200, JSON.stringify(created.json));
+    escOverdueTaskId = created.json.task.id;
+
+    const r = await call("POST", "/api/reminder/run", { user: "shaxzodshokirov", body: {} });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    const adminEsc = r.json.results.find((x) => x.kind === "admin_escalation" && x.username === "test_escalate_admin");
+    assert.ok(adminEsc, JSON.stringify(r.json.results));
+    assert.strictEqual(adminEsc.status, "sent", JSON.stringify(adminEsc));
+  });
+  await check("tozalash: eskalatsiya test vazifalari va userlari o'chiriladi", async () => {
+    await db.query(`delete from tasks where id = any($1)`, [[escOnTimeTaskId, escOverdueTaskId]]);
+    await db.query(`delete from users where id = any($1)`, [[escAdminId, escEmpId]]);
   });
 
   await cleanupTestData();
