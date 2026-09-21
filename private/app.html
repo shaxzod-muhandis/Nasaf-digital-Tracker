@@ -7214,13 +7214,15 @@
           `<option value="">— Umumiy —</option>` +
           projects.map((p) => `<option value="${escArg(p.id)}">${escHtml(p.label)}</option>`).join("");
         // full_name (eski maydon) ko'pincha bo'sh — xodimning haqiqiy
-        // ism-familiyasi first_name/last_name'da saqlanadi. Ular bo'lmasa
-        // (profil hali to'ldirilmagan), faqat @username ko'rsatiladi —
-        // ikkalasini bir xilda ("username (@username)") qayta ko'rsatib
-        // chalkashtirmaslik uchun.
+        // ism-familiyasi first_name/last_name'da saqlanadi. Qavs ichida
+        // @username o'rniga lavozimi (job_title) ko'rsatiladi — kim
+        // ekanini emas, NIMA ish qilishini ko'rsatish tanlovni
+        // osonlashtiradi. Lavozimi hali kiritilmagan bo'lsa, @username'ga
+        // qaytamiz (bo'sh qavsdan ko'ra ma'lumotliroq).
         const userDisplayLabel = (u) => {
           const name = u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : u.full_name;
-          return name ? `${name} (@${u.username})` : `@${u.username}`;
+          const suffix = u.job_title ? u.job_title : `@${u.username}`;
+          return name ? `${name} (${suffix})` : `@${u.username}`;
         };
         // Vazifa faqat ilovadan foydalanadigan (Telegram orqali ro'yxatdan
         // o'tgan) xodimlarga biriktiriladi — "staff" (montajchi/mobilograf
