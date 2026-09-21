@@ -586,6 +586,32 @@
         display: flex;
         flex-direction: column;
       }
+      /* NShop sahifasi birinchi ochilganda (mahsulotlar/balans hali
+         so'ralayotganda) ko'rsatiladigan skelet — haqiqiy .nshop-grid
+         qatoriga o'xshab quriladi, shu sabab yuklangach almashinish
+         "sakramaydi". */
+      .nshop-skel-img,
+      .nshop-skel-line {
+        background: linear-gradient(90deg, var(--surf2) 25%, var(--bd2) 37%, var(--surf2) 63%);
+        background-size: 400% 100%;
+        animation: nshop-shimmer 1.4s ease infinite;
+      }
+      .nshop-skel-img {
+        height: 104px;
+      }
+      .nshop-skel-line {
+        height: 10px;
+        border-radius: 5px;
+        margin: 11px 12px 0;
+      }
+      @keyframes nshop-shimmer {
+        0% {
+          background-position: 100% 0;
+        }
+        100% {
+          background-position: 0 0;
+        }
+      }
       .nshop-img-placeholder {
         width: 100%;
         height: 104px;
@@ -777,7 +803,8 @@
           grid-template-columns: repeat(4, 1fr);
           gap: 18px;
         }
-        .nshop-img-placeholder {
+        .nshop-img-placeholder,
+        .nshop-skel-img {
           height: 158px;
         }
         .nshop-card-body {
@@ -9510,7 +9537,7 @@
         return `<tr id="nshop-row-${p.id}"${p.is_visible ? "" : ' style="background:var(--surf2)"'}>
           <td>
             <div style="display:flex;align-items:center;gap:13px">
-              <div class="nshop-purchase-thumb" style="width:44px;height:44px;border-radius:11px"><span>rasm</span></div>
+              ${nshopThumbHtml(p.image_url, "width:44px;height:44px;border-radius:11px")}
               <div>
                 <div class="dtbl-name"${p.is_visible ? "" : ' style="color:var(--t2)"'}>${escHtml(p.name)}</div>
                 <div style="font-size:11.5px;color:var(--t3);margin-top:2px">${p.is_visible ? "Ko'rinadi" : "Yashirilgan"}</div>
@@ -9595,10 +9622,32 @@
         el.classList.add("flash");
         setTimeout(() => el.classList.remove("flash"), 1500);
       }
+      // Mahsulot rasmi — tanlangan zahoti mahalliy oldindan ko'rish
+      // ko'rsatiladi, shu bilan bir vaqtda Vercel Blob'ga yuklanadi
+      // (spinner bilan); yuklab bo'lingach qaytgan URL shu o'zgaruvchida
+      // saqlanadi va "Saqlash" bosilganda mahsulotga biriktiriladi.
+      let npImageUrl = null;
+      function npImagePreviewInner(url) {
+        return url
+          ? `<img src="${escArg(url)}" style="width:100%;height:100%;object-fit:cover"/>`
+          : `<div class="nshop-img-placeholder" style="width:96px;height:96px;border-radius:12px"><span>rasm</span></div>`;
+      }
       function openNShopProductSheet(productId) {
         const p = productId ? nshopAdminProducts.find((x) => x.id === productId) : null;
+        npImageUrl = p?.image_url || null;
         const { body } = makeSheet(p ? "Mahsulotni tahrirlash" : "Yangi mahsulot");
         body.innerHTML = `
+          <div class="f-group">
+            <label class="f-label">Mahsulot rasmi (ixtiyoriy)</label>
+            <div style="display:flex;align-items:center;gap:12px">
+              <div id="np-image-preview" style="position:relative;width:96px;height:96px;border-radius:12px;overflow:hidden;cursor:pointer;flex:none" onclick="document.getElementById('np-image-input').click()">${npImagePreviewInner(npImageUrl)}</div>
+              <div style="flex:1">
+                <div class="f-hint" id="np-image-hint" style="margin:0">${npImageUrl ? "O'zgartirish uchun bosing" : "Yuklash uchun bosing (4MB gacha)"}</div>
+                ${npImageUrl ? `<span id="np-image-remove" class="stat-link" style="font-size:12px;margin-top:6px;display:inline-block" onclick="removeNpImage()">Rasmni olib tashlash</span>` : ""}
+              </div>
+            </div>
+            <input type="file" id="np-image-input" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none" onchange="handleNpImageSelect(this)"/>
+          </div>
           <div class="f-group">
             <label class="f-label">Mahsulot nomi</label>
             <input class="f-input" id="np-name" value="${escHtml(p?.name || "")}" placeholder="masalan: Fuse Tea 500 ml"/>
@@ -9618,6 +9667,56 @@
           </div>
           <button class="btn btn-blue" id="np-save-btn" onclick="saveNShopProduct('${p ? escArg(p.id) : ""}')">${p ? "Saqlash" : "Qo'shish"}</button>`;
       }
+      function removeNpImage() {
+        npImageUrl = null;
+        document.getElementById("np-image-preview").innerHTML = npImagePreviewInner(null);
+        document.getElementById("np-image-hint").textContent = "Yuklash uchun bosing (4MB gacha)";
+        document.getElementById("np-image-remove")?.remove();
+      }
+      function handleNpImageSelect(input) {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        if (file.size > 4 * 1024 * 1024) {
+          showToast("⚠ Rasm hajmi 4MB dan oshmasligi kerak");
+          input.value = "";
+          return;
+        }
+        if (!/^image\/(png|jpeg|jpg|webp|gif)$/.test(file.type)) {
+          showToast("⚠ Faqat PNG/JPEG/WEBP/GIF rasm qabul qilinadi");
+          input.value = "";
+          return;
+        }
+        const preview = document.getElementById("np-image-preview");
+        const hint = document.getElementById("np-image-hint");
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const dataUrl = reader.result;
+          preview.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;opacity:.5"/><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.15);color:#fff"><span class="spinner"></span></div>`;
+          hint.textContent = "Yuklanmoqda…";
+          try {
+            const res = await apiFetch("/api/ncoin/admin/upload-image", {
+              method: "POST",
+              body: JSON.stringify({ imageBase64: dataUrl }),
+            });
+            const d = await res.json();
+            if (!res.ok) throw new Error(d.error || "Xato");
+            npImageUrl = d.url;
+            preview.innerHTML = npImagePreviewInner(npImageUrl);
+            hint.textContent = "O'zgartirish uchun bosing";
+            if (!document.getElementById("np-image-remove")) {
+              hint.insertAdjacentHTML(
+                "afterend",
+                `<span id="np-image-remove" class="stat-link" style="font-size:12px;margin-top:6px;display:inline-block" onclick="removeNpImage()">Rasmni olib tashlash</span>`,
+              );
+            }
+          } catch (e) {
+            showToast("⚠ Rasm yuklanmadi: " + e.message);
+            preview.innerHTML = npImagePreviewInner(npImageUrl);
+            hint.textContent = npImageUrl ? "O'zgartirish uchun bosing" : "Yuklash uchun bosing (4MB gacha)";
+          }
+        };
+        reader.readAsDataURL(file);
+      }
       async function saveNShopProduct(productId) {
         const name = document.getElementById("np-name").value.trim();
         if (!name) return showToast("⚠ Mahsulot nomini kiriting");
@@ -9632,7 +9731,7 @@
           const url = productId ? `/api/ncoin/admin/products/${productId}` : "/api/ncoin/admin/products";
           const res = await apiFetch(url, {
             method: productId ? "PATCH" : "POST",
-            body: JSON.stringify({ name, description, price, stock, isVisible }),
+            body: JSON.stringify({ name, description, price, stock, isVisible, imageUrl: npImageUrl }),
           });
           const d = await res.json();
           if (!res.ok) throw new Error(d.error || "Xato");
@@ -10226,9 +10325,17 @@
       let nshopBalance = 0;
       let nshopMe = null;
 
+      function nshopSkeletonHtml(count) {
+        const card = `<div class="nshop-card">
+          <div class="nshop-skel-img"></div>
+          <div class="nshop-skel-line" style="width:75%"></div>
+          <div class="nshop-skel-line" style="width:45%;margin-top:7px;margin-bottom:11px"></div>
+        </div>`;
+        return `<div class="nshop-grid">${card.repeat(count)}</div>`;
+      }
       async function renderNShopScreen() {
         const c = document.getElementById("nshop-body");
-        c.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        c.innerHTML = nshopSkeletonHtml(4);
         try {
           const [prodRes, meRes] = await Promise.all([
             apiFetch("/api/ncoin/products"),
@@ -10278,7 +10385,7 @@
                   ? shown
                       .map(
                         (t) => `<div class="nshop-purchase-row">
-                          <div class="nshop-purchase-thumb"><span>rasm</span></div>
+                          ${nshopThumbHtml(t.productImageUrl, "width:40px;height:40px;border-radius:10px")}
                           <div style="flex:1;min-width:0">
                             <div class="nshop-purchase-name">${escHtml(t.productName || "Mahsulot")}</div>
                             <div class="nshop-purchase-date">${fmtDay(new Date(t.at))}</div>
@@ -10308,12 +10415,26 @@
         return Number.isInteger(v) ? String(v) : v.toFixed(1);
       }
 
+      // Mahsulot/xarid rasmi — bor bo'lsa asta ko'rinadigan (fade-in)
+      // <img> (yuklanish paytida chizilgan fon "skelet" bo'lib turadi),
+      // yo'q bo'lsa doimiy chizilgan placeholder. `sizeStyle` bo'sh
+      // bo'lsa katta grid-karta o'lchami (.nshop-img-placeholder
+      // standart qiymatlari) ishlatiladi, aks holda kichik tarix/jadval
+      // qatorlari uchun aniq o'lcham beriladi.
+      function nshopThumbHtml(url, sizeStyle) {
+        const style = sizeStyle || "";
+        if (!url) return `<div class="nshop-img-placeholder" style="${style}"><span>rasm</span></div>`;
+        return `<div class="nshop-img-placeholder" style="${style};padding:0;overflow:hidden">
+          <img src="${escArg(url)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s ease" onload="this.style.opacity='1'"/>
+        </div>`;
+      }
+
       function nshopCardHtml(p) {
         const canAfford = nshopBalance >= p.price && p.stock > 0;
         const low = p.stock > 0 && p.stock <= 5;
         return `
           <div class="nshop-card">
-            <div class="nshop-img-placeholder"><span>mahsulot rasmi</span></div>
+            ${nshopThumbHtml(p.image_url, "")}
             <div class="nshop-card-body">
               <div class="nshop-card-name">${escHtml(p.name)}</div>
               <div class="nshop-card-row">
@@ -10336,7 +10457,7 @@
         const { ov, body } = makeSheet("Xaridni tasdiqlaysizmi?");
         body.innerHTML = `
           <div style="display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:12px;background:var(--surf2);border:1px solid var(--bd1)">
-            <div class="nshop-purchase-thumb" style="width:46px;height:46px;border-radius:12px"><span>rasm</span></div>
+            ${nshopThumbHtml(p.image_url, "width:46px;height:46px;border-radius:12px")}
             <div style="flex:1;min-width:0">
               <div style="font-weight:600;font-size:14px;color:var(--ink)">${escHtml(p.name)}</div>
               <div class="f-hint" style="margin:2px 0 0">${p.stock} tadan</div>

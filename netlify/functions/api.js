@@ -46,6 +46,7 @@ const {
   buildPacingMessage,
 } = require("./lib/notify");
 const { getBalance, awardNcoin, reverseNcoin } = require("./lib/ncoin");
+const { put: blobPut } = require("@vercel/blob");
 
 // Faqat Telegram bildirishnoma matnlarini tuzish uchun (Vazifalar
 // ekranidagi TASK_STATUS_LABEL bilan bir xil) — front-end'ga ulanmagan
@@ -63,7 +64,10 @@ const TASK_STATUS_LABEL_UZ = {
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+// Standart 100kb limit ko'pchilik so'rov uchun yetarli, lekin NShop
+// mahsulot rasmlari base64 holida JSON body ichida yuboriladi (alohida
+// multipart middleware qo'shmaslik uchun) — shu sabab limit oshirildi.
+app.use(express.json({ limit: "6mb" }));
 
 const auth = createAuthMiddleware(db);
 const CRON_SECRET = process.env.CRON_SECRET || "";
@@ -1956,7 +1960,7 @@ app.get("/api/ncoin/me", auth, async (req, res) => {
     // oddiy uuid, check uchun `${cycleId}:${type}:${seq}`.
     const txR = await db.query(
       `select t.amount, t.reason, t.reference_type, t.created_at,
-              p.name as product_name,
+              p.name as product_name, p.image_url as product_image_url,
               tk.title as task_title,
               pr.label as project_label,
               split_part(t.reference_id, ':', 2) as check_type,
@@ -2001,6 +2005,7 @@ app.get("/api/ncoin/me", auth, async (req, res) => {
           reason: row.reason,
           referenceType: row.reference_type,
           productName: row.product_name,
+          productImageUrl: row.product_image_url,
           detail,
           at: row.created_at,
         };
@@ -2026,7 +2031,7 @@ app.post("/api/ncoin/ack", auth, async (req, res) => {
 app.get("/api/ncoin/products", auth, async (req, res) => {
   try {
     const r = await db.query(
-      `select id, name, description, price, stock from ncoin_products
+      `select id, name, description, price, stock, image_url from ncoin_products
        where is_visible = true and is_archived = false order by price asc, name asc`,
     );
     res.json({ ok: true, products: r.rows.map(normalizeProduct) });
@@ -2110,6 +2115,32 @@ app.get("/api/ncoin/admin/products", auth, async (req, res) => {
   }
 });
 
+// Mahsulot rasmini Vercel Blob'ga yuklaydi va ochiq URL qaytaradi —
+// mahsulot yaratish/tahrirlash formasidan mustaqil ishlaydi (yangi
+// mahsulot hali bazada yo'q bo'lsa ham rasm avval yuklanadi), qaytgan
+// URL keyin oddiy `imageUrl` maydoni sifatida create/PATCH so'roviga
+// qo'shiladi. Rasm base64 (data URL) ko'rinishida JSON body ichida
+// keladi — alohida multipart middleware (masalan multer) qo'shmaslik
+// uchun, mavjud express.json() bilan bir xil yo'l ishlatiladi.
+app.post("/api/ncoin/admin/upload-image", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const dataUrl = req.body.imageBase64;
+    if (!dataUrl || typeof dataUrl !== "string") return res.status(400).json({ error: "Rasm kerak" });
+    const match = dataUrl.match(/^data:(image\/(png|jpeg|jpg|webp|gif));base64,(.+)$/);
+    if (!match) return res.status(400).json({ error: "Faqat PNG/JPEG/WEBP/GIF rasm qabul qilinadi" });
+    const [, mimeType, ext, base64Data] = match;
+    const buffer = Buffer.from(base64Data, "base64");
+    const MAX_BYTES = 4 * 1024 * 1024;
+    if (buffer.length > MAX_BYTES) return res.status(400).json({ error: "Rasm hajmi 4MB dan oshmasligi kerak" });
+    const filename = `nshop/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext === "jpeg" ? "jpg" : ext}`;
+    const blob = await blobPut(filename, buffer, { access: "public", contentType: mimeType });
+    res.json({ ok: true, url: blob.url });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post("/api/ncoin/admin/products", auth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
@@ -2119,10 +2150,11 @@ app.post("/api/ncoin/admin/products", auth, async (req, res) => {
     const price = Math.max(0, parseFloat(req.body.price) || 0);
     const stock = Math.max(0, parseInt(req.body.stock, 10) || 0);
     const isVisible = req.body.isVisible !== false;
+    const imageUrl = req.body.imageUrl ? String(req.body.imageUrl).trim() : null;
     const r = await db.query(
-      `insert into ncoin_products (name, description, price, stock, stock_capacity, is_visible)
-       values ($1,$2,$3,$4,$4,$5) returning *`,
-      [name, description, price, stock, isVisible],
+      `insert into ncoin_products (name, description, price, stock, stock_capacity, is_visible, image_url)
+       values ($1,$2,$3,$4,$4,$5,$6) returning *`,
+      [name, description, price, stock, isVisible, imageUrl],
     );
     res.json({ ok: true, product: normalizeProduct(r.rows[0]) });
   } catch (e) {
@@ -2136,7 +2168,7 @@ app.patch("/api/ncoin/admin/products/:id", auth, async (req, res) => {
   try {
     const sets = [];
     const values = [];
-    const fieldMap = { name: "name", description: "description", price: "price", stock: "stock", isVisible: "is_visible", isArchived: "is_archived" };
+    const fieldMap = { name: "name", description: "description", price: "price", stock: "stock", isVisible: "is_visible", isArchived: "is_archived", imageUrl: "image_url" };
     let stockPlaceholder = null;
     Object.entries(fieldMap).forEach(([bodyKey, col]) => {
       if (typeof req.body[bodyKey] === "undefined") return;
