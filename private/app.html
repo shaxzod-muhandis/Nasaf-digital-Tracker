@@ -528,25 +528,6 @@
         flex: none;
         line-height: 1;
       }
-      .nshop-test-notice {
-        background: var(--amber-bg);
-        color: var(--amber-ink);
-        border-radius: 12px;
-        padding: 12px 14px;
-        font-size: 12.5px;
-        line-height: 1.5;
-        margin-bottom: 14px;
-        display: flex;
-        gap: 9px;
-        align-items: flex-start;
-      }
-      .nshop-test-notice .nshop-test-notice-icon {
-        flex: none;
-      }
-      .nshop-test-notice-text {
-        flex: 1;
-        min-width: 0;
-      }
       .nshop-hdr-row {
         display: flex;
         align-items: center;
@@ -4743,7 +4724,6 @@
           <div style="flex: 1; min-width: 160px">
             <div class="hdr-title" style="display: flex; align-items: center; gap: 8px">
               NShop
-              <span class="debt-badge" style="color: var(--t3); background: var(--chip); font-weight: 500">Test rejimi</span>
             </div>
             <div class="hdr-sub" id="nshop-summary">—</div>
           </div>
@@ -10274,10 +10254,6 @@
           `<span class="n-badge" style="width:17px;height:17px;font-size:10px">N</span>${fmtNcoin(nshopBalance)}`;
         const c = document.getElementById("nshop-body");
         c.innerHTML = `
-          <div class="nshop-test-notice">
-            <span class="nshop-test-notice-icon">🧪</span>
-            <span class="nshop-test-notice-text"><b>Diqqat:</b> NShop hozircha sinov (test) rejimida ishlamoqda — mahsulotlar, narxlar va qoldiqlar admin tomonidan sinov davomida o'zgartirilishi mumkin. Muammo yoki taklif bo'lsa, administratorga yozing.</span>
-          </div>
           ${
             nshopProducts.length
               ? `<div class="nshop-grid">${nshopProducts.map(nshopCardHtml).join("")}</div>
@@ -10418,6 +10394,7 @@
         project_bonus: "Loyiha bonusi",
         purchase: "NShopdan xarid",
         purchase_refund: "Xarid qaytarildi",
+        admin_adjustment: "Balans sozlash (admin)",
       };
       // Nima uchun/nimaga sarflangan yoki qaysi ish uchun berilgan —
       // backend `detail` maydonida (mahsulot nomi / vazifa nomi /
