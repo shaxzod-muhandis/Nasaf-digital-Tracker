@@ -5890,6 +5890,10 @@
             return owners.some((u) => u.toLowerCase().includes(q));
           });
         }
+        // Eng ko'p bajarilgandan eng kamiga — progress ustuni bo'yicha
+        // kamayish tartibida (loyihalar filtr/qidiruvdan keyin, jadvalga
+        // chizishdan oldin saralanadi).
+        tableList = [...tableList].sort((a, b) => projPct(b) - projPct(a));
 
         const tableRows = tableList
           .map((p) => {
