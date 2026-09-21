@@ -2326,6 +2326,21 @@ app.get("/api/ncoin/admin/nshop-stats", auth, async (req, res) => {
        where t.reason = 'purchase'
        order by t.created_at desc limit 5`,
     );
+    // Xodimlar Ncoin reytingi — kim qancha ishlab topgan/sarflagan,
+    // eng ko'p ishlab topgandan boshlab (jamoa faolligini bir qarashda
+    // ko'rish uchun). Faqat oddiy xodimlar (adminlar kirmaydi — ular
+    // "ishlab topish" auditoriyasi emas).
+    const employeesR = await db.query(
+      `select u.username, u.first_name, u.last_name, u.job_title,
+              coalesce(sum(t.amount) filter (where t.amount > 0), 0)::float as earned,
+              coalesce(-sum(t.amount) filter (where t.amount < 0), 0)::float as spent,
+              coalesce(sum(t.amount), 0)::float as balance
+       from users u
+       left join ncoin_transactions t on t.user_id = u.id
+       where u.role = 'employee' and u.is_active = true
+       group by u.id, u.username, u.first_name, u.last_name, u.job_title
+       order by earned desc, u.username asc`,
+    );
     res.json({
       ok: true,
       productCount: Number(totalsR.rows[0].product_count),
@@ -2344,6 +2359,14 @@ app.get("/api/ncoin/admin/nshop-stats", auth, async (req, res) => {
         weeklySales: Number(row.weekly_sales),
       })),
       recentPurchases: recentR.rows.map((row) => ({ ...row, amount: Number(row.amount) })),
+      employees: employeesR.rows.map((row) => ({
+        username: row.username,
+        name: row.first_name ? `${row.first_name} ${row.last_name || ""}`.trim() : row.username,
+        jobTitle: row.job_title,
+        earned: Number(row.earned),
+        spent: Number(row.spent),
+        balance: Number(row.balance),
+      })),
     });
   } catch (e) {
     res.status(500).json({ error: e.message });

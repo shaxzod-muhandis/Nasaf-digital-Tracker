@@ -151,10 +151,14 @@ async function notifyNcoinChange(db, userId, amountSigned, text) {
   const ur = await db.query(`select telegram_chat_id from users where id = $1`, [userId]);
   const chatId = ur.rows[0]?.telegram_chat_id;
   if (!chatId) return;
-  const amt = Number(amountSigned);
-  const sign = amt > 0 ? "+" : "";
+  // Endi +/- belgisiz — faqat ikonka, bo'sh joy va son (masalan
+  // "🪙 0.2 Ncoin"). Sabab: manfiy miqdorlar (sarflash/qaytarish)
+  // "-0.2" ko'rinishida chiqib, boshqa (bog'liq bo'lmagan) xabarlar
+  // bilan chalkashtirilishi mumkin edi — matn (pastda) allaqachon
+  // "ishlab topdingiz"/"sarfladingiz" deb aniq ayтib turadi.
+  const amt = Math.abs(Number(amountSigned));
   const fmt = Number.isInteger(amt) ? String(amt) : amt.toFixed(1);
-  await sendMsg(db, chatId, `🪙 <b>${sign}${fmt} Ncoin</b>\n${text}`, { replyMarkup: appOpenButton() }).catch(
+  await sendMsg(db, chatId, `🪙 <b>${fmt} Ncoin</b>\n${text}`, { replyMarkup: appOpenButton() }).catch(
     (e) => console.error("Ncoin bildirishnomasi xatosi:", e.message),
   );
 }
