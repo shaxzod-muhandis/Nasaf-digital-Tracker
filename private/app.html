@@ -3218,29 +3218,60 @@
       .activity-list {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 14px;
         margin: 14px 0;
       }
       .activity-item.system {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
         font-size: 12px;
+        color: var(--t3);
+        line-height: 1.5;
+      }
+      .activity-item.system::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 99px;
+        background: var(--bd4);
+        flex: none;
+        position: relative;
+        top: -1px;
+      }
+      .activity-system-action {
         color: var(--t3);
       }
       .activity-item.comment {
         display: flex;
-        gap: 9px;
+        gap: 10px;
       }
       .activity-comment-body {
         background: var(--surf2);
-        border-radius: 10px;
-        padding: 8px 11px;
-        font-size: 13px;
+        border: 1px solid var(--bd1);
+        border-radius: 12px;
+        padding: 10px 13px;
+        font-size: 13.5px;
         color: var(--t5);
-        line-height: 1.5;
-        margin-top: 3px;
+        line-height: 1.65;
+        margin-top: 4px;
+        white-space: pre-wrap;
+        word-break: break-word;
       }
       .activity-comment-meta {
-        font-size: 11.5px;
-        color: var(--t3);
+        font-size: 12.5px;
+        display: flex;
+        align-items: baseline;
+        gap: 7px;
+      }
+      .activity-comment-meta .name {
+        font-weight: 600;
+        color: var(--t2);
+      }
+      .activity-time {
+        font-size: 11px;
+        color: var(--t4);
+        white-space: nowrap;
       }
       .comment-composer {
         display: flex;
@@ -6868,18 +6899,28 @@
         if (a.kind === "assignment_change") return `Mas'ul: ${oldV} → ${newV}`;
         return a.detail;
       }
+      // Sana + soat birgalikda — bir kunda bir nechta izoh/holat
+      // o'zgarishi bo'lsa ham, qachon sodir bo'lgani aniq ko'rinishi
+      // uchun (avval faqat sana ko'rsatilardi, hammasi bir xil kunda
+      // "21-sentabr" bo'lib qolardi).
+      function activityTimestamp(iso) {
+        const d = new Date(iso);
+        return `${fmtDay(d)}, ${fmtTime(d)}`;
+      }
       function buildActivityItemHtml(a) {
         if (a.kind === "comment") {
+          const name = a.actorName || a.actorUsername || "?";
+          const c = tagColor(name);
           return `<div class="activity-item comment">
-            <div class="avatar avatar-sm">${escHtml((a.actorName || a.actorUsername || "?").slice(0, 1).toUpperCase())}</div>
+            <div class="avatar avatar-sm" style="background:${c.bg};color:${c.ink}">${escHtml(name.slice(0, 1).toUpperCase())}</div>
             <div style="flex:1;min-width:0">
-              <div class="activity-comment-meta">${escHtml(a.actorName || a.actorUsername || "")} · ${fmtDay(new Date(a.createdAt))}</div>
+              <div class="activity-comment-meta"><span class="name">${escHtml(name)}</span><span class="activity-time">${activityTimestamp(a.createdAt)}</span></div>
               <div class="activity-comment-body">${escHtml(a.body || "")}</div>
             </div>
           </div>`;
         }
         const who = a.actorUsername ? "@" + escHtml(a.actorUsername) : "Tizim";
-        return `<div class="activity-item system">${who} — ${formatActivityDetail(a)} · ${fmtDay(new Date(a.createdAt))}</div>`;
+        return `<div class="activity-item system">${who} <span class="activity-system-action">${formatActivityDetail(a)}</span><span class="activity-time">${activityTimestamp(a.createdAt)}</span></div>`;
       }
       async function submitTaskComment(id, btn) {
         const input = document.getElementById("comment-input");
