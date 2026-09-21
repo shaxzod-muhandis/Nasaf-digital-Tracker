@@ -10366,7 +10366,14 @@
         document.getElementById("nshop-balance-pill").innerHTML =
           `<span class="n-badge" style="width:17px;height:17px;font-size:10px">N</span>${fmtNcoin(nshopBalance)}`;
         const c = document.getElementById("nshop-body");
+        const debtBannerHtml = nshopMe?.debtBlocked
+          ? `<div style="display:flex;gap:10px;align-items:flex-start;background:var(--red-bg);color:var(--red);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:12.5px;line-height:1.55">
+              <span style="flex:none">🥶</span>
+              <span><b>"${escHtml(nshopMe.debtProjectLabel)}" loyihasi qarzda</b> — shu loyihadagi ishingiz (post/stories) muddatidan kechikmoqda. Qarz yopilmaguncha NShopdan xarid qila olmaysiz.</span>
+            </div>`
+          : "";
         c.innerHTML = `
+          ${debtBannerHtml}
           ${
             nshopProducts.length
               ? `<div class="nshop-grid">${nshopProducts.map(nshopCardHtml).join("")}</div>
@@ -10436,8 +10443,10 @@
       }
 
       function nshopCardHtml(p) {
-        const canAfford = nshopBalance >= p.price && p.stock > 0;
+        const debtBlocked = !!nshopMe?.debtBlocked;
+        const canAfford = !debtBlocked && nshopBalance >= p.price && p.stock > 0;
         const low = p.stock > 0 && p.stock <= 5;
+        const btnLabel = debtBlocked ? "Loyiha qarzda" : p.stock <= 0 ? "Tugagan" : canAfford ? "Sotib olish" : "Yetarli emas";
         return `
           <div class="nshop-card">
             ${nshopThumbHtml(p.image_url, "")}
@@ -10450,7 +10459,7 @@
                 <span class="nshop-stock-badge ${low ? "low" : ""}">${p.stock > 0 ? p.stock + " ta qoldi" : "Tugagan"}</span>
               </div>
               <button type="button" class="btn ${canAfford ? "btn-blue" : "btn-soft"} nshop-buy-btn" ${canAfford ? `onclick="openNcoinPurchaseSheet('${escArg(p.id)}')"` : "disabled"}>
-                ${p.stock <= 0 ? "Tugagan" : canAfford ? "Sotib olish" : "Yetarli emas"}
+                ${btnLabel}
               </button>
             </div>
           </div>`;
@@ -10522,6 +10531,7 @@
         purchase: "NShopdan xarid",
         purchase_refund: "Xarid qaytarildi",
         admin_adjustment: "Balans sozlash (admin)",
+        welcome_bonus: "Xush kelibsiz bonusi",
       };
       // Nima uchun/nimaga sarflangan yoki qaysi ish uchun berilgan —
       // backend `detail` maydonida (mahsulot nomi / vazifa nomi /

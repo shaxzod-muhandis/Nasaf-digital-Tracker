@@ -394,10 +394,28 @@ app.post("/api/users", auth, async (req, res) => {
          birth_date = coalesce(excluded.birth_date, users.birth_date),
          phone      = coalesce(excluded.phone, users.phone),
          job_title  = coalesce(excluded.job_title, users.job_title)
-       returning username, full_name, role, is_active, access_status, access_granted_at, first_name, last_name, birth_date, phone, job_title`,
+       returning id, username, full_name, role, is_active, access_status, access_granted_at, first_name, last_name, birth_date, phone, job_title, (xmax = 0) as was_inserted`,
       [username, fullName, firstName, lastName, birthDate, phone, jobTitle],
     );
-    res.json({ ok: true, user: r.rows[0] });
+    const newUser = r.rows[0];
+    // Haqiqatan YANGI xodim (avval "removed"/"blocked" bo'lib qayta
+    // faollashtirilgan emas — `xmax = 0` Postgres'da "bu qator hozir
+    // INSERT qilindi, ON CONFLICT UPDATE emas" degani) — boshlang'ich
+    // Ncoin bonusi shu holatda beriladi, qayta faollashtirishda emas
+    // (aks holda chiqarib-qayta qo'shib coin "fermasi" qilish mumkin
+    // bo'lardi).
+    if (newUser.was_inserted) {
+      const WELCOME_BONUS = 5;
+      await awardNcoin(db, { userId: newUser.id, amount: WELCOME_BONUS, reason: "welcome_bonus" });
+      await notifyNcoinChange(
+        db,
+        newUser.id,
+        WELCOME_BONUS,
+        "Nasaf Digital Trackerga xush kelibsiz! Boshlang'ich sifatida sizga 5 Ncoin berildi.",
+      ).catch((e) => console.error("Xush kelibsiz bildirishnomasi xatosi:", e.message));
+    }
+    delete newUser.was_inserted;
+    res.json({ ok: true, user: newUser });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -1942,6 +1960,26 @@ function normalizeProduct(row) {
   return row && { ...row, price: Number(row.price) };
 }
 
+// Loyihada ishlab chiqarish roliga (montajchi/mobilograf/smm — boshqa
+// rollar, masalan dizayner/kopirayter/boshqa, kirmaydi) ega bo'lgan,
+// lekin o'sha loyiha muddatidan o'tib "qarz"ga tushib qolgan xodim —
+// qarz yopilmaguncha NShopdan xarid qila olmaydi (loyihalarni o'z
+// vaqtida yopishga rag'batlantirish uchun). Bir nechta qarzli loyiha
+// bo'lsa — birinchisi qaytariladi (xabar uchun yetarli).
+async function findDebtBlockingProject(db, userId) {
+  const rolesR = await db.query(
+    `select p.* from permissions perm
+     join projects p on p.id = perm.project_id
+     where perm.user_id = $1 and perm.role in ('montajchi','mobilograf','smm') and p.is_active = true`,
+    [userId],
+  );
+  for (const project of rolesR.rows) {
+    const summary = await getProjectCycleSummary(db, project);
+    if (summary.outstandingDebt) return project.label;
+  }
+  return null;
+}
+
 app.get("/api/ncoin/me", auth, async (req, res) => {
   try {
     const balance = await getBalance(db, req.user.id);
@@ -1984,6 +2022,7 @@ app.get("/api/ncoin/me", auth, async (req, res) => {
        ) as has_unseen`,
       [req.user.id],
     );
+    const debtProjectLabel = await findDebtBlockingProject(db, req.user.id);
     res.json({
       ok: true,
       balance,
@@ -1991,6 +2030,8 @@ app.get("/api/ncoin/me", auth, async (req, res) => {
       spent: Number(statsR.rows[0].spent),
       purchaseCount: Number(statsR.rows[0].purchase_count),
       hasUnseen: unseenR.rows[0].has_unseen,
+      debtBlocked: !!debtProjectLabel,
+      debtProjectLabel,
       transactions: txR.rows.map((row) => {
         let detail = null;
         if (row.reference_type === "product") detail = row.product_name;
@@ -2044,6 +2085,14 @@ app.post("/api/ncoin/purchase", auth, async (req, res) => {
   try {
     const { productId } = req.body;
     if (!productId) return res.status(400).json({ error: "productId kerak" });
+
+    const debtProjectLabel = await findDebtBlockingProject(db, req.user.id);
+    if (debtProjectLabel) {
+      return res.status(403).json({
+        error: `"${debtProjectLabel}" loyihasi qarzda — qarz yopilmaguncha NShopdan foydalana olmaysiz`,
+        code: "PROJECT_DEBT",
+      });
+    }
 
     const result = await db.withTransaction(async (client) => {
       const prR = await client.query(

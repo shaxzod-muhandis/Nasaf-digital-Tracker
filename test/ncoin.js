@@ -85,6 +85,14 @@ async function main() {
       assert.strictEqual(r.status, 200, JSON.stringify(r.json));
     });
   }
+  // Yangi xodim yaratilganda endi avtomatik "xush kelibsiz" bonusi
+  // beriladi (pastda alohida, o'z testi bilan tekshiriladi) — shu test
+  // fayldagi qolgan barcha balans tekshiruvlari 0'dan boshlanadi deb
+  // yozilgan, shuning uchun bu 4 ta test-userning boshlang'ich bonusini
+  // shu yerda tozalab qo'yamiz.
+  await db.query(`delete from ncoin_transactions where user_id in (select id from users where username = any($1))`, [
+    [EMP, EDITOR, VIDEO, SMM],
+  ]);
 
   let projectSlug;
   await check("test loyiha yaratiladi va hammaga ruxsat beriladi", async () => {
@@ -488,6 +496,75 @@ async function main() {
   await check("statistika endpointi oddiy xodimga yopiq (403)", async () => {
     const r = await call("GET", "/api/ncoin/admin/nshop-stats", { user: EMP });
     assert.strictEqual(r.status, 403);
+  });
+
+  console.log("── YANGI XODIM — XUSH KELIBSIZ BONUSI ─────────────");
+  await check("yangi xodimga (POST /api/users) avtomatik 5 Ncoin beriladi", async () => {
+    const r = await call("POST", "/api/users", {
+      user: "shaxzodshokirov",
+      body: { username: "test_ncoin_welcome", firstName: "Welcome" },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.strictEqual(await balanceOf("test_ncoin_welcome"), 5);
+  });
+  await check("qayta faollashtirishda (removed → active) bonus QAYTA berilmaydi", async () => {
+    await call("PATCH", "/api/users/test_ncoin_welcome/access", { user: "shaxzodshokirov", body: { status: "removed" } });
+    const r = await call("POST", "/api/users", {
+      user: "shaxzodshokirov",
+      body: { username: "test_ncoin_welcome", firstName: "Welcome" },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.strictEqual(await balanceOf("test_ncoin_welcome"), 5, "qayta faollashtirishda coin ikkinchi marta berilmasligi kerak");
+  });
+
+  console.log("── LOYIHA QARZDA BO'LSA — NSHOP BLOKLANADI ────────");
+  let debtProjectSlug, freeProductId;
+  await check("fixture: hech qachon yopilmagan, muddati o'tgan loyiha yaratiladi", async () => {
+    const pastAnchor = new Date(Date.now() - 40 * 86400000).toISOString().slice(0, 10);
+    const r = await call("POST", "/api/projects", {
+      user: "shaxzodshokirov",
+      body: { label: "Ncoin Test Loyiha Qarz", anchorDate: pastAnchor, postsTarget: 1, storiesTarget: 0 },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    debtProjectSlug = r.json.project.id;
+    // EDITOR — montajchi (bloklanishi kerak), EMP — dizayner (bloklanmasligi kerak)
+    await call("PUT", "/api/permissions", { user: "shaxzodshokirov", body: { [EDITOR]: [debtProjectSlug], [EMP]: [debtProjectSlug] } });
+    await call("PATCH", "/api/permissions/role", { user: "shaxzodshokirov", body: { username: EDITOR, projectSlug: debtProjectSlug, role: "montajchi" } });
+    await call("PATCH", "/api/permissions/role", { user: "shaxzodshokirov", body: { username: EMP, projectSlug: debtProjectSlug, role: "dizayner" } });
+
+    const free = await call("POST", "/api/ncoin/admin/products", {
+      user: "shaxzodshokirov",
+      body: { name: "Test Mahsulot Bepul", price: 0, stock: 5, isVisible: true },
+    });
+    assert.strictEqual(free.status, 200, JSON.stringify(free.json));
+    freeProductId = free.json.product.id;
+  });
+  await check("montajchi/mobilograf/smm rolidagi xodim uchun /api/ncoin/me debtBlocked=true", async () => {
+    const r = await call("GET", "/api/ncoin/me", { user: EDITOR });
+    assert.strictEqual(r.json.debtBlocked, true, JSON.stringify(r.json));
+    assert.strictEqual(r.json.debtProjectLabel, "Ncoin Test Loyiha Qarz");
+  });
+  await check("shu rolidagi xodim NShopdan xarid qila olmaydi (403 PROJECT_DEBT)", async () => {
+    const r = await call("POST", "/api/ncoin/purchase", { user: EDITOR, body: { productId: freeProductId } });
+    assert.strictEqual(r.status, 403, JSON.stringify(r.json));
+    assert.strictEqual(r.json.code, "PROJECT_DEBT");
+  });
+  await check("dizayner/kopirayter/boshqa rolidagi xodim bloklanmaydi", async () => {
+    const me = await call("GET", "/api/ncoin/me", { user: EMP });
+    assert.strictEqual(me.json.debtBlocked, false, JSON.stringify(me.json));
+    const buy = await call("POST", "/api/ncoin/purchase", { user: EMP, body: { productId: freeProductId } });
+    assert.strictEqual(buy.status, 200, JSON.stringify(buy.json));
+  });
+  await check("loyiha muddatida to'liq bajarilsa — blok yo'qoladi", async () => {
+    const ck = await call("PATCH", "/api/checks", {
+      user: EDITOR,
+      body: { projectSlug: debtProjectSlug, type: "k", seqNumber: 1, checked: true, workDate: today },
+    });
+    assert.strictEqual(ck.status, 200, JSON.stringify(ck.json));
+    const r = await call("GET", "/api/ncoin/me", { user: EDITOR });
+    assert.strictEqual(r.json.debtBlocked, false, JSON.stringify(r.json));
+    const buy = await call("POST", "/api/ncoin/purchase", { user: EDITOR, body: { productId: freeProductId } });
+    assert.strictEqual(buy.status, 200, JSON.stringify(buy.json));
   });
 
   await cleanupTestData();
