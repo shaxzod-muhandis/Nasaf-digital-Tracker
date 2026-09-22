@@ -3330,6 +3330,191 @@
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07);
       }
 
+      /* ── VAZIFA DETALI — kartalar, bosqich ko'rsatkichi ───────────── */
+      .td-counter {
+        font-size: 11.5px;
+        color: var(--t4);
+        flex-shrink: 0;
+      }
+      .td-card {
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 16px;
+        padding: 20px 22px 18px;
+      }
+      @media (max-width: 640px) {
+        .td-card {
+          padding: 16px 16px 14px;
+          border-radius: 14px;
+        }
+      }
+      .td-overdue-banner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 13px 16px;
+        border-radius: 13px;
+        background: var(--red-bg);
+        border: 1px solid var(--red-bd);
+      }
+      .td-overdue-ico {
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        background: var(--red);
+        color: #fff;
+        font-weight: 700;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .td-overdue-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--red);
+      }
+      .td-overdue-sub {
+        font-size: 11.5px;
+        color: var(--t3);
+        margin-top: 2px;
+      }
+      .td-overdue-btn {
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 9px;
+        background: var(--surf);
+        border: 1px solid var(--red-bd2);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--red);
+        cursor: pointer;
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+      .td-check-progress {
+        width: 76px;
+        height: 5px;
+        border-radius: 99px;
+        background: var(--chip2);
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .td-check-progress-fill {
+        height: 100%;
+        background: var(--green);
+        border-radius: 99px;
+      }
+      .td-stepper {
+        display: flex;
+        align-items: flex-start;
+        margin-top: 14px;
+      }
+      .td-stepper-step {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        min-width: 0;
+      }
+      .td-stepper-step:last-child {
+        flex: 0 0 auto;
+      }
+      .td-stepper-dotwrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        flex: 0 0 auto;
+      }
+      .td-stepper-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 99px;
+        background: var(--bd4);
+      }
+      .td-stepper-dot.done {
+        background: var(--brand);
+      }
+      .td-stepper-dot.current {
+        width: 13px;
+        height: 13px;
+        background: var(--brand);
+        box-shadow: 0 0 0 4px rgba(47, 122, 185, 0.16);
+      }
+      .td-stepper-lbl {
+        font-size: 10.5px;
+        color: var(--t3);
+        white-space: nowrap;
+      }
+      .td-stepper-lbl.current {
+        color: var(--brand);
+        font-weight: 600;
+      }
+      .td-stepper-line {
+        flex: 1;
+        height: 2px;
+        background: var(--bd4);
+        margin: 0 6px 17px;
+      }
+      .td-stepper-line.done {
+        background: var(--brand);
+      }
+      .td-status-btn.lg {
+        height: 50px;
+        border-radius: 13px;
+        font-size: 14.5px;
+      }
+      .td-status-btn.solid-blue {
+        background: var(--brand);
+        color: #fff;
+      }
+      .td-status-btn.solid-blue .dot {
+        background: rgba(255, 255, 255, 0.85);
+      }
+      .td-status-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 9px;
+        flex-wrap: wrap;
+      }
+      .td-status-row .td-status-btn {
+        width: auto;
+        flex: 1;
+        min-width: 120px;
+      }
+      .td-notify-hint {
+        font-size: 11px;
+        line-height: 1.55;
+        color: var(--t4);
+        margin-top: 11px;
+      }
+      .td-notify-hint b {
+        font-weight: 600;
+        color: var(--t2);
+      }
+      .td-bottom-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 0 4px;
+      }
+      .td-bottom-link {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--t2);
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 0;
+      }
+      .td-bottom-link.danger {
+        color: var(--t3);
+      }
+      .td-bottom-link.danger:hover {
+        color: var(--red);
+      }
+
       /* ── TARIX ──────────────────────────────────────────────────── */
       .hist-card {
         background: var(--surf);
@@ -4928,6 +5113,7 @@
     <div class="screen" id="screen-taskdetail">
       <div class="td-hdr">
         <div class="detail-breadcrumb" id="td-breadcrumb"></div>
+        <div class="td-counter" id="td-counter"></div>
         <button class="detail-nav-btn" id="td-prev-btn" onclick="stepTaskDetail(-1)">‹</button>
         <button class="detail-nav-btn" id="td-next-btn" onclick="stepTaskDetail(1)">›</button>
         <button class="detail-nav-btn" onclick="closeTaskDetailScreen()">✕</button>
@@ -5269,6 +5455,8 @@
       let taskStatusChip = "all"; // mobil: status-chip filtri
       let taskOpenFilter = "ochiq"; // desktop board: "ochiq" | "barchasi" (Bajarildi/Arxiv ustunlarini ko'rsatish)
       let taskDetailNav = { ids: [], index: -1 }; // detal panelida oldingi/keyingi
+      let taskDetailTab = "comments"; // "Izohlar" / "Faoliyat" — vazifa yangi ochilganda "comments"ga qaytadi
+      let taskDetailActivityCache = []; // oxirgi yuklangan activity — tab almashtirishda qayta so'rov yubormaslik uchun
       let taskEmployeeExpanded = new Set(); // mobil "Jamoada" — kengaytirilgan xodimlar
       const POSITION_LABELS = {
         montajchi: "Montajchi",
@@ -6321,7 +6509,7 @@
       async function renderTasksScreen() {
         // Vazifa yaratish — har qanday xodim uchun ochiq (faqat "Bajarildi"
         // deb belgilash admin uchun cheklangan, buttonlar darajasida
-        // buildTaskStatusActionsHtml'da).
+        // buildTaskStepperHtml'da).
         document.getElementById("tasks-fab").style.display = "flex";
         const newBtn = document.getElementById("tasks-new-btn");
         if (newBtn) newBtn.style.display = "flex";
@@ -6650,6 +6838,7 @@
         const t = tasksList.find((x) => x.id === id);
         if (!t) return;
         taskDetailNav = { ids: tasksList.map((x) => x.id), index: tasksList.findIndex((x) => x.id === id) };
+        taskDetailTab = "comments";
         openSubScreen("screen-taskdetail", closeTaskDetailScreen);
         renderTaskDetailSheet(t);
       }
@@ -6673,41 +6862,89 @@
         const t = tasksList.find((x) => x.id === taskDetailNav.ids[newIndex]);
         if (!t) return;
         taskDetailNav.index = newIndex;
+        taskDetailTab = "comments";
         renderTaskDetailSheet(t);
       }
-      // Statusga qarab tegishli amal tugmalari (bosqichlar orasidagi
-      // o'tishlar) — mavjud backlog/review/failed qoidalari o'zgarishsiz.
-      function buildTaskStatusActionsHtml(t, canChangeStatus) {
-        let btns = "";
-        if (canChangeStatus && t.status === "backlog") {
-          btns = `<button class="td-status-btn tint-blue" onclick="openSetDueDateForm('${escArg(t.id)}')"><span class="dot"></span>Navbatga qo'yish</button>`;
-        } else if (canChangeStatus && ["todo", "in_progress"].includes(t.status)) {
-          // "Bajarildi" — faqat admin to'g'ridan-to'g'ri shu holatdan
-          // yakuniy tasdiqlashi mumkin; oddiy xodim (o'zi biriktirilgan
-          // bo'lsa ham) faqat tekshiruvga yubora oladi.
-          btns = `
-            ${t.status !== "in_progress" ? `<button class="td-status-btn tint-blue" onclick="setTaskStatus('${escArg(t.id)}','in_progress',this)"><span class="dot"></span>Boshladim</button>` : ""}
-            <button class="td-status-btn tint-amber" onclick="setTaskStatus('${escArg(t.id)}','review',this)"><span class="dot"></span>Tekshiruvga yubordim</button>
-            ${isAdmin ? `<button class="td-status-btn solid-green" onclick="setTaskStatus('${escArg(t.id)}','done',this)"><span class="dot"></span>Bajarildi</button>` : ""}
-            <button class="td-status-btn tint-red" onclick="openTaskFailForm('${escArg(t.id)}')"><span class="dot"></span>Bajarilmadi</button>`;
-        } else if (isAdmin && t.status === "review") {
-          btns = `
-            <button class="td-status-btn tint-blue" onclick="setTaskStatus('${escArg(t.id)}','in_progress',this)"><span class="dot"></span>Qaytarish</button>
-            <button class="td-status-btn solid-green" onclick="setTaskStatus('${escArg(t.id)}','done',this)"><span class="dot"></span>Tasdiqlash</button>
-            <button class="td-status-btn tint-red" onclick="openTaskFailForm('${escArg(t.id)}')"><span class="dot"></span>Bajarilmadi</button>`;
-        }
-        const reasonBox =
-          t.status === "failed" && t.reason
-            ? `<div class="f-group" style="margin-top:${btns ? "14px" : "0"}">
-            <label class="f-label">Bajarilmagan sababi</label>
-            <div style="background:var(--red-bg);color:var(--red);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.6">${escHtml(t.reason)}</div>
-          </div>`
-            : "";
-        if (!btns && !reasonBox) return "";
-        return `${btns ? `<div class="sec-upper">Holatni o'zgartirish</div><div style="display:flex;flex-direction:column;gap:8px">${btns}</div>` : ""}${reasonBox}`;
+      // Muddat o'tib ketgan/bugun tugaydigan banner ostidagi izoh —
+      // ishning qaysi bosqichida to'xtab qolgani.
+      function taskWorkStateLabel(status) {
+        if (status === "backlog" || status === "todo") return "ish hali boshlanmagan";
+        if (status === "in_progress") return "ish jarayonda";
+        if (status === "review") return "tekshiruvda";
+        return "";
       }
-      // Vazifa detali — chapda tavsif+amal+izoh/activity, o'ngda
-      // xossalar (dizayn asosida). Prev/next joriy ro'yxat bo'yicha.
+      // "Keyingi qadam" bloki — 4 bosqichli vizual ko'rsatkich
+      // (Biriktirilgan/Jarayonda/Tekshiruvda/Bajarildi, TASK_BOARD_COLUMNS
+      // bilan bir xil guruhlash) + joriy holatdan mumkin bo'lgan amal
+      // tugmalari. Bajarilmadi/Bekor qilingan — alohida (bosqichsiz).
+      function buildTaskStepperHtml(t, canChangeStatus) {
+        if (["failed", "cancelled"].includes(t.status)) {
+          if (t.status === "failed" && t.reason) {
+            return `<div class="rail-title" style="margin:0">Bajarilmagan sababi</div>
+              <div style="background:var(--red-bg);color:var(--red);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.6;margin-top:10px">${escHtml(t.reason)}</div>`;
+          }
+          return `<div class="rail-title" style="margin:0">Holat</div><div style="font-size:13px;color:var(--t3);margin-top:8px">${escHtml(TASK_STATUS_LABEL[t.status])}</div>`;
+        }
+
+        const steps = TASK_BOARD_COLUMNS.slice(0, 4); // assigned/in_progress/review/done — arxiv bu yerda kerak emas
+        const curKey = taskBoardColumn(t);
+        const curIdx = Math.max(0, steps.findIndex((s) => s.key === curKey));
+        const stepsHtml = steps
+          .map((s, i) => {
+            const state = i < curIdx ? "done" : i === curIdx ? "current" : "";
+            const line = i < steps.length - 1 ? `<div class="td-stepper-line${i < curIdx ? " done" : ""}"></div>` : "";
+            return `<div class="td-stepper-step">
+              <div class="td-stepper-dotwrap">
+                <div class="td-stepper-dot${state ? " " + state : ""}"></div>
+                <div class="td-stepper-lbl${state === "current" ? " current" : ""}">${s.label}</div>
+              </div>
+              ${line}
+            </div>`;
+          })
+          .join("");
+
+        let actionsHtml = "";
+        if (canChangeStatus) {
+          if (t.status === "backlog") {
+            actionsHtml = `<button type="button" class="td-status-btn lg solid-blue" onclick="openSetDueDateForm('${escArg(t.id)}')"><span class="dot"></span>Navbatga qo'yish</button>`;
+          } else if (t.status === "todo" || t.status === "in_progress") {
+            const isTodo = t.status === "todo";
+            const primary = isTodo
+              ? `<button type="button" class="td-status-btn lg solid-blue" onclick="setTaskStatus('${escArg(t.id)}','in_progress',this)"><span class="dot"></span>Ishni boshladim</button>`
+              : `<button type="button" class="td-status-btn lg solid-blue" onclick="setTaskStatus('${escArg(t.id)}','review',this)"><span class="dot"></span>Tekshiruvga yubordim</button>`;
+            const secondary = [
+              isAdmin
+                ? `<button type="button" class="td-status-btn solid-green" onclick="setTaskStatus('${escArg(t.id)}','done',this)"><span class="dot"></span>Darhol bajarildi</button>`
+                : "",
+              `<button type="button" class="td-status-btn tint-red" onclick="openTaskFailForm('${escArg(t.id)}')"><span class="dot"></span>Bajarolmadim</button>`,
+            ].filter(Boolean);
+            actionsHtml = `${primary}<div class="td-status-row">${secondary.join("")}</div>`;
+          } else if (t.status === "review") {
+            if (isAdmin) {
+              actionsHtml = `<button type="button" class="td-status-btn lg solid-green" onclick="setTaskStatus('${escArg(t.id)}','done',this)"><span class="dot"></span>Tasdiqlash</button>
+                <div class="td-status-row">
+                  <button type="button" class="td-status-btn tint-blue" onclick="setTaskStatus('${escArg(t.id)}','in_progress',this)"><span class="dot"></span>Qaytarish</button>
+                  <button type="button" class="td-status-btn tint-red" onclick="openTaskFailForm('${escArg(t.id)}')"><span class="dot"></span>Bajarolmadim</button>
+                </div>`;
+            } else {
+              actionsHtml = `<div class="f-hint" style="margin-top:2px">Vazifa tekshiruvda — admin tasdiqlashini kutmoqda.</div>`;
+            }
+          }
+        }
+
+        const hintHtml =
+          actionsHtml && t.assigneeUsername && t.status !== "review"
+            ? `<div class="td-notify-hint">Har qadam Telegram orqali <b>@${escHtml(t.assigneeUsername)}</b>ga xabar qiladi</div>`
+            : "";
+
+        return `<div class="rail-title" style="margin:0">Keyingi qadam</div>
+          <div class="td-stepper">${stepsHtml}</div>
+          ${actionsHtml ? `<div style="margin-top:17px">${actionsHtml}</div>` : ""}
+          ${hintHtml}`;
+      }
+      // Vazifa detali — chapda tavsif+checklist+izoh/faoliyat, o'ngda
+      // keyingi qadam va xossalar (dizayn asosida). Prev/next joriy
+      // ro'yxat bo'yicha.
       function renderTaskDetailSheet(t) {
         const canChangeStatus = isAdmin || t.assigneeUsername === currentUser;
         const nav = taskDetailNav;
@@ -6715,6 +6952,8 @@
         const bc = document.getElementById("td-breadcrumb");
         if (bc)
           bc.innerHTML = `<span class="bc-link" onclick="showTab('tasks')">Vazifalar</span> / <span class="bc-link" onclick="showTab('tasks')">${escHtml(TASK_STATUS_LABEL[t.status])}</span> / <b>${taskShortRef(t.id)}</b>`;
+        const counterEl = document.getElementById("td-counter");
+        if (counterEl) counterEl.textContent = nav.index >= 0 && nav.ids.length ? `${nav.index + 1} / ${nav.ids.length}` : "";
         const prevBtn = document.getElementById("td-prev-btn");
         const nextBtn = document.getElementById("td-next-btn");
         if (prevBtn) prevBtn.disabled = nav.index <= 0;
@@ -6741,62 +6980,96 @@
         const badgesHtml = `<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
           <span class="td-badge" style="background:var(--chip);color:var(--t5)"><span class="td-badge-dot" style="${colDot}"></span>${escHtml(TASK_STATUS_LABEL[t.status])}</span>
           ${t.priority === "urgent" ? `<span class="td-badge" style="background:var(--red-bg);color:var(--red)">${escHtml(TASK_PRIORITY_LABEL.urgent)}</span>` : ""}
-          ${isOpenTask && dueInfo && dueInfo.cls === "late" ? `<span class="td-badge solid-red">${dueInfo.text}</span>` : ""}
+          <div style="flex:1"></div>
+          <span style="font-size:11px;color:var(--t4)">${taskShortRef(t.id)}</span>
         </div>`;
 
-        const statusActionsHtml = buildTaskStatusActionsHtml(t, canChangeStatus);
+        const overdueBannerHtml =
+          isOpenTask && daysLeft !== null && daysLeft <= 0
+            ? `<div class="td-overdue-banner">
+                <div class="td-overdue-ico">${Math.abs(daysLeft)}</div>
+                <div style="flex:1;min-width:0">
+                  <div class="td-overdue-title">${daysLeft === 0 ? "Muddat bugun tugaydi" : `Muddat ${Math.abs(daysLeft)} kun oldin tugagan`}</div>
+                  <div class="td-overdue-sub">${fmtDay(parseISO(t.dueDate))} · ${taskWorkStateLabel(t.status)}</div>
+                </div>
+                ${isAdmin ? `<button type="button" class="td-overdue-btn" onclick="openPushDueDateForm('${escArg(t.id)}')">Muddatni surish</button>` : ""}
+              </div>`
+            : "";
+
+        const stepperHtml = buildTaskStepperHtml(t, canChangeStatus);
 
         document.getElementById("td-body").innerHTML = `
           <div class="task-detail-grid two-col">
-            <div>
-              ${badgesHtml}
-              <div class="td-title">${escHtml(t.title)}${t.projectLabel ? ` · ${escHtml(t.projectLabel)}` : ""}</div>
-              ${tagsRowHtml}
-              ${t.description ? `<div class="detail-desc" style="margin-top:18px">${escHtml(t.description)}</div>` : ""}
-              <div class="td-checklist" id="td-checklist" style="margin-top:18px"></div>
-              <div class="rail-title" style="margin-top:18px">Izohlar va tarix</div>
-              <div class="activity-list" id="activity-list"><div style="font-size:12px;color:var(--t3)">Yuklanmoqda…</div></div>
+            <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+              ${overdueBannerHtml}
+              <div class="td-card">
+                ${badgesHtml}
+                <div class="td-title">${escHtml(t.title)}</div>
+                ${tagsRowHtml}
+                ${t.description ? `<div style="height:1px;background:var(--bd1);margin:18px 0 16px"></div><div class="detail-desc">${escHtml(t.description)}</div>` : ""}
+              </div>
+              <div class="td-card">
+                <div class="td-checklist" id="td-checklist"></div>
+              </div>
+              <div class="td-card">
+                <div class="atabs" style="margin-top:0" id="td-atabs">
+                  <button type="button" class="atab${taskDetailTab === "comments" ? " active" : ""}" id="td-atab-comments" onclick="setTaskDetailTab('comments')">Izohlar</button>
+                  <button type="button" class="atab${taskDetailTab === "activity" ? " active" : ""}" id="td-atab-activity" onclick="setTaskDetailTab('activity')">Faoliyat</button>
+                </div>
+                <div class="activity-list" id="activity-list"><div style="font-size:12px;color:var(--t3)">Yuklanmoqda…</div></div>
+                ${
+                  canChangeStatus
+                    ? `<div class="comment-composer">
+                  <textarea class="f-input" id="comment-input" placeholder="Izoh yozing…"></textarea>
+                  <button class="btn btn-blue" style="width:auto;padding:0 16px;flex-shrink:0" onclick="submitTaskComment('${escArg(t.id)}', this)">Yuborish</button>
+                </div>`
+                    : ""
+                }
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:16px">
+              ${stepperHtml ? `<div class="td-card">${stepperHtml}</div>` : ""}
+              <div class="td-card">
+                <div class="detail-prop-row">
+                  <div class="detail-prop-label">Status</div>
+                  <div class="detail-prop-val">${
+                    isAdmin
+                      ? `<select class="f-input" style="width:auto;padding:4px 8px;font-size:12.5px" onchange="setTaskStatus('${escArg(t.id)}', this.value)">${Object.entries(
+                          TASK_STATUS_LABEL,
+                        )
+                          .map(([k, lbl]) => `<option value="${k}"${t.status === k ? " selected" : ""}>${lbl}</option>`)
+                          .join("")}</select>`
+                      : `<span class="td-badge-dot" style="${colDot};display:inline-block;margin-right:6px"></span>${escHtml(TASK_STATUS_LABEL[t.status])}`
+                  }</div>
+                </div>
+                <div class="detail-prop-row"><div class="detail-prop-label">Mas'ul</div><div class="detail-prop-val" style="display:flex;align-items:center;gap:8px;justify-content:flex-end">${t.assigneeName ? `<div class="avatar avatar-sm">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}</div>` : ""}${escHtml(t.assigneeName || "Biriktirilmagan")}</div></div>
+                <div class="detail-prop-row">
+                  <div class="detail-prop-label">Ustuvorlik</div>
+                  <div class="detail-prop-val">${
+                    isAdmin
+                      ? `<select class="f-input" style="width:auto;padding:4px 8px;font-size:12.5px" onchange="setTaskPriority('${escArg(t.id)}', this.value)">${Object.entries(
+                          TASK_PRIORITY_LABEL,
+                        )
+                          .map(([k, lbl]) => `<option value="${k}"${t.priority === k ? " selected" : ""}>${lbl}</option>`)
+                          .join("")}</select>`
+                      : escHtml(TASK_PRIORITY_LABEL[t.priority])
+                  }</div>
+                </div>
+                <div class="detail-prop-row"><div class="detail-prop-label">Muddat</div><div class="detail-prop-val"${dueInfo && dueInfo.cls === "late" && isOpenTask ? ` style="color:var(--red)"` : ""}>${dueText}</div></div>
+                <div class="detail-prop-row"><div class="detail-prop-label">Loyiha</div><div class="detail-prop-val">${escHtml(t.projectLabel || "Umumiy")}</div></div>
+                <div class="detail-prop-row"><div class="detail-prop-label">Biriktirdi</div><div class="detail-prop-val">${t.createdByUsername ? "@" + escHtml(t.createdByUsername) : "—"}</div></div>
+                <div class="detail-prop-row"><div class="detail-prop-label">Yaratilgan</div><div class="detail-prop-val">${t.createdAt ? fmtDay(new Date(t.createdAt)) : "—"}</div></div>
+              </div>
               ${
-                canChangeStatus
-                  ? `<div class="comment-composer">
-                <textarea class="f-input" id="comment-input" placeholder="Izoh yozing…"></textarea>
-                <button class="btn btn-blue" style="width:auto;padding:0 16px;flex-shrink:0" onclick="submitTaskComment('${escArg(t.id)}', this)">Yuborish</button>
-              </div>`
+                isAdmin
+                  ? `<div class="td-bottom-actions">
+                    <button type="button" class="td-bottom-link" onclick="openEditTaskSheet('${escArg(t.id)}')">Tahrirlash</button>
+                    <button type="button" class="td-bottom-link" onclick="duplicateTask('${escArg(t.id)}')">Nusxalash</button>
+                    <div style="flex:1"></div>
+                    <button type="button" class="td-bottom-link danger" onclick="deleteTask('${escArg(t.id)}','${escArg(t.title)}')">O'chirish</button>
+                  </div>`
                   : ""
               }
-            </div>
-            <div>
-              ${statusActionsHtml}
-              <div class="detail-prop-row" style="${statusActionsHtml ? "border-top:1px solid rgba(15,23,42,.08);margin-top:18px;padding-top:14px" : ""}">
-                <div class="detail-prop-label">Status</div>
-                <div class="detail-prop-val">${
-                  isAdmin
-                    ? `<select class="f-input" style="width:auto;padding:4px 8px;font-size:12.5px" onchange="setTaskStatus('${escArg(t.id)}', this.value)">${Object.entries(
-                        TASK_STATUS_LABEL,
-                      )
-                        .map(([k, lbl]) => `<option value="${k}"${t.status === k ? " selected" : ""}>${lbl}</option>`)
-                        .join("")}</select>`
-                    : `<span class="td-badge-dot" style="${colDot};display:inline-block;margin-right:6px"></span>${escHtml(TASK_STATUS_LABEL[t.status])}`
-                }</div>
-              </div>
-              <div class="detail-prop-row">
-                <div class="detail-prop-label">Ustuvorlik</div>
-                <div class="detail-prop-val">${
-                  isAdmin
-                    ? `<select class="f-input" style="width:auto;padding:4px 8px;font-size:12.5px" onchange="setTaskPriority('${escArg(t.id)}', this.value)">${Object.entries(
-                        TASK_PRIORITY_LABEL,
-                      )
-                        .map(([k, lbl]) => `<option value="${k}"${t.priority === k ? " selected" : ""}>${lbl}</option>`)
-                        .join("")}</select>`
-                    : escHtml(TASK_PRIORITY_LABEL[t.priority])
-                }</div>
-              </div>
-              <div class="detail-prop-row"><div class="detail-prop-label">Mas'ul</div><div class="detail-prop-val" style="display:flex;align-items:center;gap:8px">${t.assigneeName ? `<div class="avatar avatar-sm">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}</div>` : ""}${escHtml(t.assigneeName || "Biriktirilmagan")}</div></div>
-              <div class="detail-prop-row"><div class="detail-prop-label">Biriktirdi</div><div class="detail-prop-val">${t.createdByUsername ? "@" + escHtml(t.createdByUsername) : "—"}</div></div>
-              <div class="detail-prop-row"><div class="detail-prop-label">Loyiha</div><div class="detail-prop-val">${escHtml(t.projectLabel || "Umumiy")}</div></div>
-              <div class="detail-prop-row"><div class="detail-prop-label">Yaratilgan</div><div class="detail-prop-val">${t.createdAt ? fmtDay(new Date(t.createdAt)) : "—"}</div></div>
-              <div class="detail-prop-row"><div class="detail-prop-label">Muddat</div><div class="detail-prop-val">${dueText}</div></div>
-              ${isAdmin ? `<button class="btn btn-danger" style="margin-top:18px" onclick="deleteTask('${escArg(t.id)}','${escArg(t.title)}')">O'chirish</button>` : ""}
             </div>
           </div>`;
         loadTaskActivity(t.id);
@@ -6808,16 +7081,43 @@
         try {
           const res = await apiFetch(`/api/tasks/${id}/activity`);
           if (!res.ok) throw new Error();
-          const { activity } = await res.json();
-          const target = document.getElementById("activity-list");
-          if (!target) return;
-          target.innerHTML = activity.length
-            ? activity.map(buildActivityItemHtml).join("")
-            : `<div style="font-size:12px;color:var(--t3)">Hali hech narsa yo'q</div>`;
+          taskDetailActivityCache = (await res.json()).activity || [];
         } catch (e) {
-          const target = document.getElementById("activity-list");
-          if (target) target.innerHTML = `<div style="font-size:12px;color:var(--red)">Yuklab bo'lmadi</div>`;
+          taskDetailActivityCache = null;
         }
+        renderTaskDetailTabs();
+      }
+      // "Izohlar" (kind==='comment') va "Faoliyat" (qolgan barchasi —
+      // status/ustuvorlik/muddat/mas'ul o'zgarishlari, yaratilishi) —
+      // bitta so'rovdan (loadTaskActivity) kelgan ro'yxat shu yerda
+      // ikkiga bo'linadi, tab almashtirishda qayta so'rov kerak emas.
+      function renderTaskDetailTabs() {
+        const list = document.getElementById("activity-list");
+        if (!list) return;
+        const commentsBtn = document.getElementById("td-atab-comments");
+        const activityBtn = document.getElementById("td-atab-activity");
+        if (taskDetailActivityCache === null) {
+          list.innerHTML = `<div style="font-size:12px;color:var(--red)">Yuklab bo'lmadi</div>`;
+          return;
+        }
+        const comments = taskDetailActivityCache.filter((a) => a.kind === "comment");
+        const events = taskDetailActivityCache.filter((a) => a.kind !== "comment");
+        if (commentsBtn) {
+          commentsBtn.textContent = `Izohlar ${comments.length}`;
+          commentsBtn.classList.toggle("active", taskDetailTab === "comments");
+        }
+        if (activityBtn) {
+          activityBtn.textContent = `Faoliyat ${events.length}`;
+          activityBtn.classList.toggle("active", taskDetailTab === "activity");
+        }
+        const shown = taskDetailTab === "comments" ? comments : events;
+        list.innerHTML = shown.length
+          ? shown.map(buildActivityItemHtml).join("")
+          : `<div style="font-size:12px;color:var(--t3)">Hali hech narsa yo'q</div>`;
+      }
+      function setTaskDetailTab(tab) {
+        taskDetailTab = tab;
+        renderTaskDetailTabs();
       }
       // ── VAZIFA CHECKLIST — vazifa detali sahifasidagi band-band
       // tekshiruv ro'yxati (izoh qoldirish bilan bir xil ruxsat: admin
@@ -6846,6 +7146,7 @@
           return;
         }
         const doneCount = items.filter((it) => it.done).length;
+        const pct = items.length ? Math.round((doneCount / items.length) * 100) : 0;
         const rows = items
           .map(
             (it) => `<div class="td-check-row">
@@ -6856,7 +7157,15 @@
           )
           .join("");
         target.innerHTML = `
-          <div class="rail-title">Checklist${items.length ? ` · ${doneCount}/${items.length}` : ""}</div>
+          <div style="display:flex;align-items:center;gap:11px;margin-bottom:12px">
+            <div class="rail-title" style="margin:0">Checklist</div>
+            ${
+              items.length
+                ? `<div style="font-size:11.5px;color:var(--t3)">${doneCount} / ${items.length}</div>
+                  <div class="td-check-progress"><div class="td-check-progress-fill" style="width:${pct}%"></div></div>`
+                : ""
+            }
+          </div>
           ${rows}
           ${
             canEdit
@@ -7185,6 +7494,189 @@
           "O'chirish",
         );
       }
+      // "Muddatni surish" (kechikkan banner tugmasi) — faqat muddatni
+      // o'zgartiradi, statusga tegmaydi (openSetDueDateForm'dan farqi —
+      // u "Navbatga qo'yish" uchun statusni ham "todo" qilib qo'yadi,
+      // bu yerda esa allaqachon boshlangan ish holati saqlanishi kerak).
+      // Backend faqat admin'ga statusssiz PATCH qilishga ruxsat beradi.
+      function openPushDueDateForm(id) {
+        const t = tasksList.find((x) => x.id === id);
+        if (!t) return;
+        const { body } = makeSheet("Muddatni surish");
+        body.innerHTML = `
+          <div class="f-group">
+            <label class="f-label">Yangi muddat *</label>
+            ${renderDateFieldHtml("task-push-due", t.dueDate || "", "Sana tanlang")}
+          </div>
+          <div id="task-push-err" class="error-text" style="color:var(--red);font-size:12px;margin-bottom:10px"></div>
+          <button class="btn btn-blue" id="task-push-btn" onclick="submitPushDueDate('${escArg(id)}')">Saqlash</button>`;
+      }
+      async function submitPushDueDate(id) {
+        const dueDate = document.getElementById("task-push-due")?.value;
+        const errEl = document.getElementById("task-push-err");
+        if (!dueDate) {
+          if (errEl) errEl.textContent = "Sanani tanlang";
+          return;
+        }
+        const btn = document.getElementById("task-push-btn");
+        setBtnLoading(btn, true, "Saqlanmoqda…");
+        try {
+          const res = await apiFetch(`/api/tasks/${id}`, { method: "PATCH", body: JSON.stringify({ dueDate }) });
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
+          document.querySelector(".overlay")?.remove();
+          showToast("✅ Muddat yangilandi");
+          await loadTasks();
+          refreshAllViews();
+          refreshTaskDetailIfOpen(id);
+        } catch (e) {
+          if (errEl) errEl.textContent = e.message;
+          setBtnLoading(btn, false);
+        }
+      }
+      // Xodim ro'yxatidagi ism+lavozim ko'rinishi — vazifa yaratish va
+      // tahrirlash formalarida bir xil ishlatiladi.
+      function userDisplayLabel(u) {
+        const name = u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : u.full_name;
+        const suffix = u.job_title ? u.job_title : `@${u.username}`;
+        return name ? `${name} (${suffix})` : `@${u.username}`;
+      }
+      // "Tahrirlash" — mavjud vazifaning asosiy maydonlarini (nomi,
+      // tavsif, loyiha, mas'ul, ustuvorlik, muddat, taglar) o'zgartirish.
+      // Faqat admin (backend PATCH ham shu maydonlarni faqat admin'dan
+      // qabul qiladi) — createTask/openNewTaskSheet bilan bir xil forma,
+      // lekin PATCH qiladi va oldindan to'ldirilgan.
+      let etSelectedTagIds = new Set();
+      async function openEditTaskSheet(id) {
+        const t = tasksList.find((x) => x.id === id);
+        if (!t) return;
+        etSelectedTagIds = new Set((t.tags || []).map((tg) => tg.id));
+        const { body } = makeSheet("Vazifani tahrirlash");
+        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        let users = [];
+        try {
+          const res = await apiFetch("/api/users/directory");
+          if (res.ok) users = (await res.json()).users || [];
+        } catch (e) {}
+        const projectOptions =
+          `<option value="">— Umumiy —</option>` +
+          projects.map((p) => `<option value="${escArg(p.id)}"${p.id === t.projectSlug ? " selected" : ""}>${escHtml(p.label)}</option>`).join("");
+        const userOptions =
+          `<option value="">— Tanlanmagan —</option>` +
+          users
+            .map(
+              (u) =>
+                `<option value="u:${escArg(u.username)}"${u.username === t.assigneeUsername ? " selected" : ""}>${escHtml(userDisplayLabel(u))}</option>`,
+            )
+            .join("");
+        body.innerHTML = `
+          <div class="f-group">
+            <label class="f-label">Nomi</label>
+            <input class="f-input" id="et-title" placeholder="Vazifa nomi" value="${escArg(t.title)}"/>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Tavsif (ixtiyoriy)</label>
+            <textarea class="f-input" id="et-desc" rows="3">${escHtml(t.description || "")}</textarea>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Loyiha</label>
+            <select class="f-input" id="et-project">${projectOptions}</select>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Kim bajaradi</label>
+            <select class="f-input" id="et-assignee">${userOptions}</select>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Muddat (deadline)</label>
+            ${renderDateFieldHtml("et-due", t.dueDate || "", "Sana tanlang")}
+          </div>
+          <div class="f-group">
+            <label class="f-label">Ustuvorlik</label>
+            <select class="f-input" id="et-priority">
+              ${Object.entries(TASK_PRIORITY_LABEL)
+                .map(([k, lbl]) => `<option value="${k}"${k === t.priority ? " selected" : ""}>${lbl}</option>`)
+                .join("")}
+            </select>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Taglar</label>
+            <div class="chips" id="et-tags" style="margin-top:0">${renderEtTagsHtml()}</div>
+          </div>
+          <button class="btn btn-blue" id="et-save-btn" onclick="submitEditTask('${escArg(id)}')">Saqlash</button>`;
+      }
+      function renderEtTagsHtml() {
+        return tagsList
+          .map(
+            (tg) =>
+              `<button type="button" class="chip-btn${etSelectedTagIds.has(tg.id) ? " active" : ""}" onclick="toggleEtTag('${escArg(tg.id)}')">${escHtml(tg.name)}</button>`,
+          )
+          .join("");
+      }
+      function toggleEtTag(tagId) {
+        if (etSelectedTagIds.has(tagId)) etSelectedTagIds.delete(tagId);
+        else etSelectedTagIds.add(tagId);
+        const el = document.getElementById("et-tags");
+        if (el) el.innerHTML = renderEtTagsHtml();
+      }
+      async function submitEditTask(id) {
+        const btn = document.getElementById("et-save-btn");
+        const title = document.getElementById("et-title")?.value.trim();
+        if (!title) return showToast("⚠ Nomi kerak");
+        const description = document.getElementById("et-desc")?.value.trim();
+        const projectSlug = document.getElementById("et-project")?.value || "";
+        const assignee = document.getElementById("et-assignee")?.value || "";
+        const dueDate = document.getElementById("et-due")?.value || "";
+        const priority = document.getElementById("et-priority")?.value || "no_priority";
+        const body = {
+          title,
+          description,
+          projectSlug,
+          dueDate,
+          priority,
+          tagIds: [...etSelectedTagIds],
+          assigneeUsername: assignee.startsWith("u:") ? assignee.slice(2) : "",
+        };
+        setBtnLoading(btn, true, "Saqlanmoqda…");
+        try {
+          const res = await apiFetch(`/api/tasks/${id}`, { method: "PATCH", body: JSON.stringify(body) });
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
+          document.querySelector(".overlay")?.remove();
+          showToast("✅ Saqlandi");
+          await loadTasks();
+          refreshAllViews();
+          refreshTaskDetailIfOpen(id);
+        } catch (e) {
+          showToast("⚠ " + e.message);
+          setBtnLoading(btn, false);
+        }
+      }
+      // "Nusxalash" — xuddi shu maydonlar bilan yangi vazifa yaratadi
+      // (holat/tarix ko'chirilmaydi), yangisini darhol ochadi.
+      async function duplicateTask(id) {
+        const t = tasksList.find((x) => x.id === id);
+        if (!t) return;
+        const body = {
+          title: `${t.title} (nusxa)`,
+          description: t.description || undefined,
+          projectSlug: t.projectSlug || undefined,
+          status: t.dueDate ? "todo" : "backlog",
+          priority: t.priority,
+          tagIds: (t.tags || []).map((tg) => tg.id),
+          notifyTelegram: false,
+        };
+        if (body.status !== "backlog") body.dueDate = t.dueDate;
+        if (t.assigneeUsername) body.assigneeUsername = t.assigneeUsername;
+        try {
+          const res = await apiFetch("/api/tasks", { method: "POST", body: JSON.stringify(body) });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || "Xato");
+          showToast("✅ Nusxa yaratildi");
+          await loadTasks();
+          refreshAllViews();
+          openTaskActions(data.task.id);
+        } catch (e) {
+          showToast("⚠ " + e.message);
+        }
+      }
       let ntStatus = "todo";
       let ntSelectedTagIds = new Set();
       function setNtStatus(s) {
@@ -7276,17 +7768,6 @@
         const projectOptions =
           `<option value="">— Umumiy —</option>` +
           projects.map((p) => `<option value="${escArg(p.id)}">${escHtml(p.label)}</option>`).join("");
-        // full_name (eski maydon) ko'pincha bo'sh — xodimning haqiqiy
-        // ism-familiyasi first_name/last_name'da saqlanadi. Qavs ichida
-        // @username o'rniga lavozimi (job_title) ko'rsatiladi — kim
-        // ekanini emas, NIMA ish qilishini ko'rsatish tanlovni
-        // osonlashtiradi. Lavozimi hali kiritilmagan bo'lsa, @username'ga
-        // qaytamiz (bo'sh qavsdan ko'ra ma'lumotliroq).
-        const userDisplayLabel = (u) => {
-          const name = u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : u.full_name;
-          const suffix = u.job_title ? u.job_title : `@${u.username}`;
-          return name ? `${name} (${suffix})` : `@${u.username}`;
-        };
         // Vazifa faqat ilovadan foydalanadigan (Telegram orqali ro'yxatdan
         // o'tgan) xodimlarga biriktiriladi — "staff" (montajchi/mobilograf
         // kabi, faqat check tafsilotlarida ishlatiladigan) xodimlar bu
