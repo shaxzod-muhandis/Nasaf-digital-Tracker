@@ -2338,15 +2338,29 @@ app.get("/api/ncoin/admin/nshop-stats", auth, async (req, res) => {
        where p.is_archived = false and p.stock_capacity > 0 and p.stock <= p.stock_capacity * 0.25
        order by p.stock asc limit 6`,
     );
+    // Faqat xaridlar emas — xodim coin ISHLAB TOPGANDA (vazifa, post/
+    // stories, loyiha bonusi, admin qo'lda qo'shgani) ham shu ro'yxatda
+    // ko'rinadi, xuddi /api/ncoin/me'dagi bilan bir xil `detail`
+    // aniqlash mantig'i (mahsulot/vazifa/loyiha+post# nomi) qo'llaniladi,
+    // faqat bitta userga emas — HAMMA xodimlar bo'yicha.
     const recentR = await db.query(
-      `select t.created_at, t.amount,
+      `select t.created_at, t.amount, t.reason, t.reference_type,
               coalesce(nullif(trim(concat(u.first_name,' ',u.last_name)), ''), u.username) as user_name,
-              p.name as product_name
+              p.name as product_name,
+              tk.title as task_title,
+              pr.label as project_label,
+              split_part(t.reference_id, ':', 2) as check_type,
+              split_part(t.reference_id, ':', 3) as check_seq,
+              pr2.label as bonus_project_label
        from ncoin_transactions t
        join users u on u.id = t.user_id
        left join ncoin_products p on p.id::text = t.reference_id and t.reference_type = 'product'
-       where t.reason = 'purchase'
-       order by t.created_at desc limit 5`,
+       left join tasks tk on tk.id::text = t.reference_id and t.reference_type = 'task'
+       left join project_cycles pc on pc.id::text = split_part(t.reference_id, ':', 1) and t.reference_type = 'check'
+       left join projects pr on pr.id = pc.project_id
+       left join project_cycles pc2 on pc2.id::text = t.reference_id and t.reference_type = 'cycle'
+       left join projects pr2 on pr2.id = pc2.project_id
+       order by t.created_at desc limit 6`,
     );
     // Xodimlar Ncoin reytingi — kim qancha ishlab topgan/sarflagan,
     // eng ko'p ishlab topgandan boshlab (jamoa faolligini bir qarashda
@@ -2380,7 +2394,22 @@ app.get("/api/ncoin/admin/nshop-stats", auth, async (req, res) => {
         isVisible: row.is_visible,
         weeklySales: Number(row.weekly_sales),
       })),
-      recentPurchases: recentR.rows.map((row) => ({ ...row, amount: Number(row.amount) })),
+      recentActivity: recentR.rows.map((row) => {
+        let detail = row.product_name;
+        if (row.reference_type === "task") detail = row.task_title;
+        else if (row.reference_type === "check" && row.project_label) {
+          detail = `${row.project_label} — ${row.check_type === "k" ? "Post" : "Stories"} #${row.check_seq}`;
+        } else if (row.reference_type === "cycle" && row.bonus_project_label) {
+          detail = row.bonus_project_label;
+        }
+        return {
+          createdAt: row.created_at,
+          amount: Number(row.amount),
+          reason: row.reason,
+          userName: row.user_name,
+          detail,
+        };
+      }),
       employees: employeesR.rows.map((row) => ({
         username: row.username,
         name: row.first_name ? `${row.first_name} ${row.last_name || ""}`.trim() : row.username,

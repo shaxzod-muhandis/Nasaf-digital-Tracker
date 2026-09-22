@@ -491,7 +491,7 @@ async function main() {
     assert.strictEqual(r.status, 200, JSON.stringify(r.json));
     assert.ok(typeof r.json.productCount === "number");
     assert.ok(Array.isArray(r.json.lowStock));
-    assert.ok(Array.isArray(r.json.recentPurchases));
+    assert.ok(Array.isArray(r.json.recentActivity));
   });
   await check("statistika endpointi oddiy xodimga yopiq (403)", async () => {
     const r = await call("GET", "/api/ncoin/admin/nshop-stats", { user: EMP });

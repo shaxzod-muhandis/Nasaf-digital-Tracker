@@ -10168,18 +10168,23 @@
               })
               .join("")
           : `<div class="f-hint" style="padding:6px 0">Hammasi yetarli — kam qoldiq yo'q ✅</div>`;
-        const purchasesHtml = s.recentPurchases.length
-          ? s.recentPurchases
-              .map(
-                (t) => `<div class="nshop-purchase-row">
-                  <div class="avatar mute" style="width:28px;height:28px;border-radius:9px;font-size:11px">${escHtml((t.user_name || "?").slice(0, 1).toUpperCase())}</div>
-                  <div style="flex:1;min-width:0;font-size:12.5px;color:var(--t5)"><b style="color:var(--ink);font-weight:600">${escHtml(t.user_name)}</b> · ${escHtml(t.product_name || "Mahsulot")}</div>
-                  <div style="font-size:11px;color:var(--t4);flex:none">${nshopPurchaseTimeLabel(t.created_at)}</div>
-                  <div class="nshop-purchase-amt" style="width:44px;text-align:right;flex:none">−${fmtNcoin(-t.amount)}</div>
-                </div>`,
-              )
+        const activityHtml = s.recentActivity.length
+          ? s.recentActivity
+              .map((t) => {
+                const positive = t.amount > 0;
+                const isStory = positive && NCOIN_STORY_REASONS.has(t.reason);
+                const amtColor = !positive ? "var(--red)" : isStory ? "var(--purple)" : "#16a34a";
+                const reasonLabel = NCOIN_REASON_LABEL[t.reason] || t.reason;
+                const detailText = t.detail ? `${reasonLabel} — ${t.detail}` : reasonLabel;
+                return `<div class="nshop-purchase-row">
+                  <div class="avatar mute" style="width:28px;height:28px;border-radius:9px;font-size:11px">${escHtml((t.userName || "?").slice(0, 1).toUpperCase())}</div>
+                  <div style="flex:1;min-width:0;font-size:12.5px;color:var(--t5)"><b style="color:var(--ink);font-weight:600">${escHtml(t.userName)}</b> · ${escHtml(detailText)}</div>
+                  <div style="font-size:11px;color:var(--t4);flex:none">${nshopPurchaseTimeLabel(t.createdAt)}</div>
+                  <div class="nshop-purchase-amt" style="width:48px;text-align:right;flex:none;color:${amtColor}">${positive ? "+" : "−"}${fmtNcoin(Math.abs(t.amount))}</div>
+                </div>`;
+              })
               .join("")
-          : `<div class="nshop-purchase-row"><div class="f-hint" style="margin:0">Hali xarid bo'lmagan</div></div>`;
+          : `<div class="nshop-purchase-row"><div class="f-hint" style="margin:0">Hali harakat bo'lmagan</div></div>`;
         return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px">
           <div class="rail-card" style="margin-bottom:0;border-color:var(--red-bd)">
             <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px">
@@ -10189,8 +10194,8 @@
             <div style="display:flex;flex-direction:column;gap:10px">${alertsHtml}</div>
           </div>
           <div class="nshop-panel">
-            <div class="nshop-panel-hdr"><div class="nshop-panel-title">Oxirgi xaridlar</div></div>
-            ${purchasesHtml}
+            <div class="nshop-panel-hdr"><div class="nshop-panel-title">Oxirgi harakatlar</div></div>
+            ${activityHtml}
           </div>
         </div>`;
       }
