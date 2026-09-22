@@ -2395,6 +2395,42 @@ app.get("/api/ncoin/admin/nshop-stats", auth, async (req, res) => {
   }
 });
 
+// Admin o'z profilidan boshqa xodimga qo'lda Ncoin qo'shishi/ayirishi
+// (masalan mukofot yoki xato tuzatish uchun) — natija oddiy
+// "admin_adjustment" ledger yozuvi, xuddi avvalgi bir martalik
+// skriptlar bilan qilingani kabi, endi doimiy UI orqali.
+app.post("/api/ncoin/admin/adjust", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const username = String(req.body.username || "")
+      .toLowerCase()
+      .replace("@", "")
+      .trim();
+    const amount = Number(req.body.amount);
+    const note = String(req.body.note || "").trim().slice(0, 300);
+    if (!username) return res.status(400).json({ error: "Xodim tanlanmagan" });
+    if (!Number.isFinite(amount) || amount === 0) return res.status(400).json({ error: "Miqdor noto'g'ri" });
+    const ur = await db.query(
+      `select id, first_name, last_name, username from users where username = $1 and is_active = true`,
+      [username],
+    );
+    if (!ur.rows[0]) return res.status(404).json({ error: "Xodim topilmadi" });
+    const user = ur.rows[0];
+    await awardNcoin(db, { userId: user.id, amount, reason: "admin_adjustment" });
+    const baseText =
+      amount > 0
+        ? `Admin tomonidan balansingizga ${amount} Ncoin qo'shildi.`
+        : `Admin tomonidan balansingizdan ${Math.abs(amount)} Ncoin ayirildi.`;
+    await notifyNcoinChange(db, user.id, amount, note ? `${baseText}\n${note}` : baseText).catch((e) =>
+      console.error("Ncoin bildirishnomasi xatosi:", e.message),
+    );
+    const name = user.first_name ? `${user.first_name} ${user.last_name || ""}`.trim() : user.username;
+    res.json({ ok: true, name, amount });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── TAGLAR ─────────────────────────────────────────────────────────
 app.get("/api/tags", auth, async (req, res) => {
   try {

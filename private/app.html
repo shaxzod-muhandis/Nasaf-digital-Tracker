@@ -10770,6 +10770,7 @@
                 </div>
                 <button type="button" class="pf-ncoin-btn" onclick="pfGoToNShop()">NShop</button>
               </div>
+              ${isAdmin ? pfNcoinGiftCardHtml() : ""}
               ${pfNcoinHistoryCardHtml()}
               ${pfTasksCardHtml()}
               <div class="desktop-only">${buildActivityPanelCardHtml(false)}</div>
@@ -10777,6 +10778,77 @@
           </div>`;
         pfOriginalValues = pfCollectValues();
         pfUpdateSaveBar([]);
+        if (isAdmin) pfLoadGiftUserOptions();
+      }
+      // ── ADMIN: boshqa xodimga Ncoin qo'shish/ayirish ────────────────
+      // Profil sahifasidan to'g'ridan-to'g'ri — avval faqat bir martalik
+      // skriptlar bilan qilinardi, endi doimiy UI. Ledger'ga oddiy
+      // "admin_adjustment" yozuvi sifatida tushadi (Ncoin tarixida ham
+      // shu nom bilan ko'rinadi), xodimga Telegram orqali xabar boradi.
+      function pfNcoinGiftCardHtml() {
+        return `<div class="pf-card">
+          <div class="pf-card-hdr">Xodimga Ncoin qo'shish</div>
+          <div class="pf-card-body">
+            <div class="f-group">
+              <label class="f-label">Xodim</label>
+              <select class="f-input" id="pf-gift-user"><option value="">Yuklanmoqda…</option></select>
+            </div>
+            <div class="f-group">
+              <label class="f-label">Miqdor (ayirish uchun manfiy son, masalan -2)</label>
+              <input class="f-input" type="number" step="0.1" id="pf-gift-amount" placeholder="masalan: 5"/>
+            </div>
+            <div class="f-group" style="margin-bottom:0">
+              <label class="f-label">Izoh (ixtiyoriy, xabarga qo'shiladi)</label>
+              <input class="f-input" id="pf-gift-note" placeholder="Masalan: Bonus uchun"/>
+            </div>
+            <button type="button" class="btn btn-blue" id="pf-gift-btn" style="margin-top:12px" onclick="pfSubmitNcoinGift()">Yuborish</button>
+          </div>
+        </div>`;
+      }
+      async function pfLoadGiftUserOptions() {
+        const sel = document.getElementById("pf-gift-user");
+        if (!sel) return;
+        try {
+          const res = await apiFetch("/api/users/directory");
+          const users = res.ok ? (await res.json()).users || [] : [];
+          sel.innerHTML =
+            `<option value="">— Tanlang —</option>` +
+            users.map((u) => `<option value="${escArg(u.username)}">${escHtml(userDisplayLabel(u))}</option>`).join("");
+        } catch (e) {
+          sel.innerHTML = `<option value="">Yuklab bo'lmadi</option>`;
+        }
+      }
+      async function pfSubmitNcoinGift() {
+        const username = document.getElementById("pf-gift-user")?.value;
+        const amountInput = document.getElementById("pf-gift-amount");
+        const noteInput = document.getElementById("pf-gift-note");
+        const amount = Number(amountInput?.value);
+        if (!username) return showToast("⚠ Xodimni tanlang");
+        if (!amountInput?.value || !Number.isFinite(amount) || amount === 0) return showToast("⚠ Miqdorni kiriting");
+        const btn = document.getElementById("pf-gift-btn");
+        setBtnLoading(btn, true, "Yuborilmoqda…");
+        try {
+          const res = await apiFetch("/api/ncoin/admin/adjust", {
+            method: "POST",
+            body: JSON.stringify({ username, amount, note: noteInput?.value.trim() }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || "Xato");
+          showToast(`✅ ${data.name}ga ${amount > 0 ? "+" : ""}${fmtNcoin(amount)} Ncoin yuborildi`);
+          if (amountInput) amountInput.value = "";
+          if (noteInput) noteInput.value = "";
+          if (myProfile?.username === username || currentUser === username) {
+            const ncoinRes = await apiFetch("/api/ncoin/me");
+            if (ncoinRes.ok) {
+              pfNcoinData = await ncoinRes.json();
+              renderProfilePage();
+            }
+          }
+        } catch (e) {
+          showToast("⚠ " + e.message);
+        } finally {
+          setBtnLoading(btn, false);
+        }
       }
 
       function pfNcoinHistoryCardHtml() {
