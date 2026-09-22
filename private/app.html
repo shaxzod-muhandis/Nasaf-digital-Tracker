@@ -4966,6 +4966,7 @@
           <button class="btn btn-soft" style="width: auto; height: 40px; padding: 0 16px; white-space: nowrap; display: flex; align-items: center; gap: 6px" onclick="openTasksFilterSheet()">Filtr <span class="mini-chevron" style="color: var(--chev)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></button>
           <button class="btn btn-blue" id="tasks-new-btn" style="width: auto; height: 40px; padding: 0 18px; white-space: nowrap; display: none; align-items: center; justify-content: center" onclick="openNewTaskSheet()">+ Yangi vazifa</button>
         </div>
+        <div id="me-avatar-tasks" class="hdr-avatar-btn mobile-only" onclick="openProfilePage()">?</div>
       </div>
       <div class="scroll" id="tasks-body"></div>
       <button
@@ -12236,6 +12237,15 @@
         document.getElementById("nav-projects").style.display = isDesignerOnlyNav ? "none" : "flex";
         document.getElementById("sidebar-nav-today").style.display = isDesignerOnlyNav ? "none" : "flex";
         document.getElementById("sidebar-nav-projects").style.display = isDesignerOnlyNav ? "none" : "flex";
+        // "Bugun" bo'limi yashirilgan xodimlar uchun (masalan Grafik
+        // Dizayner) mobilda profilga kirishning yagona joyi shu
+        // "Bugun" ekranining o'zida edi — endi "Vazifalar" sarlavhasida
+        // ham xuddi shunday avatar-tugma bor, harflari shu yerda
+        // darhol to'ldiriladi (renderToday() kutilmaydi, chunki bu
+        // xodimlar "Bugun"ga umuman kirmaydi).
+        const meAvatarInitial = (currentUser || "?").slice(0, 1).toUpperCase();
+        document.getElementById("me-avatar").textContent = meAvatarInitial;
+        document.getElementById("me-avatar-tasks").textContent = meAvatarInitial;
 
         renderSidebar();
         // Ko'rinish (mobil/desktop) faqat CSS orqali hal qilinadi
