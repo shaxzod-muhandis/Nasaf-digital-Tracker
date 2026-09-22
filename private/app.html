@@ -6391,6 +6391,7 @@
       // (haqiqiy berish backendda hisoblanadi, bu shunchaki ko'rsatish oynasi).
       const TASK_NCOIN_AMOUNT_BY_JOB_TITLE = { "Grafik Dizyayner": 0.5 };
       const TASK_NCOIN_DEFAULT_AMOUNT = 0.2;
+      const TASK_CREATOR_NCOIN_AMOUNT = 0.2;
       function taskNcoinAmount(t) {
         return TASK_NCOIN_AMOUNT_BY_JOB_TITLE[t?.assigneeJobTitle] ?? TASK_NCOIN_DEFAULT_AMOUNT;
       }
@@ -7410,11 +7411,17 @@
       function promptTaskDoneCoin(id, btn) {
         const t = tasksList.find((x) => x.id === id);
         const amount = taskNcoinAmount(t);
+        // Biriktiruvchi ham coin oladi — FAQAT bajaruvchidan boshqa odam
+        // bo'lsa (o'ziga o'zi biriktirib, o'zi bajargan bo'lsa yo'q).
+        const creatorGetsBonus = t.createdByUsername && t.createdByUsername !== t.assigneeUsername;
+        const hint = creatorGetsBonus
+          ? `Bu vazifa uchun xodimga ${amount}, biriktirgan @${escHtml(t.createdByUsername)}ga esa ${TASK_CREATOR_NCOIN_AMOUNT} Ncoin berilsinmi?`
+          : `Bu vazifa uchun xodimga ${amount} Ncoin berilsinmi?`;
         const { body } = makeSheet("Vazifani bajarildi deb belgilash");
         body.innerHTML = `
-          <div class="f-hint" style="margin-bottom:16px;font-size:13px;line-height:1.6">Bu vazifa uchun xodimga ${amount} Ncoin berilsinmi?</div>
+          <div class="f-hint" style="margin-bottom:16px;font-size:13px;line-height:1.6">${hint}</div>
           <div style="display:flex;flex-direction:column;gap:9px">
-            <button class="btn btn-blue" id="tdc-yes">🪙 Ha, ${amount} Ncoin berilsin</button>
+            <button class="btn btn-blue" id="tdc-yes">🪙 Ha, berilsin</button>
             <button class="btn btn-soft" id="tdc-no">Yo'q, faqat bajarildi deb belgilash</button>
           </div>`;
         document.getElementById("tdc-yes").onclick = () => {
@@ -7438,7 +7445,14 @@
           if (!res.ok)
             throw new Error((await res.json().catch(() => ({}))).error || "Xato");
           const t = tasksList.find((x) => x.id === id);
-          showToast(awardNcoin ? `✅ Yangilandi — ${taskNcoinAmount(t)} Ncoin berildi` : "✅ Yangilandi");
+          const creatorGotBonus = awardNcoin && t.createdByUsername && t.createdByUsername !== t.assigneeUsername;
+          showToast(
+            awardNcoin
+              ? creatorGotBonus
+                ? `✅ Yangilandi — ${taskNcoinAmount(t)} + ${TASK_CREATOR_NCOIN_AMOUNT} Ncoin berildi`
+                : `✅ Yangilandi — ${taskNcoinAmount(t)} Ncoin berildi`
+              : "✅ Yangilandi",
+          );
           await loadTasks();
           refreshAllViews();
           refreshTaskDetailIfOpen(id);
@@ -11196,6 +11210,7 @@
         story_video: "Video olish (stories)",
         story_edit: "Video montaj (stories)",
         task_completed: "Vazifa bajarildi",
+        task_creator_bonus: "Biriktirgan vazifa bajarildi",
         task_reversed: "Vazifa holati qaytarildi",
         project_bonus: "Loyiha bonusi",
         purchase: "NShopdan xarid",

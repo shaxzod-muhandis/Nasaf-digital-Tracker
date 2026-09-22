@@ -94,6 +94,25 @@ async function main() {
     [EMP, EDITOR, VIDEO, SMM],
   ]);
 
+  // Vazifa-testlar uchun ALOHIDA test-admin — haqiqiy "shaxzodshokirov"
+  // hisobidan FOYDALANMAYMIZ, chunki endi vazifani biriktirgan odam ham
+  // coin oladi: agar admin sifatida haqiqiy shaxzodshokirov ishlatilsa,
+  // u vazifa yaratganda (creator) va o'zi "Bajarildi" deb tasdiqlaganda
+  // haqiqiy hisobiga haqiqiy coin tushib qolardi (test tozalashi buni
+  // qamrab olmaydi, chunki username 'test_ncoin%' shabloniga mos
+  // kelmaydi). Shu sabab test-only admin ishlatiladi — u ham
+  // cleanupTestData()dagi 'test_ncoin%' shabloniga mos keladi.
+  const ADMIN = "test_ncoin_admin";
+  await check(`${ADMIN} (test-admin) yaratiladi`, async () => {
+    const r = await db.query(
+      `insert into users (username, role, telegram_user_id, telegram_chat_id, first_name, is_active)
+       values ($1,'admin',900301,'900301','TestNcoinAdmin',true)
+       on conflict (username) do update set role = 'admin' returning id`,
+      [ADMIN],
+    );
+    assert.ok(r.rows[0].id);
+  });
+
   let projectSlug;
   await check("test loyiha yaratiladi va hammaga ruxsat beriladi", async () => {
     const r = await call("POST", "/api/projects", {
@@ -239,48 +258,54 @@ async function main() {
   });
 
   console.log("── VAZIFA → NCOIN (faqat Tekshiruvda→Bajarildi, admin roziligi bilan) ──");
+  // Vazifani EDITOR biriktiradi (creator), EMP'ga (assignee) — ikkalasi
+  // ham test_ncoin* userlar, hech biri haqiqiy "shaxzodshokirov" emas.
   let taskId;
-  await check("EMP'ga vazifa biriktiriladi", async () => {
+  await check("EDITOR EMP'ga vazifa biriktiradi", async () => {
     const r = await call("POST", "/api/tasks", {
-      user: "shaxzodshokirov",
+      user: EDITOR,
       body: { title: "Ncoin test vazifa 1", assigneeUsername: EMP, dueDate: today, status: "todo", notifyTelegram: false },
     });
     assert.strictEqual(r.status, 200, JSON.stringify(r.json));
     taskId = r.json.task.id;
   });
-  await check("todo→done to'g'ridan-to'g'ri (review'siz), awardNcoin:true bo'lsa ham — coin YO'Q", async () => {
+  await check("todo→done to'g'ridan-to'g'ri (review'siz), awardNcoin:true bo'lsa ham — coin YO'Q (na bajaruvchiga, na biriktiruvchiga)", async () => {
     const r = await call("PATCH", `/api/tasks/${taskId}`, {
-      user: "shaxzodshokirov",
+      user: ADMIN,
       body: { status: "done", awardNcoin: true, notifyTelegram: false },
     });
     assert.strictEqual(r.status, 200, JSON.stringify(r.json));
     assert.strictEqual(await balanceOf(EMP), 0);
+    assert.strictEqual(await balanceOf(EDITOR), 0);
   });
   await check("holat review'ga qaytariladi", async () => {
-    const r = await call("PATCH", `/api/tasks/${taskId}`, { user: "shaxzodshokirov", body: { status: "review", notifyTelegram: false } });
+    const r = await call("PATCH", `/api/tasks/${taskId}`, { user: ADMIN, body: { status: "review", notifyTelegram: false } });
     assert.strictEqual(r.status, 200, JSON.stringify(r.json));
   });
   await check("review→done, awardNcoin:false — coin YO'Q", async () => {
     const r = await call("PATCH", `/api/tasks/${taskId}`, {
-      user: "shaxzodshokirov",
+      user: ADMIN,
       body: { status: "done", awardNcoin: false, notifyTelegram: false },
     });
     assert.strictEqual(r.status, 200, JSON.stringify(r.json));
     assert.strictEqual(await balanceOf(EMP), 0);
+    assert.strictEqual(await balanceOf(EDITOR), 0);
   });
-  await check("review→done, awardNcoin:true — +0.2", async () => {
-    await call("PATCH", `/api/tasks/${taskId}`, { user: "shaxzodshokirov", body: { status: "review", notifyTelegram: false } });
+  await check("review→done, awardNcoin:true — bajaruvchiga +0.2, biriktiruvchiga +0.2", async () => {
+    await call("PATCH", `/api/tasks/${taskId}`, { user: ADMIN, body: { status: "review", notifyTelegram: false } });
     const r = await call("PATCH", `/api/tasks/${taskId}`, {
-      user: "shaxzodshokirov",
+      user: ADMIN,
       body: { status: "done", awardNcoin: true, notifyTelegram: false },
     });
     assert.strictEqual(r.status, 200, JSON.stringify(r.json));
     assert.strictEqual(await balanceOf(EMP), 0.2);
+    assert.strictEqual(await balanceOf(EDITOR), 0.2);
   });
-  await check("done'dan chiqarilsa — coin qaytariladi", async () => {
-    const r = await call("PATCH", `/api/tasks/${taskId}`, { user: "shaxzodshokirov", body: { status: "in_progress", notifyTelegram: false } });
+  await check("done'dan chiqarilsa — ikkalasining ham coini qaytariladi", async () => {
+    const r = await call("PATCH", `/api/tasks/${taskId}`, { user: ADMIN, body: { status: "in_progress", notifyTelegram: false } });
     assert.strictEqual(r.status, 200, JSON.stringify(r.json));
     assert.strictEqual(await balanceOf(EMP), 0);
+    assert.strictEqual(await balanceOf(EDITOR), 0);
   });
   await check("faqat admin awardNcoin so'ray oladi (oddiy xodim 'done' o'rnata olmaydi — 403)", async () => {
     const r = await call("PATCH", `/api/tasks/${taskId}`, {
@@ -288,6 +313,64 @@ async function main() {
       body: { status: "done", awardNcoin: true, notifyTelegram: false },
     });
     assert.strictEqual(r.status, 403);
+  });
+
+  let selfTaskId;
+  await check("EMP o'ziga o'zi vazifa biriktiradi (creator === assignee)", async () => {
+    // POST /api/tasks — "backlog"dan boshqa har qanday status "todo"ga
+    // majburlanadi, shuning uchun "review"ga alohida PATCH bilan o'tkazamiz
+    // (yuqoridagi asosiy testdagi shaklga mos).
+    const r = await call("POST", "/api/tasks", {
+      user: EMP,
+      body: { title: "Ncoin test vazifa 2 (o'z-o'ziga)", assigneeUsername: EMP, dueDate: today, notifyTelegram: false },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    selfTaskId = r.json.task.id;
+    const rr = await call("PATCH", `/api/tasks/${selfTaskId}`, { user: ADMIN, body: { status: "review", notifyTelegram: false } });
+    assert.strictEqual(rr.status, 200, JSON.stringify(rr.json));
+  });
+  await check("o'z-o'ziga biriktirilgan vazifa uchun — faqat 0.2 (biriktiruvchi bonusi QO'SHILMAYDI, ikki karra bo'lmaydi)", async () => {
+    const r = await call("PATCH", `/api/tasks/${selfTaskId}`, {
+      user: ADMIN,
+      body: { status: "done", awardNcoin: true, notifyTelegram: false },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.strictEqual(await balanceOf(EMP), 0.2);
+  });
+  await check("o'z-o'ziga vazifa tozalanadi", async () => {
+    await call("PATCH", `/api/tasks/${selfTaskId}`, { user: ADMIN, body: { status: "in_progress", notifyTelegram: false } });
+    assert.strictEqual(await balanceOf(EMP), 0);
+  });
+
+  let designerTaskId;
+  await check("EMP 'Grafik Dizyayner' lavozimiga o'tkaziladi (test uchun)", async () => {
+    const r = await call("PATCH", `/api/users/${EMP}`, { user: ADMIN, body: { jobTitle: "Grafik Dizyayner" } });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+  });
+  await check("EDITOR dizayner EMP'ga vazifa biriktiradi", async () => {
+    const r = await call("POST", "/api/tasks", {
+      user: EDITOR,
+      body: { title: "Ncoin test vazifa 3 (dizayner)", assigneeUsername: EMP, dueDate: today, notifyTelegram: false },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    designerTaskId = r.json.task.id;
+    const rr = await call("PATCH", `/api/tasks/${designerTaskId}`, { user: ADMIN, body: { status: "review", notifyTelegram: false } });
+    assert.strictEqual(rr.status, 200, JSON.stringify(rr.json));
+  });
+  await check("dizayner uchun review→done — dizaynerga +0.5, biriktiruvchiga +0.2", async () => {
+    const r = await call("PATCH", `/api/tasks/${designerTaskId}`, {
+      user: ADMIN,
+      body: { status: "done", awardNcoin: true, notifyTelegram: false },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.strictEqual(await balanceOf(EMP), 0.5);
+    assert.strictEqual(await balanceOf(EDITOR), 0.2);
+  });
+  await check("dizayner-vazifa tozalanadi, lavozim asliga qaytariladi", async () => {
+    await call("PATCH", `/api/tasks/${designerTaskId}`, { user: ADMIN, body: { status: "in_progress", notifyTelegram: false } });
+    await call("PATCH", `/api/users/${EMP}`, { user: ADMIN, body: { jobTitle: "" } });
+    assert.strictEqual(await balanceOf(EMP), 0);
+    assert.strictEqual(await balanceOf(EDITOR), 0);
   });
 
   console.log("── LOYIHA BONUSI ────────────────────────────────────");

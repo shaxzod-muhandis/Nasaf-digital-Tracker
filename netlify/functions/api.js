@@ -69,6 +69,10 @@ const TASK_STATUS_LABEL_UZ = {
 // profildagi qiymat bilan AYNAN bir xil bo'lishi kerak.
 const TASK_NCOIN_AMOUNT_BY_JOB_TITLE = { "Grafik Dizyayner": 0.5 };
 const TASK_NCOIN_DEFAULT_AMOUNT = 0.2;
+// Vazifani biriktirgan (yaratgan) odamga — bajaruvchiga coin berilganda
+// — qo'shimcha beriladigan qat'iy miqdor. Lavozimga bog'liq emas
+// (faqat bajaruvchi tomoni lavozimga qarab farqlanadi).
+const TASK_CREATOR_NCOIN_AMOUNT = 0.2;
 
 const app = express();
 app.use(cors());
@@ -1903,6 +1907,30 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
             );
           } catch (e) {
             console.error("Ncoin berish xatosi:", e.message);
+          }
+          // Vazifani biriktirgan (yaratgan) odamga ham mukofot — lekin
+          // FAQAT bajaruvchidan boshqa odam bo'lsa. Xodim o'ziga o'zi
+          // vazifa yozib, o'zi bajarsa, ikkinchi marta (endi "biriktiruvchi"
+          // sifatida) coin olmasligi kerak — aks holda bitta ishdan ikki
+          // karra coin "ishlab topish" imkoniyati tug'ilardi.
+          if (existing.created_by && existing.created_by !== existing.assignee_user_id) {
+            try {
+              await awardNcoin(db, {
+                userId: existing.created_by,
+                amount: TASK_CREATOR_NCOIN_AMOUNT,
+                reason: "task_creator_bonus",
+                referenceType: "task",
+                referenceId: task.id,
+              });
+              await notifyNcoinChange(
+                db,
+                existing.created_by,
+                TASK_CREATOR_NCOIN_AMOUNT,
+                `Siz biriktirgan "${task.title}" vazifasi bajarilgani uchun ${TASK_CREATOR_NCOIN_AMOUNT} Ncoin ishlab topdingiz.`,
+              );
+            } catch (e) {
+              console.error("Vazifa biriktiruvchiga Ncoin berish xatosi:", e.message);
+            }
           }
         } else if (before.status === "done" && task.status !== "done") {
           await reverseNcoin(db, {
