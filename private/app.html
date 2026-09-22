@@ -6673,6 +6673,7 @@
           <div style="display:flex;align-items:flex-start;gap:7px">
             ${icon}
             <div class="r-name" style="font-size:12.5px;flex:1;min-width:0;line-height:1.35;${muted ? "color:var(--t2);font-weight:500" : ""}">${escHtml(t.title)}</div>
+            ${isAdmin ? `<span onclick="event.stopPropagation();openTaskCardMenu('${escArg(t.id)}')" style="width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;color:var(--t3);font-size:13px;cursor:pointer;margin-top:-2px">⋯</span>` : ""}
           </div>
           ${renderTagChipsHtml(t.tags, muted)}
           ${noteBox}
@@ -7484,6 +7485,18 @@
           if (errEl) errEl.textContent = e.message;
           setBtnLoading(btn, false);
         }
+      }
+      // Doska kartochkasidagi tezkor "⋯" menyu — vazifani ochmasdan
+      // to'g'ridan-to'g'ri tahrirlash/o'chirish (faqat admin, xuddi
+      // vazifa detali sahifasi pastidagi tugmalar bilan bir xil
+      // funksiyalarni chaqiradi).
+      function openTaskCardMenu(id) {
+        const t = tasksList.find((x) => x.id === id);
+        if (!t) return;
+        const { body } = makeSheet(t.title);
+        body.innerHTML = `
+          <button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="document.querySelector('.overlay')?.remove();openEditTaskSheet('${escArg(id)}')">✎ Tahrirlash</button>
+          <button type="button" class="btn btn-danger" onclick="document.querySelector('.overlay')?.remove();deleteTask('${escArg(id)}','${escArg(t.title)}')">🗑 O'chirish</button>`;
       }
       function deleteTask(id, title) {
         showConfirmModal(
