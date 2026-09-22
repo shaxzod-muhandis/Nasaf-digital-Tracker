@@ -62,6 +62,14 @@ const TASK_STATUS_LABEL_UZ = {
   cancelled: "Bekor qilingan",
 };
 
+// Vazifa "Bajarildi" deb tasdiqlanganda beriladigan standart Ncoin
+// miqdori — ba'zi lavozimlar uchun boshqacha (masalan Grafik Dizayner
+// alohida loyiha-tsikliga bog'liq emas, faqat vazifalar orqali ishlaydi,
+// shu sabab standart 0.2 o'rniga 0.5 belgilangan). job_title matni
+// profildagi qiymat bilan AYNAN bir xil bo'lishi kerak.
+const TASK_NCOIN_AMOUNT_BY_JOB_TITLE = { "Grafik Dizyayner": 0.5 };
+const TASK_NCOIN_DEFAULT_AMOUNT = 0.2;
+
 const app = express();
 app.use(cors());
 // Standart 100kb limit ko'pchilik so'rov uchun yetarli, lekin NShop
@@ -177,6 +185,16 @@ app.post("/api/register-chat", auth, async (req, res) => {
     if (!chatId) return res.status(400).json({ error: "chatId kerak" });
     if (!/^\d{6,}$/.test(String(chatId))) {
       return res.status(400).json({ error: "chatId noto'g'ri formatda" });
+    }
+    // Lokal test qilishda ishlatiladigan, taniqli soxta ID — hech qachon
+    // haqiqiy Telegram foydalanuvchisiga tegishli bo'lishi mumkin emas.
+    // 2026-09-22'da shu ID bilan bir nechta xodimning HAQIQIY
+    // telegram_chat_id'i tasodifan ustidan yozilib, ularga bot
+    // xabarlari bormay qolgani aniqlangan — shu sabab endi bu yerda
+    // to'xtatiladi (avval faqat frontend testida "katta ID" tavsiya
+    // qilingandi, lekin bu haqiqiy ustidan-yozishning oldini olmasdi).
+    if (String(chatId) === "9999999999") {
+      return res.status(400).json({ error: "Test uchun ajratilgan chatId — saqlanmaydi" });
     }
     await db.query(
       `update users set telegram_chat_id = $1, telegram_user_id = coalesce(telegram_user_id, $2::bigint)
@@ -1516,6 +1534,7 @@ const TASK_ROW_SQL = `
     p.slug as project_slug, p.label as project_label,
     au.username as assignee_username,
     coalesce(au.full_name, au.username) as assignee_user_name,
+    au.job_title as assignee_job_title,
     ast.full_name as assignee_staff_name,
     cu.username as created_by_username
   from tasks t
@@ -1537,6 +1556,7 @@ function shapeTaskRow(row) {
     projectLabel: row.project_label,
     assigneeUsername: row.assignee_username || null,
     assigneeName: row.assignee_user_name || row.assignee_staff_name || null,
+    assigneeJobTitle: row.assignee_job_title || null,
     createdByUsername: row.created_by_username,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -1866,9 +1886,11 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
       if (existing.assignee_user_id) {
         if (before.status === "review" && task.status === "done" && req.body.awardNcoin === true) {
           try {
+            const jtR = await db.query(`select job_title from users where id = $1`, [existing.assignee_user_id]);
+            const amount = TASK_NCOIN_AMOUNT_BY_JOB_TITLE[jtR.rows[0]?.job_title] ?? TASK_NCOIN_DEFAULT_AMOUNT;
             await awardNcoin(db, {
               userId: existing.assignee_user_id,
-              amount: 0.2,
+              amount,
               reason: "task_completed",
               referenceType: "task",
               referenceId: task.id,
@@ -1876,8 +1898,8 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
             await notifyNcoinChange(
               db,
               existing.assignee_user_id,
-              0.2,
-              `Siz "${task.title}" vazifasini bajarganingiz uchun 0.2 Ncoin ishlab topdingiz.`,
+              amount,
+              `Siz "${task.title}" vazifasini bajarganingiz uchun ${amount} Ncoin ishlab topdingiz.`,
             );
           } catch (e) {
             console.error("Ncoin berish xatosi:", e.message);

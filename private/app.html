@@ -6385,6 +6385,14 @@
         no_priority: "Ustuvorlik yo'q",
       };
       const TASK_PRIORITY_RANK = { urgent: 0, high: 1, medium: 2, low: 3, no_priority: 4 };
+      // Backenddagi TASK_NCOIN_AMOUNT_BY_JOB_TITLE bilan bir xil — faqat
+      // tasdiqlash so'rovi/toast matnida to'g'ri miqdorni ko'rsatish uchun
+      // (haqiqiy berish backendda hisoblanadi, bu shunchaki ko'rsatish oynasi).
+      const TASK_NCOIN_AMOUNT_BY_JOB_TITLE = { "Grafik Dizyayner": 0.5 };
+      const TASK_NCOIN_DEFAULT_AMOUNT = 0.2;
+      function taskNcoinAmount(t) {
+        return TASK_NCOIN_AMOUNT_BY_JOB_TITLE[t?.assigneeJobTitle] ?? TASK_NCOIN_DEFAULT_AMOUNT;
+      }
       // Doskadagi 5 ustun — dizayn asosida, mavjud 7 statusning VIZUAL
       // guruhlanishi (bazadagi statuslar o'zgarmaydi): Backlog+Boshlanmagan
       // → Biriktirilgan; Bajarilmadi/Bekor qilingan va 30 kundan eski
@@ -7398,11 +7406,13 @@
         await applyTaskStatus(id, status, btn);
       }
       function promptTaskDoneCoin(id, btn) {
+        const t = tasksList.find((x) => x.id === id);
+        const amount = taskNcoinAmount(t);
         const { body } = makeSheet("Vazifani bajarildi deb belgilash");
         body.innerHTML = `
-          <div class="f-hint" style="margin-bottom:16px;font-size:13px;line-height:1.6">Bu vazifa uchun xodimga 0.2 Ncoin berilsinmi?</div>
+          <div class="f-hint" style="margin-bottom:16px;font-size:13px;line-height:1.6">Bu vazifa uchun xodimga ${amount} Ncoin berilsinmi?</div>
           <div style="display:flex;flex-direction:column;gap:9px">
-            <button class="btn btn-blue" id="tdc-yes">🪙 Ha, 0.2 Ncoin berilsin</button>
+            <button class="btn btn-blue" id="tdc-yes">🪙 Ha, ${amount} Ncoin berilsin</button>
             <button class="btn btn-soft" id="tdc-no">Yo'q, faqat bajarildi deb belgilash</button>
           </div>`;
         document.getElementById("tdc-yes").onclick = () => {
@@ -7425,7 +7435,8 @@
           });
           if (!res.ok)
             throw new Error((await res.json().catch(() => ({}))).error || "Xato");
-          showToast(awardNcoin ? "✅ Yangilandi — 0.2 Ncoin berildi" : "✅ Yangilandi");
+          const t = tasksList.find((x) => x.id === id);
+          showToast(awardNcoin ? `✅ Yangilandi — ${taskNcoinAmount(t)} Ncoin berildi` : "✅ Yangilandi");
           await loadTasks();
           refreshAllViews();
           refreshTaskDetailIfOpen(id);
@@ -11112,16 +11123,25 @@
       // "Ncoin tarixi" sheet ikkalasida ham AYNAN shu markup ishlatiladi.
       // `padding` berilmasa — `.list-row`ning standart (14px 15px)
       // bo'shlig'i ishlatiladi, raqamlar chekkaga yopishib qolmasligi uchun.
+      // Stories uchun kelgan qatorlar (story_smm/story_video/story_edit)
+      // odatdagi yashil "ishlab topildi" rangidan ATAYLAB farqlanadi —
+      // binafsha (Stories tag-chipining o'zidagi rang bilan bir xil),
+      // shu tarzda xodim tarixda "bu aynan stories uchun" ekanini bitta
+      // qarashda ajrata oladi.
+      const NCOIN_STORY_REASONS = new Set(["story_smm", "story_video", "story_edit"]);
       function ncoinHistoryRowHtml(t, padding) {
         const positive = t.amount > 0;
+        const isStory = positive && NCOIN_STORY_REASONS.has(t.reason);
+        const iconBg = isStory ? "var(--purple-bg)" : positive ? "var(--inkfill)" : "var(--surf2)";
+        const accent = isStory ? "var(--purple)" : positive ? "#16a34a" : "var(--red)";
         const d = new Date(t.at);
         return `<div class="list-row"${padding ? ` style="padding:${padding}"` : ""}>
-          <div style="width:30px;height:30px;border-radius:9px;background:${positive ? "var(--inkfill)" : "var(--surf2)"};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:${positive ? "#16a34a" : "var(--red)"};flex:none">${positive ? "↑" : "↓"}</div>
+          <div style="width:30px;height:30px;border-radius:9px;background:${iconBg};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:${accent};flex:none">${positive ? "↑" : "↓"}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;color:var(--ink);line-height:1.4">${escHtml(ncoinLineLabel(t))}</div>
             <div class="f-hint" style="margin:3px 0 0">${fmtDay(d)}, ${fmtTime(d)}</div>
           </div>
-          <div style="font-weight:600;font-size:13.5px;color:${positive ? "#16a34a" : "var(--red)"};flex:none;margin-left:8px">${positive ? "+" : ""}${fmtNcoin(t.amount)}</div>
+          <div style="font-weight:600;font-size:13.5px;color:${accent};flex:none;margin-left:8px">${positive ? "+" : ""}${fmtNcoin(t.amount)}</div>
         </div>`;
       }
 
@@ -12204,6 +12224,19 @@
           ? "block"
           : "none";
 
+        // Grafik Dizayner — loyiha-tsikliga (post/stories) bog'liq
+        // ishlamaydi, faqat vazifalar orqali ishlaydi — shu sabab
+        // "Bugun" (tracker) va "Loyihalar" bo'limlari uning uchun
+        // ko'rinmaydi (NShop/Tarix — coin sarflash/tarixini ko'rish
+        // uchun qoladi). Lavozim matni profildagi qiymat bilan AYNAN
+        // bir xil bo'lishi kerak (TASK_NCOIN_AMOUNT_BY_JOB_TITLE'dagi
+        // bilan bir joydan keladi).
+        const isDesignerOnlyNav = myProfile?.jobTitle === "Grafik Dizyayner";
+        document.getElementById("nav-today").style.display = isDesignerOnlyNav ? "none" : "flex";
+        document.getElementById("nav-projects").style.display = isDesignerOnlyNav ? "none" : "flex";
+        document.getElementById("sidebar-nav-today").style.display = isDesignerOnlyNav ? "none" : "flex";
+        document.getElementById("sidebar-nav-projects").style.display = isDesignerOnlyNav ? "none" : "flex";
+
         renderSidebar();
         // Ko'rinish (mobil/desktop) faqat CSS orqali hal qilinadi
         // (.mobile-only/.desktop-only) — bloklarning o'zi har doim
@@ -12227,10 +12260,10 @@
           if (openTaskId) {
             showTab("tasks");
             openTaskActions(openTaskId);
-          } else if (tabParam && ROOT_TABS.includes(tabParam)) {
+          } else if (tabParam && ROOT_TABS.includes(tabParam) && !(isDesignerOnlyNav && ["today", "projects"].includes(tabParam))) {
             showTab(tabParam);
           } else {
-            showTab("today");
+            showTab(isDesignerOnlyNav ? "tasks" : "today");
           }
           if (showBirthdayGreeting) openBirthdayGreetingModal();
         }
