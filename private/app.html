@@ -1865,6 +1865,37 @@
          urinish" tugmasi umuman yo'q edi, yagona chora — boshqa bo'limga
          o'tib qaytish, buni esa hech kim aytmagan. Endi xato o'zi bilan
          birga chiqish yo'lini ham beradi. */
+      /* ── SKELET YUKLANISH ─────────────────────────────────────────
+         Aylanuvchi spinner o'rniga sahifa tuzilishining o'zi
+         ko'rsatiladi: ekran darhol "to'lgandek" ko'rinadi va ma'lumot
+         kelganda almashinish sakramaydi. Shimmer animatsiyasi NShop
+         skeletidan qayta ishlatiladi (nshop-shimmer). */
+      .skel-card {
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .skel-box,
+      .skel-line {
+        background: linear-gradient(90deg, var(--surf2) 25%, var(--bd2) 37%, var(--surf2) 63%);
+        background-size: 400% 100%;
+        animation: nshop-shimmer 1.4s ease infinite;
+      }
+      .skel-box {
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+        flex: 0 0 auto;
+      }
+      .skel-line {
+        height: 10px;
+        border-radius: 5px;
+      }
       .load-err {
         min-height: 42vh;
         display: flex;
@@ -6247,6 +6278,19 @@
         if (retry) btn.onclick = () => retry();
         else btn.remove();
       }
+      // Yuklanish skeleti — ro'yxat shaklidagi ekranlar uchun umumiy.
+      function skeletonHtml(rows = 4) {
+        return Array.from(
+          { length: rows },
+          () => `<div class="skel-card">
+            <div class="skel-box"></div>
+            <div style="flex:1;min-width:0">
+              <div class="skel-line" style="width:58%"></div>
+              <div class="skel-line" style="width:34%;margin-top:8px;height:9px"></div>
+            </div>
+          </div>`,
+        ).join("");
+      }
       function showToast(msg, ms = 2200) {
         const el = document.getElementById("toast");
         el.textContent = msg;
@@ -7401,7 +7445,7 @@
         const newBtn = document.getElementById("tasks-new-btn");
         if (newBtn) newBtn.style.display = "flex";
         const body = document.getElementById("tasks-body");
-        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        body.innerHTML = `${skeletonHtml()}`;
         try {
           const res = await apiFetch("/api/tasks");
           if (!res.ok)
@@ -8513,7 +8557,7 @@
         if (!t) return;
         etSelectedTagIds = new Set((t.tags || []).map((tg) => tg.id));
         const { body } = makeSheet("Vazifani tahrirlash");
-        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        body.innerHTML = `${skeletonHtml()}`;
         let users = [];
         try {
           const res = await apiFetch("/api/users/directory");
@@ -8718,7 +8762,7 @@
         ntStatus = "todo";
         ntSelectedTagIds = new Set();
         const { body } = makeSheet("Yangi vazifa");
-        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        body.innerHTML = `${skeletonHtml()}`;
         let users = [];
         try {
           // /api/users admin-only (shaxsiy maydonlar bor) — vazifa yaratish
@@ -8853,7 +8897,7 @@
         renderHistChips();
         if (!histState.loaded) {
           document.getElementById("history-body").innerHTML =
-            `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+            `${skeletonHtml()}`;
           const rows = [];
           await Promise.all(
             projects.map(async (project) => {
@@ -9401,7 +9445,7 @@
         const storyKind = info.storyKind || "info";
 
         const { body } = makeSheet(`${label} ${num} — ${escHtml(p.label)}`);
-        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        body.innerHTML = `${skeletonHtml()}`;
         let directory = [];
         try {
           const res = await apiFetch("/api/users/directory");
@@ -10464,7 +10508,7 @@
           </div>`;
         if (!worklog) {
           c.innerHTML =
-            header + `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+            header + `${skeletonHtml()}`;
           try {
             const r = await apiFetch(`/api/worklog?month=${worklogMonth}`);
             if (!r.ok)
@@ -10580,7 +10624,7 @@
         // Botga kirish huquqini berish — faqat Super Admin (TZ: "Faqat
         // Super Admin userga access bera oladi").
         c.innerHTML = `
-          <div id="perm-list"><div class="empty"><div class="empty-s">Yuklanmoqda…</div></div></div>
+          <div id="perm-list">${skeletonHtml()}</div>
           ${
             isSuperAdmin
               ? `<div style="display:flex;gap:8px;margin-top:14px">
@@ -10953,7 +10997,7 @@
               <input class="f-input" id="new-admin-input" placeholder="@username" style="flex:1"/>
               <button class="btn btn-blue btn-sm" style="width:auto;padding:0 16px" onclick="addDynamicAdmin()">Qo'shish</button>
             </div>
-            <div id="admin-list"><div class="empty"><div class="empty-s">Yuklanmoqda…</div></div></div>
+            <div id="admin-list">${skeletonHtml()}</div>
           </div>`;
         refreshAdminList();
       }
@@ -11053,7 +11097,7 @@
       let nshopAdminStats = null;
       let nshopAdminSearch = "";
       async function renderNShopAdminTab(c) {
-        c.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        c.innerHTML = `${skeletonHtml()}`;
         await refreshNShopAdminList(c);
       }
       async function refreshNShopAdminList(c) {
@@ -11496,7 +11540,7 @@
       }
       async function openNShopArchivedSheet() {
         const { body } = makeSheet("Arxivlangan mahsulotlar");
-        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        body.innerHTML = `${skeletonHtml()}`;
         try {
           const res = await apiFetch("/api/ncoin/admin/products?includeArchived=1");
           const d = await res.json();
@@ -11540,7 +11584,7 @@
       // (aniq belgilangan userlar). Xodimlar ro'yxati /api/users/directory
       // orqali — bu tab birinchi ochilganda bir marta yuklanadi.
       async function renderAnnouncementTab(c) {
-        c.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        c.innerHTML = `${skeletonHtml()}`;
         if (!announcementUsersList) {
           try {
             const res = await apiFetch("/api/users/directory");
@@ -11735,7 +11779,7 @@
       async function openProfilePage() {
         openSubScreen("screen-profile", closeProfilePage);
         const c = document.getElementById("profile-body");
-        c.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        c.innerHTML = `${skeletonHtml()}`;
         try {
           const [meRes, ncoinRes] = await Promise.all([
             apiFetch("/api/me"),
@@ -12441,7 +12485,7 @@
       let ncoinHistoryState = null;
       async function openNcoinHistorySheet() {
         const { body } = makeSheet("Ncoin tarixi");
-        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        body.innerHTML = `${skeletonHtml()}`;
         try {
           const res = await apiFetch("/api/ncoin/me");
           const data = await res.json();
@@ -12977,7 +13021,7 @@
       let activitySheetState = null;
       async function openActivityStats(username) {
         const { body } = makeSheet(username ? "Faollik" : "Mening faolligim", { wide: true });
-        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        body.innerHTML = `${skeletonHtml()}`;
         let data;
         try {
           const qs = username ? `?username=${encodeURIComponent(username)}` : "";
@@ -13200,7 +13244,7 @@
         await refreshHistoryBody(body, slug);
       }
       async function refreshHistoryBody(body, slug) {
-        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        body.innerHTML = `${skeletonHtml()}`;
         try {
           const res = await apiFetch(`/api/projects/${slug}/cycles`);
           if (!res.ok)
