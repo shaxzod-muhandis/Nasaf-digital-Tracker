@@ -4407,24 +4407,43 @@
         font-size: 13px;
         color: var(--ink);
       }
+      /* Davr holati — ilovaning qolgan qismidagi holat "pill"i bilan
+         bir xil shaklda (nuqta + so'z, h22 r7), faqat ma'nolari
+         boshqacha: davr joriy, qarzli yoki tugagan bo'ladi. */
       .hist-status {
-        font-size: 10px;
-        font-weight: 700;
-        padding: 3px 7px;
-        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        height: 22px;
+        padding: 0 8px;
+        border-radius: 7px;
+        font-size: 11px;
+        font-weight: 600;
         white-space: nowrap;
+        flex: 0 0 auto;
+      }
+      .hist-status::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 99px;
+        background: var(--dot);
+        flex: none;
       }
       .hist-status.active {
-        background: rgba(47, 122, 185, 0.12);
-        color: var(--brand);
+        background: var(--st-onplan-bg);
+        color: var(--st-onplan);
+        --dot: var(--st-onplan-dot);
       }
       .hist-status.debt {
-        background: var(--red-bg);
-        color: var(--red);
+        background: var(--st-debt-bg);
+        color: var(--st-debt);
+        --dot: var(--st-debt-dot);
       }
       .hist-status.done {
-        background: var(--chip2);
-        color: var(--t5);
+        background: var(--st-ahead-bg);
+        color: var(--st-ahead);
+        --dot: var(--st-ahead-dot);
       }
       .hist-body {
         display: none;
