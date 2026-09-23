@@ -24,7 +24,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -50,9 +50,14 @@
            yozilmaydi), aks holda qorong'i temada bu fon ham
            yorishib, ustidagi oq matn/harflar ko'rinmay qolardi. */
         --inkfill: #0f172a;
-        --t2: #6b7280;
-        --t3: #8b929c;
-        --t4: #9aa1ac;
+        /* Ikkilamchi matn pog'onalari. v3 dizaynida ataylab to'qroq
+           qilingan: avvalgi --t3 (#8b929c) oq fonda ~3.1:1 kontrast
+           berardi — bu WCAG AA (4.5:1) dan past, holbuki u bo'sh-ekran
+           izohlari va statistika yorliqlari kabi HAQIQIY matn uchun
+           ishlatiladi, sof bezak uchun emas. */
+        --t2: #5b6573;
+        --t3: #7a828e;
+        --t4: #8a9099;
         --t5: #374151;
         --chev: #b6bcc5;
         --red: #dc2626;
@@ -83,6 +88,21 @@
         --pink: #92345f;
         --pink-bg: #faecf3;
         --green: #16a34a;
+        /* ── LOYIHA HOLATI — 4 ta so'z, 4 ta rang ──────────────────
+           Loyiha/davr qay ahvolda ekani ilovaning hamma joyida
+           (Bugun, Loyihalar, Tarix, Boshqaruv) AYNAN shu to'rt so'z va
+           shu to'rt rang bilan beriladi. Maqsad: xodim rangni bir marta
+           o'rgansa, qaysi ekranda ko'rmasin ma'nosi bir xil bo'lsin.
+           Matn ranglari fon rangidan to'qroq — tint ustida o'qilishi
+           uchun (masalan yashil matn #15803d, foni #e8f6ec). */
+        --st-debt: #dc2626; /* Qarz    — muddat o'tdi, bajarilmagan qoldi */
+        --st-debt-bg: #fdecec;
+        --st-behind: #a45f08; /* Ortda   — rejadan orqada */
+        --st-behind-bg: #fbf1e4;
+        --st-onplan: #374151; /* Rejada  — reja bo'yicha ketmoqda */
+        --st-onplan-bg: #f1f3f6;
+        --st-ahead: #15803d; /* Oldinda — rejadan oldinda */
+        --st-ahead-bg: #e8f6ec;
         --red-tint: #fffbfb;
         /* Faollik heatmap — bitta ko'k rangning 5 pog'onasi (dizayner
            TZ'i, 3.3-band): 0 = harakat yo'q, 4 = eng yuqori. Boshqa
@@ -142,6 +162,14 @@
         --pink: #e39cbe;
         --pink-bg: rgba(146, 52, 95, 0.22);
         --green: #34d066;
+        --st-debt: #f0554a;
+        --st-debt-bg: rgba(240, 85, 74, 0.16);
+        --st-behind: #f0c479;
+        --st-behind-bg: rgba(217, 119, 6, 0.18);
+        --st-onplan: #c7ccd4;
+        --st-onplan-bg: #272d38;
+        --st-ahead: #34d066;
+        --st-ahead-bg: rgba(52, 208, 102, 0.16);
         --red-tint: rgba(240, 85, 74, 0.08);
         --act-lvl-0: #2b313d;
         --act-lvl-1: #2a3f52;
@@ -155,7 +183,7 @@
         -webkit-tap-highlight-color: transparent;
       }
       body {
-        font-family: "Sora", -apple-system, sans-serif;
+        font-family: "Onest", -apple-system, sans-serif;
         background: var(--bg);
         color: var(--ink);
         min-height: 100vh;
@@ -2936,6 +2964,45 @@
         padding: 2px 7px;
         border-radius: 6px;
         white-space: nowrap;
+      }
+      /* ── LOYIHA HOLATI — yagona komponent ──────────────────────────
+         Ishlatilishi:  <span class="st-pill ahead">Oldinda</span>
+         Rang bilan birga HAR DOIM so'z ham keladi — ma'no faqat rangga
+         tayanmaydi (rang ajrata olmaydigan odam ham tushunadi, va
+         qora-oq skrinshotda ham o'qiladi). */
+      .st-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 3px 9px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+      .st-pill::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 99px;
+        background: currentColor;
+        flex: none;
+      }
+      .st-pill.debt {
+        color: var(--st-debt);
+        background: var(--st-debt-bg);
+      }
+      .st-pill.behind {
+        color: var(--st-behind);
+        background: var(--st-behind-bg);
+      }
+      .st-pill.onplan {
+        color: var(--st-onplan);
+        background: var(--st-onplan-bg);
+      }
+      .st-pill.ahead {
+        color: var(--st-ahead);
+        background: var(--st-ahead-bg);
       }
       .avatar-sm {
         width: 20px;
