@@ -14060,11 +14060,19 @@
           }
         } catch (e) {}
 
+        // Sessiya tugagan bo'lsa, handleSessionExpired() allaqachon
+        // sahifani xato ekraniga almashtirgan — davom etsak, yana
+        // beshta 401 so'rov yuborib, keyin mavjud bo'lmagan
+        // elementlarni qidirib yiqilamiz. Shu yerda to'xtaymiz.
+        if (sessionExpiredShown) return;
+
         await loadProjects();
         await loadStaff();
         await loadTasks();
         await loadTags();
         await loadMyActivity();
+
+        if (sessionExpiredShown) return;
 
         document.getElementById("nav-admin").style.display = isAdmin
           ? "flex"
