@@ -6371,6 +6371,11 @@
       function daysBetween(a, b) {
         return Math.round((b - a) / 86400000);
       }
+      function addDays(d, n) {
+        const x = new Date(d);
+        x.setDate(x.getDate() + n);
+        return x;
+      }
       function fmtDay(d) {
         return `${d.getDate()}-${MONTHS[d.getMonth()].toLowerCase()}`;
       }
@@ -8807,14 +8812,14 @@
             <div class="f-hint">Backlog — hali navbatga qo'yilmagan, muddat keyinroq kiritiladi.</div>
           </div>
           <div class="f-group" id="nt-due-group">
-            <label class="f-label">Muddat (deadline) *</label>
-            ${renderDateFieldHtml("nt-due", "", "Sana tanlang")}
+            <label class="f-label">Muddat</label>
+            ${renderDateFieldHtml("nt-due", isoOf(addDays(todayDate(), 1)), "Sana tanlang")}
           </div>
           <div class="f-group">
             <label class="f-label">Ustuvorlik</label>
             <select class="f-input" id="nt-priority">
               ${Object.entries(TASK_PRIORITY_LABEL)
-                .map(([k, lbl]) => `<option value="${k}"${k === "no_priority" ? " selected" : ""}>${lbl}</option>`)
+                .map(([k, lbl]) => `<option value="${k}"${k === "medium" ? " selected" : ""}>${lbl}</option>`)
                 .join("")}
             </select>
           </div>
