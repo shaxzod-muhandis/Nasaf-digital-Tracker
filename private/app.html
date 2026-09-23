@@ -12405,8 +12405,8 @@
           });
           const data = await res.json().catch(() => ({}));
           if (!res.ok) throw new Error(data.error || "Xatolik");
-          document.querySelector(".overlay")?.remove();
-          showToast(`✅ ${data.product.name} sizniki! Yangi balans: ${fmtNcoin(data.balance)} Ncoin`);
+          nshopBalance = data.balance;
+          showPurchaseDone(data.product, data.balance);
           renderNShopScreen();
         } catch (e) {
           showToast("⚠ " + e.message);
@@ -12414,6 +12414,37 @@
             setBtnLoading(btn, false);
           }
         }
+      }
+
+      // Xarid tugagandan keyingi ekran. Ilgari bu yerda shunchaki toast
+      // chiqardi va yo'qolib ketardi — xodim mahsulotni QAYERDAN
+      // olishini bilmay qolardi. Maketdagi qoida: muvaffaqiyat ekrani
+      // keyingi qadamni aytsin va yangi balansni shu yerda ko'rsatsin.
+      function showPurchaseDone(product, balance) {
+        const ov = document.querySelector(".overlay");
+        const body = ov?.querySelector(".sheet-body");
+        // Oyna sarlavhasi endi "Xaridni tasdiqlaysizmi?" emas — xarid
+        // allaqachon bo'lib bo'lgan.
+        const titleEl = ov?.querySelector(".sheet-title");
+        if (titleEl) titleEl.textContent = "NShop";
+        const html = `
+          <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:8px 8px 4px">
+            <div style="width:72px;height:72px;border-radius:24px;background:var(--st-ahead-bg);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:700">✓</div>
+            <div style="font-size:24px;font-weight:700;letter-spacing:-0.02em;margin-top:20px">Xarid qilindi</div>
+            <div style="font-size:14.5px;font-weight:500;color:var(--t5);margin-top:6px">${escHtml(product.name)} · ${fmtNcoin(product.price)} Ncoin</div>
+            <div style="font-size:14px;line-height:1.6;color:var(--t2);margin-top:10px">Mahsulotni ofis oshxonasidan olib ketasiz. Chek «Xaridlarim»da saqlandi.</div>
+            <div style="margin-top:22px;display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:12px;background:var(--surf);border:1px solid var(--bd2)">
+              <span style="font-size:13px;color:var(--t2)">Balans</span>
+              <span class="n-badge" style="width:17px;height:17px;font-size:10px">N</span>
+              <span class="num" style="font-size:15px;font-weight:600">${fmtNcoin(balance)}</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:22px">
+            <button type="button" class="btn btn-blue" onclick="document.querySelector('.overlay')?.remove()">Do'konga qaytish</button>
+            <button type="button" class="btn btn-soft" onclick="document.querySelector('.overlay')?.remove();openNcoinHistorySheet()">Xaridlarim</button>
+          </div>`;
+        if (body) body.innerHTML = html;
+        else showToast(`✅ ${product.name} sizniki! Balans: ${fmtNcoin(balance)} Ncoin`);
       }
 
       const NCOIN_REASON_LABEL = {
