@@ -5563,6 +5563,13 @@
             />
           </div>
         </div>
+        <!-- Tarix endi alohida tab emas: bir mavzu — bir joy.
+             Segment orqali faol loyihalar va o'tgan davrlar
+             o'rtasida almashinadi. -->
+        <div class="seg" style="margin-bottom:12px">
+          <button class="seg-btn active" onclick="showTab('projects')">Faol</button>
+          <button class="seg-btn " onclick="showTab('history')">Tarix</button>
+        </div>
         <div class="chips" id="proj-chips"></div>
       </div>
       <div class="scroll" id="projects-body"></div>
@@ -5631,7 +5638,7 @@
       <div class="hdr">
         <div class="hdr-row">
           <div>
-            <div class="hdr-title">Tarix</div>
+            <div class="hdr-title">Loyihalar</div>
             <div class="hdr-sub">Davrlar, muddatlar va bajarilish holati</div>
           </div>
           <div class="search-box">
@@ -5642,6 +5649,13 @@
               oninput="renderHistoryRows()"
             />
           </div>
+        </div>
+        <!-- Tarix endi alohida tab emas: bir mavzu — bir joy.
+             Segment orqali faol loyihalar va o'tgan davrlar
+             o'rtasida almashinadi. -->
+        <div class="seg" style="margin-bottom:12px">
+          <button class="seg-btn " onclick="showTab('projects')">Faol</button>
+          <button class="seg-btn active" onclick="showTab('history')">Tarix</button>
         </div>
         <div class="chips" id="hist-chips"></div>
       </div>
@@ -5798,10 +5812,6 @@
         <div class="nav-ico"></div>
         <div class="nav-lbl">NShop</div>
       </button>
-      <button class="nav-item" id="nav-history" onclick="showTab('history')">
-        <div class="nav-ico"></div>
-        <div class="nav-lbl">Tarix</div>
-      </button>
       <button
         class="nav-item"
         id="nav-admin"
@@ -5838,9 +5848,6 @@
         </button>
         <button class="sb-item" id="sidebar-nav-nshop" onclick="showTab('nshop')" title="NShop">
           <span class="sb-ico"></span><span class="sb-lbl">NShop</span>
-        </button>
-        <button class="sb-item" id="sidebar-nav-history" onclick="showTab('history')" title="Tarix">
-          <span class="sb-ico"></span><span class="sb-lbl">Tarix</span>
         </button>
         <button
           class="sb-item"
@@ -6014,7 +6021,6 @@
           "nav-projects": "folder", "sidebar-nav-projects": "folder",
           "nav-tasks": "checkSquare", "sidebar-nav-tasks": "checkSquare",
           "nav-nshop": "shoppingBag", "sidebar-nav-nshop": "shoppingBag",
-          "nav-history": "clock", "sidebar-nav-history": "clock",
           "nav-admin": "settings", "sidebar-nav-admin": "settings",
         };
         Object.entries(map).forEach(([id, icon]) => {
@@ -6751,6 +6757,13 @@
             .getElementById("sidebar-nav-" + t)
             ?.classList.toggle("active", t === tab);
         });
+        // "Tarix" endi pastki navda alohida tugma emas — u "Loyihalar"
+        // bo'limining ikkinchi segmenti, shu sabab unda turganda ham
+        // navda "Loyihalar" yonib turadi.
+        if (tab === "history") {
+          document.getElementById("nav-projects")?.classList.add("active");
+          document.getElementById("sidebar-nav-projects")?.classList.add("active");
+        }
         SUB_SCREENS.forEach((s) => document.getElementById(s)?.classList.remove("active"));
         // Bo'sh satr = inline override'ni olib tashlaydi, CSS (mobil:
         // flex, katta ekran: sidebar bor — none) o'zi hal qiladi.
