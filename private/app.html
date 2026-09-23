@@ -895,6 +895,153 @@
          Maketdagi qoida: balans ekranning eng tepasida, doim ko'rinib
          tursin — mahsulot narxini ko'rgan xodim "menda yetadimi?" deb
          boshqa joyga qarab yurmasin. */
+      /* ── PROFIL — v3 maketidan 1:1 ────────────────────────────────
+         Mobilda maydonlar forma emas, ro'yxat: qator bosilsa bitta
+         maydonlik oyna ochiladi va o'sha zahoti saqlanadi. Shu sabab
+         ekran pastida "saqlanmagan o'zgarishlar" paneli kerak emas —
+         saqlanmagan holat umuman paydo bo'lmaydi. */
+      .pf-hdr {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .pf-hdr-av {
+        width: 60px;
+        height: 60px;
+        border-radius: 20px;
+        background: var(--inkfill);
+        color: #fff;
+        font-size: 24px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+      .pf-hdr-name {
+        font-size: 19px;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .pf-hdr-badges {
+        display: flex;
+        gap: 6px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+      }
+      .pf-hdr-badge {
+        height: 22px;
+        padding: 0 8px;
+        border-radius: 7px;
+        font-size: 11.5px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        white-space: nowrap;
+        flex: 0 0 auto;
+      }
+      .pf-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 14px;
+      }
+      .pf-stat {
+        padding: 12px 14px;
+        min-width: 0;
+      }
+      .pf-stat + .pf-stat {
+        border-left: 1px solid var(--bd2);
+      }
+      .pf-stat-lbl {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--t2);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .pf-stat-val {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: -0.01em;
+        margin-top: 3px;
+        white-space: nowrap;
+      }
+      .pf-sec {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--t3);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin: 18px 0 8px 2px;
+      }
+      .pf-rows {
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .pf-row {
+        display: flex;
+        align-items: center;
+        padding: 0 14px;
+        min-height: 46px;
+        gap: 10px;
+      }
+      .pf-row + .pf-row {
+        border-top: 1px solid var(--bd2);
+      }
+      .pf-row.tappable {
+        cursor: pointer;
+      }
+      .pf-row-lbl {
+        font-size: 13px;
+        color: var(--t2);
+        white-space: nowrap;
+        width: 130px;
+        flex: 0 0 auto;
+      }
+      .pf-row-val {
+        font-size: 13.5px;
+        font-weight: 500;
+        color: var(--ink);
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .pf-row-val.none {
+        color: var(--t3);
+        font-weight: 400;
+      }
+      .pf-row-val {
+        text-align: right;
+      }
+      .pf-row-chev {
+        font-size: 18px;
+        color: var(--chev);
+        flex: 0 0 auto;
+        line-height: 1;
+      }
+      .pf-row-act {
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--brand);
+        white-space: nowrap;
+        flex: 0 0 auto;
+      }
+      .pf-row-act.muted {
+        color: var(--t3);
+        font-weight: 400;
+      }
       .nshop-balance {
         background: #0e1726;
         border-radius: 16px;
@@ -11330,6 +11477,104 @@
         return `Jamoada ${tenureLabel(days)}dan beri`;
       }
 
+      // Profil ko'rsatkichlari — hammasi allaqachon yuklangan
+      // ma'lumotdan hisoblanadi, qo'shimcha so'rov kerak emas.
+      function pfStatsHtml() {
+        const mine = (tasksList || []).filter((t) => t.assigneeUsername === currentUser);
+        const month = isoOf(todayDate()).slice(0, 7);
+        const doneThisMonth = mine.filter(
+          (t) => t.status === "done" && String(t.completedAt || "").slice(0, 7) === month,
+        );
+        // "O'z vaqtida" — muddati belgilangan va bajarilgan vazifalar
+        // ichida muddatidan kechikmaganlari ulushi.
+        const withDue = mine.filter((t) => t.status === "done" && t.dueDate && t.completedAt);
+        const onTime = withDue.filter(
+          (t) => String(t.completedAt).slice(0, 10) <= String(t.dueDate).slice(0, 10),
+        );
+        const cells = [
+          ["Ncoin", fmtNcoin(pfNcoinData?.balance || 0)],
+          ["Bu oy", `${doneThisMonth.length} vazifa`],
+          ["O'z vaqtida", withDue.length ? `${Math.round((onTime.length / withDue.length) * 100)}%` : "—"],
+        ];
+        return `<div class="pf-stats">${cells
+          .map(
+            ([lbl, val]) =>
+              `<div class="pf-stat"><div class="pf-stat-lbl">${lbl}</div><div class="pf-stat-val num">${escHtml(val)}</div></div>`,
+          )
+          .join("")}</div>`;
+      }
+      // Mobil profil — forma emas, ro'yxat. Har qator bosilsa bitta
+      // maydonlik oyna ochiladi (pastdagi pfEditField).
+      const PF_ROW_FIELDS = [
+        { key: "name", label: "Ism familiya" },
+        { key: "phone", label: "Telefon" },
+        { key: "birthDate", label: "Tug'ilgan sana" },
+      ];
+      function pfMobileRowsHtml(p) {
+        const val = {
+          name: [p.firstName, p.lastName].filter(Boolean).join(" "),
+          phone: p.phone || "",
+          birthDate: p.birthDate ? fmtDay(parseISO(String(p.birthDate).slice(0, 10))) : "",
+        };
+        const rows = PF_ROW_FIELDS.map((f) => {
+          const v = val[f.key];
+          // Maketda mobil qatorda "O'zgartirish" yozuvi yo'q — qatorning
+          // o'zi bosiladi, o'ng chetdagi belgi shunga ishora qiladi.
+          return `<div class="pf-row tappable" onclick="pfEditField('${f.key}')">
+            <div class="pf-row-lbl">${f.label}</div>
+            <div class="pf-row-val ${v ? "" : "none"}">${escHtml(v || "Kiritilmagan")}</div>
+            <div class="pf-row-chev">›</div>
+          </div>`;
+        }).join("");
+        // Lavozimni xodimning o'zi o'zgartira olmaydi: undan Ncoin
+        // miqdori va menyu ko'rinishi bog'liq, shu sabab uni admin
+        // belgilaydi (auditdagi 3-kritik topilma).
+        const jobRow = `<div class="pf-row">
+          <div class="pf-row-lbl">Lavozim</div>
+          <div class="pf-row-val ${p.jobTitle ? "" : "none"}">${escHtml(p.jobTitle || "Belgilanmagan")}</div>
+          <div class="pf-row-act muted">admin belgilaydi</div>
+        </div>`;
+        return `<div class="pf-rows">${rows}${jobRow}</div>`;
+      }
+      function pfEditField(key) {
+        const p = myProfile || {};
+        const f = PF_ROW_FIELDS.find((x) => x.key === key);
+        if (!f) return;
+        let inner;
+        if (key === "name") {
+          inner = `<div class="f-group"><label class="f-label">Ism</label><input class="f-input" id="pfe-first" value="${escHtml(p.firstName || "")}" onblur="formatNameInputOnBlur(this)"/></div>
+            <div class="f-group"><label class="f-label">Familiya</label><input class="f-input" id="pfe-last" value="${escHtml(p.lastName || "")}" onblur="formatNameInputOnBlur(this)"/></div>`;
+        } else if (key === "phone") {
+          inner = `<div class="f-group"><label class="f-label">Telefon raqami</label><input class="f-input" id="pfe-phone" value="${escHtml(p.phone || "")}" placeholder="+998 90 123 45 67" oninput="formatPhoneInput(this)"/></div>`;
+        } else {
+          inner = `<div class="f-group"><label class="f-label">Tug'ilgan sana</label><input class="f-input" type="date" id="pfe-birth" value="${p.birthDate ? String(p.birthDate).slice(0, 10) : ""}"/></div>`;
+        }
+        const { body } = makeSheet(f.label);
+        body.innerHTML = `${inner}
+          <button type="button" class="btn btn-blue" id="pfe-save" onclick="pfSaveField('${key}',this)">Saqlash</button>`;
+      }
+      async function pfSaveField(key, btn) {
+        const g = (id) => document.getElementById(id)?.value?.trim() ?? "";
+        const body =
+          key === "name"
+            ? { firstName: g("pfe-first"), lastName: g("pfe-last") }
+            : key === "phone"
+              ? { phone: g("pfe-phone") }
+              : { birthDate: g("pfe-birth") || null };
+        setBtnLoading(btn, true, "Saqlanmoqda…");
+        try {
+          const res = await apiFetch("/api/me", { method: "PATCH", body: JSON.stringify(body) });
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
+          const meRes = await apiFetch("/api/me");
+          if (meRes.ok) myProfile = (await meRes.json()).user;
+          document.querySelector(".overlay")?.remove();
+          showToast("✅ Saqlandi");
+          renderProfilePage();
+        } catch (e) {
+          showToast("⚠ " + e.message);
+          setBtnLoading(btn, false);
+        }
+      }
       function renderProfilePage() {
         const p = myProfile || {};
         const fullName = [p.firstName, p.lastName].filter(Boolean).join(" ") || p.username || currentUser;
@@ -11345,21 +11590,26 @@
           <div class="pf-grid">
             <div class="pf-col-left" style="display:flex;flex-direction:column;gap:18px">
               <div class="pf-card">
-                <div class="pf-avatar-row">
-                  <div class="pf-avatar">${initials(fullName)}</div>
+                <div class="pf-hdr">
+                  <div class="pf-hdr-av">${initials(fullName)}</div>
                   <div style="flex:1;min-width:0">
-                    <div class="pf-name">${escHtml(fullName)}</div>
-                    <div class="pf-badges">
-                      <span class="pf-badge" style="color:var(--brand);background:rgba(47,122,185,.12)">@${escHtml(username)}</span>
-                      <span class="pf-badge" style="${ROLE_BADGE_STYLE[p.role] || ROLE_BADGE_STYLE.employee}">${ROLE_LABEL_UZ[p.role] || p.role}</span>
-                      ${p.jobTitle ? `<span class="pf-badge" style="color:var(--t5);background:var(--chip)">${escHtml(p.jobTitle)}</span>` : ""}
+                    <div class="pf-hdr-name">${escHtml(fullName)}</div>
+                    <div class="pf-hdr-badges">
+                      <span class="pf-hdr-badge" style="color:var(--st-onplan);background:var(--st-onplan-bg)">@${escHtml(username)}</span>
+                      ${p.jobTitle ? `<span class="pf-hdr-badge" style="color:var(--t5);background:var(--chip2)">${escHtml(p.jobTitle)}</span>` : ""}
+                      ${p.role !== "employee" ? `<span class="pf-hdr-badge" style="${ROLE_BADGE_STYLE[p.role] || ROLE_BADGE_STYLE.employee}">${ROLE_LABEL_UZ[p.role] || p.role}</span>` : ""}
                     </div>
-                    ${metaParts.length ? `<div class="pf-meta">${metaParts.map(escHtml).join(" · ")}</div>` : ""}
+                    ${metaParts.length ? `<div class="pf-meta desktop-only">${metaParts.map(escHtml).join(" · ")}</div>` : ""}
                   </div>
                   <button type="button" class="btn btn-soft desktop-only" style="width:auto;height:38px;padding:0 15px;flex:none" onclick="pfUploadAvatarStub()">Rasm yuklash</button>
                 </div>
+                <div style="margin-top:14px">${pfStatsHtml()}</div>
               </div>
-              <div class="pf-card">
+              <div class="mobile-only">
+                <div class="pf-sec">Shaxsiy ma'lumotlar</div>
+                ${pfMobileRowsHtml(p)}
+              </div>
+              <div class="pf-card desktop-only">
                 <div class="pf-card-hdr">Shaxsiy ma'lumotlar</div>
                 <div class="pf-card-body">
                   <div class="pf-field-grid f-group">
@@ -11389,7 +11639,10 @@
               </div>
             </div>
             <div class="pf-col-right" style="display:flex;flex-direction:column;gap:18px">
-              <div class="pf-ncoin-card">
+              <!-- Balans mobilda yuqoridagi ko'rsatkichlar qatorida bor,
+                   shu sabab bu karta faqat desktopda (u yerda yon ustun
+                   alohida joy egallaydi va takrorlanish sezilmaydi). -->
+              <div class="pf-ncoin-card desktop-flex">
                 <div class="pf-ncoin-blob"></div>
                 <div class="pf-ncoin-icon">N${pfNcoinData?.hasUnseen ? `<span class="pf-ncoin-dot" id="pf-ncoin-badge"></span>` : ""}</div>
                 <div style="flex:1;position:relative">
