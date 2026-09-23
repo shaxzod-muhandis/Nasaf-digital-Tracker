@@ -1,10 +1,10 @@
 # Sozlash qo'llanmasi — Faza 0 + Faza 1 (Postgres/Supabase o'tishi)
 
-Bu hujjat `docs/ROADMAP.md`da rejalashtirilgan ishning birinchi ikki bosqichini
+Bu hujjat rejalashtirilgan ishning birinchi ikki bosqichini
 (Faza 0: xavfsizlik tozalash, Faza 1: Supabase/Postgres'ga o'tish + davr
 motori) ishga tushirish uchun amaliy qo'llanma. Kodning o'zi allaqachon
 yozilgan va 26 ta integratsion test bilan tekshirilgan — bu qo'llanma faqat
-uni sizning haqiqiy Supabase va Netlify muhitingizga ulash bo'yicha.
+uni sizning haqiqiy Supabase va Vercel muhitingizga ulash bo'yicha.
 
 ## 0. Avval — XAVFSIZLIK: eski kalitlarni bekor qiling
 
@@ -38,7 +38,7 @@ yangilashni tavsiya qilamiz.
    ```
    postgresql://postgres.xxxxxxxxxxxx:[YOUR-PASSWORD]@aws-0-region.pooler.supabase.com:6543/postgres
    ```
-   Netlify Functions har chaqiriqda yangi (yoki qayta ishlatiladigan
+   Vercel funksiyalari har chaqiriqda yangi (yoki qayta ishlatiladigan
    "warm") ulanish ochishi mumkin bo'lgani uchun aynan **pooler** (6543)
    rejimi kerak — oddiy to'g'ridan-to'g'ri ulanish (5432) emas.
 
@@ -164,19 +164,24 @@ loyiha va davr yaratish, ruxsatlar, check belgilash, ko'p oylik rollover
 va qarz hisoblash, davrni tahrirlash/arxivlash, cron endpoint'lar). Barcha
 tekshiruvlar `✅` bo'lishi kerak.
 
-Netlify Functions'ni to'liq lokal muhitda (bot va Mini App bilan birga)
-sinash uchun:
+To'liq lokal muhitda (bot va Mini App bilan birga) sinash uchun:
 
 ```bash
 npm run dev
 ```
 
-## 8. Netlify'ga deploy qilish
+Bu `scripts/dev-server.js`ni ishga tushiradi — `api.js`dagi sof Express
+`app`ni to'g'ridan-to'g'ri (standart) `PORT` (8787) portida tinglatadi,
+alohida CLI/tool shart emas.
 
-Netlify dashboard → Site settings → **Environment variables** bo'limida
-quyidagilarni qo'shing (qiymatlar `.env` fayldagi bilan bir xil, faqat
-`DATABASE_URL` — bu safar to'g'ridan-to'g'ri Supabase production
-qiymati):
+## 8. Vercel'ga deploy qilish
+
+Loyiha Vercel'da ishlaydi (`vercel.json` — `api/index.js` orqali xuddi
+shu Express ilovani ishga tushiradi, marshrutlash va kunlik cron ham
+shu faylda belgilangan). Vercel dashboard → loyiha → **Settings →
+Environment Variables** bo'limida quyidagilarni qo'shing (qiymatlar
+`.env` fayldagi bilan bir xil, faqat `DATABASE_URL` — bu safar
+to'g'ridan-to'g'ri Supabase production qiymati):
 
 | Nomi | Tavsif |
 |---|---|
@@ -184,17 +189,19 @@ qiymati):
 | `BOT_TOKEN` | Telegram bot tokeni |
 | `ADMIN_CHAT_IDS` | Bildirishnoma oluvchilar chat ID'lari (vergul bilan) |
 | `CRON_SECRET` | Cron so'rovlarini himoyalash uchun maxfiy so'z |
+| `APP_URL` | Ilovaning haqiqiy manzili (masalan `https://sizning-domeningiz.vercel.app`) — bildirishnomalardagi "Ilovani ochish" tugmasi shu asosda quriladi |
 
-So'ng oddiy `git push` (yoki Netlify CLI orqali) deploy qiling.
+So'ng oddiy `git push` (Vercel GitHub integratsiyasi orqali avtomatik
+deploy bo'ladi) yoki `vercel --prod` bilan deploy qiling.
 
 ## 9. Kunlik/davriy avtomatlashtirish (cron)
 
-**Tashqi xizmat sozlash shart emas** — `netlify/functions/scheduled-daily.js`
-Netlify'ning o'z ichki "Scheduled Functions" imkoniyati orqali (bu
-fayldagi `netlify.toml`da `schedule = "0 3 * * *"` — har kuni 03:00 UTC,
-ya'ni 08:00 Toshkent vaqtida) avtomatik ishga tushadi va quyidagi uchta
-endpoint'ni ketma-ket, o'zi chaqiradi. Deploy qilinganidan keyin hech
-kim qo'lda hech narsa sozlashi shart emas.
+**Tashqi xizmat sozlash shart emas** — `vercel.json`dagi `crons` bo'limi
+Vercel'ning o'z ichki Cron Jobs imkoniyati orqali (`schedule: "0 3 * * *"`
+— har kuni 03:00 UTC, ya'ni 08:00 Toshkent vaqtida) `/api/cron-daily`
+yo'lini (`netlify/functions/api.js`dagi mos route) avtomatik chaqiradi,
+u esa quyidagi uchta endpoint'ni ketma-ket, o'zi chaqiradi. Deploy
+qilinganidan keyin hech kim qo'lda hech narsa sozlashi shart emas.
 
 Har bir endpoint alohida ham (masalan tekshirish uchun qo'lda, yoki
 zaxira sifatida tashqi cron xizmati — masalan
@@ -223,7 +230,7 @@ talab qiladi:
 Barcha so'rovlar shunday ko'rinishda bo'lishi kerak:
 
 ```
-POST https://SIZNING-SAYTINGIZ.netlify.app/api/cycles/rollover
+POST https://SIZNING-SAYTINGIZ.vercel.app/api/cycles/rollover
 Header: X-Cron-Secret: <CRON_SECRET qiymati>
 ```
 
@@ -259,9 +266,10 @@ Header: X-Cron-Secret: <CRON_SECRET qiymati>
 
 ## Keyingi bosqichlar
 
-Ushbu qo'llanma faqat `docs/ROADMAP.md`dagi **Faza 0 va Faza 1**ni
-qamrab oladi. Quyidagilar hali ishlab chiqilmagan va navbatdagi
-bosqichlarda amalga oshiriladi:
+Ushbu qo'llanma faqat **Faza 0 va Faza 1**ni qamrab oladi. Quyidagilar
+o'sha vaqtda hali ishlab chiqilmagan edi (ko'pchiligi keyinroq
+amalga oshirilgan — masalan Faza 2 (vazifalar) va Faza 3 (Ncoin)
+hozir to'liq ishlaydi, quyida shu hujjatning 10-bo'limida tasvirlangan):
 
 - **Faza 2**: to'liq vazifa (task) modeli — muayyan xodimga biriktirilgan,
   muddati bor alohida vazifalar (hozircha faqat post/stories sonlari bor).
@@ -271,9 +279,6 @@ bosqichlarda amalga oshiriladi:
   taqsimotni emas).
 - **Faza 4**: brauzer dashboard (Telegram Login Widget orqali kirish).
 - **Faza 5**: yakuniy silliqlash va gamifikatsiya elementlari.
-
-To'liq tafsilotlar va qabul qilingan biznes-logika qarorlari uchun
-`docs/ROADMAP.md`ga qarang.
 
 ## 10. Yangi: Profil + Vazifalar (hammasi Mini App ichida)
 

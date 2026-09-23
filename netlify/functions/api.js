@@ -6,10 +6,9 @@
 // lekin "oy" (calendar month) tushunchasi endi "loyiha davri" (project
 // cycle) bilan almashtirilgani sababli ba'zi endpointlar (masalan
 // /api/months) o'rniga yangi, davr-modeliga mos endpointlar keldi
-// (/api/projects). Batafsil: docs/ROADMAP.md va docs/SETUP.md
+// (/api/projects). Batafsil: docs/SETUP.md
 // ═══════════════════════════════════════════════════════════════════════
 
-const serverless = require("serverless-http");
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -3056,6 +3055,7 @@ app.post("/api/test-notify", auth, async (req, res) => {
   res.json({ ok: true, sent_to: sent });
 });
 
-// Netlify Functions handler + lokal test/skriptlar uchun `app`ning o'zi
+// Vercel (api/index.js) + lokal test/skriptlar uchun `app`ning o'zi —
+// Express ilova to'g'ridan-to'g'ri (req,res) ko'rinishida ishlaydi,
+// alohida adapter shart emas.
 module.exports = app;
-module.exports.handler = serverless(app);
