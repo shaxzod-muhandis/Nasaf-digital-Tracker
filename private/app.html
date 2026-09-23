@@ -1175,12 +1175,12 @@
          maydonlik oyna ochiladi va o'sha zahoti saqlanadi. Shu sabab
          ekran pastida "saqlanmagan o'zgarishlar" paneli kerak emas —
          saqlanmagan holat umuman paydo bo'lmaydi. */
-      .pf-hdr {
+      .pf-top {
         display: flex;
         align-items: center;
         gap: 14px;
       }
-      .pf-hdr-av {
+      .pf-top-av {
         width: 60px;
         height: 60px;
         border-radius: 20px;
@@ -1193,7 +1193,7 @@
         justify-content: center;
         flex: 0 0 auto;
       }
-      .pf-hdr-name {
+      .pf-top-name {
         font-size: 19px;
         font-weight: 700;
         color: var(--ink);
@@ -1202,13 +1202,13 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      .pf-hdr-badges {
+      .pf-top-badges {
         display: flex;
         gap: 6px;
         margin-top: 6px;
         flex-wrap: wrap;
       }
-      .pf-hdr-badge {
+      .pf-top-badge {
         height: 22px;
         padding: 0 8px;
         border-radius: 7px;
@@ -1603,12 +1603,6 @@
         }
         .nshop-coin-price {
           font-size: 16px;
-        }
-        .nshop-buy-btn {
-          height: 42px;
-          border-radius: 11px;
-          margin-top: 14px;
-          font-size: 13.5px;
         }
         .nshop-bottom-grid {
           display: grid;
@@ -12346,14 +12340,14 @@
           <div class="pf-grid">
             <div class="pf-col-left" style="display:flex;flex-direction:column;gap:18px">
               <div class="pf-card">
-                <div class="pf-hdr">
-                  <div class="pf-hdr-av">${initials(fullName)}</div>
+                <div class="pf-top">
+                  <div class="pf-top-av">${initials(fullName)}</div>
                   <div style="flex:1;min-width:0">
-                    <div class="pf-hdr-name">${escHtml(fullName)}</div>
-                    <div class="pf-hdr-badges">
-                      <span class="pf-hdr-badge" style="color:var(--st-onplan);background:var(--st-onplan-bg)">@${escHtml(username)}</span>
-                      ${p.jobTitle ? `<span class="pf-hdr-badge" style="color:var(--t5);background:var(--chip2)">${escHtml(p.jobTitle)}</span>` : ""}
-                      ${p.role !== "employee" ? `<span class="pf-hdr-badge" style="${ROLE_BADGE_STYLE[p.role] || ROLE_BADGE_STYLE.employee}">${ROLE_LABEL_UZ[p.role] || p.role}</span>` : ""}
+                    <div class="pf-top-name">${escHtml(fullName)}</div>
+                    <div class="pf-top-badges">
+                      <span class="pf-top-badge" style="color:var(--st-onplan);background:var(--st-onplan-bg)">@${escHtml(username)}</span>
+                      ${p.jobTitle ? `<span class="pf-top-badge" style="color:var(--t5);background:var(--chip2)">${escHtml(p.jobTitle)}</span>` : ""}
+                      ${p.role !== "employee" ? `<span class="pf-top-badge" style="${ROLE_BADGE_STYLE[p.role] || ROLE_BADGE_STYLE.employee}">${ROLE_LABEL_UZ[p.role] || p.role}</span>` : ""}
                     </div>
                     ${metaParts.length ? `<div class="pf-meta desktop-only">${metaParts.map(escHtml).join(" · ")}</div>` : ""}
                   </div>
