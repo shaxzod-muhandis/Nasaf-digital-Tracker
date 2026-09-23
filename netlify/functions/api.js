@@ -62,11 +62,29 @@ const TASK_STATUS_LABEL_UZ = {
 };
 
 // Vazifa "Bajarildi" deb tasdiqlanganda beriladigan standart Ncoin
-// miqdori — ba'zi lavozimlar uchun boshqacha (masalan Grafik Dizayner
+// miqdori — ba'zi lavozimlar uchun boshqacha (masalan dizayner
 // alohida loyiha-tsikliga bog'liq emas, faqat vazifalar orqali ishlaydi,
-// shu sabab standart 0.2 o'rniga 0.5 belgilangan). job_title matni
-// profildagi qiymat bilan AYNAN bir xil bo'lishi kerak.
-const TASK_NCOIN_AMOUNT_BY_JOB_TITLE = { "Grafik Dizyayner": 0.5 };
+// shu sabab standart 0.2 o'rniga 0.5 belgilangan).
+//
+// Solishtirish katta-kichik harf va ortiqcha bo'shliqlarga bog'liq
+// bo'lmasligi uchun kalitlar normallashtirilgan holda saqlanadi
+// (jobTitleNcoinAmount'ga qarang). Bir nechta yozilish varianti
+// ataylab qo'llab-quvvatlanadi: lavozim uzoq vaqt erkin matn maydoni
+// bo'lgani uchun bazada "Grafik Dizyayner" (xato yozilgan), "Grafik
+// Dizayner" va oddiy "Dizayner" — uchalasi ham uchrashi mumkin. Biror
+// xodimning to'lovi shunchaki imlo tufayli kamayib qolmasligi kerak.
+const TASK_NCOIN_AMOUNT_BY_JOB_TITLE = {
+  "grafik dizyayner": 0.5,
+  "grafik dizayner": 0.5,
+  dizayner: 0.5,
+};
+function jobTitleNcoinAmount(jobTitle) {
+  const key = String(jobTitle || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+  return TASK_NCOIN_AMOUNT_BY_JOB_TITLE[key] ?? TASK_NCOIN_DEFAULT_AMOUNT;
+}
 const TASK_NCOIN_DEFAULT_AMOUNT = 0.2;
 // Vazifani biriktirgan (yaratgan) odamga — bajaruvchiga coin berilganda
 // — qo'shimcha beriladigan qat'iy miqdor. Lavozimga bog'liq emas
@@ -1890,7 +1908,7 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
         if (before.status === "review" && task.status === "done" && req.body.awardNcoin === true) {
           try {
             const jtR = await db.query(`select job_title from users where id = $1`, [existing.assignee_user_id]);
-            const amount = TASK_NCOIN_AMOUNT_BY_JOB_TITLE[jtR.rows[0]?.job_title] ?? TASK_NCOIN_DEFAULT_AMOUNT;
+            const amount = jobTitleNcoinAmount(jtR.rows[0]?.job_title);
             await awardNcoin(db, {
               userId: existing.assignee_user_id,
               amount,

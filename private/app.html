@@ -5992,6 +5992,64 @@
       let taskDetailTab = "comments"; // "Izohlar" / "Faoliyat" — vazifa yangi ochilganda "comments"ga qaytadi
       let taskDetailActivityCache = []; // oxirgi yuklangan activity — tab almashtirishda qayta so'rov yubormaslik uchun
       let taskEmployeeExpanded = new Set(); // mobil "Jamoada" — kengaytirilgan xodimlar
+      // ── LAVOZIM RO'YXATI ──────────────────────────────────────────
+      // Lavozim ERKIN MATN EMAS. Undan xodimning Ncoin miqdori va
+      // menyu ko'rinishi bog'liq, shu sabab u faqat shu ro'yxatdan
+      // tanlanadi — ilgari xodim o'zi yozardi va bitta imlo farqi
+      // (masalan "dizayner" / "Grafik Dizayner") to'lovni jimgina
+      // kamaytirib yuborardi.
+      //
+      // Ro'yxatda yo'q lavozim uchun "Boshqa" bor: nomi yoziladi, lekin
+      // u hech qanday maxsus miqdorga tushmaydi (standart qiymat
+      // beriladi) — ya'ni noma'lum lavozim hech qachon jimgina yuqori
+      // to'lovga olib kelmaydi.
+      const JOB_TITLE_GROUPS = [
+        { label: "Rahbariyat", items: ["CEO", "COO", "Loyiha menejeri"] },
+        {
+          label: "Jamoa",
+          items: ["SMM manager", "Dizayner", "Mobilograf", "Montajchi", "Kopirayter"],
+        },
+      ];
+      const JOB_TITLE_OTHER = "Boshqa";
+      function jobTitleSelectHtml(id, current) {
+        const known = JOB_TITLE_GROUPS.flatMap((g) => g.items);
+        const isOther = current && !known.includes(current);
+        const groups = JOB_TITLE_GROUPS.map(
+          (g) =>
+            `<optgroup label="${g.label}">${g.items
+              .map(
+                (it) =>
+                  `<option value="${escHtml(it)}"${current === it ? " selected" : ""}>${escHtml(it)}</option>`,
+              )
+              .join("")}</optgroup>`,
+        ).join("");
+        return `<select class="f-input" id="${id}" onchange="jobTitleSelectChanged('${id}')">
+            <option value=""${!current ? " selected" : ""}>Ro'yxatdan tanlang</option>
+            ${groups}
+            <option value="${JOB_TITLE_OTHER}"${isOther ? " selected" : ""}>${JOB_TITLE_OTHER}…</option>
+          </select>
+          <input class="f-input" id="${id}-other" placeholder="Lavozim nomini yozing"
+                 style="margin-top:8px;display:${isOther ? "block" : "none"}"
+                 value="${isOther ? escHtml(current) : ""}"/>`;
+      }
+      function jobTitleSelectChanged(id) {
+        const sel = document.getElementById(id);
+        const other = document.getElementById(id + "-other");
+        if (!sel || !other) return;
+        const show = sel.value === JOB_TITLE_OTHER;
+        other.style.display = show ? "block" : "none";
+        if (show) other.focus();
+        else other.value = "";
+      }
+      // Tanlangan qiymatni o'qish: "Boshqa" bo'lsa — yozilgan matn.
+      function jobTitleSelectValue(id) {
+        const sel = document.getElementById(id);
+        if (!sel) return "";
+        if (sel.value === JOB_TITLE_OTHER) {
+          return (document.getElementById(id + "-other")?.value || "").trim();
+        }
+        return sel.value;
+      }
       const POSITION_LABELS = {
         montajchi: "Montajchi",
         mobilograf: "Mobilograf",
@@ -7034,14 +7092,25 @@
         no_priority: "Ustuvorlik yo'q",
       };
       const TASK_PRIORITY_RANK = { urgent: 0, high: 1, medium: 2, low: 3, no_priority: 4 };
-      // Backenddagi TASK_NCOIN_AMOUNT_BY_JOB_TITLE bilan bir xil — faqat
+      // Backenddagi jobTitleNcoinAmount() bilan bir xil mantiq — faqat
       // tasdiqlash so'rovi/toast matnida to'g'ri miqdorni ko'rsatish uchun
       // (haqiqiy berish backendda hisoblanadi, bu shunchaki ko'rsatish oynasi).
-      const TASK_NCOIN_AMOUNT_BY_JOB_TITLE = { "Grafik Dizyayner": 0.5 };
+      // Imlo variantlari ataylab qo'llab-quvvatlanadi: lavozim uzoq vaqt
+      // erkin matn bo'lgani uchun bazada bir nechta yozilishi uchraydi.
+      const DESIGNER_JOB_TITLES = ["grafik dizyayner", "grafik dizayner", "dizayner"];
       const TASK_NCOIN_DEFAULT_AMOUNT = 0.2;
       const TASK_CREATOR_NCOIN_AMOUNT = 0.2;
+      function normJobTitle(j) {
+        return String(j || "")
+          .trim()
+          .replace(/\s+/g, " ")
+          .toLowerCase();
+      }
+      function isDesignerJobTitle(j) {
+        return DESIGNER_JOB_TITLES.includes(normJobTitle(j));
+      }
       function taskNcoinAmount(t) {
-        return TASK_NCOIN_AMOUNT_BY_JOB_TITLE[t?.assigneeJobTitle] ?? TASK_NCOIN_DEFAULT_AMOUNT;
+        return isDesignerJobTitle(t?.assigneeJobTitle) ? 0.5 : TASK_NCOIN_DEFAULT_AMOUNT;
       }
       // Doskadagi 5 ustun — dizayn asosida, mavjud 7 statusning VIZUAL
       // guruhlanishi (bazadagi statuslar o'zgarmaydi): Backlog+Boshlanmagan
@@ -10576,7 +10645,7 @@
             <div style="flex:1"><label class="f-label">Familiya</label><input class="f-input" id="ue-last" value="${escHtml(u.last_name || "")}" onblur="formatNameInputOnBlur(this)"/></div>
           </div>
           <div class="f-group"><label class="f-label">Telefon raqami</label><input class="f-input" id="ue-phone" value="${escHtml(u.phone || "")}" placeholder="+998 90 123 45 67" oninput="formatPhoneInput(this)"/></div>
-          <div class="f-group"><label class="f-label">Lavozimi</label><input class="f-input" id="ue-job" value="${escHtml(u.job_title || "")}"/></div>
+          <div class="f-group"><label class="f-label">Lavozimi</label>${jobTitleSelectHtml("ue-job", u.job_title || "")}</div>
           <div class="f-group"><label class="f-label">Tug'ilgan sana</label><input class="f-input" type="date" id="ue-birth" value="${u.birth_date ? String(u.birth_date).slice(0, 10) : ""}"/></div>
           <button class="btn btn-blue" id="ue-save-btn" onclick="saveUserEdit('${escArg(username)}')" style="margin-bottom:18px">Saqlash</button>
           ${
@@ -10616,7 +10685,7 @@
           firstName: document.getElementById("ue-first")?.value.trim(),
           lastName: document.getElementById("ue-last")?.value.trim(),
           phone: document.getElementById("ue-phone")?.value.trim(),
-          jobTitle: document.getElementById("ue-job")?.value.trim(),
+          jobTitle: jobTitleSelectValue("ue-job"),
           birthDate: document.getElementById("ue-birth")?.value || null,
         };
         if (btn) {
@@ -11425,7 +11494,6 @@
         "pf-first": "Ism",
         "pf-last": "Familiya",
         "pf-phone": "Telefon raqami",
-        "pf-job": "Lavozimi",
         "pf-birth": "Tug'ilgan sana",
       };
 
@@ -11622,7 +11690,10 @@
                   </div>
                   <div class="f-group">
                     <label class="f-label">Lavozimi</label>
-                    <input class="f-input" id="pf-job" value="${escHtml(p.jobTitle || "")}" placeholder="SMM manager" oninput="pfCheckDirty()"/>
+                    <div style="height:44px;border-radius:11px;background:var(--surf2);border:1px solid var(--bd1);display:flex;align-items:center;padding:0 13px;gap:9px">
+                      <span style="flex:1;font-size:14px;color:${p.jobTitle ? "var(--ink)" : "var(--t3)"}">${escHtml(p.jobTitle || "Belgilanmagan")}</span>
+                      <span class="f-hint" style="margin:0;flex:none">admin belgilaydi</span>
+                    </div>
                   </div>
                   <div class="f-group">
                     <label class="f-label">Tug'ilgan sana</label>
@@ -11793,7 +11864,6 @@
           "pf-first": document.getElementById("pf-first")?.value.trim() || "",
           "pf-last": document.getElementById("pf-last")?.value.trim() || "",
           "pf-phone": document.getElementById("pf-phone")?.value.trim() || "",
-          "pf-job": document.getElementById("pf-job")?.value.trim() || "",
           "pf-birth": document.getElementById("pf-birth")?.value || "",
         };
       }
@@ -11820,7 +11890,6 @@
         document.getElementById("pf-first").value = pfOriginalValues["pf-first"];
         document.getElementById("pf-last").value = pfOriginalValues["pf-last"];
         document.getElementById("pf-phone").value = pfOriginalValues["pf-phone"];
-        document.getElementById("pf-job").value = pfOriginalValues["pf-job"];
         document.getElementById("pf-birth").value = pfOriginalValues["pf-birth"];
         pfUpdateSaveBar([]);
       }
@@ -11831,7 +11900,6 @@
           firstName: values["pf-first"],
           lastName: values["pf-last"],
           phone: values["pf-phone"],
-          jobTitle: values["pf-job"],
           birthDate: values["pf-birth"] || null,
         };
         if (btn) {
@@ -12771,7 +12839,11 @@
               <div style="flex:1"><label class="f-label">Familiya</label><input class="f-input" id="ob-last" onblur="formatNameInputOnBlur(this)"/></div>
             </div>
             <div class="f-group"><label class="f-label">Telefon raqami</label><input class="f-input" id="ob-phone" placeholder="+998 90 123 45 67" oninput="formatPhoneInput(this)"/></div>
-            <div class="f-group"><label class="f-label">Lavozimi</label><input class="f-input" id="ob-job" placeholder="SMM manager"/></div>
+            <div class="f-group">
+              <label class="f-label">Lavozimi</label>
+              ${jobTitleSelectHtml("ob-job", "")}
+              <div class="f-hint" style="margin-top:6px">Ro'yxatda yo'q bo'lsa — «Boshqa»ni tanlab, nomini yozing.</div>
+            </div>
             <div class="f-group"><label class="f-label">Tug'ilgan sana (ixtiyoriy)</label><input class="f-input" type="date" id="ob-birth"/></div>
             <div id="ob-err" style="color:var(--red);font-size:12px;margin-bottom:10px"></div>
             <button class="btn btn-blue" id="ob-save-btn" onclick="submitOnboarding()">Davom etish</button>
@@ -12784,7 +12856,7 @@
         const firstName = document.getElementById("ob-first")?.value.trim();
         const lastName = document.getElementById("ob-last")?.value.trim();
         const phone = document.getElementById("ob-phone")?.value.trim();
-        const jobTitle = document.getElementById("ob-job")?.value.trim();
+        const jobTitle = jobTitleSelectValue("ob-job");
         const birthDate = document.getElementById("ob-birth")?.value || null;
         if (!firstName || !lastName || !phone || !jobTitle) {
           errEl.textContent = "Iltimos barcha majburiy maydonlarni to'ldiring.";
@@ -13270,14 +13342,13 @@
           ? "block"
           : "none";
 
-        // Grafik Dizayner — loyiha-tsikliga (post/stories) bog'liq
-        // ishlamaydi, faqat vazifalar orqali ishlaydi — shu sabab
-        // "Bugun" (tracker) va "Loyihalar" bo'limlari uning uchun
-        // ko'rinmaydi (NShop/Tarix — coin sarflash/tarixini ko'rish
-        // uchun qoladi). Lavozim matni profildagi qiymat bilan AYNAN
-        // bir xil bo'lishi kerak (TASK_NCOIN_AMOUNT_BY_JOB_TITLE'dagi
-        // bilan bir joydan keladi).
-        const isDesignerOnlyNav = myProfile?.jobTitle === "Grafik Dizyayner";
+        // Dizayner — loyiha-tsikliga (post/stories) bog'liq ishlamaydi,
+        // faqat vazifalar orqali ishlaydi — shu sabab "Bugun" (tracker)
+        // va "Loyihalar" bo'limlari uning uchun ko'rinmaydi (NShop/Tarix
+        // — coin sarflash/tarixini ko'rish uchun qoladi). Lavozimni
+        // aniqlash isDesignerJobTitle() orqali, Ncoin miqdori bilan
+        // BITTA joydan.
+        const isDesignerOnlyNav = isDesignerJobTitle(myProfile?.jobTitle);
         document.getElementById("nav-today").style.display = isDesignerOnlyNav ? "none" : "flex";
         document.getElementById("nav-projects").style.display = isDesignerOnlyNav ? "none" : "flex";
         document.getElementById("sidebar-nav-today").style.display = isDesignerOnlyNav ? "none" : "flex";
