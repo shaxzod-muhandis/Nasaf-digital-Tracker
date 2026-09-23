@@ -8289,8 +8289,7 @@
         }
         const btn = document.getElementById("task-queue-btn");
         if (btn) {
-          btn.disabled = true;
-          btn.textContent = "Saqlanmoqda…";
+          setBtnLoading(btn, true, "Saqlanmoqda…");
         }
         try {
           const res = await apiFetch(`/api/tasks/${id}`, {
@@ -8307,8 +8306,7 @@
         } catch (e) {
           if (errEl) errEl.textContent = e.message;
           if (btn) {
-            btn.disabled = false;
-            btn.textContent = "Tasdiqlash";
+            setBtnLoading(btn, false);
           }
         }
       }
@@ -9524,8 +9522,7 @@
           if (!videographerUserId) return showToast("⚠ Video olgan xodimni tanlang");
         }
         if (!workDate) return showToast("⚠ Sanani tanlang");
-        btn.disabled = true;
-        btn.textContent = "Saqlanmoqda…";
+        setBtnLoading(btn, true, "Saqlanmoqda…");
         try {
           await onCheck(slug, type, num, true, null, {
             editorUserId,
@@ -9536,8 +9533,7 @@
           document.querySelector(".overlay")?.remove();
           showToast("✅ Belgilandi");
         } catch (e) {
-          btn.disabled = false;
-          btn.textContent = "Belgilash";
+          setBtnLoading(btn, false);
         }
       }
 
@@ -9546,7 +9542,12 @@
           await onCheck(slug, type, num, false);
           document.querySelector(".overlay")?.remove();
           showToast("Belgi olib tashlandi");
-        } catch (e) {}
+        } catch (e) {
+          // Ilgari bu yerda xato jim yutilardi: oyna ochiq qolar,
+          // hech qanday xabar chiqmas va xodim belgi olib
+          // tashlandimi yoki yo'qmi — bilmay qolardi.
+          showToast("⚠ Belgi olib tashlanmadi: " + e.message);
+        }
       }
 
       // ── YANGI LOYIHA ──────────────────────────────────────────────
@@ -9816,7 +9817,7 @@
           return;
         }
         const btn = document.getElementById("np-tpl-save-btn");
-        btn.disabled = true;
+        setBtnLoading(btn, true, "Saqlanmoqda…");
         try {
           const res = await apiFetch("/api/project-templates", {
             method: "POST",
@@ -9830,7 +9831,7 @@
           showToast(`✅ "${name}" shablon sifatida saqlandi`);
         } catch (e) {
           showToast("⚠ " + e.message);
-          btn.disabled = false;
+          setBtnLoading(btn, false);
         }
       }
 
@@ -10968,8 +10969,7 @@
           birthDate: document.getElementById("ue-birth")?.value || null,
         };
         if (btn) {
-          btn.disabled = true;
-          btn.textContent = "Saqlanmoqda…";
+          setBtnLoading(btn, true, "Saqlanmoqda…");
         }
         try {
           const res = await apiFetch(`/api/users/${username}`, {
@@ -10984,8 +10984,7 @@
         } catch (e) {
           showToast("⚠ " + e.message);
           if (btn) {
-            btn.disabled = false;
-            btn.textContent = "Saqlash";
+            setBtnLoading(btn, false);
           }
         }
       }
@@ -11063,8 +11062,7 @@
           "Bu foydalanuvchi endi Boshqaruv panelidan foydalana olmaydi.",
           async () => {
             if (btn) {
-              btn.disabled = true;
-              btn.textContent = "…";
+              setBtnLoading(btn, true);
             }
             try {
               const res = await apiFetch(`/api/admins/${username}`, {
@@ -11077,8 +11075,7 @@
             } catch (e) {
               showToast("⚠ " + e.message);
               if (btn) {
-                btn.disabled = false;
-                btn.textContent = "O'chirish";
+                setBtnLoading(btn, false);
               }
             }
           },
@@ -11434,8 +11431,7 @@
         const stock = Math.max(0, parseInt(document.getElementById("np-stock").value, 10) || 0);
         const isVisible = document.getElementById("np-visible").checked;
         const btn = document.getElementById("np-save-btn");
-        btn.disabled = true;
-        btn.textContent = "Saqlanmoqda...";
+        setBtnLoading(btn, true, "Saqlanmoqda...");
         try {
           const url = productId ? `/api/ncoin/admin/products/${productId}` : "/api/ncoin/admin/products";
           const res = await apiFetch(url, {
@@ -11449,8 +11445,7 @@
           refreshNShopAdminList();
         } catch (e) {
           showToast("⚠ " + e.message);
-          btn.disabled = false;
-          btn.textContent = productId ? "Saqlash" : "Qo'shish";
+          setBtnLoading(btn, false);
         }
       }
       async function toggleNShopVisible(productId, currentlyVisible) {
@@ -11478,8 +11473,7 @@
         const qty = parseInt(document.getElementById("as-qty").value, 10);
         if (!qty || qty <= 0) return showToast("⚠ Sonni kiriting");
         const btn = document.getElementById("as-save-btn");
-        btn.disabled = true;
-        btn.textContent = "Saqlanmoqda...";
+        setBtnLoading(btn, true, "Saqlanmoqda...");
         try {
           const current = nshopAdminProducts.find((x) => x.id === productId);
           const newStock = (current ? current.stock : 0) + qty;
@@ -11493,8 +11487,7 @@
           refreshNShopAdminList();
         } catch (e) {
           showToast("⚠ " + e.message);
-          btn.disabled = false;
-          btn.textContent = "Qo'shish";
+          setBtnLoading(btn, false);
         }
       }
       // "⋯" — arxivlash (yumshoq, tarix saqlanadi) yoki butunlay
@@ -12182,8 +12175,7 @@
           birthDate: values["pf-birth"] || null,
         };
         if (btn) {
-          btn.disabled = true;
-          btn.textContent = "Saqlanmoqda…";
+          setBtnLoading(btn, true, "Saqlanmoqda…");
         }
         try {
           const res = await apiFetch("/api/me", { method: "PATCH", body: JSON.stringify(body) });
@@ -12196,8 +12188,7 @@
           showToast("⚠ " + e.message);
         } finally {
           if (btn) {
-            btn.disabled = false;
-            btn.textContent = "Saqlash";
+            setBtnLoading(btn, false);
           }
         }
       }
@@ -12405,8 +12396,7 @@
       async function confirmNcoinPurchase(productId) {
         const btn = document.getElementById("nshop-confirm-btn");
         if (btn) {
-          btn.disabled = true;
-          btn.textContent = "Yuborilmoqda...";
+          setBtnLoading(btn, true, "Yuborilmoqda...");
         }
         try {
           const res = await apiFetch("/api/ncoin/purchase", {
@@ -12421,8 +12411,7 @@
         } catch (e) {
           showToast("⚠ " + e.message);
           if (btn) {
-            btn.disabled = false;
-            btn.textContent = "Tasdiqlash";
+            setBtnLoading(btn, false);
           }
         }
       }
@@ -13142,8 +13131,7 @@
           return;
         }
         if (btn) {
-          btn.disabled = true;
-          btn.textContent = "Saqlanmoqda…";
+          setBtnLoading(btn, true, "Saqlanmoqda…");
         }
         try {
           const res = await apiFetch("/api/me", {
@@ -13157,8 +13145,7 @@
         } catch (e) {
           errEl.textContent = e.message;
           if (btn) {
-            btn.disabled = false;
-            btn.textContent = "Davom etish";
+            setBtnLoading(btn, false);
           }
         }
       }
@@ -13207,8 +13194,7 @@
           return;
         }
         if (btn) {
-          btn.disabled = true;
-          btn.textContent = "Saqlanmoqda…";
+          setBtnLoading(btn, true, "Saqlanmoqda…");
         }
         try {
           const res = await apiFetch(`/api/projects/${slug}`, {
@@ -13231,8 +13217,7 @@
         } catch (e) {
           showToast("⚠ " + e.message);
           if (btn) {
-            btn.disabled = false;
-            btn.textContent = "Saqlash";
+            setBtnLoading(btn, false);
           }
         }
       }
@@ -13407,7 +13392,7 @@
           `${escHtml(label)} ni arxivlash`,
           `Bu loyiha ro'yxatdan yashiriladi va yangi davrlar ochilmaydi.<br><br><span style="color:var(--t3);font-size:12px">Tarixi (o'tgan davrlar, belgilangan checklar) saqlanib qoladi.</span>`,
           async () => {
-            if (btn) btn.disabled = true;
+            setBtnLoading(btn, true, "Arxivlanmoqda…");
             try {
               const res = await apiFetch(`/api/projects/${slug}`, {
                 method: "DELETE",
@@ -13421,7 +13406,7 @@
               showToast(`✅ "${label}" arxivlandi`);
             } catch (e) {
               showToast("⚠ " + e.message);
-              if (btn) btn.disabled = false;
+              setBtnLoading(btn, false);
             }
           },
           "Arxivlash",
