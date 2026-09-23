@@ -3710,19 +3710,6 @@
       .kcard.muted:hover {
         border-color: var(--bd2);
       }
-      .pri-urgent {
-        width: 14px;
-        height: 14px;
-        border-radius: 4px;
-        background: var(--red);
-        color: #fff;
-        font-size: 9.5px;
-        font-weight: 700;
-        line-height: 14px;
-        text-align: center;
-        flex-shrink: 0;
-        margin-top: 1px;
-      }
       .kcard-check {
         width: 14px;
         height: 14px;
@@ -7789,7 +7776,10 @@
       }
       function taskAvatarHtml(t, sizeCls, muted) {
         if (!t.assigneeName) return "";
-        return `<div class="avatar${sizeCls ? " " + sizeCls : ""}" style="${muted ? "opacity:.6" : ""}" title="${escHtml(t.assigneeName)}">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}</div>`;
+        // Rang xodimga biriktirilgan: kartalarda ism faqat bosh harfga
+        // qisqaradi va "Mirshod / Malika" kabi juftlar ajralmay qolardi.
+        const bg = personColor(t.assigneeUsername || t.assigneeName);
+        return `<div class="avatar${sizeCls ? " " + sizeCls : ""}" style="background:${bg};color:#fff;${muted ? "opacity:.6" : ""}" title="${escHtml(t.assigneeName)}">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}</div>`;
       }
       // Xodimlar yuklamasi — faqat OCHIQ (hali yopilmagan) vazifalar
       // bo'yicha, shu ro'yxatdagi (allaqachon rolga qarab scope qilingan)
@@ -7814,21 +7804,6 @@
       // 3 ta "signal bar": daraja qancha yuqori bo'lsa, shuncha ko'p
       // ustun to'ldirilgan (rangi ham darajaga qarab: yuqori=amber,
       // o'rta=brend ko'k, past=kul rang).
-      function priorityIcon(priority) {
-        if (priority === "urgent") {
-          return `<div class="pri-urgent" title="${escHtml(TASK_PRIORITY_LABEL.urgent)}">!</div>`;
-        }
-        const level = { high: 3, medium: 2, low: 1, no_priority: 0 }[priority] ?? 0;
-        const color = { high: "var(--amber)", medium: "var(--brand)", low: "var(--t4)" }[priority] || "var(--sw-off)";
-        const bg = "var(--sw-off)";
-        const bars = [6, 9, 12]
-          .map((h, i) => {
-            const filled = i < level;
-            return `<rect x="${i * 5}" y="${12 - h}" width="3" height="${h}" rx="1" fill="${filled ? color : bg}"></rect>`;
-          })
-          .join("");
-        return `<svg width="13" height="12" viewBox="0 0 13 12" style="flex-shrink:0;margin-top:1px" title="${escHtml(TASK_PRIORITY_LABEL[priority] || TASK_PRIORITY_LABEL.no_priority)}">${bars}</svg>`;
-      }
       function setTaskStatusChip(key) {
         taskStatusChip = key;
         renderTasksBody();
@@ -7975,7 +7950,7 @@
         let icon;
         if (t.status === "done") icon = `<div class="kcard-check">✓</div>`;
         else if (t.status === "failed") icon = `<div class="kcard-fail">✕</div>`;
-        else icon = priorityIcon(t.priority);
+        else icon = priorityBarsHtml(t.priority);
 
         let noteBox = "";
         if (t.status === "failed" && t.reason) {
