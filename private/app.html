@@ -2479,7 +2479,10 @@
         padding: 0;
         font-family: inherit;
       }
-      .cal-cell.empty {
+      /* Oy boshidagi bo'shliq kataklari. ATAYLAB "empty" emas —
+         u global bo'sh-ekran klassi (min-height: 42vh) va katakni
+         cho'zib yuborardi. */
+      .cal-cell.blank {
         visibility: hidden;
       }
       .cal-cell .cn {
@@ -2496,24 +2499,57 @@
         background: var(--surf);
         border: 1px solid var(--bd2);
       }
-      .cal-cell.done {
-        background: var(--brand);
-        color: #fff;
+      /* Ish bo'lgan kun — neytral katak, turini esa nuqtalar aytadi
+         (ko'k = post, siyohrang = stories). Ilgari katak butunlay ko'k
+         bo'lib to'lardi va faqat tanlangan turni ko'rsatardi, shu sabab
+         oyning to'liq manzarasi ko'rinmasdi. */
+      .cal-cell.has {
+        background: var(--surf);
+        border: 1px solid var(--bd2);
         cursor: pointer;
       }
-      .cal-cell.done .cn {
+      .cal-cell.has .cn {
         font-weight: 600;
-        color: #fff;
+        color: var(--ink);
       }
-      /* bugungi kun bajarilgan bo'lsa — ko'k, lekin ramka bilan ajratiladi */
-      .cal-cell.done-today {
-        outline: 2px solid var(--ink);
-        outline-offset: -2px;
+      .cal-dots {
+        display: flex;
+        gap: 3px;
+        align-items: center;
+        justify-content: center;
+        height: 5px;
       }
-      .cal-cell.done .cs {
-        opacity: 1;
-        font-size: 10px;
-        font-weight: 700;
+      .cal-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 99px;
+        display: block;
+      }
+      .cal-dot.k {
+        background: var(--brand);
+      }
+      .cal-dot.s {
+        background: var(--purple);
+      }
+      .cal-legend {
+        display: flex;
+        gap: 14px;
+        margin-top: 10px;
+        padding: 0 2px;
+      }
+      .cal-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--t2);
+      }
+      .cal-legend-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 99px;
+        flex: none;
       }
       .cal-cell.today {
         background: var(--surf);
@@ -9086,33 +9122,46 @@
         deltaEl.className = "trk-prog-delta" + (delta >= 0 ? " ok" : "");
 
         // ── KALENDAR: faqat haqiqatda bajarilgan kunlar ─────────────
-        const dayMap = buildDayMap(p, trackerType);
+        // Ikkala tur birga ko'rsatiladi (ko'k nuqta — post, siyohrang —
+        // stories), shu sabab yuqoridagi segmentni almashtirmasdan ham
+        // oyning to'liq manzarasi ko'rinadi. Belgilash mantig'i
+        // o'zgarmagan: u avvalgidek tartib raqami bo'yicha ketadi,
+        // kalendar faqat ko'rish uchun.
+        const dayMapK = buildDayMap(p, "k");
+        const dayMapS = buildDayMap(p, "s");
+        const dayMap = trackerType === "k" ? dayMapK : dayMapS;
         const checks = p.checks || {};
         const det = p.checkDetails || {};
         const firstWeekday = (start.getDay() + 6) % 7; // Dushanba = 0
         let cells = "";
         for (let i = 0; i < firstWeekday; i++)
-          cells += `<div class="cal-cell empty"></div>`;
+          cells += `<div class="cal-cell blank"></div>`;
         for (let d = 0; d < totalDays; d++) {
           const cur = new Date(start);
           cur.setDate(cur.getDate() + d);
           const key = isoOf(cur);
+          const seqsK = dayMapK[key] || [];
+          const seqsS = dayMapS[key] || [];
           const seqs = dayMap[key] || [];
           const isToday = key === isoOf(today);
-          let cls = "cal-cell",
-            inner;
-          if (seqs.length) {
-            // Shu kuni nechta chiqqan bo'lsa — o'sha son yoziladi
-            cls += " done" + (isToday ? " done-today" : "");
-            inner = `<div class="cn">${cur.getDate()}</div><div class="cs num">${seqs.length}</div>`;
-          } else if (isToday) {
-            cls += " today";
-            inner = `<div class="cn">${cur.getDate()}</div><div class="cs">bugun</div>`;
-          } else {
-            cls += " pending";
-            inner = `<div class="cn">${cur.getDate()}</div>`;
-          }
-          cells += `<div class="${cls}"${seqs.length ? ` title="${seqs.map((n) => (trackerType === "k" ? "Post " : "Stories ") + n).join(", ")}" onclick="openDayCell('${escArg(p.id)}','${trackerType}',[${seqs.join(",")}])"` : ""}>${inner}</div>`;
+          let cls = "cal-cell" + (seqsK.length || seqsS.length ? " has" : " pending");
+          if (isToday) cls += " today";
+          // Har tur uchun bittadan nuqta — kun ichida nechta bo'lishidan
+          // qat'i nazar, chunki bu yerda muhimi "nima chiqqani", "nechta"
+          // emas (aniq ro'yxat kunni bosganda ochiladi).
+          const dots =
+            (seqsK.length ? `<span class="cal-dot k"></span>` : "") +
+            (seqsS.length ? `<span class="cal-dot s"></span>` : "");
+          const inner = `<div class="cn">${cur.getDate()}</div><div class="cal-dots">${dots}</div>`;
+          const tip = [
+            seqsK.length ? seqsK.map((n) => "Post " + n).join(", ") : "",
+            seqsS.length ? seqsS.map((n) => "Stories " + n).join(", ") : "",
+          ]
+            .filter(Boolean)
+            .join(" · ");
+          // Bosilganda joriy segment turidagi ro'yxat ochiladi (agar shu
+          // kuni o'sha turda ish bo'lsa).
+          cells += `<div class="${cls}"${seqs.length ? ` title="${tip}" onclick="openDayCell('${escArg(p.id)}','${trackerType}',[${seqs.join(",")}])"` : tip ? ` title="${tip}"` : ""}>${inner}</div>`;
         }
 
         // ── BUGUN BELGILANGANLAR ────────────────────────────────────
@@ -9155,7 +9204,8 @@
           <div class="cal-week">${WD.map((w) => `<span>${w}</span>`).join("")}</div>
           <div class="cal-grid">${cells}</div>
           <div class="cal-legend">
-            <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--brand)"></div>bajarilgan (son = shu kuni nechta chiqqani)</div>
+            <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--brand)"></div>Post</div>
+            <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--purple)"></div>Stories</div>
           </div>
           <div class="list-card" style="margin-top:16px">
             <div style="padding:11px 14px;border-bottom:1px solid var(--bd1);font-weight:600;font-size:11px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase">${fmtDay(today)} · bugun belgilangan</div>
