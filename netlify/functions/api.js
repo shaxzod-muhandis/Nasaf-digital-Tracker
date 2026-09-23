@@ -272,6 +272,9 @@ app.patch("/api/me", auth, async (req, res) => {
       birthDate: "birth_date",
       phone: "phone",
       jobTitle: "job_title",
+      // `color` ATAYLAB yo'q: rang xodimlarni bir-biridan ajratish uchun
+      // va u takrorlanmasligi kerak, shu sabab uni admin belgilaydi
+      // (PATCH /api/users/:username).
     };
     const sets = [];
     const values = [];
@@ -397,7 +400,7 @@ app.get("/api/users", auth, async (req, res) => {
 app.get("/api/users/directory", auth, async (req, res) => {
   try {
     const r = await db.query(
-      `select id, username, first_name, last_name, job_title from users where is_active order by username`,
+      `select id, username, first_name, last_name, job_title, color from users where is_active order by username`,
     );
     res.json({ users: r.rows });
   } catch (e) {
@@ -514,7 +517,15 @@ app.patch("/api/users/:username", auth, async (req, res) => {
       birthDate: "birth_date",
       phone: "phone",
       jobTitle: "job_title",
+      color: "color",
     };
+    if (typeof req.body.color === "string" && req.body.color.trim()) {
+      const c = req.body.color.trim().toLowerCase();
+      if (!/^#[0-9a-f]{6}$/.test(c)) {
+        return res.status(400).json({ error: "Rang #rrggbb ko'rinishida bo'lishi kerak" });
+      }
+      req.body.color = c;
+    }
     for (const [bodyKey, column] of Object.entries(profileFieldMap)) {
       if (typeof req.body[bodyKey] === "undefined") continue;
       let v = req.body[bodyKey] || null;

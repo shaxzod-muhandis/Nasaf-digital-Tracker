@@ -895,6 +895,189 @@
          Maketdagi qoida: balans ekranning eng tepasida, doim ko'rinib
          tursin — mahsulot narxini ko'rgan xodim "menda yetadimi?" deb
          boshqa joyga qarab yurmasin. */
+      /* ── LOYIHALAR · DESKTOP (v3 maketidan 1:1) ───────────────────
+         Ikki panel: chapda loyihalar ro'yxati, o'ngda tanlangani.
+         Ilgari uch ustunli karta-doska edi va loyihani ko'rish uchun
+         boshqa sahifaga o'tish kerak bo'lardi; endi tanlash va ko'rish
+         bitta ekranda. Faqat katta ekranda ko'rinadi (mobil o'z
+         ro'yxatini ishlatadi). */
+      .pdesk {
+        display: flex;
+        min-height: 0;
+        flex: 1;
+      }
+      .pdesk-rail {
+        width: 340px;
+        flex: 0 0 auto;
+        border-right: 1px solid var(--bd2);
+        background: var(--surf);
+        padding: 14px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        overflow-y: auto;
+      }
+      .pdesk-sec {
+        font-size: 11.5px;
+        font-weight: 600;
+        color: var(--t2);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        padding: 6px 14px 2px;
+      }
+      .pdesk-item {
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        cursor: pointer;
+      }
+      .pdesk-item.active {
+        background: var(--st-onplan-bg);
+        border-color: rgba(47, 122, 185, 0.3);
+      }
+      .pdesk-item-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .pdesk-item-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ink);
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .pdesk-item-pct {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: var(--ink);
+        font-variant-numeric: tabular-nums;
+      }
+      .pdesk-track {
+        position: relative;
+        height: 5px;
+        border-radius: 99px;
+        background: var(--track);
+        margin-top: 8px;
+      }
+      .pdesk-fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        border-radius: 99px;
+      }
+      .pdesk-mark {
+        position: absolute;
+        top: -3px;
+        bottom: -3px;
+        width: 2px;
+        border-radius: 2px;
+        background: var(--ink);
+      }
+      .pdesk-item-bot {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 7px;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+      .pdesk-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 99px;
+        flex: none;
+      }
+      .pdesk-main {
+        flex: 1;
+        min-width: 0;
+        padding: 18px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        overflow-y: auto;
+      }
+      .pdesk-hdr {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .pdesk-hdr-av {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        background: var(--chip2);
+        color: var(--ink);
+        font-size: 16px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+      .pdesk-hdr-name {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+      }
+      /* Jamoa avatarlari — ustma-ust. Rang har xodimga biriktirilgan
+         (personColor), shu sabab bir xil harfli xodimlar ham ajraladi. */
+      .pdesk-team {
+        display: flex;
+        flex: 0 0 auto;
+      }
+      .pdesk-team > div {
+        border: 2px solid var(--bg);
+        border-radius: 12px;
+        margin-left: -8px;
+      }
+      .pdesk-team > div:first-child {
+        margin-left: 0;
+      }
+      .pdesk-team-av {
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .pdesk-stats {
+        display: flex;
+        align-items: center;
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 14px;
+        padding: 14px 16px;
+      }
+      .pdesk-stat {
+        flex: 1;
+        min-width: 0;
+        padding: 0 16px;
+        border-left: 1px solid var(--bd2);
+      }
+      .pdesk-stat-lbl {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--t2);
+        white-space: nowrap;
+      }
+      .pdesk-stat-val {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: -0.02em;
+        margin-top: 3px;
+        font-variant-numeric: tabular-nums;
+      }
       /* ── BOSHQARUV MENYUSI — v3 maketidan 1:1 ─────────────────────
          Ilgari bu yerda 7 tagacha bo'lim bitta gorizontal qatorda
          turardi va tor ekranda oxirgilari kesilib qolardi — skroll
@@ -6222,6 +6405,59 @@
         }
         return sel.value;
       }
+      // ── XODIM RANGLARI ────────────────────────────────────────────
+      // Har bir xodimga TAKRORLANMAS rang. Rang bazada saqlanmaydi:
+      // ma'lum xodimlar ro'yxati alifbo bo'yicha tartiblanadi va
+      // palitradan ketma-ket beriladi, shu sabab ikki xodimga bir xil
+      // rang tushmaydi (palitra jamoadan kattaroq).
+      //
+      // Ranglar holat ranglaridan (yashil/sariq/qizil) ataylab uzoq
+      // tanlangan: xodim rangi hech qachon "muammo" yoki "bajarildi"
+      // deb o'qilmasligi kerak.
+      const PERSON_COLORS = [
+        "#4f6bed", "#c23a6b", "#0b7f72", "#9e47c9", "#0e7490",
+        "#9a6b3f", "#a21caf", "#64748b", "#7c6f57", "#344054",
+        "#2563eb", "#be185d", "#0f766e", "#7c3aed", "#b45309",
+        "#155e75", "#4d7c0f", "#9f1239", "#5b21b6", "#475569",
+      ];
+      let _personColorMap = null;
+      // Ro'yxat o'zgarganda (yangi xodim qo'shilganda) qayta hisoblanadi.
+      function resetPersonColors() {
+        _personColorMap = null;
+      }
+      function buildPersonColorMap() {
+        const names = new Set();
+        const stored = {};
+        // Bazada saqlangan rang bo'lsa — u ustun (admin biriktirgan va
+        // hech qachon siljimaydi). Qolganlari quyida hisoblanadi.
+        const collect = (u) => {
+          if (!u?.username) return;
+          names.add(u.username);
+          if (u.color) stored[u.username] = u.color;
+        };
+        (allUsers || []).forEach(collect);
+        (projects || []).forEach((p) => (p.assignees || []).forEach(collect));
+        (tasksList || []).forEach((t) => t?.assigneeUsername && names.add(t.assigneeUsername));
+        // Band qilingan ranglar qayta ishlatilmaydi.
+        const used = new Set(Object.values(stored));
+        const free = PERSON_COLORS.filter((c) => !used.has(c));
+        const map = { ...stored };
+        let i = 0;
+        [...names].sort().forEach((n) => {
+          if (map[n]) return;
+          map[n] = free.length ? free[i++ % free.length] : PERSON_COLORS[i++ % PERSON_COLORS.length];
+        });
+        return map;
+      }
+      function personColor(username) {
+        if (!_personColorMap) _personColorMap = buildPersonColorMap();
+        const key = String(username || "");
+        if (_personColorMap[key]) return _personColorMap[key];
+        // Ro'yxatda yo'q (masalan Telegramsiz xodim) — barqaror zaxira
+        let h = 0;
+        for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+        return PERSON_COLORS[h % PERSON_COLORS.length];
+      }
       const POSITION_LABELS = {
         montajchi: "Montajchi",
         mobilograf: "Mobilograf",
@@ -6723,6 +6959,7 @@
         if (!res.ok) return;
         const d = await res.json();
         projects = d.projects || [];
+        resetPersonColors();
       }
       async function loadTasks() {
         try {
@@ -7231,47 +7468,163 @@
       // g'oyasi, lekin bizning data modelimizga mos real bosqichlar
       // bilan: har bir loyiha doim faol bo'lgani uchun Backlog/Planned
       // tushunchasi yo'q — Qarzdor/Faol/Tugagan real holatlar).
-      function buildProjectsDesktopHtml(overdue, active) {
-        const today = todayDate();
-        const cardFor = (p) => {
-          if (p.outstandingDebt) {
-            const daysAgo = daysBetween(parseISO(p.outstandingDebt.periodEnd), today);
-            const rem = p.outstandingDebt.remainingPosts + p.outstandingDebt.remainingStories;
-            return `<div class="pcard" style="margin-bottom:10px" onclick="openTracker('${escArg(p.id)}')">
-              <div class="pcard-top">
-                <div class="r-name">${escHtml(p.label)}</div>
-                <span class="debt-badge">${daysAgo} kun</span>
-              </div>
-              <div class="r-sub">${rem} vazifa qoldi</div>
-            </div>`;
-          }
-          const pc = projPct(p);
-          const dl = projDaysLeft(p);
-          return `<div class="pcard" style="margin-bottom:10px" onclick="openTracker('${escArg(p.id)}')">
-            <div class="pcard-top">
-              <div class="r-name">${escHtml(p.label)}</div>
-              <div class="pcard-pct num">${pc}%</div>
+      // ── LOYIHALAR · DESKTOP ────────────────────────────────────────
+      // Ikki panel: chapda ro'yxat (holat bo'yicha guruhlangan), o'ngda
+      // tanlangan loyihaning ko'rsatkichlari va kalendari. Ilgari uch
+      // ustunli karta-doska edi va loyihani ko'rish uchun boshqa
+      // sahifaga o'tish kerak bo'lardi.
+      let desktopProjectId = null;
+      function setDesktopProject(id) {
+        desktopProjectId = id;
+        renderProjectsScreen();
+      }
+      function pdeskItemHtml(p, active) {
+        const st = projStatus(p);
+        const pc = Math.max(0, Math.min(100, projPct(p)));
+        const exp = Math.max(0, Math.min(100, Math.round(projElapsedFrac(p) * 100)));
+        const owner = shortPersonName(projOwner(p));
+        const fill =
+          st === "debt" ? "var(--red)" : st === "behind" ? "var(--amber)" : st === "ahead" ? "var(--green)" : "var(--brand)";
+        const dot = `var(--st-${st === "debt" ? "debt" : st === "behind" ? "behind" : st === "ahead" ? "ahead" : "onplan"}-dot)`;
+        return `<div class="pdesk-item${active ? " active" : ""}" onclick="setDesktopProject('${escArg(p.id)}')">
+          <div class="pdesk-item-top">
+            <div class="pdesk-item-name">${escHtml(p.label)}</div>
+            <div class="pdesk-item-pct num">${pc}%</div>
+          </div>
+          <div class="pdesk-track">
+            <div class="pdesk-fill" style="width:${pc}%;background:${fill}"></div>
+            ${st === "debt" ? "" : `<div class="pdesk-mark" style="left:${exp}%"></div>`}
+          </div>
+          <div class="pdesk-item-bot">
+            <span class="pdesk-dot" style="background:${dot}"></span>
+            <span style="font-weight:600;color:var(--st-${st === "debt" ? "debt" : st === "behind" ? "behind" : st === "ahead" ? "ahead" : "onplan"})">${PROJ_STATUS_LABEL[st]}</span>
+            <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;color:var(--t2)">${owner ? "· " + escHtml(owner) : ""}</span>
+            <span style="color:${st === "debt" ? "var(--red)" : "var(--t2)"}">${projDaysText(p)}</span>
+          </div>
+        </div>`;
+      }
+      function pdeskDetailHtml(p) {
+        if (!p) {
+          return `<div class="pdesk-main"><div class="empty"><div class="empty-t">Loyiha tanlang</div><div class="empty-s">Chapdagi ro'yxatdan birini tanlang.</div></div></div>`;
+        }
+        const st = projStatus(p);
+        const pc = Math.max(0, Math.min(100, projPct(p)));
+        const exp = Math.max(0, Math.min(100, Math.round(projElapsedFrac(p) * 100)));
+        const total = p.k + p.s;
+        const done = p.doneK + p.doneS;
+        const delta = projDelta(p);
+        const start = parseISO(p.periodStart);
+        const fill =
+          st === "debt" ? "var(--red)" : st === "behind" ? "var(--amber)" : st === "ahead" ? "var(--green)" : "var(--brand)";
+        const team = (p.assignees || []).slice(0, 5);
+        const teamHtml = team.length
+          ? `<div class="pdesk-team">${team
+              .map(
+                (a) =>
+                  `<div><div class="pdesk-team-av" style="background:${personColor(a.username || a.fullName)}" title="${escHtml(a.fullName || a.username || "")}">${escHtml(initials(a.fullName || a.username || "?"))}</div></div>`,
+              )
+              .join("")}</div>`
+          : "";
+        return `<div class="pdesk-main">
+          <div class="pdesk-hdr">
+            <div class="pdesk-hdr-av">${escHtml((p.label || "?").slice(0, 1).toUpperCase())}</div>
+            <div style="flex:1;min-width:0">
+              <div class="pdesk-hdr-name">${escHtml(p.label)}</div>
+              <div style="font-size:13px;color:var(--t2)">${fmtDay(start)} – ${fmtDay(parseISO(p.periodEnd))} · ${projDaysText(p)}</div>
             </div>
-            <div class="hist-track" style="margin-bottom:9px"><div class="hist-fill" style="width:${pc}%"></div></div>
-            <div class="r-sub">${dl >= 0 ? dl + " kun qoldi" : "muddat tugagan"}</div>
+            ${teamHtml}
+            <button class="btn btn-soft" style="width:auto;height:38px;padding:0 16px;flex:none" onclick="openTracker('${escArg(p.id)}')">Trackerni ochish</button>
+          </div>
+          <div class="pdesk-stats">
+            <div style="width:230px;padding-right:18px;flex:0 0 auto">
+              <div style="display:flex;align-items:flex-end;gap:8px">
+                <div style="font:700 30px/1 inherit;letter-spacing:-0.03em">${pc}<span style="font-size:17px">%</span></div>
+                <div style="font-size:13px;font-weight:500;color:var(--t2);padding-bottom:2px" class="num">${done}/${total}</div>
+                <div style="flex:1"></div>
+                <span class="st-pill ${st}">${PROJ_STATUS_LABEL[st]}</span>
+              </div>
+              <div class="pdesk-track" style="height:7px;margin-top:10px">
+                <div class="pdesk-fill" style="width:${pc}%;background:${fill}"></div>
+                ${st === "debt" ? "" : `<div class="pdesk-mark" style="left:${exp}%"></div>`}
+              </div>
+            </div>
+            <div class="pdesk-stat"><div class="pdesk-stat-lbl">Post</div><div class="pdesk-stat-val">${p.doneK}/${p.k}</div></div>
+            <div class="pdesk-stat"><div class="pdesk-stat-lbl">Stories</div><div class="pdesk-stat-val">${p.doneS}/${p.s}</div></div>
+            <div class="pdesk-stat">
+              <div class="pdesk-stat-lbl">Reja bo'yicha</div>
+              <div class="pdesk-stat-val" style="color:${delta < 0 ? "var(--red)" : "var(--st-ahead)"}">${delta > 0 ? "+" + delta : delta}</div>
+            </div>
+          </div>
+          ${pdeskCalendarHtml(p)}
+        </div>`;
+      }
+      // Oy kalendari — mobil trackerdagi bilan bir xil mantiq: faqat
+      // haqiqatda bajarilgan kunlar belgilanadi (nuqta turiga qarab),
+      // chunki "rejalashtirilgan sana" degan ma'lumot hozir yo'q.
+      function pdeskCalendarHtml(p) {
+        const start = parseISO(p.periodStart);
+        const end = parseISO(p.periodEnd);
+        const today = todayDate();
+        const mapK = buildDayMap(p, "k");
+        const mapS = buildDayMap(p, "s");
+        const totalDays = daysBetween(start, end) + 1;
+        const firstWeekday = (start.getDay() + 6) % 7;
+        let cells = "";
+        for (let i = 0; i < firstWeekday; i++) cells += `<div></div>`;
+        for (let d = 0; d < totalDays; d++) {
+          const cur = addDays(start, d);
+          const key = isoOf(cur);
+          const kk = (mapK[key] || []).length;
+          const ss = (mapS[key] || []).length;
+          const isToday = key === isoOf(today);
+          const has = kk || ss;
+          const bg = isToday ? "var(--brand)" : has ? "var(--st-ahead-bg)" : "var(--surf)";
+          const fg = isToday ? "#fff" : has ? "var(--ink)" : "var(--t3)";
+          const dots =
+            (kk ? `<span style="width:6px;height:6px;border-radius:99px;background:${isToday ? "#fff" : "var(--brand)"}"></span>` : "") +
+            (ss ? `<span style="width:6px;height:6px;border-radius:99px;background:${isToday ? "#fff" : "var(--purple)"}"></span>` : "");
+          cells += `<div style="height:64px;border-radius:10px;background:${bg};border:1px solid ${isToday ? "var(--brand)" : "var(--bd2)"};display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box">
+            <div class="num" style="font-size:14px;font-weight:${isToday ? 700 : 500};color:${fg}">${cur.getDate()}</div>
+            <div style="display:flex;gap:3px;justify-content:center;margin-top:4px;height:6px">${dots}</div>
           </div>`;
-        };
-        const inProgress = active.filter((p) => projPct(p) < 100);
-        const finished = active.filter((p) => projPct(p) >= 100);
-        const cols = [
-          { label: "Qarzdor", items: overdue },
-          { label: "Faol", items: inProgress },
-          { label: "Tugagan", items: finished },
-        ];
-        const colsHtml = cols
-          .map(
-            (col) => `<div>
-              <div class="kanban-col-hdr"><span>${col.label}</span><span class="kanban-count">${col.items.length}</span></div>
-              ${col.items.map(cardFor).join("") || `<div style="font-size:12px;color:var(--t3);padding:4px 2px">Bo'sh</div>`}
-            </div>`,
-          )
-          .join("");
-        return `<div class="desktop-only"><div class="kanban" style="grid-template-columns:repeat(3,1fr)">${colsHtml}</div></div>`;
+        }
+        const WDS = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
+        return `<div style="display:flex;align-items:center;gap:12px">
+            <div style="flex:1"></div>
+            <div style="display:flex;gap:14px">
+              <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--brand)"></div>Post</div>
+              <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--purple)"></div>Stories</div>
+            </div>
+          </div>
+          <div style="background:var(--surf);border:1px solid var(--bd2);border-radius:14px;padding:14px">
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">
+              ${WDS.map((w) => `<div style="font-size:11.5px;font-weight:600;color:var(--t3);text-align:center">${w}</div>`).join("")}
+              ${cells}
+            </div>
+          </div>`;
+      }
+      function buildProjectsDesktopHtml(overdue, active) {
+        const all = [...overdue, ...active];
+        const STATUS_ORDER = { debt: 0, behind: 1, onplan: 2, ahead: 3 };
+        const sorted = [...all].sort(
+          (a, b) => STATUS_ORDER[projStatus(a)] - STATUS_ORDER[projStatus(b)] || projPct(b) - projPct(a),
+        );
+        const attention = sorted.filter((x) => ["debt", "behind"].includes(projStatus(x)));
+        const fine = sorted.filter((x) => !["debt", "behind"].includes(projStatus(x)));
+        // Tanlov saqlanadi; yo'q bo'lsa — diqqat talab qiladigan
+        // birinchi loyiha ochiladi (admin eng avval shuni ko'rishi kerak).
+        let sel = sorted.find((x) => x.id === desktopProjectId) || sorted[0] || null;
+        const railHtml =
+          (attention.length
+            ? `<div class="pdesk-sec">Diqqat talab qiladi</div>${attention.map((x) => pdeskItemHtml(x, sel && x.id === sel.id)).join("")}`
+            : "") +
+          (fine.length
+            ? `<div class="pdesk-sec">Yaxshi ketmoqda</div>${fine.map((x) => pdeskItemHtml(x, sel && x.id === sel.id)).join("")}`
+            : "");
+        return `<div class="desktop-flex pdesk">
+          <div class="pdesk-rail">${railHtml || `<div class="empty"><div class="empty-s">Loyiha yo'q</div></div>`}</div>
+          ${pdeskDetailHtml(sel)}
+        </div>`;
       }
 
       // ── VAZIFALAR ─────────────────────────────────────────────────
@@ -7492,6 +7845,7 @@
           if (!res.ok)
             throw new Error((await res.json().catch(() => ({}))).error || "Xato");
           tasksList = (await res.json()).tasks || [];
+          resetPersonColors();
         } catch (e) {
           showLoadError(body, e.message, () => renderTasksScreen());
           return;
@@ -9687,6 +10041,7 @@
           if (!res.ok) return;
           const d = await res.json();
           allUsers = (d.users || []).filter((u) => u.role === "employee" && u.is_active);
+          resetPersonColors();
         } catch (e) {}
       }
       async function loadNpTemplates() {
@@ -10371,6 +10726,7 @@
           if (!res.ok)
             throw new Error((await res.json().catch(() => ({}))).error || "Xato");
           allUsers = (await res.json()).users || [];
+          resetPersonColors();
         } catch (e) {
           wrap.innerHTML = `<div style="padding:16px 14px;font-size:12px;color:var(--red)">⚠ ${escHtml(e.message)}</div>`;
           return;
