@@ -95,14 +95,23 @@
            o'rgansa, qaysi ekranda ko'rmasin ma'nosi bir xil bo'lsin.
            Matn ranglari fon rangidan to'qroq — tint ustida o'qilishi
            uchun (masalan yashil matn #15803d, foni #e8f6ec). */
+        /* Har holatda uchta rang: fon (tint), matn (to'q — tint ustida
+           o'qilishi uchun) va nuqta (yorqinroq — ko'zga tashlanishi
+           uchun). Qiymatlar maketdan aynan olingan. */
         --st-debt: #dc2626; /* Qarz    — muddat o'tdi, bajarilmagan qoldi */
         --st-debt-bg: #fdecec;
+        --st-debt-dot: #dc2626;
         --st-behind: #a45f08; /* Ortda   — rejadan orqada */
         --st-behind-bg: #fbf1e4;
-        --st-onplan: #374151; /* Rejada  — reja bo'yicha ketmoqda */
-        --st-onplan-bg: #f1f3f6;
+        --st-behind-dot: #d97706;
+        --st-onplan: #255f91; /* Rejada  — reja bo'yicha ketmoqda */
+        --st-onplan-bg: #eaf2f9;
+        --st-onplan-dot: #2f7ab9;
         --st-ahead: #15803d; /* Oldinda — rejadan oldinda */
         --st-ahead-bg: #e8f6ec;
+        --st-ahead-dot: #16a34a;
+        /* Progress chizig'ining bo'sh qismi */
+        --track: #e6e9ed;
         --red-tint: #fffbfb;
         /* Faollik heatmap — bitta ko'k rangning 5 pog'onasi (dizayner
            TZ'i, 3.3-band): 0 = harakat yo'q, 4 = eng yuqori. Boshqa
@@ -164,12 +173,17 @@
         --green: #34d066;
         --st-debt: #f0554a;
         --st-debt-bg: rgba(240, 85, 74, 0.16);
+        --st-debt-dot: #f0554a;
         --st-behind: #f0c479;
         --st-behind-bg: rgba(217, 119, 6, 0.18);
-        --st-onplan: #c7ccd4;
-        --st-onplan-bg: #272d38;
+        --st-behind-dot: #f0a836;
+        --st-onplan: #8fc2ea;
+        --st-onplan-bg: rgba(47, 122, 185, 0.2);
+        --st-onplan-dot: #5aa3dd;
         --st-ahead: #34d066;
         --st-ahead-bg: rgba(52, 208, 102, 0.16);
+        --st-ahead-dot: #34d066;
+        --track: #2b313d;
         --red-tint: rgba(240, 85, 74, 0.08);
         --act-lvl-0: #2b313d;
         --act-lvl-1: #2a3f52;
@@ -468,6 +482,122 @@
         font-size: 11.5px;
         color: rgba(255, 255, 255, 0.6);
         margin-top: 8px;
+      }
+      /* ── LOYIHA KARTASI — v3 maketidan 1:1 ────────────────────────
+         Bitta kartada xodimga kerak bo'lgan hamma narsa bor: kim
+         mas'ul, qancha vaqt qoldi, necha foiz, rejaga nisbatan qayerda
+         (chiziqdagi to'q belgi) va post/stories alohida. Qarzli karta
+         qizil hoshiya bilan ajralib turadi. */
+      .prj-card {
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 14px;
+        padding: 13px 14px;
+      }
+      .prj-card.debt {
+        border: 1.5px solid var(--red-bd2);
+      }
+      .prj-card-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .prj-card-av {
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        background: var(--chip2);
+        color: var(--ink);
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+      .prj-card-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--ink);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .prj-card-sub {
+        font-size: 12.5px;
+        color: var(--t2);
+        white-space: nowrap;
+        margin-top: 1px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .prj-card-pct {
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--ink);
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+      .prj-card.debt .prj-card-sub,
+      .prj-card.debt .prj-card-pct,
+      .prj-card.debt .prj-card-note {
+        color: var(--red);
+      }
+      .prj-card-track {
+        position: relative;
+        height: 6px;
+        border-radius: 99px;
+        background: var(--track);
+        margin-top: 11px;
+      }
+      .prj-card-fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        border-radius: 99px;
+        background: var(--brand);
+      }
+      .prj-card.debt .prj-card-fill {
+        background: var(--red);
+      }
+      /* Bugungi kunga kutilgan joy — chiziqdan sal baland turadi
+         (top/bottom -3px), shu sabab to'ldirish ustida ham ko'rinadi. */
+      .prj-card-mark {
+        position: absolute;
+        top: -3px;
+        bottom: -3px;
+        width: 2px;
+        border-radius: 2px;
+        background: var(--ink);
+      }
+      .prj-card-bot {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 9px;
+      }
+      .prj-card-note {
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--t2);
+        white-space: nowrap;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .prj-card-cnt {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--t2);
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+      .prj-card-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
         margin-top: 3px;
       }
@@ -1757,52 +1887,6 @@
         font-weight: 600;
       }
 
-      /* ── LOYIHALAR RO'YXATI ─────────────────────────────────────── */
-      .od-row,
-      .pv-row {
-        padding: 13px 15px;
-        border-bottom: 1px solid var(--bd1);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        cursor: pointer;
-      }
-      .od-row:last-child,
-      .pv-row:last-child {
-        border-bottom: none;
-      }
-      .od-bar {
-        width: 6px;
-        height: 34px;
-        border-radius: 99px;
-        background: var(--red);
-        flex-shrink: 0;
-      }
-      .od-days {
-        font-weight: 600;
-        font-size: 12.5px;
-        color: var(--red);
-        flex-shrink: 0;
-      }
-      .pv-bar-wrap {
-        width: 56px;
-        flex-shrink: 0;
-      }
-      .pv-bar-track {
-        height: 5px;
-        border-radius: 99px;
-        background: var(--chip3);
-        overflow: hidden;
-      }
-      .pv-bar-fill {
-        height: 100%;
-        background: var(--brand);
-      }
-      .pv-pct {
-        font-weight: 500;
-        font-size: 10.5px;
-        color: var(--t2);
-        text-align: right;
         margin-top: 5px;
       }
 
@@ -3038,35 +3122,41 @@
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        font-size: 12px;
+        height: 22px;
+        padding: 0 8px;
+        border-radius: 7px;
+        font-size: 11px;
         font-weight: 600;
-        padding: 3px 9px;
-        border-radius: 999px;
         white-space: nowrap;
+        flex: 0 0 auto;
       }
       .st-pill::before {
         content: "";
         width: 6px;
         height: 6px;
         border-radius: 99px;
-        background: currentColor;
+        background: var(--dot);
         flex: none;
       }
       .st-pill.debt {
         color: var(--st-debt);
         background: var(--st-debt-bg);
+        --dot: var(--st-debt-dot);
       }
       .st-pill.behind {
         color: var(--st-behind);
         background: var(--st-behind-bg);
+        --dot: var(--st-behind-dot);
       }
       .st-pill.onplan {
         color: var(--st-onplan);
         background: var(--st-onplan-bg);
+        --dot: var(--st-onplan-dot);
       }
       .st-pill.ahead {
         color: var(--st-ahead);
         background: var(--st-ahead-bg);
+        --dot: var(--st-ahead-dot);
       }
       .avatar-sm {
         width: 20px;
@@ -5850,6 +5940,89 @@
         return daysBetween(todayDate(), parseISO(p.periodEnd));
       }
 
+      // ── LOYIHA HOLATI ─────────────────────────────────────────────
+      // Loyiha qay ahvolda ekani ilovaning hamma joyida shu yerdan
+      // keladi, shu sabab "Bugun"da, "Loyihalar"da va "Tarix"da bir xil
+      // so'z va bir xil rang chiqadi. Qarz — eng og'iri, qolgani esa
+      // bajarilgan ish bugungi kunga kutilgan miqdordan qanchalik farq
+      // qilishiga qarab aniqlanadi (bitta vazifadan kam farq — "reja
+      // bo'yicha" deb hisoblanadi, aks holda holat kun sayin sakrardi).
+      const PROJ_STATUS_LABEL = {
+        debt: "Qarz",
+        behind: "Ortda",
+        onplan: "Rejada",
+        ahead: "Oldinda",
+      };
+      function projDelta(p) {
+        const total = p.k + p.s;
+        if (!total) return 0;
+        return Math.round(p.doneK + p.doneS - projElapsedFrac(p) * total);
+      }
+      function projStatus(p) {
+        if (p.outstandingDebt) return "debt";
+        const d = projDelta(p);
+        if (d <= -1) return "behind";
+        if (d >= 1) return "ahead";
+        return "onplan";
+      }
+      function projStatusNote(p) {
+        const st = projStatus(p);
+        if (st === "debt") {
+          const dbt = p.outstandingDebt;
+          return `${dbt.remainingPosts + dbt.remainingStories} vazifa muddatdan chiqdi`;
+        }
+        const d = projDelta(p);
+        if (st === "behind") return `Rejadan ${-d} vazifa orqada`;
+        if (st === "ahead") return `Rejadan ${d} vazifa oldinda`;
+        return "Rejada";
+      }
+      // Loyihaning "yuzi" — SMM menejer, u yo'q bo'lsa birinchi mas'ul.
+      function projOwner(p) {
+        const as = p.assignees || [];
+        return as.find((a) => a.role === "smm") || as[0] || null;
+      }
+      function shortPersonName(a) {
+        if (!a) return "";
+        const parts = (a.fullName || "").trim().split(/\s+/);
+        const first = a.firstName || parts[0] || a.username || "";
+        const last = a.lastName || parts[1] || "";
+        return last ? `${first} ${last[0]}.` : first;
+      }
+      function projDaysText(p) {
+        const d = projDaysLeft(p);
+        if (d > 0) return `${d} kun qoldi`;
+        if (d === 0) return "Bugun tugaydi";
+        return `${-d} kun kechikdi`;
+      }
+      // Loyiha kartasi — "Loyihalar" ro'yxatining asosiy bloki.
+      function buildProjectCardHtml(p) {
+        const st = projStatus(p);
+        const pc = Math.max(0, Math.min(100, projPct(p)));
+        const exp = Math.max(0, Math.min(100, Math.round(projElapsedFrac(p) * 100)));
+        const owner = projOwner(p);
+        const who = shortPersonName(owner);
+        return `
+          <div class="prj-card ${st === "debt" ? "debt" : ""} clickable" onclick="openTracker('${escArg(p.id)}')">
+            <div class="prj-card-top">
+              <div class="prj-card-av">${escHtml((p.label || "?").slice(0, 1).toUpperCase())}</div>
+              <div style="flex:1;min-width:0">
+                <div class="prj-card-name">${escHtml(p.label)}</div>
+                <div class="prj-card-sub">${who ? escHtml(who) + " · " : ""}${projDaysText(p)}</div>
+              </div>
+              <div class="prj-card-pct">${pc}%</div>
+            </div>
+            <div class="prj-card-track">
+              <div class="prj-card-fill" style="width:${pc}%"></div>
+              ${st === "debt" ? "" : `<div class="prj-card-mark" style="left:${exp}%"></div>`}
+            </div>
+            <div class="prj-card-bot">
+              <span class="st-pill ${st}">${PROJ_STATUS_LABEL[st]}</span>
+              <div class="prj-card-note">${escHtml(projStatusNote(p))}</div>
+              <div class="prj-card-cnt">${p.doneK}/${p.k} · ${p.doneS}/${p.s}</div>
+            </div>
+          </div>`;
+      }
+
       // Bitta loyihaning BUGUN belgilangan post/stories'lari (k va s
       // ikkalasi ham) — Boshqaruv paneli va Tracker o'ng paneli umumiy
       // ishlatadi (faqat katta ekran).
@@ -6450,52 +6623,34 @@
           return;
         }
 
-        const today = todayDate();
         const overdue = list.filter((p) => p.outstandingDebt);
         const active = list.filter((p) => !p.outstandingDebt);
+
+        // Loyihalar holat bo'yicha saralanadi (qarz -> ortda -> rejada
+        // -> oldinda) va ikki guruhga bo'linadi. Maqsad: xodim ro'yxatni
+        // ochishi bilan muammoli loyihalarni ko'rsin, ularni alifbo
+        // ichidan qidirib yurmasin.
+        const STATUS_ORDER = { debt: 0, behind: 1, onplan: 2, ahead: 3 };
+        const sorted = [...list].sort(
+          (a, b) =>
+            STATUS_ORDER[projStatus(a)] - STATUS_ORDER[projStatus(b)] ||
+            projPct(b) - projPct(a),
+        );
+        const needsAttention = sorted.filter((p) =>
+          ["debt", "behind"].includes(projStatus(p)),
+        );
+        const goingWell = sorted.filter(
+          (p) => !["debt", "behind"].includes(projStatus(p)),
+        );
+
         let html = `<div class="mobile-only">`;
-        if (overdue.length) {
-          html += `<div class="sec-upper">Muddati o'tgan · ${overdue.length}</div><div class="list-card" style="margin-bottom:20px">`;
-          html += overdue
-            .map((p) => {
-              const daysAgo = daysBetween(
-                parseISO(p.outstandingDebt.periodEnd),
-                today,
-              );
-              const rem =
-                p.outstandingDebt.remainingPosts +
-                p.outstandingDebt.remainingStories;
-              return `<div class="od-row" onclick="openTracker('${escArg(p.id)}')">
-                <div class="od-bar"></div>
-                <div style="flex:1;min-width:0">
-                  <div class="r-name">${escHtml(p.label)}</div>
-                  <div class="r-sub">${rem} vazifa qoldi</div>
-                </div>
-                <div class="od-days num">${daysAgo} kun</div>
-              </div>`;
-            })
-            .join("");
-          html += `</div>`;
+        if (needsAttention.length) {
+          html += `<div class="sec-upper">Diqqat talab qiladi · ${needsAttention.length}</div>
+            <div class="prj-card-list">${needsAttention.map(buildProjectCardHtml).join("")}</div>`;
         }
-        if (active.length) {
-          html += `<div class="sec-upper">Faol · ${active.length}</div><div class="list-card">`;
-          html += active
-            .map((p) => {
-              const pc = projPct(p);
-              const dl = projDaysLeft(p);
-              return `<div class="pv-row" onclick="openTracker('${escArg(p.id)}')">
-                <div style="flex:1;min-width:0">
-                  <div class="r-name">${escHtml(p.label)}</div>
-                  <div class="r-sub">${dl >= 0 ? dl + " kun qoldi" : "muddat tugagan"}</div>
-                </div>
-                <div class="pv-bar-wrap">
-                  <div class="pv-bar-track"><div class="pv-bar-fill" style="width:${pc}%"></div></div>
-                  <div class="pv-pct num">${pc}%</div>
-                </div>
-              </div>`;
-            })
-            .join("");
-          html += `</div>`;
+        if (goingWell.length) {
+          html += `<div class="sec-upper"${needsAttention.length ? ' style="margin-top:20px"' : ""}>Yaxshi ketmoqda · ${goingWell.length}</div>
+            <div class="prj-card-list">${goingWell.map(buildProjectCardHtml).join("")}</div>`;
         }
         html += `</div>${buildProjectsDesktopHtml(overdue, active)}`;
         body.innerHTML = html;
