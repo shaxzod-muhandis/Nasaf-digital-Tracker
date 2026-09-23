@@ -3541,10 +3541,27 @@
         margin-top: 2px;
         line-height: 1.5;
       }
-      .m-actions-inline {
+      /* Qator amallari — bitta "⋯" tugmasi. Ilgari yonma-yon ikkita
+         30x30 tugma turardi (tahrirlash va o'chirish), ya'ni mobil uchun
+         tavsiya etilgan ~44px'dan kichik va halokatli amal neytralining
+         yonida edi — xato bosish oson. Endi amallar menyuda, tugmaning
+         o'zi esa barmoq uchun yetarli. */
+      .row-menu-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: var(--t3);
+        font-size: 17px;
         display: flex;
-        gap: 6px;
+        align-items: center;
+        justify-content: center;
         flex-shrink: 0;
+      }
+      .row-menu-btn:active {
+        background: var(--chip);
       }
       .icon-btn {
         width: 30px;
@@ -3559,6 +3576,15 @@
         font-size: 13px;
         color: var(--t2);
         flex-shrink: 0;
+        position: relative;
+      }
+      /* Ko'rinadigan o'lcham 30px bo'lib qoladi (ixcham sarlavhalarda
+         joylashuv buzilmasin), lekin bosiladigan maydon ~44px —
+         barmoq uchun tavsiya etilgan o'lcham. */
+      .icon-btn::after {
+        content: "";
+        position: absolute;
+        inset: -7px;
       }
       .icon-btn svg {
         width: 15px;
@@ -8818,6 +8844,46 @@
           <button type="button" class="td-more-btn" title="Boshqa amallar" onclick="openTaskCardMenu('${escArg(t.id)}')">⋯</button>
         </div>`;
       }
+      // Qator amallari uchun umumiy menyu. `items`: {label, danger, run}.
+      function openRowMenu(title, items) {
+        const list = items.filter(Boolean);
+        if (!list.length) return;
+        const { body } = makeSheet(title);
+        body.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px">${list
+          .map(
+            (it, i) =>
+              `<button type="button" class="btn ${it.danger ? "btn-danger" : "btn-soft"}" data-i="${i}">${escHtml(it.label)}</button>`,
+          )
+          .join("")}</div>`;
+        body.querySelectorAll("button[data-i]").forEach((b) => {
+          b.onclick = () => {
+            document.querySelector(".overlay")?.remove();
+            list[+b.dataset.i].run();
+          };
+        });
+      }
+      function openStaffRowMenu(id, name) {
+        openRowMenu(name, [
+          { label: "Tahrirlash", run: () => openStaffEdit(id) },
+          { label: "O'chirish", danger: true, run: () => deleteStaff(id, name) },
+        ]);
+      }
+      function openUserRowMenu(username, displayName, canRemove) {
+        openRowMenu(displayName, [
+          { label: "Tahrirlash", run: () => openUserEditSheet(username) },
+          canRemove && {
+            label: "Chiqarish",
+            danger: true,
+            run: () => deleteTelegramUser(username, displayName),
+          },
+        ]);
+      }
+      function openProjectRowMenu(id, label) {
+        openRowMenu(label, [
+          { label: "Tahrirlash", run: () => openProjectEditSheet(id) },
+          { label: "Arxivlash", danger: true, run: () => archiveProject(id, label, null) },
+        ]);
+      }
       function openTaskCardMenu(id) {
         const t = tasksList.find((x) => x.id === id);
         if (!t) return;
@@ -10651,10 +10717,7 @@
                     <div class="r-name">${escHtml(s.fullName)}</div>
                     <div class="r-sub">${POSITION_LABELS[s.position] || s.position}</div>
                   </div>
-                  <div class="m-actions-inline">
-                    <button class="icon-btn" onclick="openStaffEdit('${escArg(s.id)}')">${ICON.edit}</button>
-                    <button class="icon-btn danger" onclick="deleteStaff('${escArg(s.id)}','${escArg(s.fullName)}')">${ICON.trash}</button>
-                  </div>
+                  <button class="row-menu-btn" title="Amallar" onclick="openStaffRowMenu('${escArg(s.id)}','${escArg(s.fullName)}')">⋯</button>
                 </div>`,
               )
               .join("");
@@ -10743,10 +10806,7 @@
                 <div class="r-sub"${complete ? "" : ' style="color:var(--red)"'}>${escHtml(sub)}</div>
               </div>
               ${userAccessBadgeHtml(u)}
-              <div class="m-actions-inline">
-                <button class="icon-btn" onclick="openUserEditSheet('${escArg(u.username)}')">${ICON.edit}</button>
-                ${isSuperAdmin && u.access_status !== "removed" ? `<button class="icon-btn danger" onclick="deleteTelegramUser('${escArg(u.username)}','${escArg(displayName)}')">${ICON.trash}</button>` : ""}
-              </div>
+              <button class="row-menu-btn" title="Amallar" onclick="openUserRowMenu('${escArg(u.username)}','${escArg(displayName)}',${isSuperAdmin && u.access_status !== "removed"})">⋯</button>
             </div>`;
           })
           .join("");
@@ -10764,10 +10824,7 @@
                   <div class="avatar" style="flex-shrink:0">${u.username.slice(0, 1).toUpperCase()}</div>
                   <div class="r-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(displayName)}</div>
                 </div>
-                <div class="m-actions-inline">
-                  <button class="icon-btn" onclick="openUserEditSheet('${escArg(u.username)}')">${ICON.edit}</button>
-                  ${isSuperAdmin && u.access_status !== "removed" ? `<button class="icon-btn danger" onclick="deleteTelegramUser('${escArg(u.username)}','${escArg(displayName)}')">${ICON.trash}</button>` : ""}
-                </div>
+                <button class="row-menu-btn" title="Amallar" onclick="openUserRowMenu('${escArg(u.username)}','${escArg(displayName)}',${isSuperAdmin && u.access_status !== "removed"})">⋯</button>
               </div>
               <div class="r-sub"${complete ? "" : ' style="color:var(--red)"'}>${escHtml(sub)}</div>
               ${userAccessBadgeHtml(u, "margin-top:8px")}
@@ -10984,10 +11041,7 @@
                 <div class="m-item-sub">${p.periodStart} – ${p.periodEnd}<br>Post ${p.doneK}/${p.k} · Stories ${p.doneS}/${p.s}</div>
               </div>
               ${p.outstandingDebt ? `<span class="debt-badge">QARZ</span>` : ""}
-              <div class="m-actions-inline">
-                <button class="icon-btn" onclick="openProjectEditSheet('${escArg(p.id)}')">${ICON.edit}</button>
-                <button class="icon-btn danger" onclick="archiveProject('${escArg(p.id)}','${escArg(p.label)}',this)">${ICON.trash}</button>
-              </div>
+              <button class="row-menu-btn" title="Amallar" onclick="openProjectRowMenu('${escArg(p.id)}','${escArg(p.label)}')">⋯</button>
             </div>`,
           )
           .join("");
@@ -11000,10 +11054,7 @@
                 ${p.outstandingDebt ? `<span class="debt-badge">QARZ</span>` : `<span class="debt-badge" style="color:var(--brand);background:rgba(47,122,185,.12)">Faol</span>`}
               </div>
               <div class="r-sub">${p.periodStart} – ${p.periodEnd}<br>Post ${p.doneK}/${p.k} · Stories ${p.doneS}/${p.s}</div>
-              <div class="m-actions-inline" style="margin-top:12px">
-                <button class="icon-btn" onclick="openProjectEditSheet('${escArg(p.id)}')">${ICON.edit}</button>
-                <button class="icon-btn danger" onclick="archiveProject('${escArg(p.id)}','${escArg(p.label)}',this)">${ICON.trash}</button>
-              </div>
+              <button class="row-menu-btn" title="Amallar" style="margin-top:12px" onclick="openProjectRowMenu('${escArg(p.id)}','${escArg(p.label)}')">⋯</button>
             </div>`,
           )
           .join("");
