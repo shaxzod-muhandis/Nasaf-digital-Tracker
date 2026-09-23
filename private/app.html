@@ -895,6 +895,98 @@
          Maketdagi qoida: balans ekranning eng tepasida, doim ko'rinib
          tursin — mahsulot narxini ko'rgan xodim "menda yetadimi?" deb
          boshqa joyga qarab yurmasin. */
+      /* ── BOSHQARUV MENYUSI — v3 maketidan 1:1 ─────────────────────
+         Ilgari bu yerda 7 tagacha bo'lim bitta gorizontal qatorda
+         turardi va tor ekranda oxirgilari kesilib qolardi — skroll
+         borligi haqida hech qanday ishora yo'q edi, shu sabab Super
+         Admin "Adminlar"/"E'lon" bo'limlari borligini umuman
+         sezmasligi mumkin edi (auditdagi 7-topilma). Endi barcha
+         bo'lim guruhlangan ro'yxatda ko'rinadi va har qatorda nima
+         kutayotgani yozib turadi. */
+      .amenu-sec {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--t3);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin: 18px 0 8px 2px;
+      }
+      .amenu-sec:first-child {
+        margin-top: 4px;
+      }
+      .amenu-list {
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .amenu-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 58px;
+        padding: 0 14px;
+        cursor: pointer;
+      }
+      .amenu-row + .amenu-row {
+        border-top: 1px solid var(--bd2);
+      }
+      .amenu-ico {
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+        background: var(--st-onplan-bg);
+        color: var(--brand);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+      .amenu-title {
+        font-size: 14.5px;
+        font-weight: 600;
+        color: var(--ink);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .amenu-sub {
+        font-size: 12.5px;
+        color: var(--t2);
+        margin-top: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .amenu-badge {
+        height: 20px;
+        padding: 0 8px;
+        border-radius: 7px;
+        background: var(--st-behind-bg);
+        color: var(--st-behind);
+        font-size: 11.5px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        flex: 0 0 auto;
+      }
+      .amenu-chev {
+        color: var(--chev);
+        font-size: 18px;
+        line-height: 1;
+        flex: 0 0 auto;
+      }
+      /* Bo'lim ochilganda — orqaga qaytish qatori */
+      .aback {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--brand);
+        padding: 2px 2px 14px;
+        cursor: pointer;
+      }
       /* ── PROFIL — v3 maketidan 1:1 ────────────────────────────────
          Mobilda maydonlar forma emas, ro'yxat: qator bosilsa bitta
          maydonlik oyna ochiladi va o'sha zahoti saqlanadi. Shu sabab
@@ -5559,8 +5651,13 @@
     <!-- ── BOSHQARUV ───────────────────────────────────────────────── -->
     <div class="screen" id="screen-admin">
       <div class="hdr" id="admin-hdr">
-        <div class="hdr-title">Boshqaruv</div>
-        <div class="atabs" id="admin-tabs">
+        <div class="hdr-title" id="admin-hdr-title">Boshqaruv</div>
+        <!-- Mobilda bo'lim ochilganda menyuga qaytish; desktopda
+             yuqoridagi tablar doim turadi, shu sabab u yerda kerak emas. -->
+        <div class="aback mobile-only" id="admin-back" style="display: none" onclick="backToAdminMenu()">
+          ‹ Boshqaruv
+        </div>
+        <div class="atabs desktop-flex" id="admin-tabs">
           <button class="atab" id="atab-projects" onclick="switchATab('projects')">
             Loyihalar
           </button>
@@ -5968,7 +6065,9 @@
       let projFilter = "all";
       let trackerProjectId = null,
         trackerType = "k";
-      let adminActiveTab = "projects";
+      // null = menyu bosqichi (mobil). Desktopda applyAdminChrome()
+      // uni darhol "projects"ga o'tkazadi, chunki u yerda tablar bor.
+      let adminActiveTab = null;
       let npState = {}; // npDefaultState() orqali openNewProjectSheet()da to'ldiriladi
       let histState = { rows: [], filter: "all", sort: "newest", loaded: false };
       let staffList = [];
@@ -6662,7 +6761,10 @@
         else if (tab === "tasks") renderTasksScreen();
         else if (tab === "nshop") renderNShopScreen();
         else if (tab === "history") openHistoryTab();
-        else if (tab === "admin") switchATab(adminActiveTab);
+        else if (tab === "admin") {
+          applyAdminChrome();
+          renderAdminActiveTab();
+        }
       }
 
       // Ichki (drill-in) ekranni ochish — root ekranlar yashiriladi
@@ -9915,19 +10017,46 @@
         "announcement",
         "nshop",
       ];
-      function switchATab(tabName) {
-        adminActiveTab = tabName;
+      // Boshqaruv ekranining "ramkasi" — sarlavha, orqaga tugmasi,
+      // qidiruv va FAB. Menyu bosqichida (mobil) ularning ko'pi
+      // yashiriladi, chunki menyuda qidiradigan narsa yo'q.
+      const ADMIN_TAB_TITLES = {
+        projects: "Loyihalar",
+        staff: "Xodimlar",
+        worklog: "Tabel",
+        perms: "Ruxsatlar",
+        admins: "Adminlar",
+        announcement: "E'lon yuborish",
+        nshop: "NShop mahsulotlari",
+      };
+      function applyAdminChrome() {
+        // Desktopda menyu bosqichi yo'q — tablar doim ko'rinib turadi.
+        const isDesktop = window.matchMedia("(min-width: 860px)").matches;
+        if (isDesktop && adminActiveTab === null) adminActiveTab = "projects";
+        const onMenu = adminActiveTab === null;
+
         ADMIN_TABS.forEach((t) => {
           const b = document.getElementById("atab-" + t);
-          if (b) b.classList.toggle("active", t === tabName);
+          if (b) b.classList.toggle("active", t === adminActiveTab);
         });
-        const noSearch = tabName === "announcement" || tabName === "worklog" || tabName === "nshop";
-        document.getElementById("admin-search-box").style.display = noSearch
-          ? "none"
-          : "flex";
-        // Faqat "Loyihalar" tabida yangi loyiha yaratish mantiqiy
+        const titleEl = document.getElementById("admin-hdr-title");
+        if (titleEl) {
+          titleEl.textContent = onMenu
+            ? "Boshqaruv"
+            : ADMIN_TAB_TITLES[adminActiveTab] || "Boshqaruv";
+        }
+        const backEl = document.getElementById("admin-back");
+        if (backEl) backEl.style.display = onMenu ? "none" : "flex";
+
+        const noSearch =
+          onMenu ||
+          adminActiveTab === "announcement" ||
+          adminActiveTab === "worklog" ||
+          adminActiveTab === "nshop";
+        document.getElementById("admin-search-box").style.display = noSearch ? "none" : "flex";
         document.getElementById("admin-fab").style.display =
-          tabName === "projects" ? "flex" : "none";
+          adminActiveTab === "projects" ? "flex" : "none";
+
         const ph = {
           projects: "Loyiha qidirish",
           staff: "Xodim qidirish",
@@ -9935,11 +10064,104 @@
           admins: "Admin qidirish",
         };
         const s = document.getElementById("admin-search");
-        if (s && ph[tabName]) s.placeholder = ph[tabName];
+        if (s && ph[adminActiveTab]) s.placeholder = ph[adminActiveTab];
+      }
+      function switchATab(tabName) {
+        adminActiveTab = tabName;
+        applyAdminChrome();
+        renderAdminActiveTab();
+      }
+      // ── BOSHQARUV MENYUSI ─────────────────────────────────────────
+      // Har qatorda bo'lim nomi va uning HOZIRGI holati: "14 kishi ·
+      // 2 tasi tasdiq kutmoqda" kabi. Maqsad — admin bo'limni ochmasdan
+      // turib qayerda ish borligini ko'rsin.
+      const ADMIN_MENU_ICONS = {
+        staff: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 20c1-3.5 3.5-5.5 6.5-5.5s5.5 2 6.5 5.5"/><path d="M15.5 5.2a3.5 3.5 0 0 1 0 6.6M18 14.8c1.8.8 3 2.6 3.5 5.2"/></svg>`,
+        worklog: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M8 2.5v4M16 2.5v4M3 9.5h18"/></svg>`,
+        perms: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>`,
+        projects: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>`,
+        nshop: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>`,
+        announcement: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4h3l6 4V6l-6 4z"/><path d="M17.5 9.5a4 4 0 0 1 0 5"/></svg>`,
+        admins: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5.5c0 4.2-2.9 7.6-7 9.5-4.1-1.9-7-5.3-7-9.5V6z"/></svg>`,
+      };
+      function adminMenuGroups() {
+        const pendingJob = 0; // lavozim tasdiqlash hali backendda yo'q
+        const staffCount = (allUsers || []).length;
+        const debtCount = projects.filter((p) => p.outstandingDebt).length;
+        const activeCount = projects.length;
+        return [
+          {
+            label: "Jamoa",
+            items: [
+              {
+                key: "staff",
+                title: "Xodimlar",
+                sub: staffCount ? `${staffCount} kishi` : "Ro'yxatni ochish",
+                badge: pendingJob || 0,
+              },
+              { key: "worklog", title: "Tabel", sub: "Ish vaqti va kunlik hisobot" },
+              { key: "perms", title: "Ruxsatlar", sub: "Kim qaysi loyihaga mas'ul" },
+            ],
+          },
+          {
+            label: "Kontent",
+            items: [
+              {
+                key: "projects",
+                title: "Loyihalar",
+                sub: `${activeCount} faol${debtCount ? ` · ${debtCount} qarzda` : ""}`,
+                badge: debtCount,
+              },
+              { key: "nshop", title: "NShop mahsulotlari", sub: "Mahsulot va qoldiqlar" },
+            ],
+          },
+          {
+            label: "Tizim",
+            items: [
+              ...(isSuperAdmin
+                ? [
+                    { key: "announcement", title: "E'lon yuborish", sub: "Telegram orqali xodimlarga" },
+                    { key: "admins", title: "Adminlar", sub: "Kim boshqaruvga kira oladi" },
+                  ]
+                : []),
+            ],
+          },
+        ].filter((g) => g.items.length);
+      }
+      function renderAdminMenu(c) {
+        c.innerHTML = adminMenuGroups()
+          .map(
+            (g) => `<div class="amenu-sec">${g.label}</div>
+              <div class="amenu-list">${g.items
+                .map(
+                  (it) => `<div class="amenu-row" onclick="switchATab('${it.key}')">
+                    <div class="amenu-ico">${ADMIN_MENU_ICONS[it.key] || ""}</div>
+                    <div style="flex:1;min-width:0">
+                      <div class="amenu-title">${escHtml(it.title)}</div>
+                      <div class="amenu-sub">${escHtml(it.sub)}</div>
+                    </div>
+                    ${it.badge ? `<span class="amenu-badge">${it.badge}</span>` : ""}
+                    <span class="amenu-chev">›</span>
+                  </div>`,
+                )
+                .join("")}</div>`,
+          )
+          .join("");
+      }
+      function backToAdminMenu() {
+        adminActiveTab = null;
+        applyAdminChrome();
         renderAdminActiveTab();
       }
       function renderAdminActiveTab() {
         const c = document.getElementById("admin-body");
+        // Mobilda bo'lim tanlanmagan bo'lsa — menyu ko'rsatiladi.
+        // Desktopda yuqoridagi tablar doim turadi, shu sabab u yerda
+        // menyu bosqichi umuman bo'lmaydi.
+        if (adminActiveTab === null) {
+          renderAdminMenu(c);
+          return;
+        }
         if (adminActiveTab === "projects") renderAdminProjectsTab(c);
         else if (adminActiveTab === "staff") renderStaffTab(c);
         else if (adminActiveTab === "worklog") renderWorklogTab(c);
