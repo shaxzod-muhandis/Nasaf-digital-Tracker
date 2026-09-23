@@ -5557,11 +5557,35 @@
       // ── UTILS ─────────────────────────────────────────────────────
       const getInitData = () => window.Telegram?.WebApp?.initData || "";
       const tg = () => window.Telegram?.WebApp;
+      // Sessiya tugashi (401) — butun ilova uchun BITTA joyda hal
+      // qilinadi. Ilgari har ekran buni o'zicha talqin qilardi: ba'zisi
+      // to'g'ri "Telegram orqali kiring" deb yozsa, ba'zisi "Hech narsa
+      // topilmadi — filtrni o'zgartiring" deb ko'rsatardi, ya'ni xodim
+      // sessiyasi tugaganini bilmay, ma'lumoti yo'q deb o'ylardi.
+      // Endi qaysi so'rov 401 qaytarishidan qat'i nazar — yakun bitta.
+      let sessionExpiredShown = false;
+      function handleSessionExpired() {
+        if (sessionExpiredShown) return;
+        sessionExpiredShown = true;
+        if (bootFinished) {
+          // Ilova ochilib bo'lgan bo'lsa, showBootError o'zini
+          // to'xtatadi — shu sabab bayroqni qaytarib, ekranni to'g'ridan
+          // -to'g'ri chizamiz.
+          bootFinished = false;
+        }
+        showBootError("session");
+      }
+
       async function apiFetch(url, opts = {}) {
         const h = { "Content-Type": "application/json", ...(opts.headers || {}) };
         const id = getInitData();
         if (id) h["X-Telegram-Init-Data"] = id;
-        return fetch(`${API}${url}`, { ...opts, headers: h });
+        const res = await fetch(`${API}${url}`, { ...opts, headers: h });
+        // `/api/auth` bundan mustasno: u kirish huquqini tekshiradigan
+        // endpoint, uning 401/403'i initApp'da alohida, aniqroq xabar
+        // bilan ko'rsatiladi (bloklangan / ruxsat yo'q).
+        if (res.status === 401 && !url.startsWith("/api/auth")) handleSessionExpired();
+        return res;
       }
       const pct = (d, t) => (t === 0 ? 0 : Math.round((d / t) * 100));
       function escHtml(s) {
@@ -12293,6 +12317,66 @@
           </div>`;
       }
 
+      // ── ILOVA YUKLANISHINING YAKUNLARI ────────────────────────────
+      // Yuklanishning uchta yakuni bor: muvaffaqiyat, tarmoq xatosi va
+      // sessiya tugashi. Ilgari faqat birinchisi hisobga olingan edi —
+      // boshlang'ich so'rovlardan bittasi yiqilsa, "ND" ekrani abadiy
+      // qolib ketardi, chunki uni olib tashlaydigan qatorga ijro
+      // umuman yetib bormasdi. Endi har uch yakun ham aniq ekran bilan
+      // tugaydi va har birida keyingi qadam bor.
+      const BOOT_TIMEOUT_MS = 8000;
+      let bootWatchdog = null;
+      let bootFinished = false;
+
+      function finishBoot() {
+        bootFinished = true;
+        if (bootWatchdog) {
+          clearTimeout(bootWatchdog);
+          bootWatchdog = null;
+        }
+        document.getElementById("loading")?.remove();
+      }
+
+      // `kind`: "network" (aloqa yo'q / so'rov yiqildi) yoki "session"
+      // (401 — token eskirgan). Ilova allaqachon ochilib bo'lgan bo'lsa
+      // (bootFinished) — hech narsa qilinmaydi: kech kelgan xato
+      // ishlayotgan ekranni o'chirib yuborishi kerak emas.
+      function showBootError(kind) {
+        if (bootFinished) return;
+        finishBoot();
+        const isSession = kind === "session";
+        const title = isSession ? "Sessiya muddati tugadi" : "Internet bilan aloqa yo'q";
+        const text = isSession
+          ? "Xavfsizlik uchun qayta kirish kerak. Ma'lumotlaringiz saqlangan."
+          : "Ma'lumotlar yuklanmadi. Aloqani tekshirib, qayta urinib ko'ring.";
+        const btnText = isSession ? "Telegram orqali kirish" : "Qayta urinish";
+        const now = new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
+        document.body.innerHTML = `
+          <div style="min-height:100vh;min-height:100dvh;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px">
+            <div style="background:var(--surf);border:1px solid var(--bd2);border-radius:16px;padding:36px 24px;max-width:320px;width:100%;text-align:center">
+              <div style="width:52px;height:52px;border-radius:99px;background:${isSession ? "var(--amber-bg)" : "var(--chip)"};margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:24px;color:${isSession ? "var(--amber)" : "var(--t2)"}">${isSession ? "!" : "↻"}</div>
+              <div style="font-size:17px;font-weight:600;margin-bottom:8px">${title}</div>
+              <div style="font-size:12.5px;color:var(--t2);line-height:1.7;margin-bottom:22px">${text}</div>
+              <button id="boot-retry" class="btn btn-blue" style="width:100%">${btnText}</button>
+              <div style="font-size:11px;color:var(--t3);margin-top:14px">Oxirgi urinish: ${now}</div>
+            </div>
+          </div>`;
+        document.getElementById("boot-retry").onclick = () => {
+          // Sessiya tugaganda sahifani yangilash yetarli emas — initData
+          // Telegram tomonidan beriladi, shuning uchun ilovani yopib,
+          // qaytadan ochish kerak. Telegram tashqarisida (masalan
+          // brauzerda sinayotganda) close() ishlamaydi — o'shanda oddiy
+          // yangilashga qaytamiz.
+          if (isSession && tg()?.close) {
+            try {
+              tg().close();
+              return;
+            } catch (e) {}
+          }
+          location.reload();
+        };
+      }
+
       // ── INIT ──────────────────────────────────────────────────────
       // To'liq ekran rejimida Telegram o'zining sarlavha/yopish
       // tugmalarini kontent ustiga chizadi (contentSafeAreaInset) —
@@ -12327,7 +12411,7 @@
             const res = await apiFetch("/api/auth", { method: "POST", body: "{}" });
             const d = await res.json();
             if (res.status === 403 || res.status === 401) {
-              document.getElementById("loading").remove();
+              finishBoot();
               showAccessDenied(
                 d.username || tg()?.initDataUnsafe?.user?.username || null,
                 d.code,
@@ -12429,7 +12513,7 @@
           .matchMedia("(min-width: 860px)")
           .addEventListener("change", refreshAllViews);
 
-        document.getElementById("loading").remove();
+        finishBoot();
         if (profileIncomplete) {
           showOnboarding();
         } else {
@@ -12451,7 +12535,14 @@
         }
       }
 
-      initApp();
+      // Qo'riqchi: yuklanish belgilangan vaqt ichida tugamasa (masalan
+      // so'rov javobsiz osilib qolsa), foydalanuvchini "ND" ekranida
+      // qoldirmasdan xato ekraniga o'tkazamiz.
+      bootWatchdog = setTimeout(() => showBootError("network"), BOOT_TIMEOUT_MS);
+      initApp().catch((e) => {
+        console.error("Ilova yuklanmadi:", e);
+        showBootError("network");
+      });
     </script>
   </body>
 </html>
