@@ -6525,6 +6525,9 @@
         const id = getInitData();
         if (id) h["X-Telegram-Init-Data"] = id;
         const res = await fetch(`${API}${url}`, { ...opts, headers: h });
+        // Javob keldi — yuklanish qotib qolmagan, qo'riqchi taymerini
+        // qaytadan boshlaymiz (ilova ochilib bo'lgan bo'lsa — bekor).
+        noteBootProgress();
         // `/api/auth` bundan mustasno: u kirish huquqini tekshiradigan
         // endpoint, uning 401/403'i initApp'da alohida, aniqroq xabar
         // bilan ko'rsatiladi (bloklangan / ruxsat yo'q).
@@ -13922,9 +13925,32 @@
       // qolib ketardi, chunki uni olib tashlaydigan qatorga ijro
       // umuman yetib bormasdi. Endi har uch yakun ham aniq ekran bilan
       // tugaydi va har birida keyingi qadam bor.
-      const BOOT_TIMEOUT_MS = 8000;
+      // Qo'riqchi JAMI yuklanish vaqtini emas, QOTIB QOLISHNI o'lchaydi.
+      // Sabab: initApp ketma-ket sakkizta so'rov yuboradi va ularning
+      // har biri serverni uyg'otib, bazaga ulanadi — sekin tarmoqda bu
+      // bemalol o'n soniyadan oshadi. Jami vaqtga chegara qo'yilganda
+      // (avval 8s edi) ilova aslida normal yuklanayotgan bo'lsa ham
+      // "Internet bilan aloqa yo'q" deb xato ko'rsatardi.
+      //
+      // Endi har bir tugagan so'rov taymerni qaytadan boshlaydi: xato
+      // faqat shuncha vaqt davomida BITTA HAM javob kelmasa chiqadi —
+      // bu haqiqatan aloqa uzilgani yoki server javob bermayotganini
+      // bildiradi.
+      const BOOT_TIMEOUT_MS = 15000;
       let bootWatchdog = null;
       let bootFinished = false;
+
+      function armBootWatchdog() {
+        if (bootFinished) return;
+        if (bootWatchdog) clearTimeout(bootWatchdog);
+        bootWatchdog = setTimeout(() => showBootError("network"), BOOT_TIMEOUT_MS);
+      }
+
+      // apiFetch har javob kelganda chaqiradi — "hali ham harakat bor".
+      function noteBootProgress() {
+        if (bootFinished) return;
+        armBootWatchdog();
+      }
 
       function finishBoot() {
         bootFinished = true;
@@ -13939,22 +13965,34 @@
       // (401 — token eskirgan). Ilova allaqachon ochilib bo'lgan bo'lsa
       // (bootFinished) — hech narsa qilinmaydi: kech kelgan xato
       // ishlayotgan ekranni o'chirib yuborishi kerak emas.
-      function showBootError(kind) {
+      function showBootError(kind, detail) {
         if (bootFinished) return;
         finishBoot();
         const isSession = kind === "session";
-        const title = isSession ? "Sessiya muddati tugadi" : "Internet bilan aloqa yo'q";
+        const isCode = kind === "code";
+        const title = isSession
+          ? "Sessiya muddati tugadi"
+          : isCode
+            ? "Ilovada xatolik"
+            : "Internet bilan aloqa yo'q";
         const text = isSession
           ? "Xavfsizlik uchun qayta kirish kerak. Ma'lumotlaringiz saqlangan."
-          : "Ma'lumotlar yuklanmadi. Aloqani tekshirib, qayta urinib ko'ring.";
+          : isCode
+            ? "Ilovani ochishda kutilmagan xatolik yuz berdi. Qayta urinib ko'ring — takrorlansa, quyidagi qatorni dasturchiga yuboring."
+            : "Ma'lumotlar yuklanmadi. Aloqani tekshirib, qayta urinib ko'ring.";
         const btnText = isSession ? "Telegram orqali kirish" : "Qayta urinish";
         const now = new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
         document.body.innerHTML = `
           <div style="min-height:100vh;min-height:100dvh;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px">
             <div style="background:var(--surf);border:1px solid var(--bd2);border-radius:16px;padding:36px 24px;max-width:320px;width:100%;text-align:center">
-              <div style="width:52px;height:52px;border-radius:99px;background:${isSession ? "var(--amber-bg)" : "var(--chip)"};margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:24px;color:${isSession ? "var(--amber)" : "var(--t2)"}">${isSession ? "!" : "↻"}</div>
+              <div style="width:52px;height:52px;border-radius:99px;background:${isSession || isCode ? "var(--amber-bg)" : "var(--chip)"};margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:24px;color:${isSession || isCode ? "var(--amber)" : "var(--t2)"}">${isSession || isCode ? "!" : "↻"}</div>
               <div style="font-size:17px;font-weight:600;margin-bottom:8px">${title}</div>
               <div style="font-size:12.5px;color:var(--t2);line-height:1.7;margin-bottom:22px">${text}</div>
+              ${
+                detail
+                  ? `<div style="font-size:11px;color:var(--t3);line-height:1.6;background:var(--chip);border-radius:8px;padding:10px 12px;margin-bottom:18px;text-align:left;word-break:break-word">${escHtml(detail)}</div>`
+                  : ""
+              }
               <button id="boot-retry" class="btn btn-blue" style="width:100%">${btnText}</button>
               <div style="font-size:11px;color:var(--t3);margin-top:14px">Oxirgi urinish: ${now}</div>
             </div>
@@ -14143,10 +14181,19 @@
       // Qo'riqchi: yuklanish belgilangan vaqt ichida tugamasa (masalan
       // so'rov javobsiz osilib qolsa), foydalanuvchini "ND" ekranida
       // qoldirmasdan xato ekraniga o'tkazamiz.
-      bootWatchdog = setTimeout(() => showBootError("network"), BOOT_TIMEOUT_MS);
+      armBootWatchdog();
       initApp().catch((e) => {
         console.error("Ilova yuklanmadi:", e);
-        showBootError("network");
+        // Tarmoq uzilganda fetch "Failed to fetch" turidagi xato beradi.
+        // Qolgan hammasi — koddagi xato, va uni "Internet bilan aloqa
+        // yo'q" deb ko'rsatish sababni yashiradi: xodim aloqasini
+        // tekshirib vaqt yo'qotadi, biz esa nima buzilganini bilmaymiz.
+        const msg = String(e?.message || e || "");
+        if (/failed to fetch|networkerror|load failed|network request/i.test(msg)) {
+          showBootError("network");
+        } else {
+          showBootError("code", `${e?.name || "Error"}: ${msg}`);
+        }
       });
     </script>
   </body>
