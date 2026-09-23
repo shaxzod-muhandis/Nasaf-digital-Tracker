@@ -24,7 +24,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -50,20 +50,9 @@
            yozilmaydi), aks holda qorong'i temada bu fon ham
            yorishib, ustidagi oq matn/harflar ko'rinmay qolardi. */
         --inkfill: #0f172a;
-        /* "To'q fon + ustida oq" elementlar uchun (Ncoin nishoni,
-           progress to'ldirishi). --amber/--green'dan farqli o'laroq
-           qorong'i temada ham AYNAN shu qoladi: aks holda fon yorishib,
-           ustidagi oq belgi ko'rinmay qolardi. */
-        --amber-fill: #d97706;
-        --green-fill: #16a34a;
-        /* Ikkilamchi matn pog'onalari. v3 dizaynida ataylab to'qroq
-           qilingan: avvalgi --t3 (#8b929c) oq fonda ~3.1:1 kontrast
-           berardi — bu WCAG AA (4.5:1) dan past, holbuki u bo'sh-ekran
-           izohlari va statistika yorliqlari kabi HAQIQIY matn uchun
-           ishlatiladi, sof bezak uchun emas. */
-        --t2: #5b6573;
-        --t3: #7a828e;
-        --t4: #8a9099;
+        --t2: #6b7280;
+        --t3: #8b929c;
+        --t4: #9aa1ac;
         --t5: #374151;
         --chev: #b6bcc5;
         --red: #dc2626;
@@ -85,41 +74,15 @@
         --amber: #d97706;
         --amber-bg: #fbf1e4;
         --amber-ink: #8a5a1a;
-        --teal: #0f766e;
-        --teal-bg: #e3f4f1;
-        --tagblue: #255f91;
-        --tagblue-bg: #eaf2f9;
-        --purple: #7c3aed;
-        --purple-bg: #f3edfd;
-        --pink: #b4235a;
-        --pink-bg: #fce9f0;
+        --teal: #1e6b57;
+        --teal-bg: #e9f5f1;
+        --tagblue: #23608f;
+        --tagblue-bg: #ebf3fa;
+        --purple: #4b41a8;
+        --purple-bg: #efedfb;
+        --pink: #92345f;
+        --pink-bg: #faecf3;
         --green: #16a34a;
-        /* ── LOYIHA HOLATI — 4 ta so'z, 4 ta rang ──────────────────
-           Loyiha/davr qay ahvolda ekani ilovaning hamma joyida
-           (Bugun, Loyihalar, Tarix, Boshqaruv) AYNAN shu to'rt so'z va
-           shu to'rt rang bilan beriladi. Maqsad: xodim rangni bir marta
-           o'rgansa, qaysi ekranda ko'rmasin ma'nosi bir xil bo'lsin.
-           Matn ranglari fon rangidan to'qroq — tint ustida o'qilishi
-           uchun (masalan yashil matn #15803d, foni #e8f6ec). */
-        /* Har holatda uchta rang: fon (tint), matn (to'q — tint ustida
-           o'qilishi uchun) va nuqta (yorqinroq — ko'zga tashlanishi
-           uchun). Qiymatlar maketdan aynan olingan. */
-        --st-debt: #dc2626; /* Qarz    — muddat o'tdi, bajarilmagan qoldi */
-        --st-debt-bg: #fdecec;
-        --st-debt-dot: #dc2626;
-        --st-behind: #a45f08; /* Ortda   — rejadan orqada */
-        --st-behind-bg: #fbf1e4;
-        --st-behind-dot: #d97706;
-        --st-onplan: #255f91; /* Rejada  — reja bo'yicha ketmoqda */
-        --st-onplan-bg: #eaf2f9;
-        --st-onplan-dot: #2f7ab9;
-        --st-ahead: #15803d; /* Oldinda — rejadan oldinda */
-        --st-ahead-bg: #e8f6ec;
-        --st-ahead-dot: #16a34a;
-        /* Progress chizig'ining bo'sh qismi */
-        --track: #e6e9ed;
-        /* Ustuvorlik ustunchasining yonmagan qismi */
-        --pb-off: #d8dce1;
         --red-tint: #fffbfb;
         /* Faollik heatmap — bitta ko'k rangning 5 pog'onasi (dizayner
            TZ'i, 3.3-band): 0 = harakat yo'q, 4 = eng yuqori. Boshqa
@@ -179,20 +142,6 @@
         --pink: #e39cbe;
         --pink-bg: rgba(146, 52, 95, 0.22);
         --green: #34d066;
-        --st-debt: #f0554a;
-        --st-debt-bg: rgba(240, 85, 74, 0.16);
-        --st-debt-dot: #f0554a;
-        --st-behind: #f0c479;
-        --st-behind-bg: rgba(217, 119, 6, 0.18);
-        --st-behind-dot: #f0a836;
-        --st-onplan: #8fc2ea;
-        --st-onplan-bg: rgba(47, 122, 185, 0.2);
-        --st-onplan-dot: #5aa3dd;
-        --st-ahead: #34d066;
-        --st-ahead-bg: rgba(52, 208, 102, 0.16);
-        --st-ahead-dot: #34d066;
-        --track: #2b313d;
-        --pb-off: #3a4048;
         --red-tint: rgba(240, 85, 74, 0.08);
         --act-lvl-0: #2b313d;
         --act-lvl-1: #2a3f52;
@@ -206,7 +155,7 @@
         -webkit-tap-highlight-color: transparent;
       }
       body {
-        font-family: "Onest", -apple-system, sans-serif;
+        font-family: "Sora", -apple-system, sans-serif;
         background: var(--bg);
         color: var(--ink);
         min-height: 100vh;
@@ -399,341 +348,73 @@
         color: var(--brand);
       }
 
-      /* ── DAVR KARTASI (Bugun) — v3 maketidan 1:1 ko'chirilgan ─────
-         O'lchamlarning hammasi (shrift, oraliq, radius, shaffoflik)
-         maketning o'zidan olingan. Karta bitta savolga javob beradi:
-         men rejadan oldindami yoki ortdami. Oq chiziqcha — bugungi
-         kunga kutilgan joy, shu sabab foizni boshqa raqam bilan
-         solishtirish shart emas, ko'z bilan ko'rinadi.
-         Karta ikkala temada ham to'q qoladi (--inkfill kabi). */
-      .dcard {
-        background: #0e1726;
-        border-radius: 18px;
-        padding: 16px 16px 14px;
+      /* ── TEMPO KARTASI ──────────────────────────────────────────── */
+      .tempo {
+        background: var(--brand);
+        border-radius: 16px;
+        padding: 18px;
         color: #fff;
       }
-      .dcard-top {
+      .tempo-top {
         display: flex;
-        align-items: center;
-        gap: 8px;
+        justify-content: space-between;
+        align-items: flex-start;
       }
-      .dcard-lbl {
-        font-size: 12.5px;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.7);
-      }
-      .dcard-mid {
-        display: flex;
-        align-items: flex-end;
-        gap: 10px;
-        margin-top: 9px;
-      }
-      .dcard-pct {
-        font-size: 44px;
-        font-weight: 700;
-        line-height: 44px;
-        letter-spacing: -0.03em;
-      }
-      .dcard-pct span {
-        font-size: 22px;
-        line-height: 22px;
-      }
-      .dcard-frac {
-        font-size: 13.5px;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.85);
-        padding-bottom: 5px;
-      }
-      .dcard-delta {
-        display: flex;
-        align-items: center;
-        height: 26px;
-        padding: 0 9px;
-        border-radius: 8px;
-        font-size: 12.5px;
-        font-weight: 600;
-        white-space: nowrap;
-      }
-      .dcard-delta.ahead {
-        background: rgba(74, 222, 128, 0.16);
-        color: #86efac;
-      }
-      .dcard-delta.behind {
-        background: rgba(248, 113, 113, 0.16);
-        color: #fca5a5;
-      }
-      .dcard-delta.exact {
-        background: rgba(255, 255, 255, 0.14);
-        color: rgba(255, 255, 255, 0.85);
-      }
-      .dcard-track {
-        position: relative;
-        height: 8px;
-        border-radius: 99px;
-        background: rgba(255, 255, 255, 0.14);
-        margin-top: 12px;
-      }
-      .dcard-fill {
-        height: 100%;
-        border-radius: 99px;
-        background: #5795c6;
-      }
-      .dcard-mark {
-        position: absolute;
-        top: 50%;
-        width: 2px;
-        height: 14px;
-        border-radius: 2px;
-        background: #fff;
-        transform: translate(-50%, -50%);
-      }
-      .dcard-note {
+      .tempo-lbl {
         font-size: 11.5px;
         color: rgba(255, 255, 255, 0.6);
-        margin-top: 8px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
       }
-      /* ── LOYIHA KARTASI — v3 maketidan 1:1 ────────────────────────
-         Bitta kartada xodimga kerak bo'lgan hamma narsa bor: kim
-         mas'ul, qancha vaqt qoldi, necha foiz, rejaga nisbatan qayerda
-         (chiziqdagi to'q belgi) va post/stories alohida. Qarzli karta
-         qizil hoshiya bilan ajralib turadi. */
-      .prj-card {
-        background: var(--surf);
-        border: 1px solid var(--bd2);
-        border-radius: 14px;
-        padding: 13px 14px;
-      }
-      .prj-card.debt {
-        border: 1.5px solid var(--red-bd2);
-      }
-      .prj-card-top {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .prj-card-av {
-        width: 34px;
-        height: 34px;
-        border-radius: 12px;
-        background: var(--chip2);
-        color: var(--ink);
-        font-size: 14px;
+      .tempo-pct {
         font-weight: 600;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 auto;
+        font-size: 36px;
+        line-height: 1;
+        margin-top: 10px;
+        letter-spacing: -0.03em;
       }
-      .prj-card-name {
+      .tempo-pct span {
+        font-size: 18px;
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .tempo-exp {
+        text-align: right;
+      }
+      .tempo-exp .l1 {
+        font-size: 11.5px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+      .tempo-exp .l2 {
+        font-weight: 600;
         font-size: 15px;
-        font-weight: 600;
-        color: var(--ink);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .prj-card-sub {
-        font-size: 12.5px;
-        color: var(--t2);
-        white-space: nowrap;
-        margin-top: 1px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .prj-card-pct {
-        font-size: 17px;
-        font-weight: 700;
-        color: var(--ink);
-        white-space: nowrap;
-        font-variant-numeric: tabular-nums;
-      }
-      .prj-card.debt .prj-card-sub,
-      .prj-card.debt .prj-card-pct,
-      .prj-card.debt .prj-card-note {
-        color: var(--red);
-      }
-      .prj-card-track {
-        position: relative;
-        height: 6px;
-        border-radius: 99px;
-        background: var(--track);
-        margin-top: 11px;
-      }
-      .prj-card-fill {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        border-radius: 99px;
-        background: var(--brand);
-      }
-      .prj-card.debt .prj-card-fill {
-        background: var(--red);
-      }
-      /* Bugungi kunga kutilgan joy — chiziqdan sal baland turadi
-         (top/bottom -3px), shu sabab to'ldirish ustida ham ko'rinadi. */
-      .prj-card-mark {
-        position: absolute;
-        top: -3px;
-        bottom: -3px;
-        width: 2px;
-        border-radius: 2px;
-        background: var(--ink);
-      }
-      .prj-card-bot {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-top: 9px;
-      }
-      .prj-card-note {
-        font-size: 12.5px;
-        font-weight: 500;
-        color: var(--t2);
-        white-space: nowrap;
-        flex: 1;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .prj-card-cnt {
-        font-size: 12px;
-        font-weight: 500;
-        color: var(--t2);
-        white-space: nowrap;
-        font-variant-numeric: tabular-nums;
-      }
-      .prj-card-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-      /* ── VAZIFA QATORI — v3 maketidan 1:1 ─────────────────────────
-         Vazifalar bosqich bo'yicha guruhlanadi va har guruh bitta
-         kartaning ichida ro'yxat bo'lib turadi. Bitta qatorda xodimga
-         kerak bo'lgan hamma narsa bor: ustuvorlik (chapdagi uchta
-         ustuncha), nom, teg, loyiha, muddat va kimga biriktirilgani. */
-      .tlist {
-        background: var(--surf);
-        border: 1px solid var(--bd2);
-        border-radius: 14px;
-        overflow: hidden;
-      }
-      .trow {
-        display: flex;
-        gap: 12px;
-        padding: 12px 14px;
-        border-bottom: 1px solid var(--bd2);
-        cursor: pointer;
-      }
-      .trow:last-child {
-        border-bottom: none;
-      }
-      /* Ustuvorlik — uchta o'sib boruvchi ustuncha. Nechtasi yonishi
-         darajani, rangi esa shoshilinchlikni bildiradi. */
-      .tprio {
-        padding-top: 3px;
-        flex: 0 0 auto;
-      }
-      .tprio > i {
-        display: inline-block;
-        width: 3px;
-        border-radius: 1px;
-        background: var(--pb-off);
-        vertical-align: bottom;
-        margin-right: 2px;
-      }
-      .tprio > i:last-child {
-        margin-right: 0;
-      }
-      .tprio > i:nth-child(1) {
-        height: 5px;
-      }
-      .tprio > i:nth-child(2) {
-        height: 8px;
-      }
-      .tprio > i:nth-child(3) {
-        height: 12px;
-      }
-      .tprio > i.on {
-        background: var(--pb);
-      }
-      .trow-title {
-        font-size: 14.5px;
-        font-weight: 500;
-        color: var(--ink);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .trow-meta {
-        display: flex;
-        align-items: center;
-        gap: 7px;
         margin-top: 6px;
       }
-      .trow-tag {
-        height: 21px;
-        padding: 0 8px;
-        border-radius: 7px;
-        font-size: 11px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        flex: 0 0 auto;
-        white-space: nowrap;
-      }
-      .trow-proj {
-        font-size: 12.5px;
-        color: var(--t2);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        min-width: 0;
-      }
-      .trow-right {
+      .tempo-segs {
+        margin-top: 16px;
         display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 6px;
-        flex: 0 0 auto;
+        gap: 3px;
       }
-      .trow-due {
-        font-size: 12.5px;
-        font-weight: 600;
-        color: var(--t2);
-        white-space: nowrap;
-      }
-      .trow-due.soon {
-        color: var(--red);
-      }
-      .trow-av {
-        width: 24px;
+      .tempo-seg {
+        flex: 1;
         height: 24px;
-        border-radius: 8px;
-        background: var(--inkfill);
-        color: #fff;
-        font-size: 10px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 auto;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.22);
       }
-      .tgroup-hdr {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--ink);
-        margin-bottom: 8px;
+      .tempo-seg.done {
+        background: var(--surf);
       }
-      .tgroup-count {
+      .tempo-seg.now {
+        outline: 1.5px solid var(--red);
+        outline-offset: 1px;
+      }
+      .tempo-foot {
         font-size: 12px;
-        font-weight: 600;
-        color: var(--t3);
+        color: rgba(255, 255, 255, 0.62);
+        margin-top: 11px;
       }
+      .tempo-note {
+        font-size: 10.5px;
+        color: rgba(255, 255, 255, 0.45);
         margin-top: 3px;
       }
 
@@ -841,7 +522,7 @@
         align-items: center;
         justify-content: center;
         border-radius: 999px;
-        background: var(--amber-fill);
+        background: #d97706;
         color: #fff;
         font-weight: 700;
         flex: none;
@@ -897,486 +578,13 @@
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
       }
-      /* ── NSHOP BALANS KARTASI — v3 maketidan 1:1 ──────────────────
-         Maketdagi qoida: balans ekranning eng tepasida, doim ko'rinib
-         tursin — mahsulot narxini ko'rgan xodim "menda yetadimi?" deb
-         boshqa joyga qarab yurmasin. */
-      /* ── LOYIHALAR · DESKTOP (v3 maketidan 1:1) ───────────────────
-         Ikki panel: chapda loyihalar ro'yxati, o'ngda tanlangani.
-         Ilgari uch ustunli karta-doska edi va loyihani ko'rish uchun
-         boshqa sahifaga o'tish kerak bo'lardi; endi tanlash va ko'rish
-         bitta ekranda. Faqat katta ekranda ko'rinadi (mobil o'z
-         ro'yxatini ishlatadi). */
-      .pdesk {
-        display: flex;
-        min-height: 0;
-        flex: 1;
-      }
-      .pdesk-rail {
-        width: 340px;
-        flex: 0 0 auto;
-        border-right: 1px solid var(--bd2);
-        background: var(--surf);
-        padding: 14px 12px;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        overflow-y: auto;
-      }
-      .pdesk-sec {
-        font-size: 11.5px;
-        font-weight: 600;
-        color: var(--t2);
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        padding: 6px 14px 2px;
-      }
-      .pdesk-item {
-        padding: 12px 14px;
-        border-radius: 12px;
-        border: 1px solid transparent;
-        cursor: pointer;
-      }
-      .pdesk-item.active {
-        background: var(--st-onplan-bg);
-        border-color: rgba(47, 122, 185, 0.3);
-      }
-      .pdesk-item-top {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .pdesk-item-name {
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--ink);
-        flex: 1;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .pdesk-item-pct {
-        font-size: 13.5px;
-        font-weight: 700;
-        color: var(--ink);
-        font-variant-numeric: tabular-nums;
-      }
-      .pdesk-track {
-        position: relative;
-        height: 5px;
-        border-radius: 99px;
-        background: var(--track);
-        margin-top: 8px;
-      }
-      .pdesk-fill {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        border-radius: 99px;
-      }
-      .pdesk-mark {
-        position: absolute;
-        top: -3px;
-        bottom: -3px;
-        width: 2px;
-        border-radius: 2px;
-        background: var(--ink);
-      }
-      .pdesk-item-bot {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 7px;
-        font-size: 12px;
-        white-space: nowrap;
-      }
-      .pdesk-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 99px;
-        flex: none;
-      }
-      .pdesk-main {
-        flex: 1;
-        min-width: 0;
-        padding: 18px 24px;
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        overflow-y: auto;
-      }
-      .pdesk-hdr {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .pdesk-hdr-av {
-        width: 40px;
-        height: 40px;
-        border-radius: 14px;
-        background: var(--chip2);
-        color: var(--ink);
-        font-size: 16px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 auto;
-      }
-      .pdesk-hdr-name {
-        font-size: 20px;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        color: var(--ink);
-      }
-      /* Jamoa avatarlari — ustma-ust. Rang har xodimga biriktirilgan
-         (personColor), shu sabab bir xil harfli xodimlar ham ajraladi. */
-      .pdesk-team {
-        display: flex;
-        flex: 0 0 auto;
-      }
-      .pdesk-team > div {
-        border: 2px solid var(--bg);
-        border-radius: 12px;
-        margin-left: -8px;
-      }
-      .pdesk-team > div:first-child {
-        margin-left: 0;
-      }
-      .pdesk-team-av {
-        width: 30px;
-        height: 30px;
-        border-radius: 10px;
-        color: #fff;
-        font-size: 12px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .pdesk-stats {
-        display: flex;
-        align-items: center;
-        background: var(--surf);
-        border: 1px solid var(--bd2);
-        border-radius: 14px;
-        padding: 14px 16px;
-      }
-      .pdesk-stat {
-        flex: 1;
-        min-width: 0;
-        padding: 0 16px;
-        border-left: 1px solid var(--bd2);
-      }
-      .pdesk-stat-lbl {
-        font-size: 12px;
-        font-weight: 500;
-        color: var(--t2);
-        white-space: nowrap;
-      }
-      .pdesk-stat-val {
-        font-size: 20px;
-        font-weight: 700;
-        color: var(--ink);
-        letter-spacing: -0.02em;
-        margin-top: 3px;
-        font-variant-numeric: tabular-nums;
-      }
-      /* ── BOSHQARUV MENYUSI — v3 maketidan 1:1 ─────────────────────
-         Ilgari bu yerda 7 tagacha bo'lim bitta gorizontal qatorda
-         turardi va tor ekranda oxirgilari kesilib qolardi — skroll
-         borligi haqida hech qanday ishora yo'q edi, shu sabab Super
-         Admin "Adminlar"/"E'lon" bo'limlari borligini umuman
-         sezmasligi mumkin edi (auditdagi 7-topilma). Endi barcha
-         bo'lim guruhlangan ro'yxatda ko'rinadi va har qatorda nima
-         kutayotgani yozib turadi. */
-      .amenu-sec {
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--t3);
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        margin: 18px 0 8px 2px;
-      }
-      .amenu-sec:first-child {
-        margin-top: 4px;
-      }
-      .amenu-list {
-        background: var(--surf);
-        border: 1px solid var(--bd2);
-        border-radius: 14px;
-        overflow: hidden;
-      }
-      .amenu-row {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-height: 58px;
-        padding: 0 14px;
-        cursor: pointer;
-      }
-      .amenu-row + .amenu-row {
-        border-top: 1px solid var(--bd2);
-      }
-      .amenu-ico {
-        width: 36px;
-        height: 36px;
-        border-radius: 11px;
-        background: var(--st-onplan-bg);
-        color: var(--brand);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 auto;
-      }
-      .amenu-title {
-        font-size: 14.5px;
-        font-weight: 600;
-        color: var(--ink);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .amenu-sub {
-        font-size: 12.5px;
-        color: var(--t2);
-        margin-top: 1px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .amenu-badge {
-        height: 20px;
-        padding: 0 8px;
-        border-radius: 7px;
-        background: var(--st-behind-bg);
-        color: var(--st-behind);
-        font-size: 11.5px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        flex: 0 0 auto;
-      }
-      .amenu-chev {
-        color: var(--chev);
-        font-size: 18px;
-        line-height: 1;
-        flex: 0 0 auto;
-      }
-      /* Bo'lim ochilganda — orqaga qaytish qatori */
-      .aback {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 13.5px;
-        font-weight: 600;
-        color: var(--brand);
-        padding: 2px 2px 14px;
-        cursor: pointer;
-      }
-      /* ── PROFIL — v3 maketidan 1:1 ────────────────────────────────
-         Mobilda maydonlar forma emas, ro'yxat: qator bosilsa bitta
-         maydonlik oyna ochiladi va o'sha zahoti saqlanadi. Shu sabab
-         ekran pastida "saqlanmagan o'zgarishlar" paneli kerak emas —
-         saqlanmagan holat umuman paydo bo'lmaydi. */
-      .pf-top {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-      }
-      .pf-top-av {
-        width: 60px;
-        height: 60px;
-        border-radius: 20px;
-        background: var(--inkfill);
-        color: #fff;
-        font-size: 24px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 auto;
-      }
-      .pf-top-name {
-        font-size: 19px;
-        font-weight: 700;
-        color: var(--ink);
-        letter-spacing: -0.02em;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .pf-top-badges {
-        display: flex;
-        gap: 6px;
-        margin-top: 6px;
-        flex-wrap: wrap;
-      }
-      .pf-top-badge {
-        height: 22px;
-        padding: 0 8px;
-        border-radius: 7px;
-        font-size: 11.5px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        white-space: nowrap;
-        flex: 0 0 auto;
-      }
-      .pf-stats {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        background: var(--surf);
-        border: 1px solid var(--bd2);
-        border-radius: 14px;
-      }
-      .pf-stat {
-        padding: 12px 14px;
-        min-width: 0;
-      }
-      .pf-stat + .pf-stat {
-        border-left: 1px solid var(--bd2);
-      }
-      .pf-stat-lbl {
-        font-size: 12px;
-        font-weight: 500;
-        color: var(--t2);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .pf-stat-val {
-        font-size: 16px;
-        font-weight: 700;
-        color: var(--ink);
-        letter-spacing: -0.01em;
-        margin-top: 3px;
-        white-space: nowrap;
-      }
-      .pf-sec {
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--t3);
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        margin: 18px 0 8px 2px;
-      }
-      .pf-rows {
-        background: var(--surf);
-        border: 1px solid var(--bd2);
-        border-radius: 14px;
-        overflow: hidden;
-      }
-      .pf-row {
-        display: flex;
-        align-items: center;
-        padding: 0 14px;
-        min-height: 46px;
-        gap: 10px;
-      }
-      .pf-row + .pf-row {
-        border-top: 1px solid var(--bd2);
-      }
-      .pf-row.tappable {
-        cursor: pointer;
-      }
-      .pf-row-lbl {
-        font-size: 13px;
-        color: var(--t2);
-        white-space: nowrap;
-        width: 130px;
-        flex: 0 0 auto;
-      }
-      .pf-row-val {
-        font-size: 13.5px;
-        font-weight: 500;
-        color: var(--ink);
-        flex: 1;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        text-align: right;
-      }
-      .pf-row-val.none {
-        color: var(--t3);
-        font-weight: 400;
-      }
-      .pf-row-chev {
-        font-size: 18px;
-        color: var(--chev);
-        flex: 0 0 auto;
-        line-height: 1;
-      }
-      .pf-row-act {
-        font-size: 12.5px;
-        font-weight: 500;
-        color: var(--brand);
-        white-space: nowrap;
-        flex: 0 0 auto;
-      }
-      .pf-row-act.muted {
-        color: var(--t3);
-        font-weight: 400;
-      }
-      .nshop-balance {
-        background: #0e1726;
-        border-radius: 16px;
-        padding: 14px 16px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        color: #fff;
-        margin-bottom: 14px;
-      }
-      .nshop-balance-ico {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-        background: rgba(217, 119, 6, 0.2);
-        color: #fbbf24;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 17px;
-        font-weight: 700;
-        flex: 0 0 auto;
-      }
-      .nshop-balance-lbl {
-        font-size: 12.5px;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.7);
-      }
-      .nshop-balance-val {
-        font-size: 22px;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        margin-top: 1px;
-      }
-      .nshop-balance-side {
-        text-align: right;
-        flex: 0 0 auto;
-      }
-      .nshop-balance-side-lbl {
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.65);
-      }
-      .nshop-balance-side-val {
-        font-size: 15px;
-        font-weight: 600;
-        color: #86efac;
-        margin-top: 2px;
-      }
       .nshop-card {
         background: var(--surf);
         border: 1px solid var(--bd2);
-        border-radius: 14px;
-        padding: 8px;
+        border-radius: 16px;
+        overflow: hidden;
         display: flex;
         flex-direction: column;
-        gap: 8px;
       }
       /* NShop sahifasi birinchi ochilganda (mahsulotlar/balans hali
          so'ralayotganda) ko'rsatiladigan skelet — haqiqiy .nshop-grid
@@ -1389,8 +597,7 @@
         animation: nshop-shimmer 1.4s ease infinite;
       }
       .nshop-skel-img {
-        height: 112px;
-        border-radius: 10px;
+        height: 104px;
       }
       .nshop-skel-line {
         height: 10px;
@@ -1407,8 +614,7 @@
       }
       .nshop-img-placeholder {
         width: 100%;
-        height: 112px;
-        border-radius: 10px;
+        height: 104px;
         flex: none;
         background: repeating-linear-gradient(135deg, var(--surf2) 0px, var(--surf2) 9px, var(--bd2) 9px, var(--bd2) 18px);
         display: flex;
@@ -1421,7 +627,7 @@
         color: var(--t3);
       }
       .nshop-card-body {
-        padding: 0 4px;
+        padding: 11px 12px 12px;
         display: flex;
         flex-direction: column;
         flex: 1;
@@ -1435,8 +641,8 @@
       .nshop-card-row {
         display: flex;
         align-items: center;
-        gap: 5px;
-        margin-top: 5px;
+        gap: 7px;
+        margin-top: 8px;
       }
       .nshop-coin-price {
         font-size: 14px;
@@ -1444,30 +650,26 @@
         color: var(--ink);
       }
       .nshop-stock-badge {
-        font-size: 12px;
-        font-weight: 500;
-        color: var(--t2);
+        height: 24px;
+        padding: 0 9px;
+        border-radius: 7px;
+        background: var(--chip);
+        font-size: 11.5px;
+        font-weight: 600;
+        color: var(--t5);
+        display: flex;
+        align-items: center;
         white-space: nowrap;
       }
       .nshop-stock-badge.low {
+        background: rgba(217, 119, 6, 0.14);
         color: #a45f08;
-        font-weight: 600;
       }
-      /* `.btn` faylda keyinroq e'lon qilingani uchun ikki klassli
-         selektor — aks holda balandlik/radius bosib ketiladi. */
-      .nshop-card .nshop-buy-btn {
+      .nshop-buy-btn {
         height: 36px;
         border-radius: 10px;
-        font-size: 13px;
-      }
-      /* Balans yetmagan holat — tugma emas, xabar: bosilmaydi va
-         ko'zni tortmaydi, lekin qancha yetmasligini aniq aytadi. */
-      .nshop-card .nshop-buy-btn:disabled {
-        background: var(--chip2);
-        color: var(--t2);
-        font-size: 12px;
-        font-weight: 500;
-        opacity: 1;
+        margin-top: 10px;
+        font-size: 12.5px;
       }
       .nshop-bottom-grid {
         display: flex;
@@ -1560,6 +762,15 @@
         letter-spacing: 0.07em;
         text-transform: uppercase;
       }
+      .nshop-stats-value {
+        position: relative;
+        font-size: 34px;
+        font-weight: 600;
+        color: #fff;
+        letter-spacing: -0.03em;
+        margin-top: 12px;
+        line-height: 1;
+      }
       .nshop-stats-row {
         position: relative;
         display: flex;
@@ -1607,6 +818,12 @@
         }
         .nshop-coin-price {
           font-size: 16px;
+        }
+        .nshop-buy-btn {
+          height: 42px;
+          border-radius: 11px;
+          margin-top: 14px;
+          font-size: 13.5px;
         }
         .nshop-bottom-grid {
           display: grid;
@@ -1795,7 +1012,7 @@
         width: 36px;
         height: 36px;
         border-radius: 99px;
-        background: var(--amber-fill);
+        background: #d97706;
         color: #fff;
         font-weight: 700;
         font-size: 15px;
@@ -1875,7 +1092,7 @@
         display: flex;
       }
       .pf-tasks-track-done {
-        background: var(--green-fill);
+        background: #16a34a;
         height: 100%;
       }
       .pf-tasks-track-progress {
@@ -1912,7 +1129,7 @@
         width: 6px;
         height: 6px;
         border-radius: 99px;
-        background: var(--amber-fill);
+        background: #d97706;
         flex: none;
       }
       .pf-savebar-text {
@@ -2027,79 +1244,10 @@
         color: var(--t2);
         margin-top: 2px;
       }
-      /* Bo'sh holat ekran tepasida qotib qolmasligi uchun — mavjud
-         bo'shliqning o'rtasiga tushadi (ilgari sarlavha ostida turib,
-         pastida katta quruq maydon qolardi). */
       .empty {
         text-align: center;
         padding: 40px 20px;
         color: var(--t3);
-        min-height: 42vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-      }
-      /* ── YUKLASHDA XATO — yagona shakl ────────────────────────────
-         Ilgari har loader xatoni shunchaki qizil matn bilan ko'rsatardi
-         va boshqa hech narsa qilib bo'lmasdi: butun ilovada "Qayta
-         urinish" tugmasi umuman yo'q edi, yagona chora — boshqa bo'limga
-         o'tib qaytish, buni esa hech kim aytmagan. Endi xato o'zi bilan
-         birga chiqish yo'lini ham beradi. */
-      /* ── SKELET YUKLANISH ─────────────────────────────────────────
-         Aylanuvchi spinner o'rniga sahifa tuzilishining o'zi
-         ko'rsatiladi: ekran darhol "to'lgandek" ko'rinadi va ma'lumot
-         kelganda almashinish sakramaydi. Shimmer animatsiyasi NShop
-         skeletidan qayta ishlatiladi (nshop-shimmer). */
-      .skel-card {
-        background: var(--surf);
-        border: 1px solid var(--bd2);
-        border-radius: 14px;
-        padding: 14px;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .skel-box,
-      .skel-line {
-        background: linear-gradient(90deg, var(--surf2) 25%, var(--bd2) 37%, var(--surf2) 63%);
-        background-size: 400% 100%;
-        animation: nshop-shimmer 1.4s ease infinite;
-      }
-      .skel-box {
-        width: 36px;
-        height: 36px;
-        border-radius: 11px;
-        flex: 0 0 auto;
-      }
-      .skel-line {
-        height: 10px;
-        border-radius: 5px;
-      }
-      .load-err {
-        min-height: 42vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 14px;
-        padding: 32px 20px;
-        text-align: center;
-      }
-      .load-err-msg {
-        font-size: 13px;
-        color: var(--t2);
-        line-height: 1.6;
-        max-width: 260px;
-      }
-      /* `.btn` faylda keyinroq e'lon qilingani uchun (bir xil
-         aniqlikda oxirgisi yutadi) bu yerda ataylab ikki klassli
-         selektor — aks holda tugma to'liq kenglikka cho'ziladi. */
-      .load-err .load-err-btn {
-        width: auto;
-        min-width: 150px;
-        padding: 0 20px;
       }
       .empty-ico {
         font-size: 28px;
@@ -2517,6 +1665,52 @@
         font-weight: 600;
       }
 
+      /* ── LOYIHALAR RO'YXATI ─────────────────────────────────────── */
+      .od-row,
+      .pv-row {
+        padding: 13px 15px;
+        border-bottom: 1px solid var(--bd1);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+      }
+      .od-row:last-child,
+      .pv-row:last-child {
+        border-bottom: none;
+      }
+      .od-bar {
+        width: 6px;
+        height: 34px;
+        border-radius: 99px;
+        background: var(--red);
+        flex-shrink: 0;
+      }
+      .od-days {
+        font-weight: 600;
+        font-size: 12.5px;
+        color: var(--red);
+        flex-shrink: 0;
+      }
+      .pv-bar-wrap {
+        width: 56px;
+        flex-shrink: 0;
+      }
+      .pv-bar-track {
+        height: 5px;
+        border-radius: 99px;
+        background: var(--chip3);
+        overflow: hidden;
+      }
+      .pv-bar-fill {
+        height: 100%;
+        background: var(--brand);
+      }
+      .pv-pct {
+        font-weight: 500;
+        font-size: 10.5px;
+        color: var(--t2);
+        text-align: right;
         margin-top: 5px;
       }
 
@@ -2660,10 +1854,7 @@
         padding: 0;
         font-family: inherit;
       }
-      /* Oy boshidagi bo'shliq kataklari. ATAYLAB "empty" emas —
-         u global bo'sh-ekran klassi (min-height: 42vh) va katakni
-         cho'zib yuborardi. */
-      .cal-cell.blank {
+      .cal-cell.empty {
         visibility: hidden;
       }
       .cal-cell .cn {
@@ -2680,57 +1871,24 @@
         background: var(--surf);
         border: 1px solid var(--bd2);
       }
-      /* Ish bo'lgan kun — neytral katak, turini esa nuqtalar aytadi
-         (ko'k = post, siyohrang = stories). Ilgari katak butunlay ko'k
-         bo'lib to'lardi va faqat tanlangan turni ko'rsatardi, shu sabab
-         oyning to'liq manzarasi ko'rinmasdi. */
-      .cal-cell.has {
-        background: var(--surf);
-        border: 1px solid var(--bd2);
+      .cal-cell.done {
+        background: var(--brand);
+        color: #fff;
         cursor: pointer;
       }
-      .cal-cell.has .cn {
+      .cal-cell.done .cn {
         font-weight: 600;
-        color: var(--ink);
+        color: #fff;
       }
-      .cal-dots {
-        display: flex;
-        gap: 3px;
-        align-items: center;
-        justify-content: center;
-        height: 5px;
+      /* bugungi kun bajarilgan bo'lsa — ko'k, lekin ramka bilan ajratiladi */
+      .cal-cell.done-today {
+        outline: 2px solid var(--ink);
+        outline-offset: -2px;
       }
-      .cal-dot {
-        width: 5px;
-        height: 5px;
-        border-radius: 99px;
-        display: block;
-      }
-      .cal-dot.k {
-        background: var(--brand);
-      }
-      .cal-dot.s {
-        background: var(--purple);
-      }
-      .cal-legend {
-        display: flex;
-        gap: 14px;
-        margin-top: 10px;
-        padding: 0 2px;
-      }
-      .cal-legend-item {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-        font-weight: 500;
-        color: var(--t2);
-      }
-      .cal-legend-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 99px;
-        flex: none;
+      .cal-cell.done .cs {
+        opacity: 1;
+        font-size: 10px;
+        font-weight: 700;
       }
       .cal-cell.today {
         background: var(--surf);
@@ -2746,6 +1904,24 @@
         color: var(--t2);
         opacity: 1;
       }
+      .cal-legend {
+        display: flex;
+        gap: 16px;
+        margin-top: 14px;
+        flex-wrap: wrap;
+      }
+      .cal-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: var(--t2);
+      }
+      .cal-legend-dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 4px;
+        flex-shrink: 0;
       }
       .today-task {
         padding: 13px 14px;
@@ -3547,27 +2723,10 @@
         margin-top: 2px;
         line-height: 1.5;
       }
-      /* Qator amallari — bitta "⋯" tugmasi. Ilgari yonma-yon ikkita
-         30x30 tugma turardi (tahrirlash va o'chirish), ya'ni mobil uchun
-         tavsiya etilgan ~44px'dan kichik va halokatli amal neytralining
-         yonida edi — xato bosish oson. Endi amallar menyuda, tugmaning
-         o'zi esa barmoq uchun yetarli. */
-      .row-menu-btn {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        color: var(--t3);
-        font-size: 17px;
+      .m-actions-inline {
         display: flex;
-        align-items: center;
-        justify-content: center;
+        gap: 6px;
         flex-shrink: 0;
-      }
-      .row-menu-btn:active {
-        background: var(--chip);
       }
       .icon-btn {
         width: 30px;
@@ -3582,15 +2741,6 @@
         font-size: 13px;
         color: var(--t2);
         flex-shrink: 0;
-        position: relative;
-      }
-      /* Ko'rinadigan o'lcham 30px bo'lib qoladi (ixcham sarlavhalarda
-         joylashuv buzilmasin), lekin bosiladigan maydon ~44px —
-         barmoq uchun tavsiya etilgan o'lcham. */
-      .icon-btn::after {
-        content: "";
-        position: absolute;
-        inset: -7px;
       }
       .icon-btn svg {
         width: 15px;
@@ -3716,6 +2866,19 @@
       .kcard.muted:hover {
         border-color: var(--bd2);
       }
+      .pri-urgent {
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        background: var(--red);
+        color: #fff;
+        font-size: 9.5px;
+        font-weight: 700;
+        line-height: 14px;
+        text-align: center;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
       .kcard-check {
         width: 14px;
         height: 14px;
@@ -3773,51 +2936,6 @@
         padding: 2px 7px;
         border-radius: 6px;
         white-space: nowrap;
-      }
-      /* ── LOYIHA HOLATI — yagona komponent ──────────────────────────
-         Ishlatilishi:  <span class="st-pill ahead">Oldinda</span>
-         Rang bilan birga HAR DOIM so'z ham keladi — ma'no faqat rangga
-         tayanmaydi (rang ajrata olmaydigan odam ham tushunadi, va
-         qora-oq skrinshotda ham o'qiladi). */
-      .st-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        height: 22px;
-        padding: 0 8px;
-        border-radius: 7px;
-        font-size: 11px;
-        font-weight: 600;
-        white-space: nowrap;
-        flex: 0 0 auto;
-      }
-      .st-pill::before {
-        content: "";
-        width: 6px;
-        height: 6px;
-        border-radius: 99px;
-        background: var(--dot);
-        flex: none;
-      }
-      .st-pill.debt {
-        color: var(--st-debt);
-        background: var(--st-debt-bg);
-        --dot: var(--st-debt-dot);
-      }
-      .st-pill.behind {
-        color: var(--st-behind);
-        background: var(--st-behind-bg);
-        --dot: var(--st-behind-dot);
-      }
-      .st-pill.onplan {
-        color: var(--st-onplan);
-        background: var(--st-onplan-bg);
-        --dot: var(--st-onplan-dot);
-      }
-      .st-pill.ahead {
-        color: var(--st-ahead);
-        background: var(--st-ahead-bg);
-        --dot: var(--st-ahead-dot);
       }
       .avatar-sm {
         width: 20px;
@@ -3984,14 +3102,42 @@
         border: none;
         cursor: pointer;
       }
+      .td-status-btn .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 99px;
+        flex-shrink: 0;
+      }
       .td-status-btn.solid-green {
         background: var(--green);
         color: #fff;
+      }
+      .td-status-btn.solid-green .dot {
+        background: var(--surf);
       }
       .td-status-btn.tint-amber {
         background: var(--amber-bg);
         color: var(--amber-ink);
         border: 1px solid rgba(217, 119, 6, 0.32);
+      }
+      .td-status-btn.tint-amber .dot {
+        background: var(--amber);
+      }
+      .td-status-btn.tint-red {
+        background: var(--red-bg);
+        color: var(--red);
+        border: 1px solid rgba(220, 38, 38, 0.28);
+      }
+      .td-status-btn.tint-red .dot {
+        background: var(--red);
+      }
+      .td-status-btn.tint-blue {
+        background: var(--tagblue-bg);
+        color: var(--tagblue);
+        border: 1px solid rgba(47, 122, 185, 0.3);
+      }
+      .td-status-btn.tint-blue .dot {
+        background: var(--brand);
       }
       .td-status-btn:disabled {
         opacity: 0.6;
@@ -4278,21 +3424,21 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 5px;
+        gap: 6px;
         flex: 0 0 auto;
       }
       .td-stepper-dot {
         width: 9px;
         height: 9px;
         border-radius: 99px;
-        background: var(--sw-off);
+        background: var(--bd4);
       }
       .td-stepper-dot.done {
         background: var(--brand);
       }
       .td-stepper-dot.current {
-        width: 12px;
-        height: 12px;
+        width: 13px;
+        height: 13px;
         background: var(--brand);
         box-shadow: 0 0 0 4px rgba(47, 122, 185, 0.16);
       }
@@ -4308,48 +3454,34 @@
       .td-stepper-line {
         flex: 1;
         height: 2px;
-        background: var(--track);
-        margin: 0 6px 16px;
+        background: var(--bd4);
+        margin: 0 6px 17px;
       }
       .td-stepper-line.done {
         background: var(--brand);
       }
       .td-status-btn.lg {
         height: 50px;
-        border-radius: 12px;
+        border-radius: 13px;
         font-size: 14.5px;
-      }
-      /* Harakat paneli: bitta asosiy tugma + "⋯". Maketdagi qoida —
-         ekranda bitta aniq keyingi qadam bo'lsin, qolgan (kamroq
-         ishlatiladigan va xavfliroq) amallar menyuga yashirinsin.
-         Ilgari bu yerda uch-to'rtta bir xil ko'rinishdagi tugma yonma-yon
-         turardi va qaysi biri asosiysi ekani bilinmasdi. */
-      .td-actbar {
-        display: flex;
-        gap: 8px;
-        margin-top: 12px;
-      }
-      .td-actbar .td-status-btn {
-        flex: 1;
-        width: auto;
-      }
-      .td-more-btn {
-        width: 50px;
-        height: 50px;
-        flex: 0 0 auto;
-        border-radius: 12px;
-        background: var(--surf);
-        color: var(--ink);
-        border: 1px solid var(--bd4);
-        font-size: 17px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
       }
       .td-status-btn.solid-blue {
         background: var(--brand);
         color: #fff;
+      }
+      .td-status-btn.solid-blue .dot {
+        background: rgba(255, 255, 255, 0.85);
+      }
+      .td-status-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 9px;
+        flex-wrap: wrap;
+      }
+      .td-status-row .td-status-btn {
+        width: auto;
+        flex: 1;
+        min-width: 120px;
       }
       .td-notify-hint {
         font-size: 11px;
@@ -4413,43 +3545,24 @@
         font-size: 13px;
         color: var(--ink);
       }
-      /* Davr holati — ilovaning qolgan qismidagi holat "pill"i bilan
-         bir xil shaklda (nuqta + so'z, h22 r7), faqat ma'nolari
-         boshqacha: davr joriy, qarzli yoki tugagan bo'ladi. */
       .hist-status {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        height: 22px;
-        padding: 0 8px;
-        border-radius: 7px;
-        font-size: 11px;
-        font-weight: 600;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 3px 7px;
+        border-radius: 6px;
         white-space: nowrap;
-        flex: 0 0 auto;
-      }
-      .hist-status::before {
-        content: "";
-        width: 6px;
-        height: 6px;
-        border-radius: 99px;
-        background: var(--dot);
-        flex: none;
       }
       .hist-status.active {
-        background: var(--st-onplan-bg);
-        color: var(--st-onplan);
-        --dot: var(--st-onplan-dot);
+        background: rgba(47, 122, 185, 0.12);
+        color: var(--brand);
       }
       .hist-status.debt {
-        background: var(--st-debt-bg);
-        color: var(--st-debt);
-        --dot: var(--st-debt-dot);
+        background: var(--red-bg);
+        color: var(--red);
       }
       .hist-status.done {
-        background: var(--st-ahead-bg);
-        color: var(--st-ahead);
-        --dot: var(--st-ahead-dot);
+        background: var(--chip2);
+        color: var(--t5);
       }
       .hist-body {
         display: none;
@@ -5825,13 +4938,6 @@
             />
           </div>
         </div>
-        <!-- Tarix endi alohida tab emas: bir mavzu — bir joy.
-             Segment orqali faol loyihalar va o'tgan davrlar
-             o'rtasida almashinadi. -->
-        <div class="seg" style="margin-bottom:12px">
-          <button class="seg-btn active" onclick="showTab('projects')">Faol</button>
-          <button class="seg-btn " onclick="showTab('history')">Tarix</button>
-        </div>
         <div class="chips" id="proj-chips"></div>
       </div>
       <div class="scroll" id="projects-body"></div>
@@ -5900,7 +5006,7 @@
       <div class="hdr">
         <div class="hdr-row">
           <div>
-            <div class="hdr-title">Loyihalar</div>
+            <div class="hdr-title">Tarix</div>
             <div class="hdr-sub">Davrlar, muddatlar va bajarilish holati</div>
           </div>
           <div class="search-box">
@@ -5912,13 +5018,6 @@
             />
           </div>
         </div>
-        <!-- Tarix endi alohida tab emas: bir mavzu — bir joy.
-             Segment orqali faol loyihalar va o'tgan davrlar
-             o'rtasida almashinadi. -->
-        <div class="seg" style="margin-bottom:12px">
-          <button class="seg-btn " onclick="showTab('projects')">Faol</button>
-          <button class="seg-btn active" onclick="showTab('history')">Tarix</button>
-        </div>
         <div class="chips" id="hist-chips"></div>
       </div>
       <div class="scroll" id="history-body"></div>
@@ -5927,13 +5026,8 @@
     <!-- ── BOSHQARUV ───────────────────────────────────────────────── -->
     <div class="screen" id="screen-admin">
       <div class="hdr" id="admin-hdr">
-        <div class="hdr-title" id="admin-hdr-title">Boshqaruv</div>
-        <!-- Mobilda bo'lim ochilganda menyuga qaytish; desktopda
-             yuqoridagi tablar doim turadi, shu sabab u yerda kerak emas. -->
-        <div class="aback mobile-only" id="admin-back" style="display: none" onclick="backToAdminMenu()">
-          ‹ Boshqaruv
-        </div>
-        <div class="atabs desktop-flex" id="admin-tabs">
+        <div class="hdr-title">Boshqaruv</div>
+        <div class="atabs" id="admin-tabs">
           <button class="atab" id="atab-projects" onclick="switchATab('projects')">
             Loyihalar
           </button>
@@ -6074,6 +5168,10 @@
         <div class="nav-ico"></div>
         <div class="nav-lbl">NShop</div>
       </button>
+      <button class="nav-item" id="nav-history" onclick="showTab('history')">
+        <div class="nav-ico"></div>
+        <div class="nav-lbl">Tarix</div>
+      </button>
       <button
         class="nav-item"
         id="nav-admin"
@@ -6110,6 +5208,9 @@
         </button>
         <button class="sb-item" id="sidebar-nav-nshop" onclick="showTab('nshop')" title="NShop">
           <span class="sb-ico"></span><span class="sb-lbl">NShop</span>
+        </button>
+        <button class="sb-item" id="sidebar-nav-history" onclick="showTab('history')" title="Tarix">
+          <span class="sb-ico"></span><span class="sb-lbl">Tarix</span>
         </button>
         <button
           class="sb-item"
@@ -6283,6 +5384,7 @@
           "nav-projects": "folder", "sidebar-nav-projects": "folder",
           "nav-tasks": "checkSquare", "sidebar-nav-tasks": "checkSquare",
           "nav-nshop": "shoppingBag", "sidebar-nav-nshop": "shoppingBag",
+          "nav-history": "clock", "sidebar-nav-history": "clock",
           "nav-admin": "settings", "sidebar-nav-admin": "settings",
         };
         Object.entries(map).forEach(([id, icon]) => {
@@ -6333,9 +5435,7 @@
       let projFilter = "all";
       let trackerProjectId = null,
         trackerType = "k";
-      // null = menyu bosqichi (mobil). Desktopda applyAdminChrome()
-      // uni darhol "projects"ga o'tkazadi, chunki u yerda tablar bor.
-      let adminActiveTab = null;
+      let adminActiveTab = "projects";
       let npState = {}; // npDefaultState() orqali openNewProjectSheet()da to'ldiriladi
       let histState = { rows: [], filter: "all", sort: "newest", loaded: false };
       let staffList = [];
@@ -6359,117 +5459,6 @@
       let taskDetailTab = "comments"; // "Izohlar" / "Faoliyat" — vazifa yangi ochilganda "comments"ga qaytadi
       let taskDetailActivityCache = []; // oxirgi yuklangan activity — tab almashtirishda qayta so'rov yubormaslik uchun
       let taskEmployeeExpanded = new Set(); // mobil "Jamoada" — kengaytirilgan xodimlar
-      // ── LAVOZIM RO'YXATI ──────────────────────────────────────────
-      // Lavozim ERKIN MATN EMAS. Undan xodimning Ncoin miqdori va
-      // menyu ko'rinishi bog'liq, shu sabab u faqat shu ro'yxatdan
-      // tanlanadi — ilgari xodim o'zi yozardi va bitta imlo farqi
-      // (masalan "dizayner" / "Grafik Dizayner") to'lovni jimgina
-      // kamaytirib yuborardi.
-      //
-      // Ro'yxatda yo'q lavozim uchun "Boshqa" bor: nomi yoziladi, lekin
-      // u hech qanday maxsus miqdorga tushmaydi (standart qiymat
-      // beriladi) — ya'ni noma'lum lavozim hech qachon jimgina yuqori
-      // to'lovga olib kelmaydi.
-      const JOB_TITLE_GROUPS = [
-        { label: "Rahbariyat", items: ["CEO", "COO", "Loyiha menejeri"] },
-        {
-          label: "Jamoa",
-          items: ["SMM manager", "Dizayner", "Mobilograf", "Montajchi", "Kopirayter"],
-        },
-      ];
-      const JOB_TITLE_OTHER = "Boshqa";
-      function jobTitleSelectHtml(id, current) {
-        const known = JOB_TITLE_GROUPS.flatMap((g) => g.items);
-        const isOther = current && !known.includes(current);
-        const groups = JOB_TITLE_GROUPS.map(
-          (g) =>
-            `<optgroup label="${g.label}">${g.items
-              .map(
-                (it) =>
-                  `<option value="${escHtml(it)}"${current === it ? " selected" : ""}>${escHtml(it)}</option>`,
-              )
-              .join("")}</optgroup>`,
-        ).join("");
-        return `<select class="f-input" id="${id}" onchange="jobTitleSelectChanged('${id}')">
-            <option value=""${!current ? " selected" : ""}>Ro'yxatdan tanlang</option>
-            ${groups}
-            <option value="${JOB_TITLE_OTHER}"${isOther ? " selected" : ""}>${JOB_TITLE_OTHER}…</option>
-          </select>
-          <input class="f-input" id="${id}-other" placeholder="Lavozim nomini yozing"
-                 style="margin-top:8px;display:${isOther ? "block" : "none"}"
-                 value="${isOther ? escHtml(current) : ""}"/>`;
-      }
-      function jobTitleSelectChanged(id) {
-        const sel = document.getElementById(id);
-        const other = document.getElementById(id + "-other");
-        if (!sel || !other) return;
-        const show = sel.value === JOB_TITLE_OTHER;
-        other.style.display = show ? "block" : "none";
-        if (show) other.focus();
-        else other.value = "";
-      }
-      // Tanlangan qiymatni o'qish: "Boshqa" bo'lsa — yozilgan matn.
-      function jobTitleSelectValue(id) {
-        const sel = document.getElementById(id);
-        if (!sel) return "";
-        if (sel.value === JOB_TITLE_OTHER) {
-          return (document.getElementById(id + "-other")?.value || "").trim();
-        }
-        return sel.value;
-      }
-      // ── XODIM RANGLARI ────────────────────────────────────────────
-      // Har bir xodimga TAKRORLANMAS rang. Rang bazada saqlanmaydi:
-      // ma'lum xodimlar ro'yxati alifbo bo'yicha tartiblanadi va
-      // palitradan ketma-ket beriladi, shu sabab ikki xodimga bir xil
-      // rang tushmaydi (palitra jamoadan kattaroq).
-      //
-      // Ranglar holat ranglaridan (yashil/sariq/qizil) ataylab uzoq
-      // tanlangan: xodim rangi hech qachon "muammo" yoki "bajarildi"
-      // deb o'qilmasligi kerak.
-      const PERSON_COLORS = [
-        "#4f6bed", "#c23a6b", "#0b7f72", "#9e47c9", "#0e7490",
-        "#9a6b3f", "#a21caf", "#64748b", "#7c6f57", "#344054",
-        "#2563eb", "#be185d", "#0f766e", "#7c3aed", "#b45309",
-        "#155e75", "#4d7c0f", "#9f1239", "#5b21b6", "#475569",
-      ];
-      let _personColorMap = null;
-      // Ro'yxat o'zgarganda (yangi xodim qo'shilganda) qayta hisoblanadi.
-      function resetPersonColors() {
-        _personColorMap = null;
-      }
-      function buildPersonColorMap() {
-        const names = new Set();
-        const stored = {};
-        // Bazada saqlangan rang bo'lsa — u ustun (admin biriktirgan va
-        // hech qachon siljimaydi). Qolganlari quyida hisoblanadi.
-        const collect = (u) => {
-          if (!u?.username) return;
-          names.add(u.username);
-          if (u.color) stored[u.username] = u.color;
-        };
-        (allUsers || []).forEach(collect);
-        (projects || []).forEach((p) => (p.assignees || []).forEach(collect));
-        (tasksList || []).forEach((t) => t?.assigneeUsername && names.add(t.assigneeUsername));
-        // Band qilingan ranglar qayta ishlatilmaydi.
-        const used = new Set(Object.values(stored));
-        const free = PERSON_COLORS.filter((c) => !used.has(c));
-        const map = { ...stored };
-        let i = 0;
-        [...names].sort().forEach((n) => {
-          if (map[n]) return;
-          map[n] = free.length ? free[i++ % free.length] : PERSON_COLORS[i++ % PERSON_COLORS.length];
-        });
-        return map;
-      }
-      function personColor(username) {
-        if (!_personColorMap) _personColorMap = buildPersonColorMap();
-        const key = String(username || "");
-        if (_personColorMap[key]) return _personColorMap[key];
-        // Ro'yxatda yo'q (masalan Telegramsiz xodim) — barqaror zaxira
-        let h = 0;
-        for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
-        return PERSON_COLORS[h % PERSON_COLORS.length];
-      }
       const POSITION_LABELS = {
         montajchi: "Montajchi",
         mobilograf: "Mobilograf",
@@ -6501,38 +5490,11 @@
       // ── UTILS ─────────────────────────────────────────────────────
       const getInitData = () => window.Telegram?.WebApp?.initData || "";
       const tg = () => window.Telegram?.WebApp;
-      // Sessiya tugashi (401) — butun ilova uchun BITTA joyda hal
-      // qilinadi. Ilgari har ekran buni o'zicha talqin qilardi: ba'zisi
-      // to'g'ri "Telegram orqali kiring" deb yozsa, ba'zisi "Hech narsa
-      // topilmadi — filtrni o'zgartiring" deb ko'rsatardi, ya'ni xodim
-      // sessiyasi tugaganini bilmay, ma'lumoti yo'q deb o'ylardi.
-      // Endi qaysi so'rov 401 qaytarishidan qat'i nazar — yakun bitta.
-      let sessionExpiredShown = false;
-      function handleSessionExpired() {
-        if (sessionExpiredShown) return;
-        sessionExpiredShown = true;
-        if (bootFinished) {
-          // Ilova ochilib bo'lgan bo'lsa, showBootError o'zini
-          // to'xtatadi — shu sabab bayroqni qaytarib, ekranni to'g'ridan
-          // -to'g'ri chizamiz.
-          bootFinished = false;
-        }
-        showBootError("session");
-      }
-
       async function apiFetch(url, opts = {}) {
         const h = { "Content-Type": "application/json", ...(opts.headers || {}) };
         const id = getInitData();
         if (id) h["X-Telegram-Init-Data"] = id;
-        const res = await fetch(`${API}${url}`, { ...opts, headers: h });
-        // Javob keldi — yuklanish qotib qolmagan, qo'riqchi taymerini
-        // qaytadan boshlaymiz (ilova ochilib bo'lgan bo'lsa — bekor).
-        noteBootProgress();
-        // `/api/auth` bundan mustasno: u kirish huquqini tekshiradigan
-        // endpoint, uning 401/403'i initApp'da alohida, aniqroq xabar
-        // bilan ko'rsatiladi (bloklangan / ruxsat yo'q).
-        if (res.status === 401 && !url.startsWith("/api/auth")) handleSessionExpired();
-        return res;
+        return fetch(`${API}${url}`, { ...opts, headers: h });
       }
       const pct = (d, t) => (t === 0 ? 0 : Math.round((d / t) * 100));
       function escHtml(s) {
@@ -6548,35 +5510,6 @@
           .replace(/'/g, "\\'")
           .replace(/"/g, "&quot;")
           .replace(/</g, "&lt;");
-      }
-      // Yuklash xatosini ko'rsatadi va qayta urinish yo'lini beradi.
-      // `retry` — yopilma (closure), shu sabab har loader o'z
-      // argumentlari bilan qaytadan chaqiriladi (masalan qaysi DOM
-      // konteynerga yoki qaysi loyiha slug'iga tegishli ekani
-      // saqlanadi). Berilmasa — tugma ko'rsatilmaydi.
-      function showLoadError(el, message, retry) {
-        if (!el) return;
-        el.innerHTML = `
-          <div class="load-err">
-            <div class="load-err-msg">${escHtml(message || "Ma'lumot yuklanmadi")}</div>
-            <button class="btn btn-soft load-err-btn">Qayta urinish</button>
-          </div>`;
-        const btn = el.querySelector(".load-err-btn");
-        if (retry) btn.onclick = () => retry();
-        else btn.remove();
-      }
-      // Yuklanish skeleti — ro'yxat shaklidagi ekranlar uchun umumiy.
-      function skeletonHtml(rows = 4) {
-        return Array.from(
-          { length: rows },
-          () => `<div class="skel-card">
-            <div class="skel-box"></div>
-            <div style="flex:1;min-width:0">
-              <div class="skel-line" style="width:58%"></div>
-              <div class="skel-line" style="width:34%;margin-top:8px;height:9px"></div>
-            </div>
-          </div>`,
-        ).join("");
       }
       function showToast(msg, ms = 2200) {
         const el = document.getElementById("toast");
@@ -6657,11 +5590,6 @@
       }
       function daysBetween(a, b) {
         return Math.round((b - a) / 86400000);
-      }
-      function addDays(d, n) {
-        const x = new Date(d);
-        x.setDate(x.getDate() + n);
-        return x;
       }
       function fmtDay(d) {
         return `${d.getDate()}-${MONTHS[d.getMonth()].toLowerCase()}`;
@@ -6749,89 +5677,6 @@
       }
       function projDaysLeft(p) {
         return daysBetween(todayDate(), parseISO(p.periodEnd));
-      }
-
-      // ── LOYIHA HOLATI ─────────────────────────────────────────────
-      // Loyiha qay ahvolda ekani ilovaning hamma joyida shu yerdan
-      // keladi, shu sabab "Bugun"da, "Loyihalar"da va "Tarix"da bir xil
-      // so'z va bir xil rang chiqadi. Qarz — eng og'iri, qolgani esa
-      // bajarilgan ish bugungi kunga kutilgan miqdordan qanchalik farq
-      // qilishiga qarab aniqlanadi (bitta vazifadan kam farq — "reja
-      // bo'yicha" deb hisoblanadi, aks holda holat kun sayin sakrardi).
-      const PROJ_STATUS_LABEL = {
-        debt: "Qarz",
-        behind: "Ortda",
-        onplan: "Rejada",
-        ahead: "Oldinda",
-      };
-      function projDelta(p) {
-        const total = p.k + p.s;
-        if (!total) return 0;
-        return Math.round(p.doneK + p.doneS - projElapsedFrac(p) * total);
-      }
-      function projStatus(p) {
-        if (p.outstandingDebt) return "debt";
-        const d = projDelta(p);
-        if (d <= -1) return "behind";
-        if (d >= 1) return "ahead";
-        return "onplan";
-      }
-      function projStatusNote(p) {
-        const st = projStatus(p);
-        if (st === "debt") {
-          const dbt = p.outstandingDebt;
-          return `${dbt.remainingPosts + dbt.remainingStories} vazifa muddatdan chiqdi`;
-        }
-        const d = projDelta(p);
-        if (st === "behind") return `Rejadan ${-d} vazifa orqada`;
-        if (st === "ahead") return `Rejadan ${d} vazifa oldinda`;
-        return "Rejada";
-      }
-      // Loyihaning "yuzi" — SMM menejer, u yo'q bo'lsa birinchi mas'ul.
-      function projOwner(p) {
-        const as = p.assignees || [];
-        return as.find((a) => a.role === "smm") || as[0] || null;
-      }
-      function shortPersonName(a) {
-        if (!a) return "";
-        const parts = (a.fullName || "").trim().split(/\s+/);
-        const first = a.firstName || parts[0] || a.username || "";
-        const last = a.lastName || parts[1] || "";
-        return last ? `${first} ${last[0]}.` : first;
-      }
-      function projDaysText(p) {
-        const d = projDaysLeft(p);
-        if (d > 0) return `${d} kun qoldi`;
-        if (d === 0) return "Bugun tugaydi";
-        return `${-d} kun kechikdi`;
-      }
-      // Loyiha kartasi — "Loyihalar" ro'yxatining asosiy bloki.
-      function buildProjectCardHtml(p) {
-        const st = projStatus(p);
-        const pc = Math.max(0, Math.min(100, projPct(p)));
-        const exp = Math.max(0, Math.min(100, Math.round(projElapsedFrac(p) * 100)));
-        const owner = projOwner(p);
-        const who = shortPersonName(owner);
-        return `
-          <div class="prj-card ${st === "debt" ? "debt" : ""} clickable" onclick="openTracker('${escArg(p.id)}')">
-            <div class="prj-card-top">
-              <div class="prj-card-av">${escHtml((p.label || "?").slice(0, 1).toUpperCase())}</div>
-              <div style="flex:1;min-width:0">
-                <div class="prj-card-name">${escHtml(p.label)}</div>
-                <div class="prj-card-sub">${who ? escHtml(who) + " · " : ""}${projDaysText(p)}</div>
-              </div>
-              <div class="prj-card-pct">${pc}%</div>
-            </div>
-            <div class="prj-card-track">
-              <div class="prj-card-fill" style="width:${pc}%"></div>
-              ${st === "debt" ? "" : `<div class="prj-card-mark" style="left:${exp}%"></div>`}
-            </div>
-            <div class="prj-card-bot">
-              <span class="st-pill ${st}">${PROJ_STATUS_LABEL[st]}</span>
-              <div class="prj-card-note">${escHtml(projStatusNote(p))}</div>
-              <div class="prj-card-cnt">${p.doneK}/${p.k} · ${p.doneS}/${p.s}</div>
-            </div>
-          </div>`;
       }
 
       // Bitta loyihaning BUGUN belgilangan post/stories'lari (k va s
@@ -6974,7 +5819,6 @@
         if (!res.ok) return;
         const d = await res.json();
         projects = d.projects || [];
-        resetPersonColors();
       }
       async function loadTasks() {
         try {
@@ -6996,6 +5840,11 @@
       }
 
       // ── SIDEBAR (faqat katta ekran — "doimiy chap navigatsiya") ────
+      const ROLE_LABEL_SIDEBAR = {
+        super_admin: "Super admin",
+        admin: "Admin",
+        employee: "Xodim",
+      };
       function renderSidebar() {
         document.getElementById("sidebar-avatar").textContent = (currentUser || "?")
           .slice(0, 1)
@@ -7004,7 +5853,7 @@
           ? "@" + currentUser
           : "—";
         document.getElementById("sidebar-user-role").textContent =
-          ROLE_LABEL_UZ[userRole] || userRole || "—";
+          ROLE_LABEL_SIDEBAR[userRole] || userRole || "—";
 
         const debtCount = projects.filter((p) => p.outstandingDebt).length;
         const debtEl = document.getElementById("sidebar-debt-count");
@@ -7089,13 +5938,6 @@
             .getElementById("sidebar-nav-" + t)
             ?.classList.toggle("active", t === tab);
         });
-        // "Tarix" endi pastki navda alohida tugma emas — u "Loyihalar"
-        // bo'limining ikkinchi segmenti, shu sabab unda turganda ham
-        // navda "Loyihalar" yonib turadi.
-        if (tab === "history") {
-          document.getElementById("nav-projects")?.classList.add("active");
-          document.getElementById("sidebar-nav-projects")?.classList.add("active");
-        }
         SUB_SCREENS.forEach((s) => document.getElementById(s)?.classList.remove("active"));
         // Bo'sh satr = inline override'ni olib tashlaydi, CSS (mobil:
         // flex, katta ekran: sidebar bor — none) o'zi hal qiladi.
@@ -7106,10 +5948,7 @@
         else if (tab === "tasks") renderTasksScreen();
         else if (tab === "nshop") renderNShopScreen();
         else if (tab === "history") openHistoryTab();
-        else if (tab === "admin") {
-          applyAdminChrome();
-          renderAdminActiveTab();
-        }
+        else if (tab === "admin") switchATab(adminActiveTab);
       }
 
       // Ichki (drill-in) ekranni ochish — root ekranlar yashiriladi
@@ -7150,41 +5989,17 @@
           behind: Math.max(0, expectedDone - doneAll),
         };
       }
-      // Davr kartasi — "Bugun" ekranining asosiy bloki.
-      // Hamma qiymat computeHomeTempo()dan keladi, qo'shimcha so'rov
-      // yoki backend o'zgarishi kerak emas: bajarilgan foiz, kutilgan
-      // foiz (oq chiziqcha) va ikkalasining farqi ("Rejadan +4").
-      function buildPeriodCardHtml(t) {
-        const delta = t.doneAll - t.expectedDone;
-        const dCls = delta > 0 ? "ahead" : delta < 0 ? "behind" : "exact";
-        const dTxt =
-          delta > 0 ? `Rejadan +${delta}` : delta < 0 ? `Rejadan ${delta}` : "Reja bo'yicha";
-        // Eng yaqin tugaydigan davr — xodim uchun eng dolzarb muddat.
-        const daysLeft = Math.min(...projects.map(projDaysLeft));
-        const daysTxt =
-          daysLeft > 0 ? `${daysLeft} kun qoldi` : daysLeft === 0 ? "Bugun tugaydi" : "Muddat o'tdi";
-        const monthName = MONTHS[todayDate().getMonth()];
-        const pctSafe = Math.max(0, Math.min(100, t.overallPct));
-        const expSafe = Math.max(0, Math.min(100, t.expectedPct));
-        return `
-          <div class="dcard">
-            <div class="dcard-top">
-              <div class="dcard-lbl">${escHtml(monthName)} davri</div>
-              <div style="flex:1"></div>
-              <div class="dcard-lbl">${daysTxt}</div>
-            </div>
-            <div class="dcard-mid">
-              <div class="dcard-pct num">${t.overallPct}<span>%</span></div>
-              <div class="dcard-frac num">${t.doneAll} / ${t.totalTasks} vazifa</div>
-              <div style="flex:1"></div>
-              <div class="dcard-delta ${dCls}">${dTxt}</div>
-            </div>
-            <div class="dcard-track">
-              <div class="dcard-fill" style="width:${pctSafe}%"></div>
-              <div class="dcard-mark" style="left:${expSafe}%"></div>
-            </div>
-            <div class="dcard-note">Oq chiziq — bugungacha kutilgan joy</div>
-          </div>`;
+      function buildSegs(frac) {
+        const n = 5;
+        const curIdx = Math.min(n - 1, Math.floor(frac * n));
+        let html = "";
+        for (let i = 0; i < n; i++) {
+          let cls = "tempo-seg";
+          if (i < curIdx || (i === curIdx && frac >= 1)) cls += " done";
+          else if (i === curIdx) cls += " now";
+          html += `<div class="${cls}"></div>`;
+        }
+        return html;
       }
       function renderToday() {
         const body = document.getElementById("today-body");
@@ -7248,7 +6063,21 @@
         body.innerHTML = `
           <div class="mobile-only">
             ${buildActivityPanelCardHtml(true)}
-            <div style="margin-top:14px">${buildPeriodCardHtml(t)}</div>
+            <div class="tempo" style="margin-top:14px">
+              <div class="tempo-top">
+                <div>
+                  <div class="tempo-lbl">Umumiy bajarilish</div>
+                  <div class="tempo-pct num">${t.overallPct}<span>%</span></div>
+                </div>
+                <div class="tempo-exp">
+                  <div class="l1" title="Loyihalar davri (boshlanish–tugash sanasi)ga nisbatan bugun qancha % bajarilgan bo'lishi kerakligi">Kutilgan surhat</div>
+                  <div class="l2 num">${t.expectedPct}%</div>
+                </div>
+              </div>
+              <div class="tempo-segs">${buildSegs(t.expectedFrac)}</div>
+              <div class="tempo-foot">${t.doneAll}/${t.totalTasks} vazifa bajarildi${t.behind > 0 ? ` · ${t.behind} ta muddatga nisbatan orqada` : ""}</div>
+              <div class="tempo-note">Loyihalar muddatiga (boshlanish–tugash sanasi) asosan hisoblanadi</div>
+            </div>
             ${debtHtml}
             <div style="margin-top:14px">
               ${buildAssignedTasksCardHtml()}
@@ -7273,9 +6102,6 @@
         const today = todayDate();
         const debtProjects = projects.filter((p) => p.outstandingDebt);
         const empWithAccess = Object.keys(perms).filter((u) => (perms[u] || []).length > 0).length;
-        // Rejadan ortda qolgan loyihalar — "faol loyiha soni"dan ko'ra
-        // harakatga chorlaydigan ko'rsatkich.
-        const behindCount = projects.filter((p) => projStatus(p) === "behind").length;
         const monthLabel = MONTHS[today.getMonth()];
 
         const chips = [
@@ -7302,36 +6128,32 @@
             return owners.some((u) => u.toLowerCase().includes(q));
           });
         }
-        // Holat bo'yicha saralanadi (qarz -> ortda -> rejada -> oldinda),
-        // teng bo'lsa — foiz bo'yicha. Admin jadvalni ochishi bilan
-        // muammoli loyihalarni tepada ko'radi, ularni qidirib yurmaydi.
-        const DASH_STATUS_ORDER = { debt: 0, behind: 1, onplan: 2, ahead: 3 };
-        tableList = [...tableList].sort(
-          (a, b) =>
-            DASH_STATUS_ORDER[projStatus(a)] - DASH_STATUS_ORDER[projStatus(b)] ||
-            projPct(b) - projPct(a),
-        );
+        // Eng ko'p bajarilgandan eng kamiga — progress ustuni bo'yicha
+        // kamayish tartibida (loyihalar filtr/qidiruvdan keyin, jadvalga
+        // chizishdan oldin saralanadi).
+        tableList = [...tableList].sort((a, b) => projPct(b) - projPct(a));
 
         const tableRows = tableList
           .map((p) => {
-            const st = projStatus(p);
+            const owners = Object.keys(perms).filter((u) => (perms[u] || []).includes(p.id)).length;
             const pc = projPct(p);
-            const who = shortPersonName(projOwner(p));
-            const muddat =
-              st === "debt"
-                ? `<span style="color:var(--red);font-weight:600">${projDaysText(p)}</span>`
-                : projDaysText(p);
-            return `<tr class="clickable${st === "debt" ? " debt-row" : ""}" onclick="openTracker('${escArg(p.id)}')">
-              <td class="dtbl-name">${escHtml(p.label)}${who ? `<div style="font-weight:400;font-size:11.5px;color:var(--t3);margin-top:1px">${escHtml(who)}</div>` : ""}</td>
-              <td><span class="st-pill ${st}">${PROJ_STATUS_LABEL[st]}</span></td>
+            const muddat = p.outstandingDebt
+              ? `<span style="color:var(--red);font-weight:600">${daysBetween(parseISO(p.outstandingDebt.periodEnd), today)} kun o'tdi</span>`
+              : fmtDay(parseISO(p.periodEnd));
+            const holat = p.outstandingDebt
+              ? `<span class="debt-badge">Qarz</span>`
+              : `<span class="debt-badge" style="color:var(--brand);background:rgba(47,122,185,.12)">Faol</span>`;
+            return `<tr class="clickable${p.outstandingDebt ? " debt-row" : ""}" onclick="openTracker('${escArg(p.id)}')">
+              <td class="dtbl-name">${escHtml(p.label)}</td>
+              <td>${owners ? owners + " xodim" : "—"}</td>
               <td>
                 <div class="dtbl-bar-wrap">
                   <div class="hist-track"><div class="hist-fill" style="width:${pc}%"></div></div>
                   <span class="num">${pc}%</span>
                 </div>
               </td>
-              <td class="num" style="white-space:nowrap">${p.doneK}/${p.k} · ${p.doneS}/${p.s}</td>
               <td>${muddat}</td>
+              <td>${holat}</td>
             </tr>`;
           })
           .join("");
@@ -7368,9 +6190,9 @@
                 <div class="stat-foot">${monthLabel} oyi bo'yicha</div>
               </div>
               <div class="stat-card">
-                <div class="stat-lbl">Ortda</div>
-                <div class="stat-val">${behindCount}</div>
-                <div class="stat-foot">${projects.length} faol loyihadan</div>
+                <div class="stat-lbl">Faol loyiha</div>
+                <div class="stat-val">${projects.length}</div>
+                <div class="stat-foot">${empWithAccess} xodim orasida</div>
               </div>
               <div class="stat-card danger">
                 <div class="stat-lbl">Qarzda</div>
@@ -7386,7 +6208,7 @@
                     <div class="chips" style="margin: 0">${chipsHtml}</div>
                   </div>
                   <table class="dtbl">
-                    <thead><tr><th>Loyiha</th><th>Holat</th><th>Bajarilish</th><th>Post · Stories</th><th>Muddat</th></tr></thead>
+                    <thead><tr><th>Loyiha</th><th>Mas'ul</th><th>Progress</th><th>Muddat</th><th>Holat</th></tr></thead>
                     <tbody>${tableRows || `<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:24px">Loyiha topilmadi</td></tr>`}</tbody>
                   </table>
                 </div>
@@ -7447,34 +6269,52 @@
           return;
         }
 
+        const today = todayDate();
         const overdue = list.filter((p) => p.outstandingDebt);
         const active = list.filter((p) => !p.outstandingDebt);
-
-        // Loyihalar holat bo'yicha saralanadi (qarz -> ortda -> rejada
-        // -> oldinda) va ikki guruhga bo'linadi. Maqsad: xodim ro'yxatni
-        // ochishi bilan muammoli loyihalarni ko'rsin, ularni alifbo
-        // ichidan qidirib yurmasin.
-        const STATUS_ORDER = { debt: 0, behind: 1, onplan: 2, ahead: 3 };
-        const sorted = [...list].sort(
-          (a, b) =>
-            STATUS_ORDER[projStatus(a)] - STATUS_ORDER[projStatus(b)] ||
-            projPct(b) - projPct(a),
-        );
-        const needsAttention = sorted.filter((p) =>
-          ["debt", "behind"].includes(projStatus(p)),
-        );
-        const goingWell = sorted.filter(
-          (p) => !["debt", "behind"].includes(projStatus(p)),
-        );
-
         let html = `<div class="mobile-only">`;
-        if (needsAttention.length) {
-          html += `<div class="sec-upper">Diqqat talab qiladi · ${needsAttention.length}</div>
-            <div class="prj-card-list">${needsAttention.map(buildProjectCardHtml).join("")}</div>`;
+        if (overdue.length) {
+          html += `<div class="sec-upper">Muddati o'tgan · ${overdue.length}</div><div class="list-card" style="margin-bottom:20px">`;
+          html += overdue
+            .map((p) => {
+              const daysAgo = daysBetween(
+                parseISO(p.outstandingDebt.periodEnd),
+                today,
+              );
+              const rem =
+                p.outstandingDebt.remainingPosts +
+                p.outstandingDebt.remainingStories;
+              return `<div class="od-row" onclick="openTracker('${escArg(p.id)}')">
+                <div class="od-bar"></div>
+                <div style="flex:1;min-width:0">
+                  <div class="r-name">${escHtml(p.label)}</div>
+                  <div class="r-sub">${rem} vazifa qoldi</div>
+                </div>
+                <div class="od-days num">${daysAgo} kun</div>
+              </div>`;
+            })
+            .join("");
+          html += `</div>`;
         }
-        if (goingWell.length) {
-          html += `<div class="sec-upper"${needsAttention.length ? ' style="margin-top:20px"' : ""}>Yaxshi ketmoqda · ${goingWell.length}</div>
-            <div class="prj-card-list">${goingWell.map(buildProjectCardHtml).join("")}</div>`;
+        if (active.length) {
+          html += `<div class="sec-upper">Faol · ${active.length}</div><div class="list-card">`;
+          html += active
+            .map((p) => {
+              const pc = projPct(p);
+              const dl = projDaysLeft(p);
+              return `<div class="pv-row" onclick="openTracker('${escArg(p.id)}')">
+                <div style="flex:1;min-width:0">
+                  <div class="r-name">${escHtml(p.label)}</div>
+                  <div class="r-sub">${dl >= 0 ? dl + " kun qoldi" : "muddat tugagan"}</div>
+                </div>
+                <div class="pv-bar-wrap">
+                  <div class="pv-bar-track"><div class="pv-bar-fill" style="width:${pc}%"></div></div>
+                  <div class="pv-pct num">${pc}%</div>
+                </div>
+              </div>`;
+            })
+            .join("");
+          html += `</div>`;
         }
         html += `</div>${buildProjectsDesktopHtml(overdue, active)}`;
         body.innerHTML = html;
@@ -7485,167 +6325,47 @@
       // g'oyasi, lekin bizning data modelimizga mos real bosqichlar
       // bilan: har bir loyiha doim faol bo'lgani uchun Backlog/Planned
       // tushunchasi yo'q — Qarzdor/Faol/Tugagan real holatlar).
-      // ── LOYIHALAR · DESKTOP ────────────────────────────────────────
-      // Ikki panel: chapda ro'yxat (holat bo'yicha guruhlangan), o'ngda
-      // tanlangan loyihaning ko'rsatkichlari va kalendari. Ilgari uch
-      // ustunli karta-doska edi va loyihani ko'rish uchun boshqa
-      // sahifaga o'tish kerak bo'lardi.
-      let desktopProjectId = null;
-      // Ro'yxatdagi loyihani bosish — to'g'ridan-to'g'ri o'sha loyihaning
-      // sahifasini (tracker) ochadi. Tanlov ham eslab qolinadi, shu sabab
-      // trackerdan qaytganda o'ng panel aynan shu loyihani ko'rsatib
-      // turadi.
-      function setDesktopProject(id) {
-        desktopProjectId = id;
-        openTracker(id);
-      }
-      function pdeskItemHtml(p, active) {
-        const st = projStatus(p);
-        const pc = Math.max(0, Math.min(100, projPct(p)));
-        const exp = Math.max(0, Math.min(100, Math.round(projElapsedFrac(p) * 100)));
-        const owner = shortPersonName(projOwner(p));
-        const fill =
-          st === "debt" ? "var(--red)" : st === "behind" ? "var(--amber)" : st === "ahead" ? "var(--green)" : "var(--brand)";
-        const dot = `var(--st-${st === "debt" ? "debt" : st === "behind" ? "behind" : st === "ahead" ? "ahead" : "onplan"}-dot)`;
-        return `<div class="pdesk-item${active ? " active" : ""}" onclick="setDesktopProject('${escArg(p.id)}')">
-          <div class="pdesk-item-top">
-            <div class="pdesk-item-name">${escHtml(p.label)}</div>
-            <div class="pdesk-item-pct num">${pc}%</div>
-          </div>
-          <div class="pdesk-track">
-            <div class="pdesk-fill" style="width:${pc}%;background:${fill}"></div>
-            ${st === "debt" ? "" : `<div class="pdesk-mark" style="left:${exp}%"></div>`}
-          </div>
-          <div class="pdesk-item-bot">
-            <span class="pdesk-dot" style="background:${dot}"></span>
-            <span style="font-weight:600;color:var(--st-${st === "debt" ? "debt" : st === "behind" ? "behind" : st === "ahead" ? "ahead" : "onplan"})">${PROJ_STATUS_LABEL[st]}</span>
-            <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;color:var(--t2)">${owner ? "· " + escHtml(owner) : ""}</span>
-            <span style="color:${st === "debt" ? "var(--red)" : "var(--t2)"}">${projDaysText(p)}</span>
-          </div>
-        </div>`;
-      }
-      function pdeskDetailHtml(p) {
-        if (!p) {
-          return `<div class="pdesk-main"><div class="empty"><div class="empty-t">Loyiha tanlang</div><div class="empty-s">Chapdagi ro'yxatdan birini tanlang.</div></div></div>`;
-        }
-        const st = projStatus(p);
-        const pc = Math.max(0, Math.min(100, projPct(p)));
-        const exp = Math.max(0, Math.min(100, Math.round(projElapsedFrac(p) * 100)));
-        const total = p.k + p.s;
-        const done = p.doneK + p.doneS;
-        const delta = projDelta(p);
-        const start = parseISO(p.periodStart);
-        const fill =
-          st === "debt" ? "var(--red)" : st === "behind" ? "var(--amber)" : st === "ahead" ? "var(--green)" : "var(--brand)";
-        const team = (p.assignees || []).slice(0, 5);
-        const teamHtml = team.length
-          ? `<div class="pdesk-team">${team
-              .map(
-                (a) =>
-                  `<div><div class="pdesk-team-av" style="background:${personColor(a.username || a.fullName)}" title="${escHtml(a.fullName || a.username || "")}">${escHtml(initials(a.fullName || a.username || "?"))}</div></div>`,
-              )
-              .join("")}</div>`
-          : "";
-        return `<div class="pdesk-main">
-          <div class="pdesk-hdr">
-            <div class="pdesk-hdr-av">${escHtml((p.label || "?").slice(0, 1).toUpperCase())}</div>
-            <div style="flex:1;min-width:0">
-              <div class="pdesk-hdr-name">${escHtml(p.label)}</div>
-              <div style="font-size:13px;color:var(--t2)">${fmtDay(start)} – ${fmtDay(parseISO(p.periodEnd))} · ${projDaysText(p)}</div>
-            </div>
-            ${teamHtml}
-            <button class="btn btn-soft" style="width:auto;height:38px;padding:0 16px;flex:none" onclick="openTracker('${escArg(p.id)}')">Trackerni ochish</button>
-          </div>
-          <div class="pdesk-stats">
-            <div style="width:230px;padding-right:18px;flex:0 0 auto">
-              <div style="display:flex;align-items:flex-end;gap:8px">
-                <div style="font:700 30px/1 inherit;letter-spacing:-0.03em">${pc}<span style="font-size:17px">%</span></div>
-                <div style="font-size:13px;font-weight:500;color:var(--t2);padding-bottom:2px" class="num">${done}/${total}</div>
-                <div style="flex:1"></div>
-                <span class="st-pill ${st}">${PROJ_STATUS_LABEL[st]}</span>
-              </div>
-              <div class="pdesk-track" style="height:7px;margin-top:10px">
-                <div class="pdesk-fill" style="width:${pc}%;background:${fill}"></div>
-                ${st === "debt" ? "" : `<div class="pdesk-mark" style="left:${exp}%"></div>`}
-              </div>
-            </div>
-            <div class="pdesk-stat"><div class="pdesk-stat-lbl">Post</div><div class="pdesk-stat-val">${p.doneK}/${p.k}</div></div>
-            <div class="pdesk-stat"><div class="pdesk-stat-lbl">Stories</div><div class="pdesk-stat-val">${p.doneS}/${p.s}</div></div>
-            <div class="pdesk-stat">
-              <div class="pdesk-stat-lbl">Reja bo'yicha</div>
-              <div class="pdesk-stat-val" style="color:${delta < 0 ? "var(--red)" : "var(--st-ahead)"}">${delta > 0 ? "+" + delta : delta}</div>
-            </div>
-          </div>
-          ${pdeskCalendarHtml(p)}
-        </div>`;
-      }
-      // Oy kalendari — mobil trackerdagi bilan bir xil mantiq: faqat
-      // haqiqatda bajarilgan kunlar belgilanadi (nuqta turiga qarab),
-      // chunki "rejalashtirilgan sana" degan ma'lumot hozir yo'q.
-      function pdeskCalendarHtml(p) {
-        const start = parseISO(p.periodStart);
-        const end = parseISO(p.periodEnd);
-        const today = todayDate();
-        const mapK = buildDayMap(p, "k");
-        const mapS = buildDayMap(p, "s");
-        const totalDays = daysBetween(start, end) + 1;
-        const firstWeekday = (start.getDay() + 6) % 7;
-        let cells = "";
-        for (let i = 0; i < firstWeekday; i++) cells += `<div></div>`;
-        for (let d = 0; d < totalDays; d++) {
-          const cur = addDays(start, d);
-          const key = isoOf(cur);
-          const kk = (mapK[key] || []).length;
-          const ss = (mapS[key] || []).length;
-          const isToday = key === isoOf(today);
-          const has = kk || ss;
-          const bg = isToday ? "var(--brand)" : has ? "var(--st-ahead-bg)" : "var(--surf)";
-          const fg = isToday ? "#fff" : has ? "var(--ink)" : "var(--t3)";
-          const dots =
-            (kk ? `<span style="width:6px;height:6px;border-radius:99px;background:${isToday ? "#fff" : "var(--brand)"}"></span>` : "") +
-            (ss ? `<span style="width:6px;height:6px;border-radius:99px;background:${isToday ? "#fff" : "var(--purple)"}"></span>` : "");
-          cells += `<div style="height:64px;border-radius:10px;background:${bg};border:1px solid ${isToday ? "var(--brand)" : "var(--bd2)"};display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box">
-            <div class="num" style="font-size:14px;font-weight:${isToday ? 700 : 500};color:${fg}">${cur.getDate()}</div>
-            <div style="display:flex;gap:3px;justify-content:center;margin-top:4px;height:6px">${dots}</div>
-          </div>`;
-        }
-        const WDS = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
-        return `<div style="display:flex;align-items:center;gap:12px">
-            <div style="flex:1"></div>
-            <div style="display:flex;gap:14px">
-              <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--brand)"></div>Post</div>
-              <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--purple)"></div>Stories</div>
-            </div>
-          </div>
-          <div style="background:var(--surf);border:1px solid var(--bd2);border-radius:14px;padding:14px">
-            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">
-              ${WDS.map((w) => `<div style="font-size:11.5px;font-weight:600;color:var(--t3);text-align:center">${w}</div>`).join("")}
-              ${cells}
-            </div>
-          </div>`;
-      }
       function buildProjectsDesktopHtml(overdue, active) {
-        const all = [...overdue, ...active];
-        const STATUS_ORDER = { debt: 0, behind: 1, onplan: 2, ahead: 3 };
-        const sorted = [...all].sort(
-          (a, b) => STATUS_ORDER[projStatus(a)] - STATUS_ORDER[projStatus(b)] || projPct(b) - projPct(a),
-        );
-        const attention = sorted.filter((x) => ["debt", "behind"].includes(projStatus(x)));
-        const fine = sorted.filter((x) => !["debt", "behind"].includes(projStatus(x)));
-        // Tanlov saqlanadi; yo'q bo'lsa — diqqat talab qiladigan
-        // birinchi loyiha ochiladi (admin eng avval shuni ko'rishi kerak).
-        let sel = sorted.find((x) => x.id === desktopProjectId) || sorted[0] || null;
-        const railHtml =
-          (attention.length
-            ? `<div class="pdesk-sec">Diqqat talab qiladi</div>${attention.map((x) => pdeskItemHtml(x, sel && x.id === sel.id)).join("")}`
-            : "") +
-          (fine.length
-            ? `<div class="pdesk-sec">Yaxshi ketmoqda</div>${fine.map((x) => pdeskItemHtml(x, sel && x.id === sel.id)).join("")}`
-            : "");
-        return `<div class="desktop-flex pdesk">
-          <div class="pdesk-rail">${railHtml || `<div class="empty"><div class="empty-s">Loyiha yo'q</div></div>`}</div>
-          ${pdeskDetailHtml(sel)}
-        </div>`;
+        const today = todayDate();
+        const cardFor = (p) => {
+          if (p.outstandingDebt) {
+            const daysAgo = daysBetween(parseISO(p.outstandingDebt.periodEnd), today);
+            const rem = p.outstandingDebt.remainingPosts + p.outstandingDebt.remainingStories;
+            return `<div class="pcard" style="margin-bottom:10px" onclick="openTracker('${escArg(p.id)}')">
+              <div class="pcard-top">
+                <div class="r-name">${escHtml(p.label)}</div>
+                <span class="debt-badge">${daysAgo} kun</span>
+              </div>
+              <div class="r-sub">${rem} vazifa qoldi</div>
+            </div>`;
+          }
+          const pc = projPct(p);
+          const dl = projDaysLeft(p);
+          return `<div class="pcard" style="margin-bottom:10px" onclick="openTracker('${escArg(p.id)}')">
+            <div class="pcard-top">
+              <div class="r-name">${escHtml(p.label)}</div>
+              <div class="pcard-pct num">${pc}%</div>
+            </div>
+            <div class="hist-track" style="margin-bottom:9px"><div class="hist-fill" style="width:${pc}%"></div></div>
+            <div class="r-sub">${dl >= 0 ? dl + " kun qoldi" : "muddat tugagan"}</div>
+          </div>`;
+        };
+        const inProgress = active.filter((p) => projPct(p) < 100);
+        const finished = active.filter((p) => projPct(p) >= 100);
+        const cols = [
+          { label: "Qarzdor", items: overdue },
+          { label: "Faol", items: inProgress },
+          { label: "Tugagan", items: finished },
+        ];
+        const colsHtml = cols
+          .map(
+            (col) => `<div>
+              <div class="kanban-col-hdr"><span>${col.label}</span><span class="kanban-count">${col.items.length}</span></div>
+              ${col.items.map(cardFor).join("") || `<div style="font-size:12px;color:var(--t3);padding:4px 2px">Bo'sh</div>`}
+            </div>`,
+          )
+          .join("");
+        return `<div class="desktop-only"><div class="kanban" style="grid-template-columns:repeat(3,1fr)">${colsHtml}</div></div>`;
       }
 
       // ── VAZIFALAR ─────────────────────────────────────────────────
@@ -7666,25 +6386,14 @@
         no_priority: "Ustuvorlik yo'q",
       };
       const TASK_PRIORITY_RANK = { urgent: 0, high: 1, medium: 2, low: 3, no_priority: 4 };
-      // Backenddagi jobTitleNcoinAmount() bilan bir xil mantiq — faqat
+      // Backenddagi TASK_NCOIN_AMOUNT_BY_JOB_TITLE bilan bir xil — faqat
       // tasdiqlash so'rovi/toast matnida to'g'ri miqdorni ko'rsatish uchun
       // (haqiqiy berish backendda hisoblanadi, bu shunchaki ko'rsatish oynasi).
-      // Imlo variantlari ataylab qo'llab-quvvatlanadi: lavozim uzoq vaqt
-      // erkin matn bo'lgani uchun bazada bir nechta yozilishi uchraydi.
-      const DESIGNER_JOB_TITLES = ["grafik dizyayner", "grafik dizayner", "dizayner"];
+      const TASK_NCOIN_AMOUNT_BY_JOB_TITLE = { "Grafik Dizyayner": 0.5 };
       const TASK_NCOIN_DEFAULT_AMOUNT = 0.2;
       const TASK_CREATOR_NCOIN_AMOUNT = 0.2;
-      function normJobTitle(j) {
-        return String(j || "")
-          .trim()
-          .replace(/\s+/g, " ")
-          .toLowerCase();
-      }
-      function isDesignerJobTitle(j) {
-        return DESIGNER_JOB_TITLES.includes(normJobTitle(j));
-      }
       function taskNcoinAmount(t) {
-        return isDesignerJobTitle(t?.assigneeJobTitle) ? 0.5 : TASK_NCOIN_DEFAULT_AMOUNT;
+        return TASK_NCOIN_AMOUNT_BY_JOB_TITLE[t?.assigneeJobTitle] ?? TASK_NCOIN_DEFAULT_AMOUNT;
       }
       // Doskadagi 5 ustun — dizayn asosida, mavjud 7 statusning VIZUAL
       // guruhlanishi (bazadagi statuslar o'zgarmaydi): Backlog+Boshlanmagan
@@ -7718,7 +6427,6 @@
         let text;
         if (diff < 0) text = `${-diff} kun o'tdi`;
         else if (diff === 0) text = "Bugun";
-        else if (diff === 1) text = "Ertaga";
         else text = `${diff} kun`;
         if (diff < 0) return { text, cls: "late" };
         if (diff <= 2) return { text, cls: "soon" };
@@ -7736,56 +6444,12 @@
         { bg: "var(--pink-bg)", ink: "var(--pink)" },
         { bg: "var(--chip)", ink: "var(--t5)" },
       ];
-      const TAG_COLOR_BY_NAME = { Syomka: 1, Reels: 1, Post: 2, Stories: 3, Dizayn: 4, Matn: 5, Hisobot: 5 };
+      const TAG_COLOR_BY_NAME = { Syomka: 0, Reels: 1, Post: 2, Stories: 3, Dizayn: 4, Matn: 5 };
       function tagColor(name) {
         if (name in TAG_COLOR_BY_NAME) return TAG_PALETTE[TAG_COLOR_BY_NAME[name]];
         let h = 0;
         for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
         return TAG_PALETTE[h % TAG_PALETTE.length];
-      }
-      // Ustuvorlik — uchta ustuncha: nechtasi yonishi darajani, rangi
-      // shoshilinchlikni bildiradi. Maketda uch daraja ko'rsatilgan
-      // (3 qizil / 2 amber / 1 kulrang), ilovada esa besh qiymat bor —
-      // "shoshilinch" eng tepaga qo'shildi, "ustuvorlik yo'q"da esa
-      // hech biri yonmaydi.
-      const TASK_PRIORITY_BARS = {
-        urgent: { on: 3, color: "var(--red)" },
-        high: { on: 2, color: "var(--red)" },
-        medium: { on: 2, color: "var(--amber)" },
-        low: { on: 1, color: "var(--t4)" },
-        no_priority: { on: 0, color: "var(--t4)" },
-      };
-      function priorityBarsHtml(priority) {
-        const p = TASK_PRIORITY_BARS[priority] || TASK_PRIORITY_BARS.no_priority;
-        const bars = [1, 2, 3]
-          .map((i) => `<i class="${i <= p.on ? "on" : ""}"></i>`)
-          .join("");
-        return `<div class="tprio" style="--pb:${p.color}">${bars}</div>`;
-      }
-      // Vazifa qatori — "Vazifalar" ro'yxatining asosiy bloki.
-      function buildTaskRowHtml(t) {
-        const due = t.dueDate ? dueChipInfo(t.dueDate) : null;
-        const tag = (t.tags || [])[0];
-        const c = tag ? tagColor(tag.name) : null;
-        const av = taskAvatarInitial(t);
-        return `<div class="trow" onclick="openTaskActions('${escArg(t.id)}')">
-          ${priorityBarsHtml(t.priority)}
-          <div style="flex:1;min-width:0">
-            <div class="trow-title">${escHtml(t.title)}</div>
-            <div class="trow-meta">
-              ${tag ? `<span class="trow-tag" style="background:${c.bg};color:${c.ink}">${escHtml(tag.name)}</span>` : ""}
-              ${t.projectLabel ? `<span class="trow-proj">${escHtml(t.projectLabel)}</span>` : ""}
-            </div>
-          </div>
-          <div class="trow-right">
-            ${due ? `<div class="trow-due ${due.cls ? "soon" : ""}">${due.text}</div>` : ""}
-            ${av ? `<div class="trow-av">${escHtml(av)}</div>` : ""}
-          </div>
-        </div>`;
-      }
-      function taskAvatarInitial(t) {
-        const n = t.assigneeName || t.assigneeUsername || "";
-        return n ? n.slice(0, 1).toUpperCase() : "";
       }
       function renderTagChipsHtml(tags, muted) {
         if (!tags || !tags.length) return "";
@@ -7799,10 +6463,7 @@
       }
       function taskAvatarHtml(t, sizeCls, muted) {
         if (!t.assigneeName) return "";
-        // Rang xodimga biriktirilgan: kartalarda ism faqat bosh harfga
-        // qisqaradi va "Mirshod / Malika" kabi juftlar ajralmay qolardi.
-        const bg = personColor(t.assigneeUsername || t.assigneeName);
-        return `<div class="avatar${sizeCls ? " " + sizeCls : ""}" style="background:${bg};color:#fff;${muted ? "opacity:.6" : ""}" title="${escHtml(t.assigneeName)}">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}</div>`;
+        return `<div class="avatar${sizeCls ? " " + sizeCls : ""}" style="${muted ? "opacity:.6" : ""}" title="${escHtml(t.assigneeName)}">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}</div>`;
       }
       // Xodimlar yuklamasi — faqat OCHIQ (hali yopilmagan) vazifalar
       // bo'yicha, shu ro'yxatdagi (allaqachon rolga qarab scope qilingan)
@@ -7827,6 +6488,21 @@
       // 3 ta "signal bar": daraja qancha yuqori bo'lsa, shuncha ko'p
       // ustun to'ldirilgan (rangi ham darajaga qarab: yuqori=amber,
       // o'rta=brend ko'k, past=kul rang).
+      function priorityIcon(priority) {
+        if (priority === "urgent") {
+          return `<div class="pri-urgent" title="${escHtml(TASK_PRIORITY_LABEL.urgent)}">!</div>`;
+        }
+        const level = { high: 3, medium: 2, low: 1, no_priority: 0 }[priority] ?? 0;
+        const color = { high: "var(--amber)", medium: "var(--brand)", low: "var(--t4)" }[priority] || "var(--sw-off)";
+        const bg = "var(--sw-off)";
+        const bars = [6, 9, 12]
+          .map((h, i) => {
+            const filled = i < level;
+            return `<rect x="${i * 5}" y="${12 - h}" width="3" height="${h}" rx="1" fill="${filled ? color : bg}"></rect>`;
+          })
+          .join("");
+        return `<svg width="13" height="12" viewBox="0 0 13 12" style="flex-shrink:0;margin-top:1px" title="${escHtml(TASK_PRIORITY_LABEL[priority] || TASK_PRIORITY_LABEL.no_priority)}">${bars}</svg>`;
+      }
       function setTaskStatusChip(key) {
         taskStatusChip = key;
         renderTasksBody();
@@ -7848,15 +6524,14 @@
         const newBtn = document.getElementById("tasks-new-btn");
         if (newBtn) newBtn.style.display = "flex";
         const body = document.getElementById("tasks-body");
-        body.innerHTML = `${skeletonHtml()}`;
+        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
         try {
           const res = await apiFetch("/api/tasks");
           if (!res.ok)
             throw new Error((await res.json().catch(() => ({}))).error || "Xato");
           tasksList = (await res.json()).tasks || [];
-          resetPersonColors();
         } catch (e) {
-          showLoadError(body, e.message, () => renderTasksScreen());
+          body.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
           return;
         }
         // Standart holat — rolga qarab: oddiy xodim avval o'ziga
@@ -7973,7 +6648,7 @@
         let icon;
         if (t.status === "done") icon = `<div class="kcard-check">✓</div>`;
         else if (t.status === "failed") icon = `<div class="kcard-fail">✕</div>`;
-        else icon = priorityBarsHtml(t.priority);
+        else icon = priorityIcon(t.priority);
 
         let noteBox = "";
         if (t.status === "failed" && t.reason) {
@@ -8108,30 +6783,11 @@
         if (taskScope === "jamoada") {
           bodyHtml = buildTasksByEmployeeHtml(scoped, workload);
         } else {
-          // "Hammasi" tanlanganda vazifalar bosqich bo'yicha guruhlanib
-          // chiqadi (Biriktirilgan -> Jarayonda -> Tekshiruvda -> ...),
-          // aniq bosqich tanlansa — faqat o'sha guruh. Ilgari ikkala
-          // holatda ham bitta uzun aralash ro'yxat bo'lardi va vazifa
-          // qaysi bosqichda ekani faqat kartani ochganda bilinardi.
-          const cols =
-            taskStatusChip === "all"
-              ? TASK_BOARD_COLUMNS
-              : TASK_BOARD_COLUMNS.filter((c) => c.key === taskStatusChip);
-          const groups = cols
-            .map((col) => {
-              const items = sortTasksForBoard(
-                scoped.filter((t) => taskBoardColumn(t) === col.key),
-              );
-              if (!items.length) return "";
-              return `<div style="margin-bottom:18px">
-                <div class="tgroup-hdr">${col.label}<span class="tgroup-count">${items.length}</span></div>
-                <div class="tlist">${items.map(buildTaskRowHtml).join("")}</div>
-              </div>`;
-            })
-            .join("");
-          bodyHtml =
-            groups ||
-            `<div class="empty"><div class="empty-ico">✓</div><div class="empty-t">Vazifa yo'q</div><div class="empty-s">Filtrni o'zgartirib ko'ring.</div></div>`;
+          const byChip = taskStatusChip === "all" ? scoped : scoped.filter((t) => taskBoardColumn(t) === taskStatusChip);
+          const items = sortTasksForBoard(byChip);
+          bodyHtml = items.length
+            ? items.map(buildTaskCardHtml).join("")
+            : `<div class="empty"><div class="empty-ico">✓</div><div class="empty-t">Vazifa yo'q</div><div class="empty-s">Filtrni o'zgartirib ko'ring.</div></div>`;
         }
 
         return `<div class="mobile-only">
@@ -8261,21 +6917,26 @@
         let actionsHtml = "";
         if (canChangeStatus) {
           if (t.status === "backlog") {
-            actionsHtml = `<button type="button" class="td-status-btn lg solid-blue" onclick="openSetDueDateForm('${escArg(t.id)}')">Navbatga qo'yish</button>`;
+            actionsHtml = `<button type="button" class="td-status-btn lg solid-blue" onclick="openSetDueDateForm('${escArg(t.id)}')"><span class="dot"></span>Navbatga qo'yish</button>`;
           } else if (t.status === "todo" || t.status === "in_progress") {
             const isTodo = t.status === "todo";
-            actionsHtml = taskActionBarHtml(
-              t,
-              isTodo
-                ? `<button type="button" class="td-status-btn lg solid-blue" onclick="setTaskStatus('${escArg(t.id)}','in_progress',this)">Ishni boshladim</button>`
-                : `<button type="button" class="td-status-btn lg solid-blue" onclick="setTaskStatus('${escArg(t.id)}','review',this)">Tekshiruvga yubordim</button>`,
-            );
+            const primary = isTodo
+              ? `<button type="button" class="td-status-btn lg solid-blue" onclick="setTaskStatus('${escArg(t.id)}','in_progress',this)"><span class="dot"></span>Ishni boshladim</button>`
+              : `<button type="button" class="td-status-btn lg solid-blue" onclick="setTaskStatus('${escArg(t.id)}','review',this)"><span class="dot"></span>Tekshiruvga yubordim</button>`;
+            const secondary = [
+              isAdmin
+                ? `<button type="button" class="td-status-btn solid-green" onclick="setTaskStatus('${escArg(t.id)}','done',this)"><span class="dot"></span>Darhol bajarildi</button>`
+                : "",
+              `<button type="button" class="td-status-btn tint-red" onclick="openTaskFailForm('${escArg(t.id)}')"><span class="dot"></span>Bajarolmadim</button>`,
+            ].filter(Boolean);
+            actionsHtml = `${primary}<div class="td-status-row">${secondary.join("")}</div>`;
           } else if (t.status === "review") {
             if (isAdmin) {
-              actionsHtml = taskActionBarHtml(
-                t,
-                `<button type="button" class="td-status-btn lg solid-green" onclick="setTaskStatus('${escArg(t.id)}','done',this)">Tasdiqlash</button>`,
-              );
+              actionsHtml = `<button type="button" class="td-status-btn lg solid-green" onclick="setTaskStatus('${escArg(t.id)}','done',this)"><span class="dot"></span>Tasdiqlash</button>
+                <div class="td-status-row">
+                  <button type="button" class="td-status-btn tint-blue" onclick="setTaskStatus('${escArg(t.id)}','in_progress',this)"><span class="dot"></span>Qaytarish</button>
+                  <button type="button" class="td-status-btn tint-red" onclick="openTaskFailForm('${escArg(t.id)}')"><span class="dot"></span>Bajarolmadim</button>
+                </div>`;
             } else {
               actionsHtml = `<div class="f-hint" style="margin-top:2px">Vazifa tekshiruvda — admin tasdiqlashini kutmoqda.</div>`;
             }
@@ -8693,7 +7354,8 @@
         }
         const btn = document.getElementById("task-queue-btn");
         if (btn) {
-          setBtnLoading(btn, true, "Saqlanmoqda…");
+          btn.disabled = true;
+          btn.textContent = "Saqlanmoqda…";
         }
         try {
           const res = await apiFetch(`/api/tasks/${id}`, {
@@ -8710,7 +7372,8 @@
         } catch (e) {
           if (errEl) errEl.textContent = e.message;
           if (btn) {
-            setBtnLoading(btn, false);
+            btn.disabled = false;
+            btn.textContent = "Tasdiqlash";
           }
         }
       }
@@ -8841,85 +7504,13 @@
       // to'g'ridan-to'g'ri tahrirlash/o'chirish (faqat admin, xuddi
       // vazifa detali sahifasi pastidagi tugmalar bilan bir xil
       // funksiyalarni chaqiradi).
-      // Asosiy tugma + "⋯". Ikkinchi darajali amallar menyuga yig'iladi.
-      function taskActionBarHtml(t, primaryBtnHtml) {
-        return `<div class="td-actbar">
-          ${primaryBtnHtml}
-          <button type="button" class="td-more-btn" title="Boshqa amallar" onclick="openTaskCardMenu('${escArg(t.id)}')">⋯</button>
-        </div>`;
-      }
-      // Qator amallari uchun umumiy menyu. `items`: {label, danger, run}.
-      function openRowMenu(title, items) {
-        const list = items.filter(Boolean);
-        if (!list.length) return;
-        const { body } = makeSheet(title);
-        body.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px">${list
-          .map(
-            (it, i) =>
-              `<button type="button" class="btn ${it.danger ? "btn-danger" : "btn-soft"}" data-i="${i}">${escHtml(it.label)}</button>`,
-          )
-          .join("")}</div>`;
-        body.querySelectorAll("button[data-i]").forEach((b) => {
-          b.onclick = () => {
-            document.querySelector(".overlay")?.remove();
-            list[+b.dataset.i].run();
-          };
-        });
-      }
-      function openStaffRowMenu(id, name) {
-        openRowMenu(name, [
-          { label: "Tahrirlash", run: () => openStaffEdit(id) },
-          { label: "O'chirish", danger: true, run: () => deleteStaff(id, name) },
-        ]);
-      }
-      function openUserRowMenu(username, displayName, canRemove) {
-        openRowMenu(displayName, [
-          { label: "Tahrirlash", run: () => openUserEditSheet(username) },
-          canRemove && {
-            label: "Chiqarish",
-            danger: true,
-            run: () => deleteTelegramUser(username, displayName),
-          },
-        ]);
-      }
-      function openProjectRowMenu(id, label) {
-        openRowMenu(label, [
-          { label: "Tahrirlash", run: () => openProjectEditSheet(id) },
-          { label: "Arxivlash", danger: true, run: () => archiveProject(id, label, null) },
-        ]);
-      }
       function openTaskCardMenu(id) {
         const t = tasksList.find((x) => x.id === id);
         if (!t) return;
-        const canChangeStatus = isAdmin || t.assigneeUsername === currentUser;
-        const open = !["done", "failed", "cancelled"].includes(t.status);
-        const close = () => `document.querySelector('.overlay')?.remove();`;
-        const items = [];
-        // Holat bilan bog'liq, kamroq ishlatiladigan amallar — asosiy
-        // tugmadan alohida, chunki ular kundalik oqim emas.
-        if (canChangeStatus && open) {
-          if (isAdmin && t.status !== "review") {
-            items.push(
-              `<button type="button" class="btn btn-soft" onclick="${close()}setTaskStatus('${escArg(id)}','done',this)">Darhol bajarildi</button>`,
-            );
-          }
-          if (isAdmin && t.status === "review") {
-            items.push(
-              `<button type="button" class="btn btn-soft" onclick="${close()}setTaskStatus('${escArg(id)}','in_progress',this)">Ishga qaytarish</button>`,
-            );
-          }
-          items.push(
-            `<button type="button" class="btn btn-soft" onclick="${close()}openTaskFailForm('${escArg(id)}')">Bajarolmadim</button>`,
-          );
-        }
-        if (isAdmin) {
-          items.push(
-            `<button type="button" class="btn btn-soft" onclick="${close()}openEditTaskSheet('${escArg(id)}')">Tahrirlash</button>`,
-            `<button type="button" class="btn btn-danger" onclick="${close()}deleteTask('${escArg(id)}','${escArg(t.title)}')">O'chirish</button>`,
-          );
-        }
         const { body } = makeSheet(t.title);
-        body.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px">${items.join("")}</div>`;
+        body.innerHTML = `
+          <button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="document.querySelector('.overlay')?.remove();openEditTaskSheet('${escArg(id)}')">✎ Tahrirlash</button>
+          <button type="button" class="btn btn-danger" onclick="document.querySelector('.overlay')?.remove();deleteTask('${escArg(id)}','${escArg(t.title)}')">🗑 O'chirish</button>`;
       }
       function deleteTask(id, title) {
         showConfirmModal(
@@ -8999,7 +7590,7 @@
         if (!t) return;
         etSelectedTagIds = new Set((t.tags || []).map((tg) => tg.id));
         const { body } = makeSheet("Vazifani tahrirlash");
-        body.innerHTML = `${skeletonHtml()}`;
+        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
         let users = [];
         try {
           const res = await apiFetch("/api/users/directory");
@@ -9204,7 +7795,7 @@
         ntStatus = "todo";
         ntSelectedTagIds = new Set();
         const { body } = makeSheet("Yangi vazifa");
-        body.innerHTML = `${skeletonHtml()}`;
+        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
         let users = [];
         try {
           // /api/users admin-only (shaxsiy maydonlar bor) — vazifa yaratish
@@ -9251,14 +7842,14 @@
             <div class="f-hint">Backlog — hali navbatga qo'yilmagan, muddat keyinroq kiritiladi.</div>
           </div>
           <div class="f-group" id="nt-due-group">
-            <label class="f-label">Muddat</label>
-            ${renderDateFieldHtml("nt-due", isoOf(addDays(todayDate(), 1)), "Sana tanlang")}
+            <label class="f-label">Muddat (deadline) *</label>
+            ${renderDateFieldHtml("nt-due", "", "Sana tanlang")}
           </div>
           <div class="f-group">
             <label class="f-label">Ustuvorlik</label>
             <select class="f-input" id="nt-priority">
               ${Object.entries(TASK_PRIORITY_LABEL)
-                .map(([k, lbl]) => `<option value="${k}"${k === "medium" ? " selected" : ""}>${lbl}</option>`)
+                .map(([k, lbl]) => `<option value="${k}"${k === "no_priority" ? " selected" : ""}>${lbl}</option>`)
                 .join("")}
             </select>
           </div>
@@ -9339,7 +7930,7 @@
         renderHistChips();
         if (!histState.loaded) {
           document.getElementById("history-body").innerHTML =
-            `${skeletonHtml()}`;
+            `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
           const rows = [];
           await Promise.all(
             projects.map(async (project) => {
@@ -9525,46 +8116,33 @@
         deltaEl.className = "trk-prog-delta" + (delta >= 0 ? " ok" : "");
 
         // ── KALENDAR: faqat haqiqatda bajarilgan kunlar ─────────────
-        // Ikkala tur birga ko'rsatiladi (ko'k nuqta — post, siyohrang —
-        // stories), shu sabab yuqoridagi segmentni almashtirmasdan ham
-        // oyning to'liq manzarasi ko'rinadi. Belgilash mantig'i
-        // o'zgarmagan: u avvalgidek tartib raqami bo'yicha ketadi,
-        // kalendar faqat ko'rish uchun.
-        const dayMapK = buildDayMap(p, "k");
-        const dayMapS = buildDayMap(p, "s");
-        const dayMap = trackerType === "k" ? dayMapK : dayMapS;
+        const dayMap = buildDayMap(p, trackerType);
         const checks = p.checks || {};
         const det = p.checkDetails || {};
         const firstWeekday = (start.getDay() + 6) % 7; // Dushanba = 0
         let cells = "";
         for (let i = 0; i < firstWeekday; i++)
-          cells += `<div class="cal-cell blank"></div>`;
+          cells += `<div class="cal-cell empty"></div>`;
         for (let d = 0; d < totalDays; d++) {
           const cur = new Date(start);
           cur.setDate(cur.getDate() + d);
           const key = isoOf(cur);
-          const seqsK = dayMapK[key] || [];
-          const seqsS = dayMapS[key] || [];
           const seqs = dayMap[key] || [];
           const isToday = key === isoOf(today);
-          let cls = "cal-cell" + (seqsK.length || seqsS.length ? " has" : " pending");
-          if (isToday) cls += " today";
-          // Har tur uchun bittadan nuqta — kun ichida nechta bo'lishidan
-          // qat'i nazar, chunki bu yerda muhimi "nima chiqqani", "nechta"
-          // emas (aniq ro'yxat kunni bosganda ochiladi).
-          const dots =
-            (seqsK.length ? `<span class="cal-dot k"></span>` : "") +
-            (seqsS.length ? `<span class="cal-dot s"></span>` : "");
-          const inner = `<div class="cn">${cur.getDate()}</div><div class="cal-dots">${dots}</div>`;
-          const tip = [
-            seqsK.length ? seqsK.map((n) => "Post " + n).join(", ") : "",
-            seqsS.length ? seqsS.map((n) => "Stories " + n).join(", ") : "",
-          ]
-            .filter(Boolean)
-            .join(" · ");
-          // Bosilganda joriy segment turidagi ro'yxat ochiladi (agar shu
-          // kuni o'sha turda ish bo'lsa).
-          cells += `<div class="${cls}"${seqs.length ? ` title="${tip}" onclick="openDayCell('${escArg(p.id)}','${trackerType}',[${seqs.join(",")}])"` : tip ? ` title="${tip}"` : ""}>${inner}</div>`;
+          let cls = "cal-cell",
+            inner;
+          if (seqs.length) {
+            // Shu kuni nechta chiqqan bo'lsa — o'sha son yoziladi
+            cls += " done" + (isToday ? " done-today" : "");
+            inner = `<div class="cn">${cur.getDate()}</div><div class="cs num">${seqs.length}</div>`;
+          } else if (isToday) {
+            cls += " today";
+            inner = `<div class="cn">${cur.getDate()}</div><div class="cs">bugun</div>`;
+          } else {
+            cls += " pending";
+            inner = `<div class="cn">${cur.getDate()}</div>`;
+          }
+          cells += `<div class="${cls}"${seqs.length ? ` title="${seqs.map((n) => (trackerType === "k" ? "Post " : "Stories ") + n).join(", ")}" onclick="openDayCell('${escArg(p.id)}','${trackerType}',[${seqs.join(",")}])"` : ""}>${inner}</div>`;
         }
 
         // ── BUGUN BELGILANGANLAR ────────────────────────────────────
@@ -9607,8 +8185,7 @@
           <div class="cal-week">${WD.map((w) => `<span>${w}</span>`).join("")}</div>
           <div class="cal-grid">${cells}</div>
           <div class="cal-legend">
-            <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--brand)"></div>Post</div>
-            <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--purple)"></div>Stories</div>
+            <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--brand)"></div>bajarilgan (son = shu kuni nechta chiqqani)</div>
           </div>
           <div class="list-card" style="margin-top:16px">
             <div style="padding:11px 14px;border-bottom:1px solid var(--bd1);font-weight:600;font-size:11px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase">${fmtDay(today)} · bugun belgilangan</div>
@@ -9901,7 +8478,7 @@
         const storyKind = info.storyKind || "info";
 
         const { body } = makeSheet(`${label} ${num} — ${escHtml(p.label)}`);
-        body.innerHTML = `${skeletonHtml()}`;
+        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
         let directory = [];
         try {
           const res = await apiFetch("/api/users/directory");
@@ -9980,7 +8557,8 @@
           if (!videographerUserId) return showToast("⚠ Video olgan xodimni tanlang");
         }
         if (!workDate) return showToast("⚠ Sanani tanlang");
-        setBtnLoading(btn, true, "Saqlanmoqda…");
+        btn.disabled = true;
+        btn.textContent = "Saqlanmoqda…";
         try {
           await onCheck(slug, type, num, true, null, {
             editorUserId,
@@ -9991,7 +8569,8 @@
           document.querySelector(".overlay")?.remove();
           showToast("✅ Belgilandi");
         } catch (e) {
-          setBtnLoading(btn, false);
+          btn.disabled = false;
+          btn.textContent = "Belgilash";
         }
       }
 
@@ -10000,12 +8579,7 @@
           await onCheck(slug, type, num, false);
           document.querySelector(".overlay")?.remove();
           showToast("Belgi olib tashlandi");
-        } catch (e) {
-          // Ilgari bu yerda xato jim yutilardi: oyna ochiq qolar,
-          // hech qanday xabar chiqmas va xodim belgi olib
-          // tashlandimi yoki yo'qmi — bilmay qolardi.
-          showToast("⚠ Belgi olib tashlanmadi: " + e.message);
-        }
+        } catch (e) {}
       }
 
       // ── YANGI LOYIHA ──────────────────────────────────────────────
@@ -10090,7 +8664,6 @@
           if (!res.ok) return;
           const d = await res.json();
           allUsers = (d.users || []).filter((u) => u.role === "employee" && u.is_active);
-          resetPersonColors();
         } catch (e) {}
       }
       async function loadNpTemplates() {
@@ -10276,7 +8849,7 @@
           return;
         }
         const btn = document.getElementById("np-tpl-save-btn");
-        setBtnLoading(btn, true, "Saqlanmoqda…");
+        btn.disabled = true;
         try {
           const res = await apiFetch("/api/project-templates", {
             method: "POST",
@@ -10290,7 +8863,7 @@
           showToast(`✅ "${name}" shablon sifatida saqlandi`);
         } catch (e) {
           showToast("⚠ " + e.message);
-          setBtnLoading(btn, false);
+          btn.disabled = false;
         }
       }
 
@@ -10534,46 +9107,19 @@
         "announcement",
         "nshop",
       ];
-      // Boshqaruv ekranining "ramkasi" — sarlavha, orqaga tugmasi,
-      // qidiruv va FAB. Menyu bosqichida (mobil) ularning ko'pi
-      // yashiriladi, chunki menyuda qidiradigan narsa yo'q.
-      const ADMIN_TAB_TITLES = {
-        projects: "Loyihalar",
-        staff: "Xodimlar",
-        worklog: "Tabel",
-        perms: "Ruxsatlar",
-        admins: "Adminlar",
-        announcement: "E'lon yuborish",
-        nshop: "NShop mahsulotlari",
-      };
-      function applyAdminChrome() {
-        // Desktopda menyu bosqichi yo'q — tablar doim ko'rinib turadi.
-        const isDesktop = window.matchMedia("(min-width: 860px)").matches;
-        if (isDesktop && adminActiveTab === null) adminActiveTab = "projects";
-        const onMenu = adminActiveTab === null;
-
+      function switchATab(tabName) {
+        adminActiveTab = tabName;
         ADMIN_TABS.forEach((t) => {
           const b = document.getElementById("atab-" + t);
-          if (b) b.classList.toggle("active", t === adminActiveTab);
+          if (b) b.classList.toggle("active", t === tabName);
         });
-        const titleEl = document.getElementById("admin-hdr-title");
-        if (titleEl) {
-          titleEl.textContent = onMenu
-            ? "Boshqaruv"
-            : ADMIN_TAB_TITLES[adminActiveTab] || "Boshqaruv";
-        }
-        const backEl = document.getElementById("admin-back");
-        if (backEl) backEl.style.display = onMenu ? "none" : "flex";
-
-        const noSearch =
-          onMenu ||
-          adminActiveTab === "announcement" ||
-          adminActiveTab === "worklog" ||
-          adminActiveTab === "nshop";
-        document.getElementById("admin-search-box").style.display = noSearch ? "none" : "flex";
+        const noSearch = tabName === "announcement" || tabName === "worklog" || tabName === "nshop";
+        document.getElementById("admin-search-box").style.display = noSearch
+          ? "none"
+          : "flex";
+        // Faqat "Loyihalar" tabida yangi loyiha yaratish mantiqiy
         document.getElementById("admin-fab").style.display =
-          adminActiveTab === "projects" ? "flex" : "none";
-
+          tabName === "projects" ? "flex" : "none";
         const ph = {
           projects: "Loyiha qidirish",
           staff: "Xodim qidirish",
@@ -10581,104 +9127,11 @@
           admins: "Admin qidirish",
         };
         const s = document.getElementById("admin-search");
-        if (s && ph[adminActiveTab]) s.placeholder = ph[adminActiveTab];
-      }
-      function switchATab(tabName) {
-        adminActiveTab = tabName;
-        applyAdminChrome();
-        renderAdminActiveTab();
-      }
-      // ── BOSHQARUV MENYUSI ─────────────────────────────────────────
-      // Har qatorda bo'lim nomi va uning HOZIRGI holati: "14 kishi ·
-      // 2 tasi tasdiq kutmoqda" kabi. Maqsad — admin bo'limni ochmasdan
-      // turib qayerda ish borligini ko'rsin.
-      const ADMIN_MENU_ICONS = {
-        staff: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 20c1-3.5 3.5-5.5 6.5-5.5s5.5 2 6.5 5.5"/><path d="M15.5 5.2a3.5 3.5 0 0 1 0 6.6M18 14.8c1.8.8 3 2.6 3.5 5.2"/></svg>`,
-        worklog: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M8 2.5v4M16 2.5v4M3 9.5h18"/></svg>`,
-        perms: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>`,
-        projects: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>`,
-        nshop: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>`,
-        announcement: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4h3l6 4V6l-6 4z"/><path d="M17.5 9.5a4 4 0 0 1 0 5"/></svg>`,
-        admins: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5.5c0 4.2-2.9 7.6-7 9.5-4.1-1.9-7-5.3-7-9.5V6z"/></svg>`,
-      };
-      function adminMenuGroups() {
-        const pendingJob = 0; // lavozim tasdiqlash hali backendda yo'q
-        const staffCount = (allUsers || []).length;
-        const debtCount = projects.filter((p) => p.outstandingDebt).length;
-        const activeCount = projects.length;
-        return [
-          {
-            label: "Jamoa",
-            items: [
-              {
-                key: "staff",
-                title: "Xodimlar",
-                sub: staffCount ? `${staffCount} kishi` : "Ro'yxatni ochish",
-                badge: pendingJob || 0,
-              },
-              { key: "worklog", title: "Tabel", sub: "Ish vaqti va kunlik hisobot" },
-              { key: "perms", title: "Ruxsatlar", sub: "Kim qaysi loyihaga mas'ul" },
-            ],
-          },
-          {
-            label: "Kontent",
-            items: [
-              {
-                key: "projects",
-                title: "Loyihalar",
-                sub: `${activeCount} faol${debtCount ? ` · ${debtCount} qarzda` : ""}`,
-                badge: debtCount,
-              },
-              { key: "nshop", title: "NShop mahsulotlari", sub: "Mahsulot va qoldiqlar" },
-            ],
-          },
-          {
-            label: "Tizim",
-            items: [
-              ...(isSuperAdmin
-                ? [
-                    { key: "announcement", title: "E'lon yuborish", sub: "Telegram orqali xodimlarga" },
-                    { key: "admins", title: "Adminlar", sub: "Kim boshqaruvga kira oladi" },
-                  ]
-                : []),
-            ],
-          },
-        ].filter((g) => g.items.length);
-      }
-      function renderAdminMenu(c) {
-        c.innerHTML = adminMenuGroups()
-          .map(
-            (g) => `<div class="amenu-sec">${g.label}</div>
-              <div class="amenu-list">${g.items
-                .map(
-                  (it) => `<div class="amenu-row" onclick="switchATab('${it.key}')">
-                    <div class="amenu-ico">${ADMIN_MENU_ICONS[it.key] || ""}</div>
-                    <div style="flex:1;min-width:0">
-                      <div class="amenu-title">${escHtml(it.title)}</div>
-                      <div class="amenu-sub">${escHtml(it.sub)}</div>
-                    </div>
-                    ${it.badge ? `<span class="amenu-badge">${it.badge}</span>` : ""}
-                    <span class="amenu-chev">›</span>
-                  </div>`,
-                )
-                .join("")}</div>`,
-          )
-          .join("");
-      }
-      function backToAdminMenu() {
-        adminActiveTab = null;
-        applyAdminChrome();
+        if (s && ph[tabName]) s.placeholder = ph[tabName];
         renderAdminActiveTab();
       }
       function renderAdminActiveTab() {
         const c = document.getElementById("admin-body");
-        // Mobilda bo'lim tanlanmagan bo'lsa — menyu ko'rsatiladi.
-        // Desktopda yuqoridagi tablar doim turadi, shu sabab u yerda
-        // menyu bosqichi umuman bo'lmaydi.
-        if (adminActiveTab === null) {
-          renderAdminMenu(c);
-          return;
-        }
         if (adminActiveTab === "projects") renderAdminProjectsTab(c);
         else if (adminActiveTab === "staff") renderStaffTab(c);
         else if (adminActiveTab === "worklog") renderWorklogTab(c);
@@ -10721,7 +9174,10 @@
                     <div class="r-name">${escHtml(s.fullName)}</div>
                     <div class="r-sub">${POSITION_LABELS[s.position] || s.position}</div>
                   </div>
-                  <button class="row-menu-btn" title="Amallar" onclick="openStaffRowMenu('${escArg(s.id)}','${escArg(s.fullName)}')">⋯</button>
+                  <div class="m-actions-inline">
+                    <button class="icon-btn" onclick="openStaffEdit('${escArg(s.id)}')">${ICON.edit}</button>
+                    <button class="icon-btn danger" onclick="deleteStaff('${escArg(s.id)}','${escArg(s.fullName)}')">${ICON.trash}</button>
+                  </div>
                 </div>`,
               )
               .join("");
@@ -10772,7 +9228,6 @@
           if (!res.ok)
             throw new Error((await res.json().catch(() => ({}))).error || "Xato");
           allUsers = (await res.json()).users || [];
-          resetPersonColors();
         } catch (e) {
           wrap.innerHTML = `<div style="padding:16px 14px;font-size:12px;color:var(--red)">⚠ ${escHtml(e.message)}</div>`;
           return;
@@ -10810,7 +9265,10 @@
                 <div class="r-sub"${complete ? "" : ' style="color:var(--red)"'}>${escHtml(sub)}</div>
               </div>
               ${userAccessBadgeHtml(u)}
-              <button class="row-menu-btn" title="Amallar" onclick="openUserRowMenu('${escArg(u.username)}','${escArg(displayName)}',${isSuperAdmin && u.access_status !== "removed"})">⋯</button>
+              <div class="m-actions-inline">
+                <button class="icon-btn" onclick="openUserEditSheet('${escArg(u.username)}')">${ICON.edit}</button>
+                ${isSuperAdmin && u.access_status !== "removed" ? `<button class="icon-btn danger" onclick="deleteTelegramUser('${escArg(u.username)}','${escArg(displayName)}')">${ICON.trash}</button>` : ""}
+              </div>
             </div>`;
           })
           .join("");
@@ -10828,7 +9286,10 @@
                   <div class="avatar" style="flex-shrink:0">${u.username.slice(0, 1).toUpperCase()}</div>
                   <div class="r-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(displayName)}</div>
                 </div>
-                <button class="row-menu-btn" title="Amallar" onclick="openUserRowMenu('${escArg(u.username)}','${escArg(displayName)}',${isSuperAdmin && u.access_status !== "removed"})">⋯</button>
+                <div class="m-actions-inline">
+                  <button class="icon-btn" onclick="openUserEditSheet('${escArg(u.username)}')">${ICON.edit}</button>
+                  ${isSuperAdmin && u.access_status !== "removed" ? `<button class="icon-btn danger" onclick="deleteTelegramUser('${escArg(u.username)}','${escArg(displayName)}')">${ICON.trash}</button>` : ""}
+                </div>
               </div>
               <div class="r-sub"${complete ? "" : ' style="color:var(--red)"'}>${escHtml(sub)}</div>
               ${userAccessBadgeHtml(u, "margin-top:8px")}
@@ -10960,20 +9421,16 @@
           </div>`;
         if (!worklog) {
           c.innerHTML =
-            header + `${skeletonHtml()}`;
+            header + `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
           try {
             const r = await apiFetch(`/api/worklog?month=${worklogMonth}`);
             if (!r.ok)
               throw new Error((await r.json().catch(() => ({}))).error || "Xato");
             worklog = await r.json();
           } catch (e) {
-            // Sarlavha (oy tanlash) o'z joyida qoladi — xato faqat
-            // ro'yxat o'rnida ko'rsatiladi, aks holda xodim boshqa oyga
-            // o'tib ko'rish imkonini ham yo'qotardi.
-            c.innerHTML = header + `<div id="wl-load-err"></div>`;
-            showLoadError(document.getElementById("wl-load-err"), e.message, () =>
-              renderWorklogTab(c),
-            );
+            c.innerHTML =
+              header +
+              `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
             return;
           }
           if (adminActiveTab !== "worklog") return; // tab almashib ketgan
@@ -11045,7 +9502,10 @@
                 <div class="m-item-sub">${p.periodStart} – ${p.periodEnd}<br>Post ${p.doneK}/${p.k} · Stories ${p.doneS}/${p.s}</div>
               </div>
               ${p.outstandingDebt ? `<span class="debt-badge">QARZ</span>` : ""}
-              <button class="row-menu-btn" title="Amallar" onclick="openProjectRowMenu('${escArg(p.id)}','${escArg(p.label)}')">⋯</button>
+              <div class="m-actions-inline">
+                <button class="icon-btn" onclick="openProjectEditSheet('${escArg(p.id)}')">${ICON.edit}</button>
+                <button class="icon-btn danger" onclick="archiveProject('${escArg(p.id)}','${escArg(p.label)}',this)">${ICON.trash}</button>
+              </div>
             </div>`,
           )
           .join("");
@@ -11058,7 +9518,10 @@
                 ${p.outstandingDebt ? `<span class="debt-badge">QARZ</span>` : `<span class="debt-badge" style="color:var(--brand);background:rgba(47,122,185,.12)">Faol</span>`}
               </div>
               <div class="r-sub">${p.periodStart} – ${p.periodEnd}<br>Post ${p.doneK}/${p.k} · Stories ${p.doneS}/${p.s}</div>
-              <button class="row-menu-btn" title="Amallar" style="margin-top:12px" onclick="openProjectRowMenu('${escArg(p.id)}','${escArg(p.label)}')">⋯</button>
+              <div class="m-actions-inline" style="margin-top:12px">
+                <button class="icon-btn" onclick="openProjectEditSheet('${escArg(p.id)}')">${ICON.edit}</button>
+                <button class="icon-btn danger" onclick="archiveProject('${escArg(p.id)}','${escArg(p.label)}',this)">${ICON.trash}</button>
+              </div>
             </div>`,
           )
           .join("");
@@ -11070,7 +9533,7 @@
         // Botga kirish huquqini berish — faqat Super Admin (TZ: "Faqat
         // Super Admin userga access bera oladi").
         c.innerHTML = `
-          <div id="perm-list">${skeletonHtml()}</div>
+          <div id="perm-list"><div class="empty"><div class="empty-s">Yuklanmoqda…</div></div></div>
           ${
             isSuperAdmin
               ? `<div style="display:flex;gap:8px;margin-top:14px">
@@ -11098,7 +9561,7 @@
           permRoles = rolesRes.ok ? (await rolesRes.json()).roles || {} : {};
           renderPermList();
         } catch (e) {
-          showLoadError(wrap, e.message, () => loadUsersAndRenderPermList());
+          wrap.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
         }
       }
       // Loyihaga ruxsat berilgan xodimning shu loyihadagi rolini
@@ -11370,7 +9833,7 @@
             <div style="flex:1"><label class="f-label">Familiya</label><input class="f-input" id="ue-last" value="${escHtml(u.last_name || "")}" onblur="formatNameInputOnBlur(this)"/></div>
           </div>
           <div class="f-group"><label class="f-label">Telefon raqami</label><input class="f-input" id="ue-phone" value="${escHtml(u.phone || "")}" placeholder="+998 90 123 45 67" oninput="formatPhoneInput(this)"/></div>
-          <div class="f-group"><label class="f-label">Lavozimi</label>${jobTitleSelectHtml("ue-job", u.job_title || "")}</div>
+          <div class="f-group"><label class="f-label">Lavozimi</label><input class="f-input" id="ue-job" value="${escHtml(u.job_title || "")}"/></div>
           <div class="f-group"><label class="f-label">Tug'ilgan sana</label><input class="f-input" type="date" id="ue-birth" value="${u.birth_date ? String(u.birth_date).slice(0, 10) : ""}"/></div>
           <button class="btn btn-blue" id="ue-save-btn" onclick="saveUserEdit('${escArg(username)}')" style="margin-bottom:18px">Saqlash</button>
           ${
@@ -11410,11 +9873,12 @@
           firstName: document.getElementById("ue-first")?.value.trim(),
           lastName: document.getElementById("ue-last")?.value.trim(),
           phone: document.getElementById("ue-phone")?.value.trim(),
-          jobTitle: jobTitleSelectValue("ue-job"),
+          jobTitle: document.getElementById("ue-job")?.value.trim(),
           birthDate: document.getElementById("ue-birth")?.value || null,
         };
         if (btn) {
-          setBtnLoading(btn, true, "Saqlanmoqda…");
+          btn.disabled = true;
+          btn.textContent = "Saqlanmoqda…";
         }
         try {
           const res = await apiFetch(`/api/users/${username}`, {
@@ -11429,7 +9893,8 @@
         } catch (e) {
           showToast("⚠ " + e.message);
           if (btn) {
-            setBtnLoading(btn, false);
+            btn.disabled = false;
+            btn.textContent = "Saqlash";
           }
         }
       }
@@ -11441,7 +9906,7 @@
               <input class="f-input" id="new-admin-input" placeholder="@username" style="flex:1"/>
               <button class="btn btn-blue btn-sm" style="width:auto;padding:0 16px" onclick="addDynamicAdmin()">Qo'shish</button>
             </div>
-            <div id="admin-list">${skeletonHtml()}</div>
+            <div id="admin-list"><div class="empty"><div class="empty-s">Yuklanmoqda…</div></div></div>
           </div>`;
         refreshAdminList();
       }
@@ -11476,7 +9941,7 @@
           }
           listEl.innerHTML = html;
         } catch (e) {
-          showLoadError(listEl, e.message, () => refreshAdminList());
+          listEl.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
         }
       }
       async function addDynamicAdmin() {
@@ -11507,7 +9972,8 @@
           "Bu foydalanuvchi endi Boshqaruv panelidan foydalana olmaydi.",
           async () => {
             if (btn) {
-              setBtnLoading(btn, true);
+              btn.disabled = true;
+              btn.textContent = "…";
             }
             try {
               const res = await apiFetch(`/api/admins/${username}`, {
@@ -11520,7 +9986,8 @@
             } catch (e) {
               showToast("⚠ " + e.message);
               if (btn) {
-                setBtnLoading(btn, false);
+                btn.disabled = false;
+                btn.textContent = "O'chirish";
               }
             }
           },
@@ -11539,7 +10006,7 @@
       let nshopAdminStats = null;
       let nshopAdminSearch = "";
       async function renderNShopAdminTab(c) {
-        c.innerHTML = `${skeletonHtml()}`;
+        c.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
         await refreshNShopAdminList(c);
       }
       async function refreshNShopAdminList(c) {
@@ -11555,7 +10022,7 @@
           nshopAdminProducts = prodData.products || [];
           nshopAdminStats = statsRes.ok ? await statsRes.json() : null;
         } catch (e) {
-          showLoadError(c, e.message, () => refreshNShopAdminList(c));
+          c.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
           return;
         }
         renderNShopAdminBody(c);
@@ -11683,7 +10150,7 @@
         return `<tr id="nshop-row-${p.id}"${p.is_visible ? "" : ' style="background:var(--surf2)"'}>
           <td>
             <div style="display:flex;align-items:center;gap:13px">
-              ${nshopThumbHtml(p.image_url, "width:44px;height:44px;border-radius:11px", p.name)}
+              ${nshopThumbHtml(p.image_url, "width:44px;height:44px;border-radius:11px")}
               <div>
                 <div class="dtbl-name"${p.is_visible ? "" : ' style="color:var(--t2)"'}>${escHtml(p.name)}</div>
                 <div style="font-size:11.5px;color:var(--t3);margin-top:2px">${p.is_visible ? "Ko'rinadi" : "Yashirilgan"}</div>
@@ -11876,7 +10343,8 @@
         const stock = Math.max(0, parseInt(document.getElementById("np-stock").value, 10) || 0);
         const isVisible = document.getElementById("np-visible").checked;
         const btn = document.getElementById("np-save-btn");
-        setBtnLoading(btn, true, "Saqlanmoqda...");
+        btn.disabled = true;
+        btn.textContent = "Saqlanmoqda...";
         try {
           const url = productId ? `/api/ncoin/admin/products/${productId}` : "/api/ncoin/admin/products";
           const res = await apiFetch(url, {
@@ -11890,7 +10358,8 @@
           refreshNShopAdminList();
         } catch (e) {
           showToast("⚠ " + e.message);
-          setBtnLoading(btn, false);
+          btn.disabled = false;
+          btn.textContent = productId ? "Saqlash" : "Qo'shish";
         }
       }
       async function toggleNShopVisible(productId, currentlyVisible) {
@@ -11918,7 +10387,8 @@
         const qty = parseInt(document.getElementById("as-qty").value, 10);
         if (!qty || qty <= 0) return showToast("⚠ Sonni kiriting");
         const btn = document.getElementById("as-save-btn");
-        setBtnLoading(btn, true, "Saqlanmoqda...");
+        btn.disabled = true;
+        btn.textContent = "Saqlanmoqda...";
         try {
           const current = nshopAdminProducts.find((x) => x.id === productId);
           const newStock = (current ? current.stock : 0) + qty;
@@ -11932,7 +10402,8 @@
           refreshNShopAdminList();
         } catch (e) {
           showToast("⚠ " + e.message);
-          setBtnLoading(btn, false);
+          btn.disabled = false;
+          btn.textContent = "Qo'shish";
         }
       }
       // "⋯" — arxivlash (yumshoq, tarix saqlanadi) yoki butunlay
@@ -11978,7 +10449,7 @@
       }
       async function openNShopArchivedSheet() {
         const { body } = makeSheet("Arxivlangan mahsulotlar");
-        body.innerHTML = `${skeletonHtml()}`;
+        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
         try {
           const res = await apiFetch("/api/ncoin/admin/products?includeArchived=1");
           const d = await res.json();
@@ -11998,7 +10469,7 @@
                 .join("")
             : `<div class="empty"><div class="empty-s">Arxivlangan mahsulot yo'q</div></div>`;
         } catch (e) {
-          showLoadError(body, e.message, () => { document.querySelector(".overlay")?.remove(); openNShopArchivedSheet(); });
+          body.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
         }
       }
       async function restoreNShopProduct(productId) {
@@ -12022,7 +10493,7 @@
       // (aniq belgilangan userlar). Xodimlar ro'yxati /api/users/directory
       // orqali — bu tab birinchi ochilganda bir marta yuklanadi.
       async function renderAnnouncementTab(c) {
-        c.innerHTML = `${skeletonHtml()}`;
+        c.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
         if (!announcementUsersList) {
           try {
             const res = await apiFetch("/api/users/directory");
@@ -12211,13 +10682,14 @@
         "pf-first": "Ism",
         "pf-last": "Familiya",
         "pf-phone": "Telefon raqami",
+        "pf-job": "Lavozimi",
         "pf-birth": "Tug'ilgan sana",
       };
 
       async function openProfilePage() {
         openSubScreen("screen-profile", closeProfilePage);
         const c = document.getElementById("profile-body");
-        c.innerHTML = `${skeletonHtml()}`;
+        c.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
         try {
           const [meRes, ncoinRes] = await Promise.all([
             apiFetch("/api/me"),
@@ -12227,7 +10699,7 @@
           myProfile = (await meRes.json()).user;
           pfNcoinData = ncoinRes.ok ? await ncoinRes.json() : null;
         } catch (e) {
-          showLoadError(c, e.message, () => openProfilePage());
+          c.innerHTML = `<div style="color:var(--red);font-size:12px;padding:16px">⚠ ${escHtml(e.message)}</div>`;
           return;
         }
         if (!myActivity) await loadMyActivity();
@@ -12262,104 +10734,6 @@
         return `Jamoada ${tenureLabel(days)}dan beri`;
       }
 
-      // Profil ko'rsatkichlari — hammasi allaqachon yuklangan
-      // ma'lumotdan hisoblanadi, qo'shimcha so'rov kerak emas.
-      function pfStatsHtml() {
-        const mine = (tasksList || []).filter((t) => t.assigneeUsername === currentUser);
-        const month = isoOf(todayDate()).slice(0, 7);
-        const doneThisMonth = mine.filter(
-          (t) => t.status === "done" && String(t.completedAt || "").slice(0, 7) === month,
-        );
-        // "O'z vaqtida" — muddati belgilangan va bajarilgan vazifalar
-        // ichida muddatidan kechikmaganlari ulushi.
-        const withDue = mine.filter((t) => t.status === "done" && t.dueDate && t.completedAt);
-        const onTime = withDue.filter(
-          (t) => String(t.completedAt).slice(0, 10) <= String(t.dueDate).slice(0, 10),
-        );
-        const cells = [
-          ["Ncoin", fmtNcoin(pfNcoinData?.balance || 0)],
-          ["Bu oy", `${doneThisMonth.length} vazifa`],
-          ["O'z vaqtida", withDue.length ? `${Math.round((onTime.length / withDue.length) * 100)}%` : "—"],
-        ];
-        return `<div class="pf-stats">${cells
-          .map(
-            ([lbl, val]) =>
-              `<div class="pf-stat"><div class="pf-stat-lbl">${lbl}</div><div class="pf-stat-val num">${escHtml(val)}</div></div>`,
-          )
-          .join("")}</div>`;
-      }
-      // Mobil profil — forma emas, ro'yxat. Har qator bosilsa bitta
-      // maydonlik oyna ochiladi (pastdagi pfEditField).
-      const PF_ROW_FIELDS = [
-        { key: "name", label: "Ism familiya" },
-        { key: "phone", label: "Telefon" },
-        { key: "birthDate", label: "Tug'ilgan sana" },
-      ];
-      function pfMobileRowsHtml(p) {
-        const val = {
-          name: [p.firstName, p.lastName].filter(Boolean).join(" "),
-          phone: p.phone || "",
-          birthDate: p.birthDate ? fmtDay(parseISO(String(p.birthDate).slice(0, 10))) : "",
-        };
-        const rows = PF_ROW_FIELDS.map((f) => {
-          const v = val[f.key];
-          // Maketda mobil qatorda "O'zgartirish" yozuvi yo'q — qatorning
-          // o'zi bosiladi, o'ng chetdagi belgi shunga ishora qiladi.
-          return `<div class="pf-row tappable" onclick="pfEditField('${f.key}')">
-            <div class="pf-row-lbl">${f.label}</div>
-            <div class="pf-row-val ${v ? "" : "none"}">${escHtml(v || "Kiritilmagan")}</div>
-            <div class="pf-row-chev">›</div>
-          </div>`;
-        }).join("");
-        // Lavozimni xodimning o'zi o'zgartira olmaydi: undan Ncoin
-        // miqdori va menyu ko'rinishi bog'liq, shu sabab uni admin
-        // belgilaydi (auditdagi 3-kritik topilma).
-        const jobRow = `<div class="pf-row">
-          <div class="pf-row-lbl">Lavozim</div>
-          <div class="pf-row-val ${p.jobTitle ? "" : "none"}">${escHtml(p.jobTitle || "Belgilanmagan")}</div>
-          <div class="pf-row-act muted">admin belgilaydi</div>
-        </div>`;
-        return `<div class="pf-rows">${rows}${jobRow}</div>`;
-      }
-      function pfEditField(key) {
-        const p = myProfile || {};
-        const f = PF_ROW_FIELDS.find((x) => x.key === key);
-        if (!f) return;
-        let inner;
-        if (key === "name") {
-          inner = `<div class="f-group"><label class="f-label">Ism</label><input class="f-input" id="pfe-first" value="${escHtml(p.firstName || "")}" onblur="formatNameInputOnBlur(this)"/></div>
-            <div class="f-group"><label class="f-label">Familiya</label><input class="f-input" id="pfe-last" value="${escHtml(p.lastName || "")}" onblur="formatNameInputOnBlur(this)"/></div>`;
-        } else if (key === "phone") {
-          inner = `<div class="f-group"><label class="f-label">Telefon raqami</label><input class="f-input" id="pfe-phone" value="${escHtml(p.phone || "")}" placeholder="+998 90 123 45 67" oninput="formatPhoneInput(this)"/></div>`;
-        } else {
-          inner = `<div class="f-group"><label class="f-label">Tug'ilgan sana</label><input class="f-input" type="date" id="pfe-birth" value="${p.birthDate ? String(p.birthDate).slice(0, 10) : ""}"/></div>`;
-        }
-        const { body } = makeSheet(f.label);
-        body.innerHTML = `${inner}
-          <button type="button" class="btn btn-blue" id="pfe-save" onclick="pfSaveField('${key}',this)">Saqlash</button>`;
-      }
-      async function pfSaveField(key, btn) {
-        const g = (id) => document.getElementById(id)?.value?.trim() ?? "";
-        const body =
-          key === "name"
-            ? { firstName: g("pfe-first"), lastName: g("pfe-last") }
-            : key === "phone"
-              ? { phone: g("pfe-phone") }
-              : { birthDate: g("pfe-birth") || null };
-        setBtnLoading(btn, true, "Saqlanmoqda…");
-        try {
-          const res = await apiFetch("/api/me", { method: "PATCH", body: JSON.stringify(body) });
-          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
-          const meRes = await apiFetch("/api/me");
-          if (meRes.ok) myProfile = (await meRes.json()).user;
-          document.querySelector(".overlay")?.remove();
-          showToast("✅ Saqlandi");
-          renderProfilePage();
-        } catch (e) {
-          showToast("⚠ " + e.message);
-          setBtnLoading(btn, false);
-        }
-      }
       function renderProfilePage() {
         const p = myProfile || {};
         const fullName = [p.firstName, p.lastName].filter(Boolean).join(" ") || p.username || currentUser;
@@ -12375,26 +10749,21 @@
           <div class="pf-grid">
             <div class="pf-col-left" style="display:flex;flex-direction:column;gap:18px">
               <div class="pf-card">
-                <div class="pf-top">
-                  <div class="pf-top-av">${initials(fullName)}</div>
+                <div class="pf-avatar-row">
+                  <div class="pf-avatar">${initials(fullName)}</div>
                   <div style="flex:1;min-width:0">
-                    <div class="pf-top-name">${escHtml(fullName)}</div>
-                    <div class="pf-top-badges">
-                      <span class="pf-top-badge" style="color:var(--st-onplan);background:var(--st-onplan-bg)">@${escHtml(username)}</span>
-                      ${p.jobTitle ? `<span class="pf-top-badge" style="color:var(--t5);background:var(--chip2)">${escHtml(p.jobTitle)}</span>` : ""}
-                      ${p.role !== "employee" ? `<span class="pf-top-badge" style="${ROLE_BADGE_STYLE[p.role] || ROLE_BADGE_STYLE.employee}">${ROLE_LABEL_UZ[p.role] || p.role}</span>` : ""}
+                    <div class="pf-name">${escHtml(fullName)}</div>
+                    <div class="pf-badges">
+                      <span class="pf-badge" style="color:var(--brand);background:rgba(47,122,185,.12)">@${escHtml(username)}</span>
+                      <span class="pf-badge" style="${ROLE_BADGE_STYLE[p.role] || ROLE_BADGE_STYLE.employee}">${ROLE_LABEL_UZ[p.role] || p.role}</span>
+                      ${p.jobTitle ? `<span class="pf-badge" style="color:var(--t5);background:var(--chip)">${escHtml(p.jobTitle)}</span>` : ""}
                     </div>
-                    ${metaParts.length ? `<div class="pf-meta desktop-only">${metaParts.map(escHtml).join(" · ")}</div>` : ""}
+                    ${metaParts.length ? `<div class="pf-meta">${metaParts.map(escHtml).join(" · ")}</div>` : ""}
                   </div>
                   <button type="button" class="btn btn-soft desktop-only" style="width:auto;height:38px;padding:0 15px;flex:none" onclick="pfUploadAvatarStub()">Rasm yuklash</button>
                 </div>
-                <div style="margin-top:14px">${pfStatsHtml()}</div>
               </div>
-              <div class="mobile-only">
-                <div class="pf-sec">Shaxsiy ma'lumotlar</div>
-                ${pfMobileRowsHtml(p)}
-              </div>
-              <div class="pf-card desktop-only">
+              <div class="pf-card">
                 <div class="pf-card-hdr">Shaxsiy ma'lumotlar</div>
                 <div class="pf-card-body">
                   <div class="pf-field-grid f-group">
@@ -12407,10 +10776,7 @@
                   </div>
                   <div class="f-group">
                     <label class="f-label">Lavozimi</label>
-                    <div style="height:44px;border-radius:11px;background:var(--surf2);border:1px solid var(--bd1);display:flex;align-items:center;padding:0 13px;gap:9px">
-                      <span style="flex:1;font-size:14px;color:${p.jobTitle ? "var(--ink)" : "var(--t3)"}">${escHtml(p.jobTitle || "Belgilanmagan")}</span>
-                      <span class="f-hint" style="margin:0;flex:none">admin belgilaydi</span>
-                    </div>
+                    <input class="f-input" id="pf-job" value="${escHtml(p.jobTitle || "")}" placeholder="SMM manager" oninput="pfCheckDirty()"/>
                   </div>
                   <div class="f-group">
                     <label class="f-label">Tug'ilgan sana</label>
@@ -12427,10 +10793,7 @@
               </div>
             </div>
             <div class="pf-col-right" style="display:flex;flex-direction:column;gap:18px">
-              <!-- Balans mobilda yuqoridagi ko'rsatkichlar qatorida bor,
-                   shu sabab bu karta faqat desktopda (u yerda yon ustun
-                   alohida joy egallaydi va takrorlanish sezilmaydi). -->
-              <div class="pf-ncoin-card desktop-flex">
+              <div class="pf-ncoin-card">
                 <div class="pf-ncoin-blob"></div>
                 <div class="pf-ncoin-icon">N${pfNcoinData?.hasUnseen ? `<span class="pf-ncoin-dot" id="pf-ncoin-badge"></span>` : ""}</div>
                 <div style="flex:1;position:relative">
@@ -12581,6 +10944,7 @@
           "pf-first": document.getElementById("pf-first")?.value.trim() || "",
           "pf-last": document.getElementById("pf-last")?.value.trim() || "",
           "pf-phone": document.getElementById("pf-phone")?.value.trim() || "",
+          "pf-job": document.getElementById("pf-job")?.value.trim() || "",
           "pf-birth": document.getElementById("pf-birth")?.value || "",
         };
       }
@@ -12607,6 +10971,7 @@
         document.getElementById("pf-first").value = pfOriginalValues["pf-first"];
         document.getElementById("pf-last").value = pfOriginalValues["pf-last"];
         document.getElementById("pf-phone").value = pfOriginalValues["pf-phone"];
+        document.getElementById("pf-job").value = pfOriginalValues["pf-job"];
         document.getElementById("pf-birth").value = pfOriginalValues["pf-birth"];
         pfUpdateSaveBar([]);
       }
@@ -12617,10 +10982,12 @@
           firstName: values["pf-first"],
           lastName: values["pf-last"],
           phone: values["pf-phone"],
+          jobTitle: values["pf-job"],
           birthDate: values["pf-birth"] || null,
         };
         if (btn) {
-          setBtnLoading(btn, true, "Saqlanmoqda…");
+          btn.disabled = true;
+          btn.textContent = "Saqlanmoqda…";
         }
         try {
           const res = await apiFetch("/api/me", { method: "PATCH", body: JSON.stringify(body) });
@@ -12633,7 +11000,8 @@
           showToast("⚠ " + e.message);
         } finally {
           if (btn) {
-            setBtnLoading(btn, false);
+            btn.disabled = false;
+            btn.textContent = "Saqlash";
           }
         }
       }
@@ -12671,7 +11039,7 @@
           nshopBalance = meData.balance || 0;
           nshopMe = meData;
         } catch (e) {
-          showLoadError(c, e.message, () => renderNShopScreen());
+          c.innerHTML = `<div style="color:var(--red);font-size:12px;padding:16px">⚠ ${escHtml(e.message)}</div>`;
           return;
         }
         renderNShopBody();
@@ -12688,29 +11056,7 @@
               <span><b>"${escHtml(nshopMe.debtProjectLabel)}" loyihasi qarzda</b> — shu loyihadagi ishingiz (post/stories) muddatidan kechikmoqda. Qarz yopilmaguncha NShopdan xarid qila olmaysiz.</span>
             </div>`
           : "";
-        // Shu oy ishlab topilgani — balans yonida, "qancha kelgani"ni
-        // ko'rsatadi (tarixni ochmasdan).
-        const earnedThisMonth = (nshopMe?.transactions || [])
-          .filter((t) => t.amount > 0 && String(t.createdAt || "").slice(0, 7) === isoOf(todayDate()).slice(0, 7))
-          .reduce((s, t) => s + Number(t.amount), 0);
-        const balanceCardHtml = `
-          <div class="nshop-balance">
-            <div class="nshop-balance-ico">N</div>
-            <div style="flex:1;min-width:0">
-              <div class="nshop-balance-lbl">Balansingiz</div>
-              <div class="nshop-balance-val num">${fmtNcoin(nshopBalance)} Ncoin</div>
-            </div>
-            ${
-              earnedThisMonth > 0
-                ? `<div class="nshop-balance-side">
-                     <div class="nshop-balance-side-lbl">Shu oy</div>
-                     <div class="nshop-balance-side-val num">+${fmtNcoin(earnedThisMonth)}</div>
-                   </div>`
-                : ""
-            }
-          </div>`;
         c.innerHTML = `
-          ${balanceCardHtml}
           ${debtBannerHtml}
           ${
             nshopProducts.length
@@ -12736,7 +11082,7 @@
                   ? shown
                       .map(
                         (t) => `<div class="nshop-purchase-row">
-                          ${nshopThumbHtml(t.productImageUrl, "width:40px;height:40px;border-radius:10px", t.productName)}
+                          ${nshopThumbHtml(t.productImageUrl, "width:40px;height:40px;border-radius:10px")}
                           <div style="flex:1;min-width:0">
                             <div class="nshop-purchase-name">${escHtml(t.productName || "Mahsulot")}</div>
                             <div class="nshop-purchase-date">${fmtDay(new Date(t.at))}</div>
@@ -12750,8 +11096,9 @@
             </div>
             <div class="nshop-stats-card">
               <div class="nshop-stats-blob"></div>
-              <div class="nshop-stats-label">Ncoin hisobim</div>
-              <div class="nshop-stats-row" style="margin-top:14px">
+              <div class="nshop-stats-label">Ncoin balansi</div>
+              <div class="nshop-stats-value">${fmtNcoin(nshopBalance)}</div>
+              <div class="nshop-stats-row">
                 <div class="nshop-stats-item"><b>${fmtNcoin(nshopMe?.earned || 0)}</b><span>Topilgan</span></div>
                 <div class="nshop-stats-item"><b>${fmtNcoin(nshopMe?.spent || 0)}</b><span>Ishlatilgan</span></div>
                 <div class="nshop-stats-item"><b>${nshopMe?.purchaseCount || 0}</b><span>Xarid</span></div>
@@ -12771,11 +11118,11 @@
       // bo'lsa katta grid-karta o'lchami (.nshop-img-placeholder
       // standart qiymatlari) ishlatiladi, aks holda kichik tarix/jadval
       // qatorlari uchun aniq o'lcham beriladi.
-      function nshopThumbHtml(url, sizeStyle, name) {
+      function nshopThumbHtml(url, sizeStyle) {
         const style = sizeStyle || "";
         if (!url) return `<div class="nshop-img-placeholder" style="${style}"><span>rasm</span></div>`;
         return `<div class="nshop-img-placeholder" style="${style};padding:0;overflow:hidden">
-          <img src="${escArg(url)}" alt="${escHtml(name || "Mahsulot rasmi")}" loading="lazy" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s ease" onload="this.style.opacity='1'"/>
+          <img src="${escArg(url)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s ease" onload="this.style.opacity='1'"/>
         </div>`;
       }
 
@@ -12783,27 +11130,17 @@
         const debtBlocked = !!nshopMe?.debtBlocked;
         const canAfford = !debtBlocked && nshopBalance >= p.price && p.stock > 0;
         const low = p.stock > 0 && p.stock <= 5;
-        // Balans yetmasa — "Yetarli emas" emas, ANIQ qancha yetmasligi
-        // yoziladi: xodim nima qilish kerakligini o'zi hisoblab
-        // o'tirmaydi (maketdagi talab).
-        const short = p.price - nshopBalance;
-        const btnLabel = debtBlocked
-          ? "Loyiha qarzda"
-          : p.stock <= 0
-            ? "Tugagan"
-            : canAfford
-              ? "Olish"
-              : `${fmtNcoin(short)} Ncoin yetmaydi`;
+        const btnLabel = debtBlocked ? "Loyiha qarzda" : p.stock <= 0 ? "Tugagan" : canAfford ? "Sotib olish" : "Yetarli emas";
         return `
           <div class="nshop-card">
-            ${nshopThumbHtml(p.image_url, "", p.name)}
+            ${nshopThumbHtml(p.image_url, "")}
             <div class="nshop-card-body">
               <div class="nshop-card-name">${escHtml(p.name)}</div>
               <div class="nshop-card-row">
-                <span class="n-badge" style="width:16px;height:16px;font-size:10px">N</span>
+                <span class="n-badge" style="width:20px;height:20px;font-size:13px">N</span>
                 <span class="nshop-coin-price">${fmtNcoin(p.price)}</span>
                 <span style="flex:1"></span>
-                <span class="nshop-stock-badge ${low ? "low" : ""}">${p.stock > 0 ? p.stock + " ta" : "Tugagan"}</span>
+                <span class="nshop-stock-badge ${low ? "low" : ""}">${p.stock > 0 ? p.stock + " ta qoldi" : "Tugagan"}</span>
               </div>
               <button type="button" class="btn ${canAfford ? "btn-blue" : "btn-soft"} nshop-buy-btn" ${canAfford ? `onclick="openNcoinPurchaseSheet('${escArg(p.id)}')"` : "disabled"}>
                 ${btnLabel}
@@ -12819,7 +11156,7 @@
         const { ov, body } = makeSheet("Xaridni tasdiqlaysizmi?");
         body.innerHTML = `
           <div style="display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:12px;background:var(--surf2);border:1px solid var(--bd1)">
-            ${nshopThumbHtml(p.image_url, "width:46px;height:46px;border-radius:12px", p.name)}
+            ${nshopThumbHtml(p.image_url, "width:46px;height:46px;border-radius:12px")}
             <div style="flex:1;min-width:0">
               <div style="font-weight:600;font-size:14px;color:var(--ink)">${escHtml(p.name)}</div>
               <div class="f-hint" style="margin:2px 0 0">${p.stock} tadan</div>
@@ -12834,14 +11171,15 @@
           <div class="f-hint" style="margin-top:10px">Xarid bekor qilinmaydi. Mahsulotni ofis oshxonasidan olib ketasiz.</div>
           <div style="display:flex;gap:9px;margin-top:16px">
             <button type="button" class="btn btn-soft" style="width:96px" onclick="this.closest('.overlay').remove()">Bekor</button>
-            <button type="button" class="btn btn-blue" id="nshop-confirm-btn" style="flex:1" onclick="confirmNcoinPurchase('${escArg(p.id)}')">${fmtNcoin(p.price)} Ncoin to'lash</button>
+            <button type="button" class="btn btn-blue" id="nshop-confirm-btn" style="flex:1" onclick="confirmNcoinPurchase('${escArg(p.id)}')">Tasdiqlash</button>
           </div>`;
       }
 
       async function confirmNcoinPurchase(productId) {
         const btn = document.getElementById("nshop-confirm-btn");
         if (btn) {
-          setBtnLoading(btn, true, "Yuborilmoqda...");
+          btn.disabled = true;
+          btn.textContent = "Yuborilmoqda...";
         }
         try {
           const res = await apiFetch("/api/ncoin/purchase", {
@@ -12850,46 +11188,16 @@
           });
           const data = await res.json().catch(() => ({}));
           if (!res.ok) throw new Error(data.error || "Xatolik");
-          nshopBalance = data.balance;
-          showPurchaseDone(data.product, data.balance);
+          document.querySelector(".overlay")?.remove();
+          showToast(`✅ ${data.product.name} sizniki! Yangi balans: ${fmtNcoin(data.balance)} Ncoin`);
           renderNShopScreen();
         } catch (e) {
           showToast("⚠ " + e.message);
           if (btn) {
-            setBtnLoading(btn, false);
+            btn.disabled = false;
+            btn.textContent = "Tasdiqlash";
           }
         }
-      }
-
-      // Xarid tugagandan keyingi ekran. Ilgari bu yerda shunchaki toast
-      // chiqardi va yo'qolib ketardi — xodim mahsulotni QAYERDAN
-      // olishini bilmay qolardi. Maketdagi qoida: muvaffaqiyat ekrani
-      // keyingi qadamni aytsin va yangi balansni shu yerda ko'rsatsin.
-      function showPurchaseDone(product, balance) {
-        const ov = document.querySelector(".overlay");
-        const body = ov?.querySelector(".sheet-body");
-        // Oyna sarlavhasi endi "Xaridni tasdiqlaysizmi?" emas — xarid
-        // allaqachon bo'lib bo'lgan.
-        const titleEl = ov?.querySelector(".sheet-title");
-        if (titleEl) titleEl.textContent = "NShop";
-        const html = `
-          <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:8px 8px 4px">
-            <div style="width:72px;height:72px;border-radius:24px;background:var(--st-ahead-bg);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:700">✓</div>
-            <div style="font-size:24px;font-weight:700;letter-spacing:-0.02em;margin-top:20px">Xarid qilindi</div>
-            <div style="font-size:14.5px;font-weight:500;color:var(--t5);margin-top:6px">${escHtml(product.name)} · ${fmtNcoin(product.price)} Ncoin</div>
-            <div style="font-size:14px;line-height:1.6;color:var(--t2);margin-top:10px">Mahsulotni ofis oshxonasidan olib ketasiz. Chek «Xaridlarim»da saqlandi.</div>
-            <div style="margin-top:22px;display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:12px;background:var(--surf);border:1px solid var(--bd2)">
-              <span style="font-size:13px;color:var(--t2)">Balans</span>
-              <span class="n-badge" style="width:17px;height:17px;font-size:10px">N</span>
-              <span class="num" style="font-size:15px;font-weight:600">${fmtNcoin(balance)}</span>
-            </div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:8px;margin-top:22px">
-            <button type="button" class="btn btn-blue" onclick="document.querySelector('.overlay')?.remove()">Do'konga qaytish</button>
-            <button type="button" class="btn btn-soft" onclick="document.querySelector('.overlay')?.remove();openNcoinHistorySheet()">Xaridlarim</button>
-          </div>`;
-        if (body) body.innerHTML = html;
-        else showToast(`✅ ${product.name} sizniki! Balans: ${fmtNcoin(balance)} Ncoin`);
       }
 
       const NCOIN_REASON_LABEL = {
@@ -12950,7 +11258,7 @@
       let ncoinHistoryState = null;
       async function openNcoinHistorySheet() {
         const { body } = makeSheet("Ncoin tarixi");
-        body.innerHTML = `${skeletonHtml()}`;
+        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
         try {
           const res = await apiFetch("/api/ncoin/me");
           const data = await res.json();
@@ -12961,7 +11269,7 @@
           document.getElementById("pf-ncoin-badge")?.remove();
           apiFetch("/api/ncoin/ack", { method: "POST" }).catch(() => {});
         } catch (e) {
-          showLoadError(body, e.message, () => { document.querySelector(".overlay")?.remove(); openNcoinHistorySheet(); });
+          body.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
         }
       }
       function setNcoinHistoryFilter(filter) {
@@ -13486,7 +11794,7 @@
       let activitySheetState = null;
       async function openActivityStats(username) {
         const { body } = makeSheet(username ? "Faollik" : "Mening faolligim", { wide: true });
-        body.innerHTML = `${skeletonHtml()}`;
+        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
         let data;
         try {
           const qs = username ? `?username=${encodeURIComponent(username)}` : "";
@@ -13494,7 +11802,7 @@
           if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
           data = await res.json();
         } catch (e) {
-          showLoadError(body, e.message, () => { document.querySelector(".overlay")?.remove(); openActivityStats(username); });
+          body.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
           return;
         }
         activitySheetState = { body, data, username, mode: "all" };
@@ -13583,11 +11891,7 @@
               <div style="flex:1"><label class="f-label">Familiya</label><input class="f-input" id="ob-last" onblur="formatNameInputOnBlur(this)"/></div>
             </div>
             <div class="f-group"><label class="f-label">Telefon raqami</label><input class="f-input" id="ob-phone" placeholder="+998 90 123 45 67" oninput="formatPhoneInput(this)"/></div>
-            <div class="f-group">
-              <label class="f-label">Lavozimi</label>
-              ${jobTitleSelectHtml("ob-job", "")}
-              <div class="f-hint" style="margin-top:6px">Ro'yxatda yo'q bo'lsa — «Boshqa»ni tanlab, nomini yozing.</div>
-            </div>
+            <div class="f-group"><label class="f-label">Lavozimi</label><input class="f-input" id="ob-job" placeholder="SMM manager"/></div>
             <div class="f-group"><label class="f-label">Tug'ilgan sana (ixtiyoriy)</label><input class="f-input" type="date" id="ob-birth"/></div>
             <div id="ob-err" style="color:var(--red);font-size:12px;margin-bottom:10px"></div>
             <button class="btn btn-blue" id="ob-save-btn" onclick="submitOnboarding()">Davom etish</button>
@@ -13600,14 +11904,15 @@
         const firstName = document.getElementById("ob-first")?.value.trim();
         const lastName = document.getElementById("ob-last")?.value.trim();
         const phone = document.getElementById("ob-phone")?.value.trim();
-        const jobTitle = jobTitleSelectValue("ob-job");
+        const jobTitle = document.getElementById("ob-job")?.value.trim();
         const birthDate = document.getElementById("ob-birth")?.value || null;
         if (!firstName || !lastName || !phone || !jobTitle) {
           errEl.textContent = "Iltimos barcha majburiy maydonlarni to'ldiring.";
           return;
         }
         if (btn) {
-          setBtnLoading(btn, true, "Saqlanmoqda…");
+          btn.disabled = true;
+          btn.textContent = "Saqlanmoqda…";
         }
         try {
           const res = await apiFetch("/api/me", {
@@ -13621,7 +11926,8 @@
         } catch (e) {
           errEl.textContent = e.message;
           if (btn) {
-            setBtnLoading(btn, false);
+            btn.disabled = false;
+            btn.textContent = "Davom etish";
           }
         }
       }
@@ -13670,7 +11976,8 @@
           return;
         }
         if (btn) {
-          setBtnLoading(btn, true, "Saqlanmoqda…");
+          btn.disabled = true;
+          btn.textContent = "Saqlanmoqda…";
         }
         try {
           const res = await apiFetch(`/api/projects/${slug}`, {
@@ -13693,7 +12000,8 @@
         } catch (e) {
           showToast("⚠ " + e.message);
           if (btn) {
-            setBtnLoading(btn, false);
+            btn.disabled = false;
+            btn.textContent = "Saqlash";
           }
         }
       }
@@ -13705,7 +12013,7 @@
         await refreshHistoryBody(body, slug);
       }
       async function refreshHistoryBody(body, slug) {
-        body.innerHTML = `${skeletonHtml()}`;
+        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
         try {
           const res = await apiFetch(`/api/projects/${slug}/cycles`);
           if (!res.ok)
@@ -13773,7 +12081,7 @@
             }
           });
         } catch (e) {
-          showLoadError(body, e.message, () => refreshHistoryBody(body, slug));
+          body.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
         }
       }
       function buildHistoryCBs(body, projectSlug, cycleId, count, type, checksMap) {
@@ -13868,7 +12176,7 @@
           `${escHtml(label)} ni arxivlash`,
           `Bu loyiha ro'yxatdan yashiriladi va yangi davrlar ochilmaydi.<br><br><span style="color:var(--t3);font-size:12px">Tarixi (o'tgan davrlar, belgilangan checklar) saqlanib qoladi.</span>`,
           async () => {
-            setBtnLoading(btn, true, "Arxivlanmoqda…");
+            if (btn) btn.disabled = true;
             try {
               const res = await apiFetch(`/api/projects/${slug}`, {
                 method: "DELETE",
@@ -13882,7 +12190,7 @@
               showToast(`✅ "${label}" arxivlandi`);
             } catch (e) {
               showToast("⚠ " + e.message);
-              setBtnLoading(btn, false);
+              if (btn) btn.disabled = false;
             }
           },
           "Arxivlash",
@@ -13916,101 +12224,6 @@
               </div>
             </div>
           </div>`;
-      }
-
-      // ── ILOVA YUKLANISHINING YAKUNLARI ────────────────────────────
-      // Yuklanishning uchta yakuni bor: muvaffaqiyat, tarmoq xatosi va
-      // sessiya tugashi. Ilgari faqat birinchisi hisobga olingan edi —
-      // boshlang'ich so'rovlardan bittasi yiqilsa, "ND" ekrani abadiy
-      // qolib ketardi, chunki uni olib tashlaydigan qatorga ijro
-      // umuman yetib bormasdi. Endi har uch yakun ham aniq ekran bilan
-      // tugaydi va har birida keyingi qadam bor.
-      // Qo'riqchi JAMI yuklanish vaqtini emas, QOTIB QOLISHNI o'lchaydi.
-      // Sabab: initApp ketma-ket sakkizta so'rov yuboradi va ularning
-      // har biri serverni uyg'otib, bazaga ulanadi — sekin tarmoqda bu
-      // bemalol o'n soniyadan oshadi. Jami vaqtga chegara qo'yilganda
-      // (avval 8s edi) ilova aslida normal yuklanayotgan bo'lsa ham
-      // "Internet bilan aloqa yo'q" deb xato ko'rsatardi.
-      //
-      // Endi har bir tugagan so'rov taymerni qaytadan boshlaydi: xato
-      // faqat shuncha vaqt davomida BITTA HAM javob kelmasa chiqadi —
-      // bu haqiqatan aloqa uzilgani yoki server javob bermayotganini
-      // bildiradi.
-      const BOOT_TIMEOUT_MS = 15000;
-      let bootWatchdog = null;
-      let bootFinished = false;
-
-      function armBootWatchdog() {
-        if (bootFinished) return;
-        if (bootWatchdog) clearTimeout(bootWatchdog);
-        bootWatchdog = setTimeout(() => showBootError("network"), BOOT_TIMEOUT_MS);
-      }
-
-      // apiFetch har javob kelganda chaqiradi — "hali ham harakat bor".
-      function noteBootProgress() {
-        if (bootFinished) return;
-        armBootWatchdog();
-      }
-
-      function finishBoot() {
-        bootFinished = true;
-        if (bootWatchdog) {
-          clearTimeout(bootWatchdog);
-          bootWatchdog = null;
-        }
-        document.getElementById("loading")?.remove();
-      }
-
-      // `kind`: "network" (aloqa yo'q / so'rov yiqildi) yoki "session"
-      // (401 — token eskirgan). Ilova allaqachon ochilib bo'lgan bo'lsa
-      // (bootFinished) — hech narsa qilinmaydi: kech kelgan xato
-      // ishlayotgan ekranni o'chirib yuborishi kerak emas.
-      function showBootError(kind, detail) {
-        if (bootFinished) return;
-        finishBoot();
-        const isSession = kind === "session";
-        const isCode = kind === "code";
-        const title = isSession
-          ? "Sessiya muddati tugadi"
-          : isCode
-            ? "Ilovada xatolik"
-            : "Internet bilan aloqa yo'q";
-        const text = isSession
-          ? "Xavfsizlik uchun qayta kirish kerak. Ma'lumotlaringiz saqlangan."
-          : isCode
-            ? "Ilovani ochishda kutilmagan xatolik yuz berdi. Qayta urinib ko'ring — takrorlansa, quyidagi qatorni dasturchiga yuboring."
-            : "Ma'lumotlar yuklanmadi. Aloqani tekshirib, qayta urinib ko'ring.";
-        const btnText = isSession ? "Telegram orqali kirish" : "Qayta urinish";
-        const now = new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
-        document.body.innerHTML = `
-          <div style="min-height:100vh;min-height:100dvh;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px">
-            <div style="background:var(--surf);border:1px solid var(--bd2);border-radius:16px;padding:36px 24px;max-width:320px;width:100%;text-align:center">
-              <div style="width:52px;height:52px;border-radius:99px;background:${isSession || isCode ? "var(--amber-bg)" : "var(--chip)"};margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:24px;color:${isSession || isCode ? "var(--amber)" : "var(--t2)"}">${isSession || isCode ? "!" : "↻"}</div>
-              <div style="font-size:17px;font-weight:600;margin-bottom:8px">${title}</div>
-              <div style="font-size:12.5px;color:var(--t2);line-height:1.7;margin-bottom:22px">${text}</div>
-              ${
-                detail
-                  ? `<div style="font-size:11px;color:var(--t3);line-height:1.6;background:var(--chip);border-radius:8px;padding:10px 12px;margin-bottom:18px;text-align:left;word-break:break-word">${escHtml(detail)}</div>`
-                  : ""
-              }
-              <button id="boot-retry" class="btn btn-blue" style="width:100%">${btnText}</button>
-              <div style="font-size:11px;color:var(--t3);margin-top:14px">Oxirgi urinish: ${now}</div>
-            </div>
-          </div>`;
-        document.getElementById("boot-retry").onclick = () => {
-          // Sessiya tugaganda sahifani yangilash yetarli emas — initData
-          // Telegram tomonidan beriladi, shuning uchun ilovani yopib,
-          // qaytadan ochish kerak. Telegram tashqarisida (masalan
-          // brauzerda sinayotganda) close() ishlamaydi — o'shanda oddiy
-          // yangilashga qaytamiz.
-          if (isSession && tg()?.close) {
-            try {
-              tg().close();
-              return;
-            } catch (e) {}
-          }
-          location.reload();
-        };
       }
 
       // ── INIT ──────────────────────────────────────────────────────
@@ -14047,7 +12260,7 @@
             const res = await apiFetch("/api/auth", { method: "POST", body: "{}" });
             const d = await res.json();
             if (res.status === 403 || res.status === 401) {
-              finishBoot();
+              document.getElementById("loading").remove();
               showAccessDenied(
                 d.username || tg()?.initDataUnsafe?.user?.username || null,
                 d.code,
@@ -14098,19 +12311,11 @@
           }
         } catch (e) {}
 
-        // Sessiya tugagan bo'lsa, handleSessionExpired() allaqachon
-        // sahifani xato ekraniga almashtirgan — davom etsak, yana
-        // beshta 401 so'rov yuborib, keyin mavjud bo'lmagan
-        // elementlarni qidirib yiqilamiz. Shu yerda to'xtaymiz.
-        if (sessionExpiredShown) return;
-
         await loadProjects();
         await loadStaff();
         await loadTasks();
         await loadTags();
         await loadMyActivity();
-
-        if (sessionExpiredShown) return;
 
         document.getElementById("nav-admin").style.display = isAdmin
           ? "flex"
@@ -14125,13 +12330,14 @@
           ? "block"
           : "none";
 
-        // Dizayner — loyiha-tsikliga (post/stories) bog'liq ishlamaydi,
-        // faqat vazifalar orqali ishlaydi — shu sabab "Bugun" (tracker)
-        // va "Loyihalar" bo'limlari uning uchun ko'rinmaydi (NShop/Tarix
-        // — coin sarflash/tarixini ko'rish uchun qoladi). Lavozimni
-        // aniqlash isDesignerJobTitle() orqali, Ncoin miqdori bilan
-        // BITTA joydan.
-        const isDesignerOnlyNav = isDesignerJobTitle(myProfile?.jobTitle);
+        // Grafik Dizayner — loyiha-tsikliga (post/stories) bog'liq
+        // ishlamaydi, faqat vazifalar orqali ishlaydi — shu sabab
+        // "Bugun" (tracker) va "Loyihalar" bo'limlari uning uchun
+        // ko'rinmaydi (NShop/Tarix — coin sarflash/tarixini ko'rish
+        // uchun qoladi). Lavozim matni profildagi qiymat bilan AYNAN
+        // bir xil bo'lishi kerak (TASK_NCOIN_AMOUNT_BY_JOB_TITLE'dagi
+        // bilan bir joydan keladi).
+        const isDesignerOnlyNav = myProfile?.jobTitle === "Grafik Dizyayner";
         document.getElementById("nav-today").style.display = isDesignerOnlyNav ? "none" : "flex";
         document.getElementById("nav-projects").style.display = isDesignerOnlyNav ? "none" : "flex";
         document.getElementById("sidebar-nav-today").style.display = isDesignerOnlyNav ? "none" : "flex";
@@ -14156,7 +12362,7 @@
           .matchMedia("(min-width: 860px)")
           .addEventListener("change", refreshAllViews);
 
-        finishBoot();
+        document.getElementById("loading").remove();
         if (profileIncomplete) {
           showOnboarding();
         } else {
@@ -14178,23 +12384,7 @@
         }
       }
 
-      // Qo'riqchi: yuklanish belgilangan vaqt ichida tugamasa (masalan
-      // so'rov javobsiz osilib qolsa), foydalanuvchini "ND" ekranida
-      // qoldirmasdan xato ekraniga o'tkazamiz.
-      armBootWatchdog();
-      initApp().catch((e) => {
-        console.error("Ilova yuklanmadi:", e);
-        // Tarmoq uzilganda fetch "Failed to fetch" turidagi xato beradi.
-        // Qolgan hammasi — koddagi xato, va uni "Internet bilan aloqa
-        // yo'q" deb ko'rsatish sababni yashiradi: xodim aloqasini
-        // tekshirib vaqt yo'qotadi, biz esa nima buzilganini bilmaymiz.
-        const msg = String(e?.message || e || "");
-        if (/failed to fetch|networkerror|load failed|network request/i.test(msg)) {
-          showBootError("network");
-        } else {
-          showBootError("code", `${e?.name || "Error"}: ${msg}`);
-        }
-      });
+      initApp();
     </script>
   </body>
 </html>

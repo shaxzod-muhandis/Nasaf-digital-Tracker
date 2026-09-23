@@ -1,6 +1,6 @@
 // Juda oddiy .env yuklovchi — tashqi `dotenv` paketiga bog'liq bo'lmaslik
 // uchun (loyihada minimal dependency falsafasi saqlanadi). Faqat
-// `node scripts/*.js` qo'lda ishga tushirilganda foydali; Vercel'da
+// `node scripts/*.js` qo'lda ishga tushirilganda foydali; Netlify Functions
 // ishlab chiqarishda (production) o'zining environment variables'idan
 // foydalanadi, bu faylga muhtoj emas.
 const fs = require("fs");

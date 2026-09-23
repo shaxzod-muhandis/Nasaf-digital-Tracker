@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════
-// Loyiha davri (cycle) mexanizmi
+// Loyiha davri (cycle) mexanizmi — ROADMAP.md 5-bo'lim
 // ═══════════════════════════════════════════════════════════════════════
 // Har loyiha o'zining anchor_date'idan boshlab ketma-ket oylik davrlarga
 // bo'linadi. Bu modul: joriy davrni topish/yaratish (avtomatik rollover),

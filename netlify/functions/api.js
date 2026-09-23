@@ -6,9 +6,10 @@
 // lekin "oy" (calendar month) tushunchasi endi "loyiha davri" (project
 // cycle) bilan almashtirilgani sababli ba'zi endpointlar (masalan
 // /api/months) o'rniga yangi, davr-modeliga mos endpointlar keldi
-// (/api/projects). Batafsil: docs/SETUP.md
+// (/api/projects). Batafsil: docs/ROADMAP.md va docs/SETUP.md
 // ═══════════════════════════════════════════════════════════════════════
 
+const serverless = require("serverless-http");
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -62,29 +63,11 @@ const TASK_STATUS_LABEL_UZ = {
 };
 
 // Vazifa "Bajarildi" deb tasdiqlanganda beriladigan standart Ncoin
-// miqdori — ba'zi lavozimlar uchun boshqacha (masalan dizayner
+// miqdori — ba'zi lavozimlar uchun boshqacha (masalan Grafik Dizayner
 // alohida loyiha-tsikliga bog'liq emas, faqat vazifalar orqali ishlaydi,
-// shu sabab standart 0.2 o'rniga 0.5 belgilangan).
-//
-// Solishtirish katta-kichik harf va ortiqcha bo'shliqlarga bog'liq
-// bo'lmasligi uchun kalitlar normallashtirilgan holda saqlanadi
-// (jobTitleNcoinAmount'ga qarang). Bir nechta yozilish varianti
-// ataylab qo'llab-quvvatlanadi: lavozim uzoq vaqt erkin matn maydoni
-// bo'lgani uchun bazada "Grafik Dizyayner" (xato yozilgan), "Grafik
-// Dizayner" va oddiy "Dizayner" — uchalasi ham uchrashi mumkin. Biror
-// xodimning to'lovi shunchaki imlo tufayli kamayib qolmasligi kerak.
-const TASK_NCOIN_AMOUNT_BY_JOB_TITLE = {
-  "grafik dizyayner": 0.5,
-  "grafik dizayner": 0.5,
-  dizayner: 0.5,
-};
-function jobTitleNcoinAmount(jobTitle) {
-  const key = String(jobTitle || "")
-    .trim()
-    .replace(/\s+/g, " ")
-    .toLowerCase();
-  return TASK_NCOIN_AMOUNT_BY_JOB_TITLE[key] ?? TASK_NCOIN_DEFAULT_AMOUNT;
-}
+// shu sabab standart 0.2 o'rniga 0.5 belgilangan). job_title matni
+// profildagi qiymat bilan AYNAN bir xil bo'lishi kerak.
+const TASK_NCOIN_AMOUNT_BY_JOB_TITLE = { "Grafik Dizyayner": 0.5 };
 const TASK_NCOIN_DEFAULT_AMOUNT = 0.2;
 // Vazifani biriktirgan (yaratgan) odamga — bajaruvchiga coin berilganda
 // — qo'shimcha beriladigan qat'iy miqdor. Lavozimga bog'liq emas
@@ -272,9 +255,6 @@ app.patch("/api/me", auth, async (req, res) => {
       birthDate: "birth_date",
       phone: "phone",
       jobTitle: "job_title",
-      // `color` ATAYLAB yo'q: rang xodimlarni bir-biridan ajratish uchun
-      // va u takrorlanmasligi kerak, shu sabab uni admin belgilaydi
-      // (PATCH /api/users/:username).
     };
     const sets = [];
     const values = [];
@@ -400,7 +380,7 @@ app.get("/api/users", auth, async (req, res) => {
 app.get("/api/users/directory", auth, async (req, res) => {
   try {
     const r = await db.query(
-      `select id, username, first_name, last_name, job_title, color from users where is_active order by username`,
+      `select id, username, first_name, last_name, job_title from users where is_active order by username`,
     );
     res.json({ users: r.rows });
   } catch (e) {
@@ -517,15 +497,7 @@ app.patch("/api/users/:username", auth, async (req, res) => {
       birthDate: "birth_date",
       phone: "phone",
       jobTitle: "job_title",
-      color: "color",
     };
-    if (typeof req.body.color === "string" && req.body.color.trim()) {
-      const c = req.body.color.trim().toLowerCase();
-      if (!/^#[0-9a-f]{6}$/.test(c)) {
-        return res.status(400).json({ error: "Rang #rrggbb ko'rinishida bo'lishi kerak" });
-      }
-      req.body.color = c;
-    }
     for (const [bodyKey, column] of Object.entries(profileFieldMap)) {
       if (typeof req.body[bodyKey] === "undefined") continue;
       let v = req.body[bodyKey] || null;
@@ -1919,7 +1891,7 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
         if (before.status === "review" && task.status === "done" && req.body.awardNcoin === true) {
           try {
             const jtR = await db.query(`select job_title from users where id = $1`, [existing.assignee_user_id]);
-            const amount = jobTitleNcoinAmount(jtR.rows[0]?.job_title);
+            const amount = TASK_NCOIN_AMOUNT_BY_JOB_TITLE[jtR.rows[0]?.job_title] ?? TASK_NCOIN_DEFAULT_AMOUNT;
             await awardNcoin(db, {
               userId: existing.assignee_user_id,
               amount,
@@ -3084,7 +3056,6 @@ app.post("/api/test-notify", auth, async (req, res) => {
   res.json({ ok: true, sent_to: sent });
 });
 
-// Vercel (api/index.js) + lokal test/skriptlar uchun `app`ning o'zi —
-// Express ilova to'g'ridan-to'g'ri (req,res) ko'rinishida ishlaydi,
-// alohida adapter shart emas.
+// Netlify Functions handler + lokal test/skriptlar uchun `app`ning o'zi
 module.exports = app;
+module.exports.handler = serverless(app);
