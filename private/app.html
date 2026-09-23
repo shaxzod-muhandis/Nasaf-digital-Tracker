@@ -3452,42 +3452,14 @@
         border: none;
         cursor: pointer;
       }
-      .td-status-btn .dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 99px;
-        flex-shrink: 0;
-      }
       .td-status-btn.solid-green {
         background: var(--green);
         color: #fff;
-      }
-      .td-status-btn.solid-green .dot {
-        background: var(--surf);
       }
       .td-status-btn.tint-amber {
         background: var(--amber-bg);
         color: var(--amber-ink);
         border: 1px solid rgba(217, 119, 6, 0.32);
-      }
-      .td-status-btn.tint-amber .dot {
-        background: var(--amber);
-      }
-      .td-status-btn.tint-red {
-        background: var(--red-bg);
-        color: var(--red);
-        border: 1px solid rgba(220, 38, 38, 0.28);
-      }
-      .td-status-btn.tint-red .dot {
-        background: var(--red);
-      }
-      .td-status-btn.tint-blue {
-        background: var(--tagblue-bg);
-        color: var(--tagblue);
-        border: 1px solid rgba(47, 122, 185, 0.3);
-      }
-      .td-status-btn.tint-blue .dot {
-        background: var(--brand);
       }
       .td-status-btn:disabled {
         opacity: 0.6;
@@ -3774,21 +3746,21 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
         flex: 0 0 auto;
       }
       .td-stepper-dot {
         width: 9px;
         height: 9px;
         border-radius: 99px;
-        background: var(--bd4);
+        background: var(--sw-off);
       }
       .td-stepper-dot.done {
         background: var(--brand);
       }
       .td-stepper-dot.current {
-        width: 13px;
-        height: 13px;
+        width: 12px;
+        height: 12px;
         background: var(--brand);
         box-shadow: 0 0 0 4px rgba(47, 122, 185, 0.16);
       }
@@ -3804,34 +3776,48 @@
       .td-stepper-line {
         flex: 1;
         height: 2px;
-        background: var(--bd4);
-        margin: 0 6px 17px;
+        background: var(--track);
+        margin: 0 6px 16px;
       }
       .td-stepper-line.done {
         background: var(--brand);
       }
       .td-status-btn.lg {
         height: 50px;
-        border-radius: 13px;
+        border-radius: 12px;
         font-size: 14.5px;
+      }
+      /* Harakat paneli: bitta asosiy tugma + "⋯". Maketdagi qoida —
+         ekranda bitta aniq keyingi qadam bo'lsin, qolgan (kamroq
+         ishlatiladigan va xavfliroq) amallar menyuga yashirinsin.
+         Ilgari bu yerda uch-to'rtta bir xil ko'rinishdagi tugma yonma-yon
+         turardi va qaysi biri asosiysi ekani bilinmasdi. */
+      .td-actbar {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .td-actbar .td-status-btn {
+        flex: 1;
+        width: auto;
+      }
+      .td-more-btn {
+        width: 50px;
+        height: 50px;
+        flex: 0 0 auto;
+        border-radius: 12px;
+        background: var(--surf);
+        color: var(--ink);
+        border: 1px solid var(--bd4);
+        font-size: 17px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
       }
       .td-status-btn.solid-blue {
         background: var(--brand);
         color: #fff;
-      }
-      .td-status-btn.solid-blue .dot {
-        background: rgba(255, 255, 255, 0.85);
-      }
-      .td-status-row {
-        display: flex;
-        gap: 8px;
-        margin-top: 9px;
-        flex-wrap: wrap;
-      }
-      .td-status-row .td-status-btn {
-        width: auto;
-        flex: 1;
-        min-width: 120px;
       }
       .td-notify-hint {
         font-size: 11px;
@@ -7446,26 +7432,21 @@
         let actionsHtml = "";
         if (canChangeStatus) {
           if (t.status === "backlog") {
-            actionsHtml = `<button type="button" class="td-status-btn lg solid-blue" onclick="openSetDueDateForm('${escArg(t.id)}')"><span class="dot"></span>Navbatga qo'yish</button>`;
+            actionsHtml = `<button type="button" class="td-status-btn lg solid-blue" onclick="openSetDueDateForm('${escArg(t.id)}')">Navbatga qo'yish</button>`;
           } else if (t.status === "todo" || t.status === "in_progress") {
             const isTodo = t.status === "todo";
-            const primary = isTodo
-              ? `<button type="button" class="td-status-btn lg solid-blue" onclick="setTaskStatus('${escArg(t.id)}','in_progress',this)"><span class="dot"></span>Ishni boshladim</button>`
-              : `<button type="button" class="td-status-btn lg solid-blue" onclick="setTaskStatus('${escArg(t.id)}','review',this)"><span class="dot"></span>Tekshiruvga yubordim</button>`;
-            const secondary = [
-              isAdmin
-                ? `<button type="button" class="td-status-btn solid-green" onclick="setTaskStatus('${escArg(t.id)}','done',this)"><span class="dot"></span>Darhol bajarildi</button>`
-                : "",
-              `<button type="button" class="td-status-btn tint-red" onclick="openTaskFailForm('${escArg(t.id)}')"><span class="dot"></span>Bajarolmadim</button>`,
-            ].filter(Boolean);
-            actionsHtml = `${primary}<div class="td-status-row">${secondary.join("")}</div>`;
+            actionsHtml = taskActionBarHtml(
+              t,
+              isTodo
+                ? `<button type="button" class="td-status-btn lg solid-blue" onclick="setTaskStatus('${escArg(t.id)}','in_progress',this)">Ishni boshladim</button>`
+                : `<button type="button" class="td-status-btn lg solid-blue" onclick="setTaskStatus('${escArg(t.id)}','review',this)">Tekshiruvga yubordim</button>`,
+            );
           } else if (t.status === "review") {
             if (isAdmin) {
-              actionsHtml = `<button type="button" class="td-status-btn lg solid-green" onclick="setTaskStatus('${escArg(t.id)}','done',this)"><span class="dot"></span>Tasdiqlash</button>
-                <div class="td-status-row">
-                  <button type="button" class="td-status-btn tint-blue" onclick="setTaskStatus('${escArg(t.id)}','in_progress',this)"><span class="dot"></span>Qaytarish</button>
-                  <button type="button" class="td-status-btn tint-red" onclick="openTaskFailForm('${escArg(t.id)}')"><span class="dot"></span>Bajarolmadim</button>
-                </div>`;
+              actionsHtml = taskActionBarHtml(
+                t,
+                `<button type="button" class="td-status-btn lg solid-green" onclick="setTaskStatus('${escArg(t.id)}','done',this)">Tasdiqlash</button>`,
+              );
             } else {
               actionsHtml = `<div class="f-hint" style="margin-top:2px">Vazifa tekshiruvda — admin tasdiqlashini kutmoqda.</div>`;
             }
@@ -8033,13 +8014,45 @@
       // to'g'ridan-to'g'ri tahrirlash/o'chirish (faqat admin, xuddi
       // vazifa detali sahifasi pastidagi tugmalar bilan bir xil
       // funksiyalarni chaqiradi).
+      // Asosiy tugma + "⋯". Ikkinchi darajali amallar menyuga yig'iladi.
+      function taskActionBarHtml(t, primaryBtnHtml) {
+        return `<div class="td-actbar">
+          ${primaryBtnHtml}
+          <button type="button" class="td-more-btn" title="Boshqa amallar" onclick="openTaskCardMenu('${escArg(t.id)}')">⋯</button>
+        </div>`;
+      }
       function openTaskCardMenu(id) {
         const t = tasksList.find((x) => x.id === id);
         if (!t) return;
+        const canChangeStatus = isAdmin || t.assigneeUsername === currentUser;
+        const open = !["done", "failed", "cancelled"].includes(t.status);
+        const close = () => `document.querySelector('.overlay')?.remove();`;
+        const items = [];
+        // Holat bilan bog'liq, kamroq ishlatiladigan amallar — asosiy
+        // tugmadan alohida, chunki ular kundalik oqim emas.
+        if (canChangeStatus && open) {
+          if (isAdmin && t.status !== "review") {
+            items.push(
+              `<button type="button" class="btn btn-soft" onclick="${close()}setTaskStatus('${escArg(id)}','done',this)">Darhol bajarildi</button>`,
+            );
+          }
+          if (isAdmin && t.status === "review") {
+            items.push(
+              `<button type="button" class="btn btn-soft" onclick="${close()}setTaskStatus('${escArg(id)}','in_progress',this)">Ishga qaytarish</button>`,
+            );
+          }
+          items.push(
+            `<button type="button" class="btn btn-soft" onclick="${close()}openTaskFailForm('${escArg(id)}')">Bajarolmadim</button>`,
+          );
+        }
+        if (isAdmin) {
+          items.push(
+            `<button type="button" class="btn btn-soft" onclick="${close()}openEditTaskSheet('${escArg(id)}')">Tahrirlash</button>`,
+            `<button type="button" class="btn btn-danger" onclick="${close()}deleteTask('${escArg(id)}','${escArg(t.title)}')">O'chirish</button>`,
+          );
+        }
         const { body } = makeSheet(t.title);
-        body.innerHTML = `
-          <button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="document.querySelector('.overlay')?.remove();openEditTaskSheet('${escArg(id)}')">✎ Tahrirlash</button>
-          <button type="button" class="btn btn-danger" onclick="document.querySelector('.overlay')?.remove();deleteTask('${escArg(id)}','${escArg(t.title)}')">🗑 O'chirish</button>`;
+        body.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px">${items.join("")}</div>`;
       }
       function deleteTask(id, title) {
         showConfirmModal(
