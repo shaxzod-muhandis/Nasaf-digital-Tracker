@@ -376,73 +376,99 @@
         color: var(--brand);
       }
 
-      /* ── TEMPO KARTASI ──────────────────────────────────────────── */
-      .tempo {
-        background: var(--brand);
-        border-radius: 16px;
-        padding: 18px;
+      /* ── DAVR KARTASI (Bugun) — v3 maketidan 1:1 ko'chirilgan ─────
+         O'lchamlarning hammasi (shrift, oraliq, radius, shaffoflik)
+         maketning o'zidan olingan. Karta bitta savolga javob beradi:
+         men rejadan oldindami yoki ortdami. Oq chiziqcha — bugungi
+         kunga kutilgan joy, shu sabab foizni boshqa raqam bilan
+         solishtirish shart emas, ko'z bilan ko'rinadi.
+         Karta ikkala temada ham to'q qoladi (--inkfill kabi). */
+      .dcard {
+        background: #0e1726;
+        border-radius: 18px;
+        padding: 16px 16px 14px;
         color: #fff;
       }
-      .tempo-top {
+      .dcard-top {
         display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
+        align-items: center;
+        gap: 8px;
       }
-      .tempo-lbl {
-        font-size: 11.5px;
-        color: rgba(255, 255, 255, 0.6);
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
+      .dcard-lbl {
+        font-size: 12.5px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.7);
       }
-      .tempo-pct {
-        font-weight: 600;
-        font-size: 36px;
-        line-height: 1;
-        margin-top: 10px;
+      .dcard-mid {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        margin-top: 9px;
+      }
+      .dcard-pct {
+        font-size: 44px;
+        font-weight: 700;
+        line-height: 44px;
         letter-spacing: -0.03em;
       }
-      .tempo-pct span {
-        font-size: 18px;
-        color: rgba(255, 255, 255, 0.5);
+      .dcard-pct span {
+        font-size: 22px;
+        line-height: 22px;
       }
-      .tempo-exp {
-        text-align: right;
+      .dcard-frac {
+        font-size: 13.5px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.85);
+        padding-bottom: 5px;
       }
-      .tempo-exp .l1 {
+      .dcard-delta {
+        display: flex;
+        align-items: center;
+        height: 26px;
+        padding: 0 9px;
+        border-radius: 8px;
+        font-size: 12.5px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .dcard-delta.ahead {
+        background: rgba(74, 222, 128, 0.16);
+        color: #86efac;
+      }
+      .dcard-delta.behind {
+        background: rgba(248, 113, 113, 0.16);
+        color: #fca5a5;
+      }
+      .dcard-delta.exact {
+        background: rgba(255, 255, 255, 0.14);
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .dcard-track {
+        position: relative;
+        height: 8px;
+        border-radius: 99px;
+        background: rgba(255, 255, 255, 0.14);
+        margin-top: 12px;
+      }
+      .dcard-fill {
+        height: 100%;
+        border-radius: 99px;
+        background: #5795c6;
+      }
+      .dcard-mark {
+        position: absolute;
+        top: 50%;
+        width: 2px;
+        height: 14px;
+        border-radius: 2px;
+        background: #fff;
+        transform: translate(-50%, -50%);
+      }
+      .dcard-note {
         font-size: 11.5px;
         color: rgba(255, 255, 255, 0.6);
+        margin-top: 8px;
       }
-      .tempo-exp .l2 {
-        font-weight: 600;
-        font-size: 15px;
-        margin-top: 6px;
-      }
-      .tempo-segs {
-        margin-top: 16px;
-        display: flex;
-        gap: 3px;
-      }
-      .tempo-seg {
-        flex: 1;
-        height: 24px;
-        border-radius: 4px;
-        background: rgba(255, 255, 255, 0.22);
-      }
-      .tempo-seg.done {
-        background: var(--surf);
-      }
-      .tempo-seg.now {
-        outline: 1.5px solid var(--red);
-        outline-offset: 1px;
-      }
-      .tempo-foot {
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.62);
-        margin-top: 11px;
-      }
-      .tempo-note {
-        font-size: 10.5px;
-        color: rgba(255, 255, 255, 0.45);
         margin-top: 3px;
       }
 
@@ -6134,17 +6160,41 @@
           behind: Math.max(0, expectedDone - doneAll),
         };
       }
-      function buildSegs(frac) {
-        const n = 5;
-        const curIdx = Math.min(n - 1, Math.floor(frac * n));
-        let html = "";
-        for (let i = 0; i < n; i++) {
-          let cls = "tempo-seg";
-          if (i < curIdx || (i === curIdx && frac >= 1)) cls += " done";
-          else if (i === curIdx) cls += " now";
-          html += `<div class="${cls}"></div>`;
-        }
-        return html;
+      // Davr kartasi — "Bugun" ekranining asosiy bloki.
+      // Hamma qiymat computeHomeTempo()dan keladi, qo'shimcha so'rov
+      // yoki backend o'zgarishi kerak emas: bajarilgan foiz, kutilgan
+      // foiz (oq chiziqcha) va ikkalasining farqi ("Rejadan +4").
+      function buildPeriodCardHtml(t) {
+        const delta = t.doneAll - t.expectedDone;
+        const dCls = delta > 0 ? "ahead" : delta < 0 ? "behind" : "exact";
+        const dTxt =
+          delta > 0 ? `Rejadan +${delta}` : delta < 0 ? `Rejadan ${delta}` : "Reja bo'yicha";
+        // Eng yaqin tugaydigan davr — xodim uchun eng dolzarb muddat.
+        const daysLeft = Math.min(...projects.map(projDaysLeft));
+        const daysTxt =
+          daysLeft > 0 ? `${daysLeft} kun qoldi` : daysLeft === 0 ? "Bugun tugaydi" : "Muddat o'tdi";
+        const monthName = MONTHS[todayDate().getMonth()];
+        const pctSafe = Math.max(0, Math.min(100, t.overallPct));
+        const expSafe = Math.max(0, Math.min(100, t.expectedPct));
+        return `
+          <div class="dcard">
+            <div class="dcard-top">
+              <div class="dcard-lbl">${escHtml(monthName)} davri</div>
+              <div style="flex:1"></div>
+              <div class="dcard-lbl">${daysTxt}</div>
+            </div>
+            <div class="dcard-mid">
+              <div class="dcard-pct num">${t.overallPct}<span>%</span></div>
+              <div class="dcard-frac num">${t.doneAll} / ${t.totalTasks} vazifa</div>
+              <div style="flex:1"></div>
+              <div class="dcard-delta ${dCls}">${dTxt}</div>
+            </div>
+            <div class="dcard-track">
+              <div class="dcard-fill" style="width:${pctSafe}%"></div>
+              <div class="dcard-mark" style="left:${expSafe}%"></div>
+            </div>
+            <div class="dcard-note">Oq chiziq — bugungacha kutilgan joy</div>
+          </div>`;
       }
       function renderToday() {
         const body = document.getElementById("today-body");
@@ -6208,21 +6258,7 @@
         body.innerHTML = `
           <div class="mobile-only">
             ${buildActivityPanelCardHtml(true)}
-            <div class="tempo" style="margin-top:14px">
-              <div class="tempo-top">
-                <div>
-                  <div class="tempo-lbl">Umumiy bajarilish</div>
-                  <div class="tempo-pct num">${t.overallPct}<span>%</span></div>
-                </div>
-                <div class="tempo-exp">
-                  <div class="l1" title="Loyihalar davri (boshlanish–tugash sanasi)ga nisbatan bugun qancha % bajarilgan bo'lishi kerakligi">Kutilgan surhat</div>
-                  <div class="l2 num">${t.expectedPct}%</div>
-                </div>
-              </div>
-              <div class="tempo-segs">${buildSegs(t.expectedFrac)}</div>
-              <div class="tempo-foot">${t.doneAll}/${t.totalTasks} vazifa bajarildi${t.behind > 0 ? ` · ${t.behind} ta muddatga nisbatan orqada` : ""}</div>
-              <div class="tempo-note">Loyihalar muddatiga (boshlanish–tugash sanasi) asosan hisoblanadi</div>
-            </div>
+            <div style="margin-top:14px">${buildPeriodCardHtml(t)}</div>
             ${debtHtml}
             <div style="margin-top:14px">
               ${buildAssignedTasksCardHtml()}
