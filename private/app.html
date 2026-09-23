@@ -79,14 +79,14 @@
         --amber: #d97706;
         --amber-bg: #fbf1e4;
         --amber-ink: #8a5a1a;
-        --teal: #1e6b57;
-        --teal-bg: #e9f5f1;
-        --tagblue: #23608f;
-        --tagblue-bg: #ebf3fa;
-        --purple: #4b41a8;
-        --purple-bg: #efedfb;
-        --pink: #92345f;
-        --pink-bg: #faecf3;
+        --teal: #0f766e;
+        --teal-bg: #e3f4f1;
+        --tagblue: #255f91;
+        --tagblue-bg: #eaf2f9;
+        --purple: #7c3aed;
+        --purple-bg: #f3edfd;
+        --pink: #b4235a;
+        --pink-bg: #fce9f0;
         --green: #16a34a;
         /* ── LOYIHA HOLATI — 4 ta so'z, 4 ta rang ──────────────────
            Loyiha/davr qay ahvolda ekani ilovaning hamma joyida
@@ -112,6 +112,8 @@
         --st-ahead-dot: #16a34a;
         /* Progress chizig'ining bo'sh qismi */
         --track: #e6e9ed;
+        /* Ustuvorlik ustunchasining yonmagan qismi */
+        --pb-off: #d8dce1;
         --red-tint: #fffbfb;
         /* Faollik heatmap — bitta ko'k rangning 5 pog'onasi (dizayner
            TZ'i, 3.3-band): 0 = harakat yo'q, 4 = eng yuqori. Boshqa
@@ -184,6 +186,7 @@
         --st-ahead-bg: rgba(52, 208, 102, 0.16);
         --st-ahead-dot: #34d066;
         --track: #2b313d;
+        --pb-off: #3a4048;
         --red-tint: rgba(240, 85, 74, 0.08);
         --act-lvl-0: #2b313d;
         --act-lvl-1: #2a3f52;
@@ -598,6 +601,132 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
+      }
+      /* ── VAZIFA QATORI — v3 maketidan 1:1 ─────────────────────────
+         Vazifalar bosqich bo'yicha guruhlanadi va har guruh bitta
+         kartaning ichida ro'yxat bo'lib turadi. Bitta qatorda xodimga
+         kerak bo'lgan hamma narsa bor: ustuvorlik (chapdagi uchta
+         ustuncha), nom, teg, loyiha, muddat va kimga biriktirilgani. */
+      .tlist {
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .trow {
+        display: flex;
+        gap: 12px;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--bd2);
+        cursor: pointer;
+      }
+      .trow:last-child {
+        border-bottom: none;
+      }
+      /* Ustuvorlik — uchta o'sib boruvchi ustuncha. Nechtasi yonishi
+         darajani, rangi esa shoshilinchlikni bildiradi. */
+      .tprio {
+        padding-top: 3px;
+        flex: 0 0 auto;
+      }
+      .tprio > i {
+        display: inline-block;
+        width: 3px;
+        border-radius: 1px;
+        background: var(--pb-off);
+        vertical-align: bottom;
+        margin-right: 2px;
+      }
+      .tprio > i:last-child {
+        margin-right: 0;
+      }
+      .tprio > i:nth-child(1) {
+        height: 5px;
+      }
+      .tprio > i:nth-child(2) {
+        height: 8px;
+      }
+      .tprio > i:nth-child(3) {
+        height: 12px;
+      }
+      .tprio > i.on {
+        background: var(--pb);
+      }
+      .trow-title {
+        font-size: 14.5px;
+        font-weight: 500;
+        color: var(--ink);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .trow-meta {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 6px;
+      }
+      .trow-tag {
+        height: 21px;
+        padding: 0 8px;
+        border-radius: 7px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+      .trow-proj {
+        font-size: 12.5px;
+        color: var(--t2);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+      }
+      .trow-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+        flex: 0 0 auto;
+      }
+      .trow-due {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--t2);
+        white-space: nowrap;
+      }
+      .trow-due.soon {
+        color: var(--red);
+      }
+      .trow-av {
+        width: 24px;
+        height: 24px;
+        border-radius: 8px;
+        background: var(--inkfill);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+      .tgroup-hdr {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 8px;
+      }
+      .tgroup-count {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--t3);
       }
         margin-top: 3px;
       }
@@ -6763,6 +6892,7 @@
         let text;
         if (diff < 0) text = `${-diff} kun o'tdi`;
         else if (diff === 0) text = "Bugun";
+        else if (diff === 1) text = "Ertaga";
         else text = `${diff} kun`;
         if (diff < 0) return { text, cls: "late" };
         if (diff <= 2) return { text, cls: "soon" };
@@ -6780,12 +6910,56 @@
         { bg: "var(--pink-bg)", ink: "var(--pink)" },
         { bg: "var(--chip)", ink: "var(--t5)" },
       ];
-      const TAG_COLOR_BY_NAME = { Syomka: 0, Reels: 1, Post: 2, Stories: 3, Dizayn: 4, Matn: 5 };
+      const TAG_COLOR_BY_NAME = { Syomka: 1, Reels: 1, Post: 2, Stories: 3, Dizayn: 4, Matn: 5, Hisobot: 5 };
       function tagColor(name) {
         if (name in TAG_COLOR_BY_NAME) return TAG_PALETTE[TAG_COLOR_BY_NAME[name]];
         let h = 0;
         for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
         return TAG_PALETTE[h % TAG_PALETTE.length];
+      }
+      // Ustuvorlik — uchta ustuncha: nechtasi yonishi darajani, rangi
+      // shoshilinchlikni bildiradi. Maketda uch daraja ko'rsatilgan
+      // (3 qizil / 2 amber / 1 kulrang), ilovada esa besh qiymat bor —
+      // "shoshilinch" eng tepaga qo'shildi, "ustuvorlik yo'q"da esa
+      // hech biri yonmaydi.
+      const TASK_PRIORITY_BARS = {
+        urgent: { on: 3, color: "var(--red)" },
+        high: { on: 2, color: "var(--red)" },
+        medium: { on: 2, color: "var(--amber)" },
+        low: { on: 1, color: "var(--t4)" },
+        no_priority: { on: 0, color: "var(--t4)" },
+      };
+      function priorityBarsHtml(priority) {
+        const p = TASK_PRIORITY_BARS[priority] || TASK_PRIORITY_BARS.no_priority;
+        const bars = [1, 2, 3]
+          .map((i) => `<i class="${i <= p.on ? "on" : ""}"></i>`)
+          .join("");
+        return `<div class="tprio" style="--pb:${p.color}">${bars}</div>`;
+      }
+      // Vazifa qatori — "Vazifalar" ro'yxatining asosiy bloki.
+      function buildTaskRowHtml(t) {
+        const due = t.dueDate ? dueChipInfo(t.dueDate) : null;
+        const tag = (t.tags || [])[0];
+        const c = tag ? tagColor(tag.name) : null;
+        const av = taskAvatarInitial(t);
+        return `<div class="trow" onclick="openTaskActions('${escArg(t.id)}')">
+          ${priorityBarsHtml(t.priority)}
+          <div style="flex:1;min-width:0">
+            <div class="trow-title">${escHtml(t.title)}</div>
+            <div class="trow-meta">
+              ${tag ? `<span class="trow-tag" style="background:${c.bg};color:${c.ink}">${escHtml(tag.name)}</span>` : ""}
+              ${t.projectLabel ? `<span class="trow-proj">${escHtml(t.projectLabel)}</span>` : ""}
+            </div>
+          </div>
+          <div class="trow-right">
+            ${due ? `<div class="trow-due ${due.cls ? "soon" : ""}">${due.text}</div>` : ""}
+            ${av ? `<div class="trow-av">${escHtml(av)}</div>` : ""}
+          </div>
+        </div>`;
+      }
+      function taskAvatarInitial(t) {
+        const n = t.assigneeName || t.assigneeUsername || "";
+        return n ? n.slice(0, 1).toUpperCase() : "";
       }
       function renderTagChipsHtml(tags, muted) {
         if (!tags || !tags.length) return "";
@@ -7119,11 +7293,30 @@
         if (taskScope === "jamoada") {
           bodyHtml = buildTasksByEmployeeHtml(scoped, workload);
         } else {
-          const byChip = taskStatusChip === "all" ? scoped : scoped.filter((t) => taskBoardColumn(t) === taskStatusChip);
-          const items = sortTasksForBoard(byChip);
-          bodyHtml = items.length
-            ? items.map(buildTaskCardHtml).join("")
-            : `<div class="empty"><div class="empty-ico">✓</div><div class="empty-t">Vazifa yo'q</div><div class="empty-s">Filtrni o'zgartirib ko'ring.</div></div>`;
+          // "Hammasi" tanlanganda vazifalar bosqich bo'yicha guruhlanib
+          // chiqadi (Biriktirilgan -> Jarayonda -> Tekshiruvda -> ...),
+          // aniq bosqich tanlansa — faqat o'sha guruh. Ilgari ikkala
+          // holatda ham bitta uzun aralash ro'yxat bo'lardi va vazifa
+          // qaysi bosqichda ekani faqat kartani ochganda bilinardi.
+          const cols =
+            taskStatusChip === "all"
+              ? TASK_BOARD_COLUMNS
+              : TASK_BOARD_COLUMNS.filter((c) => c.key === taskStatusChip);
+          const groups = cols
+            .map((col) => {
+              const items = sortTasksForBoard(
+                scoped.filter((t) => taskBoardColumn(t) === col.key),
+              );
+              if (!items.length) return "";
+              return `<div style="margin-bottom:18px">
+                <div class="tgroup-hdr">${col.label}<span class="tgroup-count">${items.length}</span></div>
+                <div class="tlist">${items.map(buildTaskRowHtml).join("")}</div>
+              </div>`;
+            })
+            .join("");
+          bodyHtml =
+            groups ||
+            `<div class="empty"><div class="empty-ico">✓</div><div class="empty-t">Vazifa yo'q</div><div class="empty-s">Filtrni o'zgartirib ko'ring.</div></div>`;
         }
 
         return `<div class="mobile-only">
