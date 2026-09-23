@@ -1272,10 +1272,48 @@
         color: var(--t2);
         margin-top: 2px;
       }
+      /* Bo'sh holat ekran tepasida qotib qolmasligi uchun — mavjud
+         bo'shliqning o'rtasiga tushadi (ilgari sarlavha ostida turib,
+         pastida katta quruq maydon qolardi). */
       .empty {
         text-align: center;
         padding: 40px 20px;
         color: var(--t3);
+        min-height: 42vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      /* ── YUKLASHDA XATO — yagona shakl ────────────────────────────
+         Ilgari har loader xatoni shunchaki qizil matn bilan ko'rsatardi
+         va boshqa hech narsa qilib bo'lmasdi: butun ilovada "Qayta
+         urinish" tugmasi umuman yo'q edi, yagona chora — boshqa bo'limga
+         o'tib qaytish, buni esa hech kim aytmagan. Endi xato o'zi bilan
+         birga chiqish yo'lini ham beradi. */
+      .load-err {
+        min-height: 42vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        padding: 32px 20px;
+        text-align: center;
+      }
+      .load-err-msg {
+        font-size: 13px;
+        color: var(--t2);
+        line-height: 1.6;
+        max-width: 260px;
+      }
+      /* `.btn` faylda keyinroq e'lon qilingani uchun (bir xil
+         aniqlikda oxirgisi yutadi) bu yerda ataylab ikki klassli
+         selektor — aks holda tugma to'liq kenglikka cho'ziladi. */
+      .load-err .load-err-btn {
+        width: auto;
+        min-width: 150px;
+        padding: 0 20px;
       }
       .empty-ico {
         font-size: 28px;
@@ -5602,6 +5640,22 @@
           .replace(/"/g, "&quot;")
           .replace(/</g, "&lt;");
       }
+      // Yuklash xatosini ko'rsatadi va qayta urinish yo'lini beradi.
+      // `retry` — yopilma (closure), shu sabab har loader o'z
+      // argumentlari bilan qaytadan chaqiriladi (masalan qaysi DOM
+      // konteynerga yoki qaysi loyiha slug'iga tegishli ekani
+      // saqlanadi). Berilmasa — tugma ko'rsatilmaydi.
+      function showLoadError(el, message, retry) {
+        if (!el) return;
+        el.innerHTML = `
+          <div class="load-err">
+            <div class="load-err-msg">${escHtml(message || "Ma'lumot yuklanmadi")}</div>
+            <button class="btn btn-soft load-err-btn">Qayta urinish</button>
+          </div>`;
+        const btn = el.querySelector(".load-err-btn");
+        if (retry) btn.onclick = () => retry();
+        else btn.remove();
+      }
       function showToast(msg, ms = 2200) {
         const el = document.getElementById("toast");
         el.textContent = msg;
@@ -6622,7 +6676,7 @@
             throw new Error((await res.json().catch(() => ({}))).error || "Xato");
           tasksList = (await res.json()).tasks || [];
         } catch (e) {
-          body.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
+          showLoadError(body, e.message, () => renderTasksScreen());
           return;
         }
         // Standart holat — rolga qarab: oddiy xodim avval o'ziga
@@ -9519,9 +9573,13 @@
               throw new Error((await r.json().catch(() => ({}))).error || "Xato");
             worklog = await r.json();
           } catch (e) {
-            c.innerHTML =
-              header +
-              `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
+            // Sarlavha (oy tanlash) o'z joyida qoladi — xato faqat
+            // ro'yxat o'rnida ko'rsatiladi, aks holda xodim boshqa oyga
+            // o'tib ko'rish imkonini ham yo'qotardi.
+            c.innerHTML = header + `<div id="wl-load-err"></div>`;
+            showLoadError(document.getElementById("wl-load-err"), e.message, () =>
+              renderWorklogTab(c),
+            );
             return;
           }
           if (adminActiveTab !== "worklog") return; // tab almashib ketgan
@@ -9652,7 +9710,7 @@
           permRoles = rolesRes.ok ? (await rolesRes.json()).roles || {} : {};
           renderPermList();
         } catch (e) {
-          wrap.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
+          showLoadError(wrap, e.message, () => loadUsersAndRenderPermList());
         }
       }
       // Loyihaga ruxsat berilgan xodimning shu loyihadagi rolini
@@ -10032,7 +10090,7 @@
           }
           listEl.innerHTML = html;
         } catch (e) {
-          listEl.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
+          showLoadError(listEl, e.message, () => refreshAdminList());
         }
       }
       async function addDynamicAdmin() {
@@ -10113,7 +10171,7 @@
           nshopAdminProducts = prodData.products || [];
           nshopAdminStats = statsRes.ok ? await statsRes.json() : null;
         } catch (e) {
-          c.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
+          showLoadError(c, e.message, () => refreshNShopAdminList(c));
           return;
         }
         renderNShopAdminBody(c);
@@ -10560,7 +10618,7 @@
                 .join("")
             : `<div class="empty"><div class="empty-s">Arxivlangan mahsulot yo'q</div></div>`;
         } catch (e) {
-          body.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
+          showLoadError(body, e.message, () => { document.querySelector(".overlay")?.remove(); openNShopArchivedSheet(); });
         }
       }
       async function restoreNShopProduct(productId) {
@@ -10790,7 +10848,7 @@
           myProfile = (await meRes.json()).user;
           pfNcoinData = ncoinRes.ok ? await ncoinRes.json() : null;
         } catch (e) {
-          c.innerHTML = `<div style="color:var(--red);font-size:12px;padding:16px">⚠ ${escHtml(e.message)}</div>`;
+          showLoadError(c, e.message, () => openProfilePage());
           return;
         }
         if (!myActivity) await loadMyActivity();
@@ -11130,7 +11188,7 @@
           nshopBalance = meData.balance || 0;
           nshopMe = meData;
         } catch (e) {
-          c.innerHTML = `<div style="color:var(--red);font-size:12px;padding:16px">⚠ ${escHtml(e.message)}</div>`;
+          showLoadError(c, e.message, () => renderNShopScreen());
           return;
         }
         renderNShopBody();
@@ -11360,7 +11418,7 @@
           document.getElementById("pf-ncoin-badge")?.remove();
           apiFetch("/api/ncoin/ack", { method: "POST" }).catch(() => {});
         } catch (e) {
-          body.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
+          showLoadError(body, e.message, () => { document.querySelector(".overlay")?.remove(); openNcoinHistorySheet(); });
         }
       }
       function setNcoinHistoryFilter(filter) {
@@ -11893,7 +11951,7 @@
           if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
           data = await res.json();
         } catch (e) {
-          body.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
+          showLoadError(body, e.message, () => { document.querySelector(".overlay")?.remove(); openActivityStats(username); });
           return;
         }
         activitySheetState = { body, data, username, mode: "all" };
@@ -12172,7 +12230,7 @@
             }
           });
         } catch (e) {
-          body.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
+          showLoadError(body, e.message, () => refreshHistoryBody(body, slug));
         }
       }
       function buildHistoryCBs(body, projectSlug, cycleId, count, type, checksMap) {
