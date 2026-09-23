@@ -50,6 +50,12 @@
            yozilmaydi), aks holda qorong'i temada bu fon ham
            yorishib, ustidagi oq matn/harflar ko'rinmay qolardi. */
         --inkfill: #0f172a;
+        /* "To'q fon + ustida oq" elementlar uchun (Ncoin nishoni,
+           progress to'ldirishi). --amber/--green'dan farqli o'laroq
+           qorong'i temada ham AYNAN shu qoladi: aks holda fon yorishib,
+           ustidagi oq belgi ko'rinmay qolardi. */
+        --amber-fill: #d97706;
+        --green-fill: #16a34a;
         /* Ikkilamchi matn pog'onalari. v3 dizaynida ataylab to'qroq
            qilingan: avvalgi --t3 (#8b929c) oq fonda ~3.1:1 kontrast
            berardi — bu WCAG AA (4.5:1) dan past, holbuki u bo'sh-ekran
@@ -835,7 +841,7 @@
         align-items: center;
         justify-content: center;
         border-radius: 999px;
-        background: #d97706;
+        background: var(--amber-fill);
         color: #fff;
         font-weight: 700;
         flex: none;
@@ -1789,7 +1795,7 @@
         width: 36px;
         height: 36px;
         border-radius: 99px;
-        background: #d97706;
+        background: var(--amber-fill);
         color: #fff;
         font-weight: 700;
         font-size: 15px;
@@ -1869,7 +1875,7 @@
         display: flex;
       }
       .pf-tasks-track-done {
-        background: #16a34a;
+        background: var(--green-fill);
         height: 100%;
       }
       .pf-tasks-track-progress {
@@ -1906,7 +1912,7 @@
         width: 6px;
         height: 6px;
         border-radius: 99px;
-        background: #d97706;
+        background: var(--amber-fill);
         flex: none;
       }
       .pf-savebar-text {
@@ -6987,11 +6993,6 @@
       }
 
       // ── SIDEBAR (faqat katta ekran — "doimiy chap navigatsiya") ────
-      const ROLE_LABEL_SIDEBAR = {
-        super_admin: "Super admin",
-        admin: "Admin",
-        employee: "Xodim",
-      };
       function renderSidebar() {
         document.getElementById("sidebar-avatar").textContent = (currentUser || "?")
           .slice(0, 1)
@@ -7000,7 +7001,7 @@
           ? "@" + currentUser
           : "—";
         document.getElementById("sidebar-user-role").textContent =
-          ROLE_LABEL_SIDEBAR[userRole] || userRole || "—";
+          ROLE_LABEL_UZ[userRole] || userRole || "—";
 
         const debtCount = projects.filter((p) => p.outstandingDebt).length;
         const debtEl = document.getElementById("sidebar-debt-count");
@@ -11679,7 +11680,7 @@
         return `<tr id="nshop-row-${p.id}"${p.is_visible ? "" : ' style="background:var(--surf2)"'}>
           <td>
             <div style="display:flex;align-items:center;gap:13px">
-              ${nshopThumbHtml(p.image_url, "width:44px;height:44px;border-radius:11px")}
+              ${nshopThumbHtml(p.image_url, "width:44px;height:44px;border-radius:11px", p.name)}
               <div>
                 <div class="dtbl-name"${p.is_visible ? "" : ' style="color:var(--t2)"'}>${escHtml(p.name)}</div>
                 <div style="font-size:11.5px;color:var(--t3);margin-top:2px">${p.is_visible ? "Ko'rinadi" : "Yashirilgan"}</div>
@@ -12732,7 +12733,7 @@
                   ? shown
                       .map(
                         (t) => `<div class="nshop-purchase-row">
-                          ${nshopThumbHtml(t.productImageUrl, "width:40px;height:40px;border-radius:10px")}
+                          ${nshopThumbHtml(t.productImageUrl, "width:40px;height:40px;border-radius:10px", t.productName)}
                           <div style="flex:1;min-width:0">
                             <div class="nshop-purchase-name">${escHtml(t.productName || "Mahsulot")}</div>
                             <div class="nshop-purchase-date">${fmtDay(new Date(t.at))}</div>
@@ -12767,11 +12768,11 @@
       // bo'lsa katta grid-karta o'lchami (.nshop-img-placeholder
       // standart qiymatlari) ishlatiladi, aks holda kichik tarix/jadval
       // qatorlari uchun aniq o'lcham beriladi.
-      function nshopThumbHtml(url, sizeStyle) {
+      function nshopThumbHtml(url, sizeStyle, name) {
         const style = sizeStyle || "";
         if (!url) return `<div class="nshop-img-placeholder" style="${style}"><span>rasm</span></div>`;
         return `<div class="nshop-img-placeholder" style="${style};padding:0;overflow:hidden">
-          <img src="${escArg(url)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s ease" onload="this.style.opacity='1'"/>
+          <img src="${escArg(url)}" alt="${escHtml(name || "Mahsulot rasmi")}" loading="lazy" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s ease" onload="this.style.opacity='1'"/>
         </div>`;
       }
 
@@ -12792,7 +12793,7 @@
               : `${fmtNcoin(short)} Ncoin yetmaydi`;
         return `
           <div class="nshop-card">
-            ${nshopThumbHtml(p.image_url, "")}
+            ${nshopThumbHtml(p.image_url, "", p.name)}
             <div class="nshop-card-body">
               <div class="nshop-card-name">${escHtml(p.name)}</div>
               <div class="nshop-card-row">
@@ -12815,7 +12816,7 @@
         const { ov, body } = makeSheet("Xaridni tasdiqlaysizmi?");
         body.innerHTML = `
           <div style="display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:12px;background:var(--surf2);border:1px solid var(--bd1)">
-            ${nshopThumbHtml(p.image_url, "width:46px;height:46px;border-radius:12px")}
+            ${nshopThumbHtml(p.image_url, "width:46px;height:46px;border-radius:12px", p.name)}
             <div style="flex:1;min-width:0">
               <div style="font-weight:600;font-size:14px;color:var(--ink)">${escHtml(p.name)}</div>
               <div class="f-hint" style="margin:2px 0 0">${p.stock} tadan</div>
