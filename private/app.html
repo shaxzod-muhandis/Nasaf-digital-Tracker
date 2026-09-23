@@ -7474,9 +7474,13 @@
       // ustunli karta-doska edi va loyihani ko'rish uchun boshqa
       // sahifaga o'tish kerak bo'lardi.
       let desktopProjectId = null;
+      // Ro'yxatdagi loyihani bosish — to'g'ridan-to'g'ri o'sha loyihaning
+      // sahifasini (tracker) ochadi. Tanlov ham eslab qolinadi, shu sabab
+      // trackerdan qaytganda o'ng panel aynan shu loyihani ko'rsatib
+      // turadi.
       function setDesktopProject(id) {
         desktopProjectId = id;
-        renderProjectsScreen();
+        openTracker(id);
       }
       function pdeskItemHtml(p, active) {
         const st = projStatus(p);
