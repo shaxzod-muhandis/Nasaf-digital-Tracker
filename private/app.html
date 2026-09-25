@@ -5938,12 +5938,26 @@
       const NCOIN_MARK = `<svg viewBox="0 0 24 24" fill="none" stroke="var(--nav-coin-mark)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 15.5v-7l5 7v-7"/></svg>`;
 
       function renderSidebar() {
-        document.getElementById("sidebar-avatar").textContent = (currentUser || "?")
+        document.getElementById("sidebar-avatar").textContent = (
+          myProfile?.firstName ||
+          currentUser ||
+          "?"
+        )
           .slice(0, 1)
           .toUpperCase();
-        document.getElementById("sidebar-user-name").textContent = currentUser
-          ? "@" + currentUser
-          : "—";
+        // Chizmada bu yerda ism va familiya bosh harfi turadi ("Shaxzod S."),
+        // @username emas: u uzun bo'lib, qirqilib ketardi. Profil hali
+        // yuklanmagan bo'lsa — vaqtincha username.
+        const first = (myProfile?.firstName || "").trim();
+        const last = (myProfile?.lastName || "").trim();
+        const shortName = first
+          ? last
+            ? `${first} ${last.slice(0, 1).toUpperCase()}.`
+            : first
+          : currentUser
+            ? "@" + currentUser
+            : "—";
+        document.getElementById("sidebar-user-name").textContent = shortName;
         document.getElementById("sidebar-user-role").textContent =
           ROLE_LABEL_UZ[userRole] || userRole || "—";
 
@@ -12365,7 +12379,15 @@
       function applyTelegramSafeArea() {
         const t = tg();
         if (!t) return;
-        const top = (t.safeAreaInset?.top || 0) + (t.contentSafeAreaInset?.top || 0);
+        // Kompyuterda bo'shliq hech qachon qo'shilmaydi. To'liq ekran
+        // so'ralmagani uchun Telegram o'z tugmalarini kontent ustiga
+        // chizmaydi, ya'ni joy ajratish shart emas. Bu — exitFullscreen()
+        // kechikib ishlagan yoki "fullscreenChanged" hodisasi kelmagan
+        // holatlar uchun ham kafolat.
+        const isDesktop = window.matchMedia("(min-width: 860px)").matches;
+        const top = isDesktop
+          ? 0
+          : (t.safeAreaInset?.top || 0) + (t.contentSafeAreaInset?.top || 0);
         document.documentElement.style.setProperty("--tg-safe-top", top + "px");
       }
       async function initApp() {
@@ -12373,7 +12395,17 @@
           tg().ready();
           tg().expand();
           try {
-            tg().requestFullscreen?.(); // Bot API 8.0+ — kompyuterda ham to'liq ekran
+            // To'liq ekran FAQAT mobilda so'raladi. Kompyuterda Telegram
+            // bu rejimda o'zining yopish/menyu tugmalarini kontent ustiga
+            // chizadi va katta "xavfsiz zona" qaytaradi — u --tg-safe-top
+            // orqali butun ilovani pastga surib, tepada ~100px bo'sh joy
+            // qoldirardi. Kompyuterda oyna allaqachon katta, ya'ni to'liq
+            // ekrandan yutuq yo'q, faqat zarari bor.
+            if (window.matchMedia("(min-width: 860px)").matches) {
+              if (tg().isFullscreen) tg().exitFullscreen?.();
+            } else {
+              tg().requestFullscreen?.(); // Bot API 8.0+
+            }
             tg().disableVerticalSwipes?.();
           } catch (e) {}
           applyTelegramSafeArea();
