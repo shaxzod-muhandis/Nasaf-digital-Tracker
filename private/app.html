@@ -6226,6 +6226,54 @@
           }
         }
       }
+      // ── XODIM RANGLARI ─────────────────────────────────────────────
+      // Interfeysda xodimlar ko'pincha faqat bosh harfi bilan ko'rinadi
+      // (avatarlar). Bir xil harfli xodimlar — "Mirshod / Malika",
+      // "Jahongir / Jafar" — bir-biridan ajralmay qolardi. Har biriga
+      // o'z rangi beriladi: palitradan ketma-ket, ism bo'yicha
+      // tartiblangan holda, shu sabab ikki xodimga bir xil rang tushmaydi
+      // (palitra jamoadan kattaroq).
+      //
+      // Ranglar holat ranglaridan (yashil/sariq/qizil) ataylab uzoq
+      // tanlangan: xodim rangi hech qachon "muammo" yoki "bajarildi" deb
+      // o'qilmasligi kerak.
+      const PERSON_COLORS = [
+        "#4f6bed", "#c23a6b", "#0b7f72", "#9e47c9", "#0e7490",
+        "#9a6b3f", "#a21caf", "#64748b", "#7c6f57", "#344054",
+        "#2563eb", "#be185d", "#0f766e", "#7c3aed", "#b45309",
+        "#155e75", "#4d7c0f", "#9f1239", "#5b21b6", "#475569",
+      ];
+      let _personColorMap = null;
+      // Ro'yxat o'zgarganda (yangi xodim qo'shilganda) qayta hisoblanadi.
+      function resetPersonColors() {
+        _personColorMap = null;
+      }
+      function buildPersonColorMap() {
+        const names = new Set();
+        const collect = (u) => {
+          if (u?.username) names.add(u.username);
+        };
+        (allUsers || []).forEach(collect);
+        (projects || []).forEach((p) => (p.assignees || []).forEach(collect));
+        (tasksList || []).forEach((t) => t?.assigneeUsername && names.add(t.assigneeUsername));
+        const map = {};
+        let i = 0;
+        [...names].sort().forEach((n) => {
+          map[n] = PERSON_COLORS[i++ % PERSON_COLORS.length];
+        });
+        return map;
+      }
+      function personColor(key) {
+        if (!_personColorMap) _personColorMap = buildPersonColorMap();
+        const k = String(key || "");
+        if (_personColorMap[k]) return _personColorMap[k];
+        // Ro'yxatda yo'q (masalan Telegramsiz xodim yoki faqat ismi bor) —
+        // barqaror zaxira: bir xil matn har doim bir xil rang beradi.
+        let h = 0;
+        for (let i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0;
+        return PERSON_COLORS[h % PERSON_COLORS.length];
+      }
+
       function initials(label) {
         return String(label || "?")
           .split(/\s+/)
@@ -6509,11 +6557,16 @@
         if (!res.ok) return;
         const d = await res.json();
         projects = d.projects || [];
+        // Ro'yxat o'zgargan bo'lishi mumkin — ranglar qayta taqsimlanadi.
+        resetPersonColors();
       }
       async function loadTasks() {
         try {
           const res = await apiFetch("/api/tasks");
-          if (res.ok) tasksList = (await res.json()).tasks || [];
+          if (res.ok) {
+            tasksList = (await res.json()).tasks || [];
+            resetPersonColors();
+          }
         } catch (e) {}
       }
       async function loadTags() {
@@ -7375,7 +7428,8 @@
       }
       function taskAvatarHtml(t, sizeCls, muted) {
         if (!t.assigneeName) return "";
-        return `<div class="avatar${sizeCls ? " " + sizeCls : ""}" style="${muted ? "opacity:.6" : ""}" title="${escHtml(t.assigneeName)}">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}</div>`;
+        const bg = personColor(t.assigneeUsername || t.assigneeName);
+        return `<div class="avatar${sizeCls ? " " + sizeCls : ""}" style="background:${bg};color:#fff${muted ? ";opacity:.6" : ""}" title="${escHtml(t.assigneeName)}">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}</div>`;
       }
       // Xodimlar yuklamasi — faqat OCHIQ (hali yopilmagan) vazifalar
       // bo'yicha, shu ro'yxatdagi (allaqachon rolga qarab scope qilingan)
@@ -7602,7 +7656,7 @@
         const items = workload
           .map(
             (w) => `<div class="workload-item${w.late ? " warn" : ""}">
-              <div class="avatar">${escHtml(w.name.slice(0, 1).toUpperCase())}</div>
+              <div class="avatar" style="background:${personColor(w.username || w.name)};color:#fff">${escHtml(w.name.slice(0, 1).toUpperCase())}</div>
               <div style="min-width:0">
                 <div class="workload-name">${escHtml(w.name)}</div>
                 <div class="workload-sub${w.late ? " warn" : ""}">${w.late ? w.late + " kechikkan · " : ""}${w.open} ochiq</div>
@@ -7736,7 +7790,7 @@
             );
             return `<div class="list-card${w.late ? " late" : ""}" style="margin-bottom:${expanded ? "0" : "10px"}">
               <div class="list-row clickable" onclick="toggleEmployeeGroup('${escArg(w.username)}')">
-                <div class="avatar">${escHtml(w.name.slice(0, 1).toUpperCase())}</div>
+                <div class="avatar" style="background:${personColor(w.username || w.name)};color:#fff">${escHtml(w.name.slice(0, 1).toUpperCase())}</div>
                 <div style="flex:1;min-width:0">
                   <div class="r-name">${escHtml(w.name)}</div>
                   <div class="r-sub" style="${w.late ? "color:var(--red)" : ""}">${w.late ? w.late + " kechikkan · " : ""}${w.open} ochiq</div>
@@ -7965,7 +8019,7 @@
                       : `<span class="td-badge-dot" style="${colDot};display:inline-block;margin-right:6px"></span>${escHtml(TASK_STATUS_LABEL[t.status])}`
                   }</div>
                 </div>
-                <div class="detail-prop-row"><div class="detail-prop-label">Mas'ul</div><div class="detail-prop-val" style="display:flex;align-items:center;gap:8px;justify-content:flex-end">${t.assigneeName ? `<div class="avatar avatar-sm">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}</div>` : ""}${escHtml(t.assigneeName || "Biriktirilmagan")}</div></div>
+                <div class="detail-prop-row"><div class="detail-prop-label">Mas'ul</div><div class="detail-prop-val" style="display:flex;align-items:center;gap:8px;justify-content:flex-end">${t.assigneeName ? `<div class="avatar avatar-sm" style="background:${personColor(t.assigneeUsername || t.assigneeName)};color:#fff">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}</div>` : ""}${escHtml(t.assigneeName || "Biriktirilmagan")}</div></div>
                 <div class="detail-prop-row">
                   <div class="detail-prop-label">Ustuvorlik</div>
                   <div class="detail-prop-val">${
@@ -9576,6 +9630,7 @@
           if (!res.ok) return;
           const d = await res.json();
           allUsers = (d.users || []).filter((u) => u.role === "employee" && u.is_active);
+          resetPersonColors();
         } catch (e) {}
       }
       async function loadNpTemplates() {
@@ -10140,6 +10195,7 @@
           if (!res.ok)
             throw new Error((await res.json().catch(() => ({}))).error || "Xato");
           allUsers = (await res.json()).users || [];
+          resetPersonColors();
         } catch (e) {
           wrap.innerHTML = `<div style="padding:16px 14px;font-size:12px;color:var(--red)">⚠ ${escHtml(e.message)}</div>`;
           return;
@@ -10171,7 +10227,7 @@
               ? [u.job_title, u.phone].filter(Boolean).join(" · ") || `@${u.username}`
               : "profil hali to'ldirilmagan";
             return `<div class="list-row">
-              <div class="avatar">${u.username.slice(0, 1).toUpperCase()}</div>
+              <div class="avatar" style="background:${personColor(u.username)};color:#fff">${u.username.slice(0, 1).toUpperCase()}</div>
               <div style="flex:1;min-width:0">
                 <div class="r-name">${escHtml(displayName)}</div>
                 <div class="r-sub"${complete ? "" : ' style="color:var(--red)"'}>${escHtml(sub)}</div>
@@ -10195,7 +10251,7 @@
             return `<div class="pcard">
               <div class="pcard-top">
                 <div class="row" style="display:flex;align-items:center;gap:9px;min-width:0">
-                  <div class="avatar" style="flex-shrink:0">${u.username.slice(0, 1).toUpperCase()}</div>
+                  <div class="avatar" style="flex-shrink:0;background:${personColor(u.username)};color:#fff">${u.username.slice(0, 1).toUpperCase()}</div>
                   <div class="r-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(displayName)}</div>
                 </div>
                 <div class="m-actions-inline">
@@ -10542,7 +10598,7 @@
             : `@${u.username}`;
           html += `<div class="list-card" style="margin-bottom:10px">
             <div class="grp-hdr">
-              <div class="avatar">${u.username.slice(0, 1).toUpperCase()}</div>
+              <div class="avatar" style="background:${personColor(u.username)};color:#fff">${u.username.slice(0, 1).toUpperCase()}</div>
               <div style="flex:1;min-width:0">
                 <div class="grp-name">${escHtml(displayName)}</div>
                 <div class="grp-sub ${assigned.length === 0 ? "warn" : ""}">${u.job_title ? escHtml(u.job_title) + " · " : ""}${assigned.length === 0 ? "loyiha biriktirilmagan" : `@${escHtml(u.username)}`}</div>
@@ -10580,7 +10636,7 @@
             return `<tr>
               <td class="pmx-emp" style="cursor:pointer" onclick="openActivityStats('${escArg(u.username)}')" title="Faolligini ko'rish">
                 <div style="display:flex;align-items:center;gap:11px">
-                  <div class="avatar" style="width:30px;height:30px;border-radius:9px;font-size:11.5px">${u.username.slice(0, 1).toUpperCase()}</div>
+                  <div class="avatar" style="width:30px;height:30px;border-radius:9px;font-size:11.5px;background:${personColor(u.username)};color:#fff">${u.username.slice(0, 1).toUpperCase()}</div>
                   <div style="min-width:0">
                     <div class="pmx-emp-name">${escHtml(displayName)}</div>
                     ${u.job_title ? `<div class="pmx-emp-sub">${escHtml(u.job_title)}</div>` : ""}
