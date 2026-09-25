@@ -24,7 +24,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Onest:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -64,6 +64,20 @@
         --bd3: rgba(15, 23, 42, 0.09);
         --bd4: rgba(15, 23, 42, 0.14);
         --chip: #f1f3f6;
+        /* ── Yon menyu (v3 dizayni) ────────────────────────────────
+           Ataylab mustaqil qiymatlar: ilovaning umumiy matn ranglari
+           menyu dizaynidagidan ochroq, va bu o'zgarish faqat menyuga
+           tegishli bo'lishi kerak. */
+        --nav-ink: #374151;
+        --nav-ink2: #5b6573;
+        --nav-muted: #7a828e;
+        --nav-act-bg: #eaf2f9;
+        --nav-act-ink: #255f91;
+        --nav-badge-bg: #eef0f3;
+        --nav-badge-ink: #5b6573;
+        --nav-coin-bg: #fbf1e4;
+        --nav-coin-ink: #a45f08;
+        --nav-coin-mark: #d97706;
         --chip2: #eef0f3;
         --chip3: #edeff2;
         --sw-off: #dce0e6;
@@ -126,6 +140,16 @@
         --bd3: rgba(255, 255, 255, 0.12);
         --bd4: rgba(255, 255, 255, 0.18);
         --chip: #232833;
+        --nav-ink: #c9cfd8;
+        --nav-ink2: #a8b0bb;
+        --nav-muted: #8b929c;
+        --nav-act-bg: rgba(47, 122, 185, 0.18);
+        --nav-act-ink: #7fb3dd;
+        --nav-badge-bg: rgba(255, 255, 255, 0.08);
+        --nav-badge-ink: #a8b0bb;
+        --nav-coin-bg: rgba(217, 119, 6, 0.16);
+        --nav-coin-ink: #e0a458;
+        --nav-coin-mark: #d97706;
         --chip2: #272d38;
         --chip3: #2b313d;
         --sw-off: #3a4048;
@@ -4059,14 +4083,15 @@
         #sidebar {
           display: flex;
           flex-direction: column;
-          width: 248px;
+          width: 224px;
           position: fixed;
           top: 0;
           left: 0;
           bottom: 0;
           background: var(--surf);
           border-right: 1px solid var(--bd2);
-          padding: calc(18px + var(--tg-safe-top)) 14px 18px;
+          padding: calc(16px + var(--tg-safe-top)) 12px 16px;
+          font-family: Onest, "Sora", -apple-system, sans-serif;
           z-index: 100;
           transition: width 0.22s ease;
         }
@@ -4103,7 +4128,7 @@
           display: flex;
           align-items: center;
           gap: 10px;
-          padding: 4px 8px 20px;
+          padding: 2px 8px 18px;
         }
         .sb-brand-text,
         .sb-user-text {
@@ -4114,9 +4139,9 @@
           transition: opacity 0.12s ease;
         }
         .sb-mark {
-          width: 34px;
-          height: 34px;
-          border-radius: 10px;
+          width: 32px;
+          height: 32px;
+          border-radius: 11px;
           background: var(--brand);
           color: #fff;
           display: flex;
@@ -4128,13 +4153,12 @@
         }
         .sb-brand-name {
           font-weight: 600;
-          font-size: 13.5px;
+          font-size: 14px;
           color: var(--ink);
         }
         .sb-brand-sub {
-          font-size: 11px;
-          color: var(--t3);
-          margin-top: 1px;
+          font-size: 11.5px;
+          color: var(--nav-muted);
         }
         .sb-nav {
           display: flex;
@@ -4145,21 +4169,23 @@
           display: flex;
           align-items: center;
           gap: 11px;
-          padding: 10px 12px;
+          height: 38px;
+          padding: 0 10px;
           border-radius: 10px;
           border: none;
           background: none;
           cursor: pointer;
           font-size: 13.5px;
           font-weight: 500;
-          color: var(--t5);
+          color: var(--nav-ink);
           text-align: left;
           font-family: inherit;
         }
         .sb-item .sb-ico {
           width: 19px;
           height: 19px;
-          color: var(--nav-off);
+          /* Dizaynda ikonka matn bilan bir xil rangda (currentColor). */
+          color: inherit;
           flex-shrink: 0;
         }
         .sb-item .sb-ico svg {
@@ -4175,9 +4201,16 @@
           transition: opacity 0.12s ease;
         }
         .sb-item .sb-count {
-          font-size: 11.5px;
-          color: var(--t3);
-          font-weight: 500;
+          height: 20px;
+          padding: 0 8px;
+          border-radius: 7px;
+          background: var(--nav-badge-bg);
+          color: var(--nav-badge-ink);
+          font-size: 11px;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          flex: none;
           transition: opacity 0.12s ease;
         }
         .sb-item .sb-count.danger {
@@ -4188,72 +4221,70 @@
           font-weight: 700;
         }
         .sb-item.active {
-          background: rgba(47, 122, 185, 0.1);
-          color: var(--brand);
+          background: var(--nav-act-bg);
+          color: var(--nav-act-ink);
           font-weight: 600;
         }
         .sb-item.active .sb-ico {
-          color: var(--brand);
+          color: var(--nav-act-ink);
+        }
+        /* Qoida <svg>ning O'ZIGA yozilishi shart: elementdagi
+           stroke-width atributi merosdan ustun turadi. */
+        .sb-item .sb-ico svg,
+        .sb-aitem .sb-ico svg {
+          stroke-width: 1.7;
+        }
+        .sb-item.active .sb-ico svg {
+          stroke-width: 2;
         }
         .sb-sub-label {
           font-weight: 600;
-          font-size: 10.5px;
-          color: var(--t3);
+          font-size: 11px;
+          color: var(--nav-muted);
           letter-spacing: 0.06em;
           text-transform: uppercase;
-          margin: 20px 12px 8px;
+          margin: 18px 10px 6px;
         }
-        .sb-projects {
-          display: flex;
-          flex-direction: column;
-          gap: 1px;
-          max-height: 45vh;
-          overflow-y: auto;
-          overflow-x: hidden;
-        }
-        .sb-proj-row {
+        /* Boshqaruv bandlari — asosiy navdan ataylab past darajada:
+           pastroq bo'y, kichikroq ikonka va shrift, so'nuqroq rang. */
+        .sb-aitem {
           display: flex;
           align-items: center;
-          gap: 9px;
-          padding: 7px 12px;
-          border-radius: 8px;
-          font-size: 12.5px;
-          color: var(--t5);
-          cursor: pointer;
+          gap: 11px;
+          height: 34px;
+          padding: 0 10px;
+          border-radius: 9px;
           border: none;
           background: none;
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--nav-ink2);
+          text-align: left;
           font-family: inherit;
           width: 100%;
-          text-align: left;
         }
-        .sb-proj-row:hover {
-          background: var(--bg);
-        }
-        .sb-proj-dot {
-          width: 7px;
-          height: 7px;
-          border-radius: 99px;
-          background: var(--brand);
+        .sb-aitem .sb-ico {
+          width: 17px;
+          height: 17px;
+          color: inherit;
           flex-shrink: 0;
         }
-        .sb-proj-dot.debt {
-          background: var(--red);
+        .sb-aitem .sb-ico svg {
+          width: 100%;
+          height: 100%;
+          display: block;
         }
-        .sb-proj-name {
+        .sb-aitem .sb-lbl {
           flex: 1;
           min-width: 0;
           overflow: hidden;
-          text-overflow: ellipsis;
           white-space: nowrap;
+          transition: opacity 0.12s ease;
         }
-        .sb-proj-val {
-          font-size: 11.5px;
-          color: var(--t3);
-          font-weight: 500;
-          flex-shrink: 0;
-        }
-        .sb-proj-val.debt {
-          color: var(--red);
+        .sb-aitem.active {
+          background: var(--nav-act-bg);
+          color: var(--nav-act-ink);
           font-weight: 600;
         }
         .sb-spacer {
@@ -4263,30 +4294,57 @@
           display: flex;
           align-items: center;
           gap: 10px;
-          padding: 10px;
-          border: 1px solid var(--bd2);
-          border-radius: 12px;
+          padding: 10px 8px;
+          border: none;
+          border-top: 1px solid var(--bd2);
           background: none;
           cursor: pointer;
           text-align: left;
           width: 100%;
           font-family: inherit;
         }
+        .sb-user .avatar {
+          width: 30px;
+          height: 30px;
+          border-radius: 10px;
+          background: #344054;
+          color: #fff;
+          font-weight: 600;
+          font-size: 12px;
+          flex-shrink: 0;
+        }
+        /* Balans belgisi — menyuning eng pastida, profil qatorida. */
+        .sb-ncoin {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          height: 24px;
+          padding: 0 8px;
+          border-radius: 7px;
+          background: var(--nav-coin-bg);
+          color: var(--nav-coin-ink);
+          font-size: 12px;
+          font-weight: 600;
+          flex: none;
+          transition: opacity 0.12s ease;
+        }
+        .sb-ncoin svg {
+          width: 13px;
+          height: 13px;
+          display: block;
+          flex: none;
+        }
         .sb-user-name {
           font-weight: 600;
-          font-size: 12.5px;
+          font-size: 13px;
           color: var(--ink);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .sb-user-role {
-          font-size: 11px;
-          color: var(--t3);
-          margin-top: 1px;
-        }
-        .sb-user .chev {
-          transition: opacity 0.12s ease;
+          font-size: 11.5px;
+          color: var(--nav-muted);
         }
 
         /* ── Sidebar yig'ilgan holati: faqat ikonkalar, kontent avtomatik
@@ -4302,7 +4360,8 @@
           padding-left: 0;
           padding-right: 0;
         }
-        body.sidebar-collapsed .sb-item {
+        body.sidebar-collapsed .sb-item,
+        body.sidebar-collapsed .sb-aitem {
           justify-content: center;
           padding-left: 0;
           padding-right: 0;
@@ -4311,18 +4370,22 @@
         body.sidebar-collapsed .sb-brand-text,
         body.sidebar-collapsed .sb-item .sb-lbl,
         body.sidebar-collapsed .sb-item .sb-count,
+        body.sidebar-collapsed .sb-aitem .sb-lbl,
         body.sidebar-collapsed .sb-sub-label,
-        body.sidebar-collapsed .sb-projects,
-        body.sidebar-collapsed .sb-user-text,
-        body.sidebar-collapsed .sb-user .chev {
+        body.sidebar-collapsed .sb-ncoin,
+        body.sidebar-collapsed .sb-user-text {
           opacity: 0;
           pointer-events: none;
         }
         body.sidebar-collapsed .sb-item .sb-lbl,
-        body.sidebar-collapsed .sb-item .sb-count {
+        body.sidebar-collapsed .sb-item .sb-count,
+        body.sidebar-collapsed .sb-aitem .sb-lbl,
+        body.sidebar-collapsed .sb-ncoin {
           width: 0;
           min-width: 0;
           flex: 0;
+          padding: 0;
+          overflow: hidden;
         }
         /* box-sizing:border-box tufayli padding width:0'dan ustun
            turadi (chekka+padding yig'indisi minimal kenglik bo'lib
@@ -4332,8 +4395,7 @@
         body.sidebar-collapsed .sb-item .sb-count {
           padding: 0;
         }
-        body.sidebar-collapsed .sb-sub-label,
-        body.sidebar-collapsed .sb-projects {
+        body.sidebar-collapsed .sb-sub-label {
           height: 0;
           margin: 0;
           overflow: hidden;
@@ -4350,8 +4412,7 @@
            qolib, tugmani sidebar chekkasidan tashqariga chiqarib
            yuborardi — xuddi qarz-hisoblagichidagi kabi (padding emas,
            bu safar flex-shrink:0 sabab). Ikkalasini ham 0'ga tushiramiz. */
-        body.sidebar-collapsed .sb-user-text,
-        body.sidebar-collapsed .sb-user .chev {
+        body.sidebar-collapsed .sb-user-text {
           width: 0;
           min-width: 0;
           flex: 0 0 0;
@@ -4360,7 +4421,7 @@
 
         /* ── Kontent ustuni: sidebar uchun joy + kengroq o'qish maydoni ── */
         .screen {
-          margin-left: 248px;
+          margin-left: 224px;
           max-width: none;
           width: auto;
           box-shadow: none;
@@ -5192,12 +5253,12 @@
         <div class="sb-mark">ND</div>
         <div class="sb-brand-text">
           <div class="sb-brand-name">Nasaf Digital</div>
-          <div class="sb-brand-sub">Kontent trackeri</div>
+          <div class="sb-brand-sub">Tracker</div>
         </div>
       </div>
       <nav class="sb-nav">
-        <button class="sb-item" id="sidebar-nav-today" onclick="showTab('today')" title="Panel">
-          <span class="sb-ico"></span><span class="sb-lbl">Panel</span>
+        <button class="sb-item" id="sidebar-nav-today" onclick="showTab('today')" title="Bugun">
+          <span class="sb-ico"></span><span class="sb-lbl">Bugun</span>
         </button>
         <button class="sb-item" id="sidebar-nav-projects" onclick="showTab('projects')" title="Loyihalar">
           <span class="sb-ico"></span><span class="sb-lbl">Loyihalar</span>
@@ -5205,25 +5266,37 @@
         </button>
         <button class="sb-item" id="sidebar-nav-tasks" onclick="showTab('tasks')" title="Vazifalar">
           <span class="sb-ico"></span><span class="sb-lbl">Vazifalar</span>
+          <span class="sb-count" id="sidebar-task-count" style="display: none"></span>
         </button>
         <button class="sb-item" id="sidebar-nav-nshop" onclick="showTab('nshop')" title="NShop">
           <span class="sb-ico"></span><span class="sb-lbl">NShop</span>
         </button>
-        <button class="sb-item" id="sidebar-nav-history" onclick="showTab('history')" title="Tarix">
-          <span class="sb-ico"></span><span class="sb-lbl">Tarix</span>
-        </button>
-        <button
-          class="sb-item"
-          id="sidebar-nav-admin"
-          onclick="showTab('admin')"
-          style="display: none"
-          title="Boshqaruv"
-        >
-          <span class="sb-ico round"></span><span class="sb-lbl">Boshqaruv</span>
-        </button>
       </nav>
-      <div class="sb-sub-label">Mening loyihalarim</div>
-      <div class="sb-projects" id="sidebar-projects"></div>
+      <!-- Boshqaruv endi bitta tugma emas, ochiq ro'yxat: har bir bo'limga
+           bir bosishda kiriladi. -->
+      <div id="sidebar-admin" style="display: none">
+        <div class="sb-sub-label">Boshqaruv</div>
+        <nav class="sb-nav">
+          <button class="sb-aitem" id="sb-atab-staff" onclick="openAdminTab('staff')" title="Xodimlar">
+            <span class="sb-ico"></span><span class="sb-lbl">Xodimlar</span>
+          </button>
+          <button class="sb-aitem" id="sb-atab-worklog" onclick="openAdminTab('worklog')" title="Tabel">
+            <span class="sb-ico"></span><span class="sb-lbl">Tabel</span>
+          </button>
+          <button class="sb-aitem" id="sb-atab-perms" onclick="openAdminTab('perms')" title="Ruxsatlar">
+            <span class="sb-ico"></span><span class="sb-lbl">Ruxsatlar</span>
+          </button>
+          <button class="sb-aitem" id="sb-atab-nshop" onclick="openAdminTab('nshop')" title="NShop mahsulotlari">
+            <span class="sb-ico"></span><span class="sb-lbl">NShop mahsulotlari</span>
+          </button>
+          <button class="sb-aitem" id="sb-atab-announcement" onclick="openAdminTab('announcement')" title="E'lon" data-super="1">
+            <span class="sb-ico"></span><span class="sb-lbl">E'lon</span>
+          </button>
+          <button class="sb-aitem" id="sb-atab-admins" onclick="openAdminTab('admins')" title="Adminlar" data-super="1">
+            <span class="sb-ico"></span><span class="sb-lbl">Adminlar</span>
+          </button>
+        </nav>
+      </div>
       <div class="sb-spacer"></div>
       <button class="sb-user" onclick="openProfilePage()" title="Profil">
         <div class="avatar" id="sidebar-avatar">?</div>
@@ -5231,7 +5304,7 @@
           <div class="sb-user-name" id="sidebar-user-name">—</div>
           <div class="sb-user-role" id="sidebar-user-role">—</div>
         </div>
-        <div class="chev">⌄</div>
+        <span class="sb-ncoin" id="sidebar-ncoin" style="display: none"></span>
       </button>
     </aside>
 
@@ -5384,8 +5457,8 @@
           "nav-projects": "folder", "sidebar-nav-projects": "folder",
           "nav-tasks": "checkSquare", "sidebar-nav-tasks": "checkSquare",
           "nav-nshop": "shoppingBag", "sidebar-nav-nshop": "shoppingBag",
-          "nav-history": "clock", "sidebar-nav-history": "clock",
-          "nav-admin": "settings", "sidebar-nav-admin": "settings",
+          "nav-history": "clock",
+          "nav-admin": "settings",
         };
         Object.entries(map).forEach(([id, icon]) => {
           const el = document.getElementById(id)?.querySelector(".nav-ico, .sb-ico");
@@ -5396,6 +5469,21 @@
         if (toggleIco) toggleIco.innerHTML = ICON.chevronLeft;
       }
       applyStaticIcons();
+      // Menyudagi Boshqaruv bandlari ikonkalari — v3 chizmasidan
+      // olingan aniq shakllar.
+      const SB_ADMIN_ICONS = {
+        staff: `<svg ${SVG_ATTRS}><circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 20c1-3.5 3.5-5.5 6.5-5.5s5.5 2 6.5 5.5"/><path d="M15.5 5.2a3.5 3.5 0 0 1 0 6.6M18 14.8c1.8.8 3 2.6 3.5 5.2"/></svg>`,
+        worklog: `<svg ${SVG_ATTRS}><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M9 9.5v10"/></svg>`,
+        perms: `<svg ${SVG_ATTRS}><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l2 2"/></svg>`,
+        nshop: `<svg ${SVG_ATTRS}><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>`,
+        announcement: `<svg ${SVG_ATTRS}><path d="M4 10v4h3l7 4V6L7 10z"/><path d="M18 9a4 4 0 0 1 0 6"/></svg>`,
+        admins: `<svg ${SVG_ATTRS}><path d="M12 3 5 6v5.5c0 4.3 3 7.8 7 9.5 4-1.7 7-5.2 7-9.5V6z"/></svg>`,
+      };
+      Object.entries(SB_ADMIN_ICONS).forEach(([key, svg]) => {
+        const el = document.getElementById("sb-atab-" + key)?.querySelector(".sb-ico");
+        if (el) el.innerHTML = svg;
+      });
+
 
       // ── SIDEBAR YIG'ISH/OCHISH (faqat katta ekran) ──────────────────
       // Holat body'dagi bitta class orqali boshqariladi — CSS shu klassga
@@ -5445,6 +5533,7 @@
       let tasksList = [];
       let dashProjFilter = "all"; // faqat katta ekran — Boshqaruv paneli jadvali
       let tagsList = []; // barcha mavjud taglar ({id,name}) — /api/tags
+      let myNcoinBalance = null; // /api/me'dan — menyudagi Ncoin belgisi uchun
       let myActivity = null; // o'zining faollik xom ma'lumoti — /api/activity-stats (Panel qisqa kartasi uchun)
       let activityPanelYear = null; // Panel qisqa kartasidagi tanlangan yil (null = joriy yil)
       let announcementUsersList = null; // xodimlar ro'yxati (E'lon tabida "Tanlangan xodimlarga" uchun) — birinchi ochilganda yuklanadi
@@ -5845,6 +5934,9 @@
         admin: "Admin",
         employee: "Xodim",
       };
+      // Menyu pastidagi Ncoin belgisi ichidagi tanga ikonkasi.
+      const NCOIN_MARK = `<svg viewBox="0 0 24 24" fill="none" stroke="var(--nav-coin-mark)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 15.5v-7l5 7v-7"/></svg>`;
+
       function renderSidebar() {
         document.getElementById("sidebar-avatar").textContent = (currentUser || "?")
           .slice(0, 1)
@@ -5853,33 +5945,50 @@
           ? "@" + currentUser
           : "—";
         document.getElementById("sidebar-user-role").textContent =
-          ROLE_LABEL_SIDEBAR[userRole] || userRole || "—";
+          ROLE_LABEL_UZ[userRole] || userRole || "—";
 
         const debtCount = projects.filter((p) => p.outstandingDebt).length;
         const debtEl = document.getElementById("sidebar-debt-count");
         if (debtEl) {
           debtEl.textContent = debtCount;
-          debtEl.style.display = debtCount > 0 ? "inline-block" : "none";
+          debtEl.style.display = debtCount > 0 ? "inline-flex" : "none";
         }
 
-        const list = document.getElementById("sidebar-projects");
-        if (!list) return;
-        const today = todayDate();
-        // Cheklovsiz — hammasi ko'rsatiladi (qarzdorlar birinchi), ro'yxat
-        // uzun bo'lsa .sb-projects o'zi ichida aylanadi (scroll).
-        const top = [...projects].sort((a, b) => (b.outstandingDebt ? 1 : 0) - (a.outstandingDebt ? 1 : 0));
-        list.innerHTML = top
-          .map((p) => {
-            const val = p.outstandingDebt
-              ? `<span class="sb-proj-val debt">${daysBetween(parseISO(p.outstandingDebt.periodEnd), today)} kun</span>`
-              : `<span class="sb-proj-val">${projPct(p)}%</span>`;
-            return `<button class="sb-proj-row" onclick="openTracker('${escArg(p.id)}')">
-              <span class="sb-proj-dot${p.outstandingDebt ? " debt" : ""}"></span>
-              <span class="sb-proj-name">${escHtml(p.label)}</span>
-              ${val}
-            </button>`;
-          })
-          .join("");
+        // Vazifalar yonidagi son — hali hal qilinmagan vazifalar.
+        const openTasks = myTaskScope().filter(
+          (t) => !["done", "failed", "cancelled"].includes(t.status) && taskBoardColumn(t) !== "archive",
+        ).length;
+        const taskEl = document.getElementById("sidebar-task-count");
+        if (taskEl) {
+          taskEl.textContent = openTasks;
+          taskEl.style.display = openTasks > 0 ? "inline-flex" : "none";
+        }
+
+        const coinEl = document.getElementById("sidebar-ncoin");
+        if (coinEl) {
+          if (myNcoinBalance === null) {
+            coinEl.style.display = "none";
+          } else {
+            coinEl.innerHTML = NCOIN_MARK + escHtml(fmtNcoin(myNcoinBalance));
+            coinEl.style.display = "inline-flex";
+          }
+        }
+
+        syncSidebarAdminActive();
+      }
+
+      // Boshqaruv bo'limiga menyudan to'g'ridan-to'g'ri o'tish.
+      function openAdminTab(key) {
+        showTab("admin");
+        switchATab(key);
+        syncSidebarAdminActive();
+      }
+
+      function syncSidebarAdminActive() {
+        document.querySelectorAll(".sb-aitem").forEach((el) => {
+          const key = el.id.replace("sb-atab-", "");
+          el.classList.toggle("active", activeTab === "admin" && adminActiveTab === key);
+        });
       }
 
       function refreshAllViews() {
@@ -5949,6 +6058,7 @@
         else if (tab === "nshop") renderNShopScreen();
         else if (tab === "history") openHistoryTab();
         else if (tab === "admin") switchATab(adminActiveTab);
+        syncSidebarAdminActive();
       }
 
       // Ichki (drill-in) ekranni ochish — root ekranlar yashiriladi
@@ -10804,6 +10914,7 @@
               </div>
               ${isAdmin ? pfNcoinGiftCardHtml() : ""}
               ${pfNcoinHistoryCardHtml()}
+              ${pfHistoryCardHtml()}
               ${pfTasksCardHtml()}
               <div class="desktop-only">${buildActivityPanelCardHtml(false)}</div>
             </div>
@@ -10926,6 +11037,25 @@
       function pfGoToNShop() {
         closeProfilePage();
         showTab("nshop");
+      }
+
+      // "Tarix" yon menyudan olib tashlandi (v3 dizaynida u yo'q), va
+      // desktopda unga kirishning boshqa yo'li yo'q edi — shu sabab
+      // profilga ko'chirildi.
+      function pfHistoryCardHtml() {
+        return `<div class="pf-card">
+          <div class="pf-card-hdr" style="display:flex;align-items:center;gap:10px">
+            <span style="flex:1">Loyihalar tarixi</span>
+            <button type="button" class="act-card-link" style="height:28px;padding:0 10px;font-size:11.5px" onclick="pfGoToHistory()">Ochish</button>
+          </div>
+          <div style="padding:14px 20px">
+            <div class="f-hint" style="margin:0">Yopilgan davrlar va ularda belgilangan post/storieslar bo'yicha to'liq yozuv.</div>
+          </div>
+        </div>`;
+      }
+      function pfGoToHistory() {
+        closeProfilePage();
+        showTab("history");
       }
 
       function pfUploadAvatarStub() {
@@ -12306,6 +12436,7 @@
           if (r.ok) {
             const d = await r.json();
             myProfile = d.user;
+            if (typeof d.ncoinBalance === "number") myNcoinBalance = d.ncoinBalance;
             profileIncomplete = !!d.profileIncomplete;
             showBirthdayGreeting = !!d.showBirthdayGreeting;
           }
@@ -12320,9 +12451,12 @@
         document.getElementById("nav-admin").style.display = isAdmin
           ? "flex"
           : "none";
-        document.getElementById("sidebar-nav-admin").style.display = isAdmin
-          ? "flex"
-          : "none";
+        document.getElementById("sidebar-admin").style.display = isAdmin ? "block" : "none";
+        // "Adminlar" va "E'lon" — faqat super admin uchun, Boshqaruv
+        // ekranidagi tablar bilan bir xil qoida.
+        document.querySelectorAll('#sidebar-admin .sb-aitem[data-super="1"]').forEach((el) => {
+          el.style.display = isSuperAdmin ? "flex" : "none";
+        });
         document.getElementById("atab-admins").style.display = isSuperAdmin
           ? "block"
           : "none";

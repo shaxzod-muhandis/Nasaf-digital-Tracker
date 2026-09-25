@@ -214,8 +214,17 @@ app.post("/api/register-chat", auth, async (req, res) => {
 // ── PROFIL (o'zi haqida ko'rish/tahrirlash) ──────────────────────────
 const PROFILE_REQUIRED_FIELDS = ["first_name", "last_name", "phone", "job_title"];
 
-app.get("/api/me", auth, (req, res) => {
+app.get("/api/me", auth, async (req, res) => {
   const u = req.user;
+  // Balans shu yerda qaytariladi — menyudagi Ncoin belgisi uchun.
+  // Alohida so'rov qo'shilsa, ilova ochilishi yana bitta ketma-ket
+  // so'rovga cho'zilardi; bu esa faqat bitta yengil sum() qo'shadi.
+  let ncoinBalance = 0;
+  try {
+    ncoinBalance = await getBalance(db, u.id);
+  } catch (e) {
+    console.error("Balans o'qilmadi:", e.message);
+  }
   const profileIncomplete = PROFILE_REQUIRED_FIELDS.some((f) => !u[f]);
   // birth_date/birthday_ack_date "YYYY-MM-DD" satr sifatida qaytadi
   // (lib/pg-types.js — pg'ning Date obyektiga aylantirishi vaqt zonasi
@@ -238,6 +247,7 @@ app.get("/api/me", auth, (req, res) => {
       isAdmin: isAdminRole(u.role),
       isSuperAdmin: u.role === "super_admin",
     },
+    ncoinBalance,
     profileIncomplete,
     // Xodim o'z tug'ilgan kunida ilovani birinchi ochganda tabrik oynasi
     // chiqadi (frontend), shu bayroq shuni boshqaradi. Ko'rsatilgach
