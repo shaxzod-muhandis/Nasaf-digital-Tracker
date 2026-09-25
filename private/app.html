@@ -6411,6 +6411,17 @@
           return Math.round((kFrac * PROJ_PCT_WEIGHT_K + sFrac * PROJ_PCT_WEIGHT_S) * 100);
         return Math.round((hasK ? kFrac : sFrac) * 100);
       }
+      // Kutilgan bajarilish HAFTALIK bosqichlar bo'yicha o'lchanadi,
+      // kunlik chiziq bo'yicha emas. Sabab: kontent ishi kunlik tekis
+      // chiqmaydi — postlar hafta ichida to'planib chiqadi, shuning
+      // uchun kunlik o'lchovda hafta o'rtasida hamma loyiha "orqada"
+      // bo'lib ko'rinardi.
+      //
+      // Bosqichlar: 1-hafta oxirida 33%, 2-hafta oxirida 66%, 3-hafta
+      // oxirida 100%. To'rtinchi hafta zaxira — kutilgan 100% bo'lib
+      // qoladi. Tugamagan hafta hisobga olinmaydi, ya'ni joriy hafta
+      // xodimga qarshi ishlamaydi.
+      const EXPECTED_WEEK_STEPS = 3;
       function projElapsedFrac(p) {
         const start = parseISO(p.periodStart);
         const end = parseISO(p.periodEnd);
@@ -6419,7 +6430,7 @@
         let elapsed = daysBetween(start, todayDate()) + 1;
         if (elapsed < 0) elapsed = 0;
         if (elapsed > total) elapsed = total;
-        return elapsed / total;
+        return Math.min(1, Math.floor(elapsed / 7) / EXPECTED_WEEK_STEPS);
       }
       function projDaysLeft(p) {
         return daysBetween(todayDate(), parseISO(p.periodEnd));
