@@ -6772,12 +6772,18 @@
       // bajarilgan foiz davr bo'yicha kutilgan foizdan qanchalik
       // uzoqligiga qaraladi; 5 foiz ichidagi farq "rejada" deb olinadi,
       // aks holda har kichik tebranish holatni almashtirib turardi.
-      const PROJ_STATUS_GAP = 5;
+      // Chegaralar ataylab assimetrik. "Ortda" — ogohlantirish, shuning
+      // uchun u faqat jiddiy farqda chiqadi: davrning oxiriga borib
+      // kutilgan foiz tabiiy ravishda yuqori bo'ladi va kichik
+      // kechikishda ham hamma loyiha qizarib ketardi. "Oldinda" esa
+      // maqtov — uni qiyinlashtirishning ma'nosi yo'q.
+      const PROJ_BEHIND_GAP = 15;
+      const PROJ_AHEAD_GAP = 5;
       function projStatus(p) {
         if (p.outstandingDebt) return "debt";
         const diff = projPct(p) - projExpectedPct(p);
-        if (diff < -PROJ_STATUS_GAP) return "behind";
-        if (diff > PROJ_STATUS_GAP) return "ahead";
+        if (diff < -PROJ_BEHIND_GAP) return "behind";
+        if (diff > PROJ_AHEAD_GAP) return "ahead";
         return "onplan";
       }
       const PROJ_STATUS_LABEL = {
