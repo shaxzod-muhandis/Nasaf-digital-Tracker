@@ -86,6 +86,9 @@
         --st-behind: #a45f08;
         --st-behind-bg: #fbf1e4;
         --st-behind-dot: #d97706;
+        --st-mid: #7d6608;
+        --st-mid-bg: #fdf8e1;
+        --st-mid-dot: #eab308;
         --st-onplan: #255f91;
         --st-onplan-bg: #eaf2f9;
         --st-onplan-dot: #2f7ab9;
@@ -181,6 +184,9 @@
         --st-behind: #e0a458;
         --st-behind-bg: rgba(217, 119, 6, 0.18);
         --st-behind-dot: #d97706;
+        --st-mid: #e3c35c;
+        --st-mid-bg: rgba(234, 179, 8, 0.16);
+        --st-mid-dot: #eab308;
         --st-onplan: #7fb3dd;
         --st-onplan-bg: rgba(47, 122, 185, 0.18);
         --st-onplan-dot: #2f7ab9;
@@ -4112,6 +4118,7 @@
       }
       .st-pill.st-debt { background: var(--st-debt-bg); color: var(--st-debt); --dot: var(--st-debt-dot); }
       .st-pill.st-behind { background: var(--st-behind-bg); color: var(--st-behind); --dot: var(--st-behind-dot); }
+      .st-pill.st-mid { background: var(--st-mid-bg); color: var(--st-mid); --dot: var(--st-mid-dot); }
       .st-pill.st-onplan { background: var(--st-onplan-bg); color: var(--st-onplan); --dot: var(--st-onplan-dot); }
       .st-pill.st-ahead { background: var(--st-ahead-bg); color: var(--st-ahead); --dot: var(--st-ahead-dot); }
 
@@ -4141,6 +4148,7 @@
       }
       .st-fill-debt { background: var(--st-debt-dot); }
       .st-fill-behind { background: var(--st-behind-dot); }
+      .st-fill-mid { background: var(--st-mid-dot); }
       .st-fill-onplan { background: var(--st-onplan-dot); }
       .st-fill-ahead { background: var(--st-ahead-dot); }
 
@@ -6777,18 +6785,29 @@
       // kutilgan foiz tabiiy ravishda yuqori bo'ladi va kichik
       // kechikishda ham hamma loyiha qizarib ketardi. "Oldinda" esa
       // maqtov — uni qiyinlashtirishning ma'nosi yo'q.
-      const PROJ_BEHIND_GAP = 15;
+      // Chegaralar ataylab assimetrik. "Ortda" — ogohlantirish, shuning
+      // uchun u faqat jiddiy farqda chiqadi: davr oxiriga borib kutilgan
+      // foiz tabiiy ravishda yuqori bo'ladi va kichik kechikishda ham
+      // hamma loyiha sariq bo'lib ketardi. "Oldinda" esa maqtov —
+      // uni qiyinlashtirishning ma'nosi yo'q.
+      const PROJ_MID_GAP = 15;
       const PROJ_AHEAD_GAP = 5;
+      // Rejadan orqada qolgan loyiha ikkiga bo'linadi: ishning yarmidan
+      // o'tgani "O'rtacha", yarmiga ham yetmagani "Ortda". Ya'ni 36% da
+      // turgan loyiha hech qachon "o'rtacha" deb yumshatilmaydi.
+      const PROJ_MID_MIN_PCT = 50;
       function projStatus(p) {
         if (p.outstandingDebt) return "debt";
-        const diff = projPct(p) - projExpectedPct(p);
-        if (diff < -PROJ_BEHIND_GAP) return "behind";
+        const pc = projPct(p);
+        const diff = pc - projExpectedPct(p);
         if (diff > PROJ_AHEAD_GAP) return "ahead";
-        return "onplan";
+        if (diff >= -PROJ_MID_GAP) return "onplan";
+        return pc >= PROJ_MID_MIN_PCT ? "mid" : "behind";
       }
       const PROJ_STATUS_LABEL = {
         debt: "Qarz",
         behind: "Ortda",
+        mid: "O'rtacha",
         onplan: "Rejada",
         ahead: "Oldinda",
       };
