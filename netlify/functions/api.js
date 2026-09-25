@@ -950,6 +950,49 @@ app.post("/api/announcements", auth, async (req, res) => {
 // Bitta chaqiriqda: ko'rish huquqi bor barcha loyihalar, har birining
 // joriy davri (avtomatik rollover bilan), belgilangan checklar va
 // qarz(lar) haqida ma'lumot.
+// Jamoa faolligi — oxirgi 28 kun bo'yicha KUNLIK yig'ma (butun jamoa).
+// Mavjud /api/activity-stats faqat bitta xodimniki (done_by bo'yicha
+// filtrlaydi), shu sabab alohida endpoint. Hisobga post/stories
+// belgilashlari va bajarilgan vazifalar kiradi.
+app.get("/api/team-activity", auth, async (req, res) => {
+  try {
+    const end = todayTashkent();
+    const r = await db.query(
+      `with days as (
+         select generate_series($1::date - 27, $1::date, interval '1 day')::date as day
+       ),
+       checks_by_day as (
+         select coalesce(work_date, (done_at at time zone 'utc' at time zone 'Asia/Tashkent')::date) as day,
+                count(*)::int as n
+         from checks
+         where coalesce(work_date, (done_at at time zone 'utc' at time zone 'Asia/Tashkent')::date)
+               between $1::date - 27 and $1::date
+         group by 1
+       ),
+       tasks_by_day as (
+         select (completed_at at time zone 'utc' at time zone 'Asia/Tashkent')::date as day,
+                count(*)::int as n
+         from tasks
+         where status = 'done' and completed_at is not null
+           and (completed_at at time zone 'utc' at time zone 'Asia/Tashkent')::date
+               between $1::date - 27 and $1::date
+         group by 1
+       )
+       select to_char(d.day, 'YYYY-MM-DD') as date,
+              (coalesce(c.n, 0) + coalesce(t.n, 0))::int as count
+       from days d
+       left join checks_by_day c on c.day = d.day
+       left join tasks_by_day t on t.day = d.day
+       order by d.day`,
+      [end],
+    );
+    const days = r.rows;
+    res.json({ days, todayCount: days.length ? days[days.length - 1].count : 0 });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get("/api/projects", auth, async (req, res) => {
   try {
     const isAdm = isAdminRole(req.user.role);

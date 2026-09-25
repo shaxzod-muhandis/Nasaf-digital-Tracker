@@ -78,6 +78,30 @@
         --nav-coin-bg: #fbf1e4;
         --nav-coin-ink: #a45f08;
         --nav-coin-mark: #d97706;
+
+        /* ── Holat ranglari (v3) — loyiha holati, progress chizig'i ── */
+        --st-debt: #dc2626;
+        --st-debt-bg: #fdecec;
+        --st-debt-dot: #dc2626;
+        --st-behind: #a45f08;
+        --st-behind-bg: #fbf1e4;
+        --st-behind-dot: #d97706;
+        --st-onplan: #255f91;
+        --st-onplan-bg: #eaf2f9;
+        --st-onplan-dot: #2f7ab9;
+        --st-ahead: #15803d;
+        --st-ahead-bg: #e8f6ec;
+        --st-ahead-dot: #16a34a;
+        --track: #e6e9ed;
+        --marker: #0e1726;
+        --type-post: #255f91;
+        --type-post-bg: #eaf2f9;
+        --type-story: #7c3aed;
+        --type-story-bg: #f3edfd;
+        --dcard-bg: #0e1726;
+        --v3-t2: #5b6573;
+        --v3-t3: #7a828e;
+        --v3-t4: #b7bdc6;
         --chip2: #eef0f3;
         --chip3: #edeff2;
         --sw-off: #dce0e6;
@@ -150,6 +174,29 @@
         --nav-coin-bg: rgba(217, 119, 6, 0.16);
         --nav-coin-ink: #e0a458;
         --nav-coin-mark: #d97706;
+
+        --st-debt: #f87171;
+        --st-debt-bg: rgba(220, 38, 38, 0.18);
+        --st-debt-dot: #ef4444;
+        --st-behind: #e0a458;
+        --st-behind-bg: rgba(217, 119, 6, 0.18);
+        --st-behind-dot: #d97706;
+        --st-onplan: #7fb3dd;
+        --st-onplan-bg: rgba(47, 122, 185, 0.18);
+        --st-onplan-dot: #2f7ab9;
+        --st-ahead: #6ee7a0;
+        --st-ahead-bg: rgba(22, 163, 74, 0.18);
+        --st-ahead-dot: #16a34a;
+        --track: rgba(255, 255, 255, 0.12);
+        --marker: #e8ecf2;
+        --type-post: #7fb3dd;
+        --type-post-bg: rgba(47, 122, 185, 0.18);
+        --type-story: #c4a6f7;
+        --type-story-bg: rgba(124, 58, 237, 0.2);
+        --dcard-bg: #10192b;
+        --v3-t2: #a8b0bb;
+        --v3-t3: #8b929c;
+        --v3-t4: #6b7480;
         --chip2: #272d38;
         --chip3: #2b313d;
         --sw-off: #3a4048;
@@ -4041,6 +4088,280 @@
       #sidebar {
         display: none;
       }
+      /* ══ "BUGUN" SAHIFASI — v3 dizayni ═══════════════════════════ */
+      /* Holat belgisi: qarz / ortda / rejada / oldinda. Nuqta ::before
+         orqali — har holat uchun alohida markup yozilmasin. */
+      .st-pill {
+        height: 22px;
+        padding: 0 8px;
+        border-radius: 7px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        flex: none;
+        white-space: nowrap;
+      }
+      .st-pill::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 99px;
+        background: var(--dot);
+      }
+      .st-pill.st-debt { background: var(--st-debt-bg); color: var(--st-debt); --dot: var(--st-debt-dot); }
+      .st-pill.st-behind { background: var(--st-behind-bg); color: var(--st-behind); --dot: var(--st-behind-dot); }
+      .st-pill.st-onplan { background: var(--st-onplan-bg); color: var(--st-onplan); --dot: var(--st-onplan-dot); }
+      .st-pill.st-ahead { background: var(--st-ahead-bg); color: var(--st-ahead); --dot: var(--st-ahead-dot); }
+
+      /* Progress chizig'i + kutilgan joy ko'rsatkichi */
+      .pbar {
+        display: block;
+        height: 6px;
+        border-radius: 99px;
+        background: var(--track);
+        position: relative;
+        overflow: visible;
+      }
+      .pbar-fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        border-radius: 99px;
+      }
+      .pbar-marker {
+        position: absolute;
+        top: -3px;
+        bottom: -3px;
+        width: 2px;
+        border-radius: 2px;
+        background: var(--marker);
+      }
+      .st-fill-debt { background: var(--st-debt-dot); }
+      .st-fill-behind { background: var(--st-behind-dot); }
+      .st-fill-onplan { background: var(--st-onplan-dot); }
+      .st-fill-ahead { background: var(--st-ahead-dot); }
+
+      /* Tur belgisi — vazifa holati (Post/Stories o'rnida) */
+      .type-pill {
+        height: 22px;
+        padding: 0 8px;
+        border-radius: 7px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        flex: none;
+        white-space: nowrap;
+        background: var(--type-post-bg);
+        color: var(--type-post);
+      }
+      .type-pill.alt { background: var(--type-story-bg); color: var(--type-story); }
+
+      /* ── Mobil: qorong'i davr kartasi ──────────────────────────── */
+      .dcard {
+        background: var(--dcard-bg);
+        border-radius: 18px;
+        padding: 16px 16px 14px;
+        color: #fff;
+      }
+      .dcard-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.7);
+        white-space: nowrap;
+      }
+      .dcard-val {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .dcard-pct {
+        font-size: 44px;
+        line-height: 1;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+      }
+      .dcard-pct span { font-size: 22px; }
+      .dcard-sub {
+        font-size: 13.5px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.85);
+        white-space: nowrap;
+        padding-bottom: 5px;
+      }
+      .dcard-badge {
+        height: 26px;
+        padding: 0 9px;
+        border-radius: 8px;
+        font-size: 12.5px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        margin-bottom: 3px;
+        white-space: nowrap;
+        background: rgba(74, 222, 128, 0.16);
+        color: #86efac;
+      }
+      .dcard-badge.behind { background: rgba(248, 113, 113, 0.16); color: #fca5a5; }
+      .dcard-bar {
+        margin-top: 12px;
+        height: 8px;
+        border-radius: 99px;
+        background: rgba(255, 255, 255, 0.14);
+        position: relative;
+      }
+      .dcard-bar-fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        border-radius: 99px;
+        background: #5795c6;
+      }
+      .dcard-bar-marker {
+        position: absolute;
+        top: -3px;
+        bottom: -3px;
+        width: 2px;
+        border-radius: 2px;
+        background: #fff;
+      }
+      .dcard-note {
+        font-size: 11.5px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-top: 7px;
+      }
+
+      /* ── Mobil: qarz ogohlantirishi ────────────────────────────── */
+      .alert-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: var(--surf);
+        border: 1.5px solid rgba(220, 38, 38, 0.35);
+        cursor: pointer;
+      }
+      .alert-ico {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: var(--st-debt-bg);
+        color: var(--st-debt);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        font-weight: 700;
+        flex: none;
+      }
+      .alert-title { font-size: 14px; font-weight: 600; color: var(--ink); }
+      .alert-sub { font-size: 12.5px; color: var(--v3-t2); margin-top: 1px; }
+
+      /* ── Mobil: bo'lim sarlavhasi ──────────────────────────────── */
+      .sec-hdr {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        margin: 0 0 8px;
+      }
+      .sec-hdr-t {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--v3-t2);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      .sec-hdr-a {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--brand);
+        white-space: nowrap;
+        cursor: pointer;
+      }
+      .sec-hdr-n { font-size: 12.5px; font-weight: 600; color: var(--v3-t2); }
+
+      .v3-card {
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .v3-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        cursor: pointer;
+      }
+      .v3-row + .v3-row { border-top: 1px solid var(--bd2); }
+      .v3-box {
+        width: 22px;
+        height: 22px;
+        border-radius: 7px;
+        border: 1.8px solid var(--bd3, #c5cbd3);
+        box-sizing: border-box;
+        flex: none;
+      }
+      .v3-title {
+        font-size: 14.5px;
+        font-weight: 500;
+        color: var(--ink);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .v3-meta {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-top: 3px;
+        font-size: 12.5px;
+        color: var(--v3-t2);
+        min-width: 0;
+      }
+      .v3-meta-dot {
+        width: 3px;
+        height: 3px;
+        border-radius: 9px;
+        background: var(--v3-t4);
+        flex: none;
+      }
+      .v3-when { font-weight: 600; white-space: nowrap; }
+      .v3-when.today { color: var(--st-debt); }
+      .v3-when.soon { color: var(--st-behind); }
+      .v3-chev { color: var(--v3-t4); flex: none; display: flex; }
+
+      /* ── Mobil: loyiha qatori ──────────────────────────────────── */
+      .mproj-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--ink);
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mproj-stats {
+        display: flex;
+        gap: 10px;
+        margin-top: 7px;
+        font-size: 12.5px;
+      }
+      .mproj-stats b { font-weight: 500; color: var(--t5); }
+      .mproj-days { color: var(--v3-t2); }
+      .mproj-days.late { color: var(--st-debt); font-weight: 600; }
+
       @media (min-width: 860px) {
         body {
           display: block;
@@ -4417,6 +4738,286 @@
           min-width: 0;
           flex: 0 0 0;
           overflow: hidden;
+        }
+
+        /* Vertikal bo'shliq chizmadagidek. Gorizontali ataylab
+           o'zgartirilmaydi: u sahifa sarlavhasiniki bilan bir xil
+           (32px) bo'lishi kerak, aks holda kartalar sarlavhadan
+           chetga chiqib qolardi. Pastdagi katta bo'shliq mobil pastki
+           navigatsiya uchun edi — desktopda u keraksiz. */
+        #screen-today #today-body {
+          padding-top: 20px;
+          padding-bottom: 24px;
+        }
+
+        /* ══ "BUGUN" — desktop maketi (v3) ═══════════════════════════ */
+        .d2-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 288px;
+          gap: 20px;
+          align-items: start;
+        }
+        .d2-stats {
+          display: flex;
+          gap: 12px;
+        }
+        .d2-stat {
+          flex: 1;
+          min-width: 0;
+          background: var(--surf);
+          border: 1px solid var(--bd2);
+          border-radius: 14px;
+          padding: 14px 16px;
+        }
+        .d2-stat-l {
+          font-size: 12.5px;
+          font-weight: 500;
+          color: var(--v3-t2);
+          white-space: nowrap;
+        }
+        .d2-stat-v {
+          display: flex;
+          align-items: baseline;
+          gap: 8px;
+          margin-top: 6px;
+        }
+        .d2-stat-n {
+          font-variant-numeric: tabular-nums;
+          font-size: 26px;
+          font-weight: 700;
+          letter-spacing: -0.025em;
+          color: var(--ink);
+          white-space: nowrap;
+        }
+        .d2-stat-n.warn { color: var(--st-behind); }
+        .d2-stat-n.bad { color: var(--st-debt); }
+        .d2-stat-s {
+          font-size: 12.5px;
+          color: var(--v3-t2);
+          white-space: nowrap;
+        }
+
+        .d2-tbl {
+          background: var(--surf);
+          border: 1px solid var(--bd2);
+          border-radius: 14px;
+          overflow: hidden;
+        }
+        .d2-tbl-hdr {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 14px 18px;
+        }
+        .d2-tbl-t {
+          font-size: 15px;
+          font-weight: 600;
+          color: var(--ink);
+          flex: 1;
+          white-space: nowrap;
+        }
+        .d2-seg {
+          display: flex;
+          padding: 3px;
+          border-radius: 11px;
+          background: var(--nav-badge-bg);
+          gap: 2px;
+          width: max-content;
+        }
+        .d2-seg button {
+          flex: none;
+          height: 26px;
+          padding: 0 12px;
+          border-radius: 8px;
+          border: none;
+          background: transparent;
+          box-shadow: none;
+          font-family: inherit;
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--v3-t2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          white-space: nowrap;
+          cursor: pointer;
+        }
+        .d2-seg button.on {
+          background: var(--surf);
+          box-shadow: 0 1px 2px rgba(14, 23, 38, 0.1);
+          font-weight: 600;
+          color: var(--ink);
+        }
+        /* Ustun kengliklari sarlavha va qatorlarda BIR XIL bo'lishi shart —
+           shuning uchun bitta o'zgaruvchida saqlanadi. */
+        .d2-cols,
+        .d2-row {
+          display: grid;
+          grid-template-columns: minmax(120px, 1.5fr) 84px minmax(0, 1fr) 92px 96px;
+          gap: 14px;
+          padding: 0 18px;
+          align-items: center;
+          border-top: 1px solid var(--bd2);
+        }
+        .d2-cols {
+          height: 34px;
+          background: var(--surf2, #fafbfc);
+        }
+        .d2-cols > div {
+          font-size: 11.5px;
+          font-weight: 600;
+          color: var(--v3-t2);
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+          white-space: nowrap;
+        }
+        .d2-cols > div:last-child { text-align: right; }
+        .d2-row {
+          height: 58px;
+          cursor: pointer;
+        }
+        .d2-row:hover { background: var(--surf2, #fafbfc); }
+        .d2-name {
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--ink);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .d2-owner {
+          font-size: 12px;
+          color: var(--v3-t2);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .d2-prog {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .d2-prog .pbar { flex: 1; }
+        .d2-pct {
+          font-variant-numeric: tabular-nums;
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--ink);
+          width: 36px;
+          text-align: right;
+          white-space: nowrap;
+        }
+        .d2-counts {
+          font-variant-numeric: tabular-nums;
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--t5);
+          white-space: nowrap;
+        }
+        .d2-due {
+          font-size: 13px;
+          color: var(--v3-t2);
+          text-align: right;
+          white-space: nowrap;
+        }
+        .d2-due.late { color: var(--st-debt); font-weight: 600; }
+
+        .d2-side {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          min-width: 0;
+        }
+        .d2-card {
+          background: var(--surf);
+          border: 1px solid var(--bd2);
+          border-radius: 14px;
+          padding: 14px 16px;
+          box-sizing: border-box;
+        }
+        .d2-card.tight { padding: 14px 16px 6px; }
+        .d2-card-hdr {
+          display: flex;
+          align-items: center;
+          margin-bottom: 12px;
+        }
+        .d2-card.tight .d2-card-hdr { margin-bottom: 4px; }
+        .d2-card-t {
+          font-size: 14.5px;
+          font-weight: 600;
+          color: var(--ink);
+          flex: 1;
+          white-space: nowrap;
+        }
+        .d2-card-n {
+          height: 20px;
+          padding: 0 8px;
+          border-radius: 7px;
+          background: var(--st-debt-bg);
+          color: var(--st-debt);
+          font-size: 11.5px;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          flex: none;
+        }
+        .d2-card-side {
+          font-size: 12px;
+          color: var(--v3-t2);
+          white-space: nowrap;
+        }
+        .d2-item {
+          padding: 10px 0;
+          cursor: pointer;
+        }
+        .d2-item + .d2-item { border-top: 1px solid var(--bd2); }
+        .d2-item-top {
+          display: flex;
+          gap: 8px;
+        }
+        .d2-item-t {
+          font-size: 13.5px;
+          font-weight: 500;
+          color: var(--ink);
+          flex: 1;
+          min-width: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .d2-item-w {
+          font-size: 12.5px;
+          font-weight: 600;
+          white-space: nowrap;
+        }
+        .d2-item-s {
+          font-size: 12px;
+          color: var(--v3-t2);
+          margin-top: 2px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .d2-heat {
+          display: grid;
+          grid-template-columns: repeat(14, 1fr);
+          gap: 4px;
+        }
+        .d2-heat span {
+          aspect-ratio: 1 / 1;
+          border-radius: 4px;
+          background: var(--heat0, #edeff2);
+        }
+        .d2-heat span.l1 { background: #c9ddef; }
+        .d2-heat span.l2 { background: #8db7dc; }
+        .d2-heat span.l3 { background: #2f7ab9; }
+        .d2-heat-foot {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-top: 12px;
         }
 
         /* ── Kontent ustuni: sidebar uchun joy + kengroq o'qish maydoni ── */
@@ -6091,6 +6692,85 @@
       }
 
       // ── BUGUN ─────────────────────────────────────────────────────
+      // ── "BUGUN" SAHIFASI — UMUMIY YORDAMCHILAR (v3 dizayni) ────────
+      // Ism-familiyani qisqa shaklga keltiradi: "Malika Rahimova" -> "Malika R."
+      function shortPersonName(first, last, fallback) {
+        const f = String(first || "").trim();
+        const l = String(last || "").trim();
+        if (!f) return fallback || "";
+        return l ? `${f} ${l.slice(0, 1).toUpperCase()}.` : f;
+      }
+
+      // Loyiha mas'uli — Ruxsatlar'da "SMM manager" roli berilgan xodim.
+      // Rol tanlanmagan loyihalarda (hozir ko'pchiligi shunday) xodimlar
+      // soni ko'rsatiladi — bo'sh katak qoldirgandan ko'ra foydaliroq.
+      function projOwnerLabel(p) {
+        const smm = (p.assignees || []).find((a) => a.role === "smm");
+        if (smm) return shortPersonName(smm.firstName, smm.lastName, "@" + smm.username);
+        const n = (p.assignees || []).length;
+        return n ? `${n} xodim` : "—";
+      }
+
+      function projExpectedPct(p) {
+        return Math.round(projElapsedFrac(p) * 100);
+      }
+
+      // Loyiha holati. Qarz — alohida, eng og'ir holat. Qolganida
+      // bajarilgan foiz davr bo'yicha kutilgan foizdan qanchalik
+      // uzoqligiga qaraladi; 5 foiz ichidagi farq "rejada" deb olinadi,
+      // aks holda har kichik tebranish holatni almashtirib turardi.
+      const PROJ_STATUS_GAP = 5;
+      function projStatus(p) {
+        if (p.outstandingDebt) return "debt";
+        const diff = projPct(p) - projExpectedPct(p);
+        if (diff < -PROJ_STATUS_GAP) return "behind";
+        if (diff > PROJ_STATUS_GAP) return "ahead";
+        return "onplan";
+      }
+      const PROJ_STATUS_LABEL = {
+        debt: "Qarz",
+        behind: "Ortda",
+        onplan: "Rejada",
+        ahead: "Oldinda",
+      };
+      function statusPillHtml(status) {
+        return `<span class="st-pill st-${status}">${PROJ_STATUS_LABEL[status]}</span>`;
+      }
+
+      // Progress chizig'i. Qora ko'rsatkich — davr bo'yicha bugungacha
+      // kutilgan joy. Qarzdor loyihada u ko'rsatilmaydi: davr allaqachon
+      // tugagan, "kutilgan joy" degan tushuncha ma'nosini yo'qotadi.
+      function progressBarHtml(p, status) {
+        const pc = Math.max(0, Math.min(100, projPct(p)));
+        const exp = Math.max(0, Math.min(100, projExpectedPct(p)));
+        const marker =
+          status === "debt" ? "" : `<span class="pbar-marker" style="left:${exp}%"></span>`;
+        return `<span class="pbar"><span class="pbar-fill st-fill-${status}" style="width:${pc}%"></span>${marker}</span>`;
+      }
+
+      // Muddat matni: qarzdorda "2 kun kechikdi", qolganida "6 kun".
+      function projDaysInfo(p) {
+        const today = todayDate();
+        if (p.outstandingDebt) {
+          const late = daysBetween(parseISO(p.outstandingDebt.periodEnd), today);
+          return { text: `${late} kun kechikdi`, late: true };
+        }
+        const left = Math.max(0, daysBetween(today, parseISO(p.periodEnd)));
+        return { text: `${left} kun`, late: false };
+      }
+
+      // Jamoa faolligi (desktop o'ng ustun) — /api/team-activity'dan.
+      let teamActivity = null;
+      async function loadTeamActivity() {
+        try {
+          const r = await apiFetch("/api/team-activity");
+          if (r.ok) {
+            teamActivity = await r.json();
+            if (document.getElementById("screen-today").classList.contains("active")) renderToday();
+          }
+        } catch (e) {}
+      }
+
       function computeHomeTempo() {
         let totalTasks = 0,
           weightedElapsed = 0,
@@ -6145,212 +6825,320 @@
         }
 
         const t = computeHomeTempo();
+        body.innerHTML =
+          `<div class="mobile-only">${buildTodayMobileHtml(t)}</div>` +
+          `<div class="desktop-only">${buildTodayDesktopHtml(t)}</div>`;
+      }
 
-        const debtProjects = projects.filter((p) => p.outstandingDebt);
+      // ── Muddati yaqin vazifalar ────────────────────────────────────
+      // "Bugun muddati" kartasi shundan to'ladi: muddati o'tgan, bugungi
+      // va ertangi vazifalar. "Tekshiruvda" chiqarib tashlanadi — xodim
+      // ishini tugatgan, endi admin navbati.
+      function tasksDueSoon() {
+        const todayIso = isoOf(todayDate());
+        const tmr = new Date(todayDate());
+        tmr.setDate(tmr.getDate() + 1);
+        const tmrIso = isoOf(tmr);
+        return myTaskScope()
+          .filter(
+            (t) =>
+              !["done", "failed", "cancelled", "review"].includes(t.status) &&
+              t.dueDate &&
+              t.dueDate <= tmrIso,
+          )
+          .sort((a, b) => (a.dueDate || "").localeCompare(b.dueDate || ""));
+      }
+      // Vazifa muddatining matni va rangi.
+      function taskWhenInfo(task) {
+        const todayIso = isoOf(todayDate());
+        const tmr = new Date(todayDate());
+        tmr.setDate(tmr.getDate() + 1);
+        const tmrIso = isoOf(tmr);
+        // Qisqa: mobil meta qatorida uzun matn loyiha nomini qirqib yuborardi.
+        if (task.dueDate < todayIso) return { text: "Kechikdi", cls: "today" };
+        if (task.dueDate === todayIso) return { text: "Bugun", cls: "today" };
+        if (task.dueDate === tmrIso) return { text: "Ertaga", cls: "soon" };
+        return { text: fmtDay(parseISO(task.dueDate)), cls: "" };
+      }
+
+      // ── MOBIL ──────────────────────────────────────────────────────
+      function buildTodayMobileHtml(t) {
+        const today = todayDate();
+
+        // Davr kartasi. "N kun qoldi" — eng yaqin tugaydigan davr bo'yicha
+        // (amalda loyihalarning davrlari bir xil kunda tugaydi).
+        const ends = projects
+          .filter((p) => !p.outstandingDebt && p.periodEnd)
+          .map((p) => daysBetween(today, parseISO(p.periodEnd)))
+          .filter((n) => n >= 0);
+        const daysLeft = ends.length ? Math.min(...ends) : 0;
+        const diff = t.doneAll - t.expectedDone;
+        const badge =
+          diff >= 0
+            ? `<div class="dcard-badge">Rejadan +${diff}</div>`
+            : `<div class="dcard-badge behind">Rejadan −${Math.abs(diff)}</div>`;
+        const periodCard = `<div class="dcard">
+          <div class="dcard-top">
+            <span>${MONTHS[today.getMonth()]} davri</span>
+            <span style="flex:1"></span>
+            <span>${daysLeft} kun qoldi</span>
+          </div>
+          <div class="dcard-val">
+            <div class="dcard-pct">${t.overallPct}<span>%</span></div>
+            <div class="dcard-sub">${t.doneAll} / ${t.totalTasks} vazifa</div>
+            <div style="flex:1"></div>
+            ${badge}
+          </div>
+          <div class="dcard-bar">
+            <div class="dcard-bar-fill" style="width:${Math.max(0, Math.min(100, t.overallPct))}%"></div>
+            <div class="dcard-bar-marker" style="left:${Math.max(0, Math.min(100, t.expectedPct))}%"></div>
+          </div>
+          <div class="dcard-note">Oq chiziq — bugungacha kutilgan joy</div>
+        </div>`;
+
+        // Qarz ogohlantirishi
+        const debts = projects.filter((p) => p.outstandingDebt);
         let debtHtml = "";
-        if (debtProjects.length) {
-          const d0 = debtProjects[0];
-          const debt = d0.outstandingDebt;
-          const daysAgo = daysBetween(parseISO(debt.periodEnd), today);
-          const remaining = debt.remainingPosts + debt.remainingStories;
-          debtHtml = `<div class="debt-card" onclick="openProjectHistorySheet('${escArg(d0.id)}','${escArg(d0.label)}')">
-            <div class="debt-ico">!</div>
+        if (debts.length) {
+          const d0 = debts[0];
+          const d = d0.outstandingDebt;
+          const remaining = d.remainingPosts + d.remainingStories;
+          const monthName = MONTHS[parseISO(d.periodStart).getMonth()];
+          const title =
+            debts.length === 1
+              ? `${escHtml(d0.label)} qarzda`
+              : `${debts.length} loyiha qarzda`;
+          const sub =
+            debts.length === 1
+              ? `${monthName} davridan ${remaining} vazifa qolgan`
+              : `${escHtml(d0.label)} · ${monthName} davridan ${remaining} vazifa qolgan`;
+          debtHtml = `<div class="alert-card" onclick="openTracker('${escArg(d0.id)}')">
+            <div class="alert-ico">!</div>
             <div style="flex:1;min-width:0">
-              <div class="debt-title">${debtProjects.length} loyiha qarzda</div>
-              <div class="debt-sub">${escHtml(d0.label)} · ${daysAgo} kun · ${remaining} vazifa</div>
+              <div class="alert-title">${title}</div>
+              <div class="alert-sub">${sub}</div>
             </div>
-            <div class="debt-btn">Ochish</div>
+            <div style="color:var(--st-debt);display:flex">${ICON.chevronRight}</div>
           </div>`;
         }
 
-        const rows = projects
+        // Bugun muddati — vazifalar
+        const due = tasksDueSoon();
+        const dueRows = due.length
+          ? due
+              .slice(0, 6)
+              .map((task) => {
+                const w = taskWhenInfo(task);
+                // Chizmada meta qatorida faqat loyiha nomi turadi — mas'ul
+                // emas. Mobil ekranda joy tor, ikkisi birga sig'maydi va
+                // vazifa nomi qirqilib ketardi.
+                return `<div class="v3-row" onclick="openTaskActions('${escArg(task.id)}')">
+                  <div class="v3-box"></div>
+                  <div style="flex:1;min-width:0">
+                    <div class="v3-title">${escHtml(task.title)}</div>
+                    <div class="v3-meta">
+                      <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(task.projectLabel || "Umumiy")}</span>
+                      <span class="v3-meta-dot"></span>
+                      <span class="v3-when ${w.cls}">${w.text}</span>
+                    </div>
+                  </div>
+                  <span class="type-pill${task.status === "in_progress" ? " alt" : ""}">${escHtml(TASK_STATUS_LABEL[task.status] || "")}</span>
+                </div>`;
+              })
+              .join("")
+          : `<div style="padding:16px 14px;font-size:12.5px;color:var(--t3)">Muddati yaqin vazifa yo'q</div>`;
+        const dueSection = `<div>
+          <div class="sec-hdr">
+            <div class="sec-hdr-t">Bugun muddati</div>
+            <div style="flex:1"></div>
+            <div class="sec-hdr-a" onclick="showTab('tasks')">Hammasi</div>
+          </div>
+          <div class="v3-card">${dueRows}</div>
+        </div>`;
+
+        // Mening loyihalarim
+        const projRows = projects
           .map((p) => {
-            const pc = projPct(p);
-            const color = p.outstandingDebt ? "var(--red)" : "var(--brand)";
-            const donut = `conic-gradient(${color} 0% ${pc}%, var(--chip3) ${pc}% 100%)`;
-            const sub = p.outstandingDebt
-              ? `<div class="r-sub" style="color:var(--red)">Muddati o'tgan · ${MONTHS[parseISO(p.outstandingDebt.periodStart).getMonth()].toLowerCase()}</div>`
-              : `<div class="r-sub">${p.doneK}/${p.k} post · ${p.doneS}/${p.s} stories</div>`;
-            return `<div class="list-row clickable" onclick="openTracker('${escArg(p.id)}')">
-              <div class="donut" style="background:${donut}">
-                <div class="donut-in num" style="color:${color}">${pc}</div>
-              </div>
+            const st = projStatus(p);
+            const d = projDaysInfo(p);
+            return `<div class="v3-row" onclick="openTracker('${escArg(p.id)}')">
               <div style="flex:1;min-width:0">
-                <div class="r-name">${escHtml(p.label)}</div>
-                ${sub}
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div class="mproj-name">${escHtml(p.label)}</div>
+                  ${statusPillHtml(st)}
+                </div>
+                <div style="margin-top:9px">${progressBarHtml(p, st)}</div>
+                <div class="mproj-stats">
+                  <b>Post ${p.doneK}/${p.k}</b>
+                  <b>Stories ${p.doneS}/${p.s}</b>
+                  <span style="flex:1"></span>
+                  <span class="mproj-days${d.late ? " late" : ""}">${d.text}</span>
+                </div>
               </div>
-              <div class="chev">›</div>
+              <div class="v3-chev">${ICON.chevronRight}</div>
             </div>`;
           })
           .join("");
-
-        body.innerHTML = `
-          <div class="mobile-only">
-            ${buildActivityPanelCardHtml(true)}
-            <div class="tempo" style="margin-top:14px">
-              <div class="tempo-top">
-                <div>
-                  <div class="tempo-lbl">Umumiy bajarilish</div>
-                  <div class="tempo-pct num">${t.overallPct}<span>%</span></div>
-                </div>
-                <div class="tempo-exp">
-                  <div class="l1" title="Loyihalar davri (boshlanish–tugash sanasi)ga nisbatan bugun qancha % bajarilgan bo'lishi kerakligi">Kutilgan surhat</div>
-                  <div class="l2 num">${t.expectedPct}%</div>
-                </div>
-              </div>
-              <div class="tempo-segs">${buildSegs(t.expectedFrac)}</div>
-              <div class="tempo-foot">${t.doneAll}/${t.totalTasks} vazifa bajarildi${t.behind > 0 ? ` · ${t.behind} ta muddatga nisbatan orqada` : ""}</div>
-              <div class="tempo-note">Loyihalar muddatiga (boshlanish–tugash sanasi) asosan hisoblanadi</div>
-            </div>
-            ${debtHtml}
-            <div style="margin-top:14px">
-              ${buildAssignedTasksCardHtml()}
-              ${buildTodayTasksCardHtml()}
-              ${buildMyProgressCardHtml()}
-            </div>
-            <div class="sec-row">
-              <div class="sec-title">Mening loyihalarim</div>
-              <div class="sec-count num">${projects.length}</div>
-            </div>
-            <div class="list-card">${rows}</div>
+        const projSection = `<div>
+          <div class="sec-hdr">
+            <div class="sec-hdr-t">Mening loyihalarim</div>
+            <div style="flex:1"></div>
+            <div class="sec-hdr-n">${projects.length}</div>
           </div>
-          ${buildDashboardDesktopHtml(t)}`;
+          <div class="v3-card">${projRows}</div>
+        </div>`;
+
+        return `<div style="display:flex;flex-direction:column;gap:14px">
+          ${periodCard}
+          ${debtHtml}
+          ${dueSection}
+          ${projSection}
+        </div>`;
       }
 
-      // ── BOSHQARUV PANELI (faqat katta ekran — "Bugun" desktop bloki) ─
+      // ── DESKTOP ────────────────────────────────────────────────────
       function setDashFilter(key) {
         dashProjFilter = key;
         renderToday();
       }
-      function buildDashboardDesktopHtml(t) {
-        const today = todayDate();
-        const debtProjects = projects.filter((p) => p.outstandingDebt);
-        const empWithAccess = Object.keys(perms).filter((u) => (perms[u] || []).length > 0).length;
-        const monthLabel = MONTHS[today.getMonth()];
+      function buildTodayDesktopHtml(t) {
+        const behindCount = projects.filter((p) => projStatus(p) === "behind").length;
+        const debtCount = projects.filter((p) => p.outstandingDebt).length;
 
-        const chips = [
-          { key: "all", label: "Hammasi" },
-          { key: "debt", label: "Qarzdor" },
-          { key: "mine", label: "Mening" },
-        ];
-        const chipsHtml = chips
-          .map(
-            (c) =>
-              `<button class="chip-btn${dashProjFilter === c.key ? " active" : ""}" onclick="setDashFilter('${c.key}')">${c.label}</button>`,
-          )
-          .join("");
+        const stats = `<div class="d2-stats">
+          <div class="d2-stat">
+            <div class="d2-stat-l">Umumiy bajarilish</div>
+            <div class="d2-stat-v"><div class="d2-stat-n">${t.overallPct}%</div><div class="d2-stat-s">reja ${t.expectedPct}%</div></div>
+          </div>
+          <div class="d2-stat">
+            <div class="d2-stat-l">Bajarildi</div>
+            <div class="d2-stat-v"><div class="d2-stat-n">${t.doneAll}</div><div class="d2-stat-s">/ ${t.totalTasks} vazifa</div></div>
+          </div>
+          <div class="d2-stat">
+            <div class="d2-stat-l">Ortda</div>
+            <div class="d2-stat-v"><div class="d2-stat-n${behindCount ? " warn" : ""}">${behindCount}</div><div class="d2-stat-s">loyiha</div></div>
+          </div>
+          <div class="d2-stat">
+            <div class="d2-stat-l">Qarzda</div>
+            <div class="d2-stat-v"><div class="d2-stat-n${debtCount ? " bad" : ""}">${debtCount}</div><div class="d2-stat-s">loyiha</div></div>
+          </div>
+        </div>`;
 
+        // Jadval — filtr va qidiruv
         const q = (document.getElementById("today-search")?.value || "").toLowerCase().trim();
-        let tableList = projects;
-        if (dashProjFilter === "debt") tableList = tableList.filter((p) => p.outstandingDebt);
-        else if (dashProjFilter === "mine")
-          tableList = tableList.filter((p) => isAdmin || (perms[currentUser] || []).includes(p.id));
+        const problem = (p) => p.outstandingDebt || projStatus(p) === "behind";
+        let list = dashProjFilter === "problem" ? projects.filter(problem) : projects;
         if (q) {
-          tableList = tableList.filter((p) => {
-            if (p.label.toLowerCase().includes(q)) return true;
-            const owners = Object.keys(perms).filter((u) => (perms[u] || []).includes(p.id));
-            return owners.some((u) => u.toLowerCase().includes(q));
-          });
+          list = list.filter(
+            (p) =>
+              p.label.toLowerCase().includes(q) ||
+              (p.assignees || []).some((a) =>
+                [a.username, a.firstName, a.lastName].some((v) =>
+                  String(v || "").toLowerCase().includes(q),
+                ),
+              ),
+          );
         }
-        // Eng ko'p bajarilgandan eng kamiga — progress ustuni bo'yicha
-        // kamayish tartibida (loyihalar filtr/qidiruvdan keyin, jadvalga
-        // chizishdan oldin saralanadi).
-        tableList = [...tableList].sort((a, b) => projPct(b) - projPct(a));
+        list = [...list].sort((a, b) => projPct(b) - projPct(a));
 
-        const tableRows = tableList
-          .map((p) => {
-            const owners = Object.keys(perms).filter((u) => (perms[u] || []).includes(p.id)).length;
-            const pc = projPct(p);
-            const muddat = p.outstandingDebt
-              ? `<span style="color:var(--red);font-weight:600">${daysBetween(parseISO(p.outstandingDebt.periodEnd), today)} kun o'tdi</span>`
-              : fmtDay(parseISO(p.periodEnd));
-            const holat = p.outstandingDebt
-              ? `<span class="debt-badge">Qarz</span>`
-              : `<span class="debt-badge" style="color:var(--brand);background:rgba(47,122,185,.12)">Faol</span>`;
-            return `<tr class="clickable${p.outstandingDebt ? " debt-row" : ""}" onclick="openTracker('${escArg(p.id)}')">
-              <td class="dtbl-name">${escHtml(p.label)}</td>
-              <td>${owners ? owners + " xodim" : "—"}</td>
-              <td>
-                <div class="dtbl-bar-wrap">
-                  <div class="hist-track"><div class="hist-fill" style="width:${pc}%"></div></div>
-                  <span class="num">${pc}%</span>
-                </div>
-              </td>
-              <td>${muddat}</td>
-              <td>${holat}</td>
-            </tr>`;
+        const rows = list.length
+          ? list
+              .map((p) => {
+                const st = projStatus(p);
+                const d = projDaysInfo(p);
+                return `<div class="d2-row" onclick="openTracker('${escArg(p.id)}')">
+                  <div style="min-width:0">
+                    <div class="d2-name">${escHtml(p.label)}</div>
+                    <div class="d2-owner">${escHtml(projOwnerLabel(p))}</div>
+                  </div>
+                  <div>${statusPillHtml(st)}</div>
+                  <div class="d2-prog">
+                    ${progressBarHtml(p, st)}
+                    <span class="d2-pct">${projPct(p)}%</span>
+                  </div>
+                  <div class="d2-counts">${p.doneK}/${p.k} · ${p.doneS}/${p.s}</div>
+                  <div class="d2-due${d.late ? " late" : ""}">${d.text}</div>
+                </div>`;
+              })
+              .join("")
+          : `<div style="padding:22px 18px;font-size:13px;color:var(--t3);border-top:1px solid var(--bd2)">Mos loyiha topilmadi</div>`;
+
+        const problemCount = projects.filter(problem).length;
+        const table = `<div class="d2-tbl">
+          <div class="d2-tbl-hdr">
+            <div class="d2-tbl-t">Loyihalar</div>
+            <div class="d2-seg">
+              <button class="${dashProjFilter === "problem" ? "" : "on"}" onclick="setDashFilter('all')">Hammasi ${projects.length}</button>
+              <button class="${dashProjFilter === "problem" ? "on" : ""}" onclick="setDashFilter('problem')">Muammoli ${problemCount}</button>
+            </div>
+          </div>
+          <div class="d2-cols">
+            <div>Loyiha</div><div>Holat</div><div>Bajarilish</div><div>Post · Stories</div><div>Muddat</div>
+          </div>
+          ${rows}
+        </div>`;
+
+        // O'ng ustun — muddati yaqin vazifalar
+        const due = tasksDueSoon();
+        const dueItems = due.length
+          ? due
+              .slice(0, 5)
+              .map((task) => {
+                const w = taskWhenInfo(task);
+                const who = task.assigneeName ? " · " + escHtml(task.assigneeName) : "";
+                const color =
+                  w.cls === "today" ? "var(--st-debt)" : w.cls === "soon" ? "var(--st-behind)" : "var(--t2)";
+                return `<div class="d2-item" onclick="openTaskActions('${escArg(task.id)}')">
+                  <div class="d2-item-top">
+                    <div class="d2-item-t">${escHtml(task.title)}</div>
+                    <div class="d2-item-w" style="color:${color}">${w.text}</div>
+                  </div>
+                  <div class="d2-item-s">${escHtml(task.projectLabel || "Umumiy")}${who}</div>
+                </div>`;
+              })
+              .join("")
+          : `<div style="padding:10px 0;font-size:12.5px;color:var(--t3)">Muddati yaqin vazifa yo'q</div>`;
+        const dueCard = `<div class="d2-card tight">
+          <div class="d2-card-hdr">
+            <div class="d2-card-t">Bugun muddati</div>
+            ${due.length ? `<span class="d2-card-n">${due.length}</span>` : ""}
+          </div>
+          ${dueItems}
+        </div>`;
+
+        // O'ng ustun — jamoa faolligi
+        const days = teamActivity?.days || [];
+        const max = days.reduce((m, d) => Math.max(m, d.count), 0);
+        const cells = (days.length ? days : Array.from({ length: 28 }, () => ({ count: 0 })))
+          .map((d) => {
+            if (!max || !d.count) return `<span></span>`;
+            const r = d.count / max;
+            return `<span class="${r > 0.66 ? "l3" : r > 0.33 ? "l2" : "l1"}"></span>`;
           })
           .join("");
+        const heatCard = `<div class="d2-card">
+          <div class="d2-card-hdr">
+            <div class="d2-card-t">Jamoa faolligi</div>
+            <div class="d2-card-side">4 hafta</div>
+          </div>
+          <div class="d2-heat">${cells}</div>
+          <div class="d2-heat-foot">
+            <div class="d2-card-side" style="flex:1">Bugun</div>
+            <div style="font-size:12.5px;font-weight:600;color:var(--ink)">${teamActivity ? teamActivity.todayCount : 0} ta bajarildi</div>
+          </div>
+        </div>`;
 
-        const empProgressHtml = computeEmployeeProgress().length
-          ? computeEmployeeProgress()
-              .map(
-                (r) => `<div class="rail-item" style="flex-direction:column;align-items:stretch;gap:6px">
-                  <div style="display:flex;justify-content:space-between;font-size:12.5px">
-                    <span class="r-name">@${escHtml(r.username)}</span>
-                    <span class="num" style="color:${r.avg < 40 ? "var(--red)" : "var(--t2)"}">${r.avg}%</span>
-                  </div>
-                  <div class="hist-track"><div class="hist-fill" style="width:${r.avg}%;background:${r.avg < 40 ? "var(--red)" : "var(--brand)"}"></div></div>
-                </div>`,
-              )
-              .join("")
-          : `<div style="font-size:12px;color:var(--t3)">Ma'lumot yo'q</div>`;
-
-        return `
-          <div class="desktop-only">
-            ${buildActivityPanelCardHtml(false)}
-            <div class="stat-grid" style="margin-top:18px">
-              <div class="stat-card tempo">
-                <div class="stat-lbl">Bajarilish darajasi</div>
-                <div style="display:flex;align-items:baseline;gap:8px">
-                  <div class="stat-val" style="margin-top:12px">${t.overallPct}%</div>
-                  <div class="stat-foot" style="margin-top:12px" title="Loyihalar davri (boshlanish–tugash sanasi)ga nisbatan bugun qancha % bajarilgan bo'lishi kerakligi">Kutilgan: ${t.expectedPct}%${t.behind > 0 ? ` · ${t.behind} orqada` : ""}</div>
-                </div>
-                <div class="stat-bar"><div class="stat-bar-fill" style="width:${Math.max(0, Math.min(100, t.overallPct))}%"></div></div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-lbl">Bajarilgan</div>
-                <div class="stat-val">${t.doneAll}<span class="stat-sub">/${t.totalTasks}</span></div>
-                <div class="stat-foot">${monthLabel} oyi bo'yicha</div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-lbl">Faol loyiha</div>
-                <div class="stat-val">${projects.length}</div>
-                <div class="stat-foot">${empWithAccess} xodim orasida</div>
-              </div>
-              <div class="stat-card danger">
-                <div class="stat-lbl">Qarzda</div>
-                <div class="stat-val">${debtProjects.length}</div>
-                <div class="stat-foot"><span class="stat-link" onclick="showTab('projects');setProjFilter('debt')">Ko'rish →</span></div>
-              </div>
-            </div>
-            <div class="dash-cols">
-              <div>
-                <div class="dtbl-wrap">
-                  <div class="card-hdr">
-                    <div class="card-hdr-title">Loyihalar</div>
-                    <div class="chips" style="margin: 0">${chipsHtml}</div>
-                  </div>
-                  <table class="dtbl">
-                    <thead><tr><th>Loyiha</th><th>Mas'ul</th><th>Progress</th><th>Muddat</th><th>Holat</th></tr></thead>
-                    <tbody>${tableRows || `<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:24px">Loyiha topilmadi</td></tr>`}</tbody>
-                  </table>
-                </div>
-              </div>
-              <div>
-                ${buildAssignedTasksCardHtml()}
-                ${buildTodayTasksCardHtml()}
-                ${buildMyProgressCardHtml()}
-                <div class="rail-card">
-                  <div class="rail-title">Xodimlar progresi</div>
-                  ${empProgressHtml}
-                </div>
-              </div>
-            </div>
-          </div>`;
+        return `<div class="d2-grid">
+          <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+            ${stats}
+            ${table}
+          </div>
+          <div class="d2-side">
+            ${dueCard}
+            ${heatCard}
+          </div>
+        </div>`;
       }
-
-      // ── LOYIHALAR ─────────────────────────────────────────────────
       function setProjFilter(k) {
         projFilter = k;
         renderProjectsScreen();
@@ -12529,6 +13317,9 @@
           .addEventListener("change", refreshAllViews);
 
         document.getElementById("loading").remove();
+        // Jamoa faolligi — ilova ochilishini kutdirmasdan, fonda yuklanadi.
+        // Kelgach renderToday() o'zi qayta chiziladi.
+        loadTeamActivity();
         if (profileIncomplete) {
           showOnboarding();
         } else {
