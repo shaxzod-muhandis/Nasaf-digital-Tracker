@@ -4119,7 +4119,7 @@
       .st-pill.st-debt { background: var(--st-debt-bg); color: var(--st-debt); --dot: var(--st-debt-dot); }
       .st-pill.st-behind { background: var(--st-behind-bg); color: var(--st-behind); --dot: var(--st-behind-dot); }
       .st-pill.st-mid { background: var(--st-mid-bg); color: var(--st-mid); --dot: var(--st-mid-dot); }
-      .st-pill.st-onplan { background: var(--st-onplan-bg); color: var(--st-onplan); --dot: var(--st-onplan-dot); }
+      .st-pill.st-onplan { background: var(--st-ahead-bg); color: var(--st-ahead); --dot: var(--st-ahead-dot); }
       .st-pill.st-ahead { background: var(--st-ahead-bg); color: var(--st-ahead); --dot: var(--st-ahead-dot); }
 
       /* Progress chizig'i + kutilgan joy ko'rsatkichi */
@@ -4149,7 +4149,7 @@
       .st-fill-debt { background: var(--st-debt-dot); }
       .st-fill-behind { background: var(--st-behind-dot); }
       .st-fill-mid { background: var(--st-mid-dot); }
-      .st-fill-onplan { background: var(--st-onplan-dot); }
+      .st-fill-onplan { background: var(--st-ahead-dot); }
       .st-fill-ahead { background: var(--st-ahead-dot); }
 
       /* Tur belgisi — vazifa holati (Post/Stories o'rnida) */
@@ -6417,11 +6417,15 @@
       // uchun kunlik o'lchovda hafta o'rtasida hamma loyiha "orqada"
       // bo'lib ko'rinardi.
       //
-      // Bosqichlar: 1-hafta oxirida 33%, 2-hafta oxirida 66%, 3-hafta
-      // oxirida 100%. To'rtinchi hafta zaxira — kutilgan 100% bo'lib
-      // qoladi. Tugamagan hafta hisobga olinmaydi, ya'ni joriy hafta
-      // xodimga qarshi ishlamaydi.
-      const EXPECTED_WEEK_STEPS = 3;
+      // Har hafta teng ulush: 1-hafta oxirida 25%, keyin 50%, 75%,
+      // 100%. Tugamagan hafta hisobga olinmaydi — joriy hafta xodimga
+      // qarshi ishlamaydi.
+      //
+      // Teng ulush ataylab: 33/66/100 bo'lganda kutilgan foiz oxirgi
+      // haftaga borib 100% ga yetardi va hech bir loyiha yashil bo'la
+      // olmasdi, dastlabki ikki haftada esa aksincha hammasi yashil
+      // bo'lib turardi.
+      const EXPECTED_WEEK_STEPS = 4;
       function projElapsedFrac(p) {
         const start = parseISO(p.periodStart);
         const end = parseISO(p.periodEnd);
@@ -6796,23 +6800,19 @@
       // kutilgan foiz tabiiy ravishda yuqori bo'ladi va kichik
       // kechikishda ham hamma loyiha qizarib ketardi. "Oldinda" esa
       // maqtov — uni qiyinlashtirishning ma'nosi yo'q.
-      // Chegaralar ataylab assimetrik. "Ortda" — ogohlantirish, shuning
-      // uchun u faqat jiddiy farqda chiqadi: davr oxiriga borib kutilgan
-      // foiz tabiiy ravishda yuqori bo'ladi va kichik kechikishda ham
-      // hamma loyiha sariq bo'lib ketardi. "Oldinda" esa maqtov —
-      // uni qiyinlashtirishning ma'nosi yo'q.
-      const PROJ_MID_GAP = 15;
-      const PROJ_AHEAD_GAP = 5;
-      // Rejadan orqada qolgan loyiha ikkiga bo'linadi: ishning yarmidan
-      // o'tgani "O'rtacha", yarmiga ham yetmagani "Ortda". Ya'ni 36% da
-      // turgan loyiha hech qachon "o'rtacha" deb yumshatilmaydi.
+      // Haftalik rejani bajargan (yoki oshirgan) loyiha — yashil
+      // "Rejada". Shu sabab alohida "Oldinda" darajasi yo'q: rejani
+      // bajarish va undan oshirish bir xil yaxshi xabar, ikkita yashil
+      // daraja esa faqat chalkashtirardi.
+      //
+      // Orqada qolganlar ikkiga bo'linadi: ishning yarmidan o'tgani
+      // "O'rtacha", yarmiga ham yetmagani "Ortda". Ya'ni 36% da turgan
+      // loyiha hech qachon "o'rtacha" deb yumshatilmaydi.
       const PROJ_MID_MIN_PCT = 50;
       function projStatus(p) {
         if (p.outstandingDebt) return "debt";
         const pc = projPct(p);
-        const diff = pc - projExpectedPct(p);
-        if (diff > PROJ_AHEAD_GAP) return "ahead";
-        if (diff >= -PROJ_MID_GAP) return "onplan";
+        if (pc >= projExpectedPct(p)) return "onplan";
         return pc >= PROJ_MID_MIN_PCT ? "mid" : "behind";
       }
       const PROJ_STATUS_LABEL = {
