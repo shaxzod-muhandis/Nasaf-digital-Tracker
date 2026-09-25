@@ -4110,6 +4110,8 @@
       #sidebar {
         display: none;
       }
+      .pd-root { display: none; }
+
       /* ══ "BUGUN" SAHIFASI — v3 dizayni ═══════════════════════════ */
       /* Holat belgisi: qarz / ortda / rejada / oldinda. Nuqta ::before
          orqali — har holat uchun alohida markup yozilmasin. */
@@ -4786,6 +4788,332 @@
           padding-bottom: 24px;
         }
 
+        /* ══ LOYIHALAR — desktop ikki panelli maket (v3) ══════════════ */
+        /* Sahifaning o'z sarlavhasi bor, umumiy .hdr kerak emas. */
+        #screen-projects .hdr { display: none; }
+        #screen-projects #projects-body {
+          padding: 0;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+        .pd-root {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          min-height: 0;
+        }
+        .pd-top {
+          height: 64px;
+          background: var(--surf);
+          border-bottom: 1px solid var(--bd2);
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 0 24px;
+          flex: none;
+          box-sizing: border-box;
+        }
+        .pd-top-t {
+          font-size: 18px;
+          font-weight: 600;
+          color: var(--ink);
+          letter-spacing: -0.015em;
+          white-space: nowrap;
+        }
+        .pd-top-s {
+          font-size: 12.5px;
+          color: var(--v3-t2);
+          margin-top: 2px;
+          white-space: nowrap;
+        }
+        .pd-new {
+          height: 38px;
+          padding: 0 16px;
+          border-radius: 10px;
+          border: none;
+          background: var(--brand);
+          color: #fff;
+          font-family: inherit;
+          font-size: 13px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          flex: none;
+          cursor: pointer;
+          white-space: nowrap;
+        }
+        .pd-body {
+          flex: 1;
+          display: flex;
+          min-height: 0;
+        }
+        .pd-list {
+          width: 340px;
+          flex: none;
+          border-right: 1px solid var(--bd2);
+          background: var(--surf);
+          padding: 14px 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          box-sizing: border-box;
+          overflow-y: auto;
+        }
+        .pd-search {
+          height: 36px;
+          border-radius: 11px;
+          background: var(--surf);
+          border: 1px solid var(--bd3s, rgba(15, 23, 42, 0.13));
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 0 12px;
+          margin: 0 2px 8px;
+          box-sizing: border-box;
+          flex: none;
+        }
+        .pd-search input {
+          border: none;
+          outline: none;
+          background: none;
+          font-family: inherit;
+          font-size: 13.5px;
+          color: var(--ink);
+          width: 100%;
+        }
+        .pd-search .search-ico { width: 17px; height: 17px; color: var(--v3-t3); flex: none; }
+        .pd-search .search-ico svg { width: 100%; height: 100%; display: block; }
+        .pd-sec {
+          font-size: 11.5px;
+          font-weight: 600;
+          color: var(--v3-t2);
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          padding: 6px 14px 2px;
+          white-space: nowrap;
+        }
+        .pd-sec + .pd-sec,
+        .pd-item + .pd-sec { padding-top: 10px; }
+        .pd-item {
+          padding: 12px 14px;
+          border-radius: 12px;
+          background: transparent;
+          border: 1px solid transparent;
+          cursor: pointer;
+          box-sizing: border-box;
+        }
+        .pd-item:hover { background: var(--surf2, #fafbfc); }
+        .pd-item.on {
+          background: var(--st-onplan-bg);
+          border-color: rgba(47, 122, 185, 0.3);
+        }
+        .pd-item-top { display: flex; align-items: center; gap: 8px; }
+        .pd-item-name {
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--ink);
+          flex: 1;
+          min-width: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .pd-item-pct {
+          font-variant-numeric: tabular-nums;
+          font-size: 13.5px;
+          font-weight: 700;
+          color: var(--ink);
+          white-space: nowrap;
+        }
+        .pd-item-meta {
+          display: flex;
+          gap: 8px;
+          margin-top: 7px;
+          align-items: center;
+          font-size: 12px;
+          white-space: nowrap;
+        }
+        .pd-item-dot { width: 7px; height: 7px; border-radius: 9px; flex: none; }
+        .pd-item-st { font-weight: 600; }
+        .pd-item-own {
+          color: var(--v3-t2);
+          flex: 1;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .pd-item-days { color: var(--v3-t2); }
+        .pd-item-days.late { color: var(--st-debt); }
+
+        .pd-main {
+          flex: 1;
+          min-width: 0;
+          padding: 18px 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          overflow-y: auto;
+        }
+        .pd-head { display: flex; align-items: center; gap: 12px; }
+        .pd-logo {
+          width: 40px;
+          height: 40px;
+          border-radius: 14px;
+          background: var(--nav-badge-bg);
+          color: var(--ink);
+          font-size: 16px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex: none;
+        }
+        .pd-name {
+          font-size: 20px;
+          font-weight: 700;
+          color: var(--ink);
+          letter-spacing: -0.02em;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .pd-sub { font-size: 13px; color: var(--v3-t2); white-space: nowrap; }
+        /* Jamoa avatarlari ustma-ust — ramka sahifa foni rangida, shu
+           sabab ular bir-biridan ajralib turadi. */
+        .pd-team { display: flex; flex: none; }
+        .pd-team > div { border: 2px solid var(--bg); border-radius: 12px; margin-left: -8px; }
+        .pd-team > div:first-child { margin-left: 0; }
+        .pd-team .avatar { width: 30px; height: 30px; border-radius: 10px; font-size: 12px; }
+        .pd-btn {
+          height: 38px;
+          padding: 0 16px;
+          border-radius: 10px;
+          background: var(--surf);
+          color: var(--ink);
+          border: 1px solid var(--bd3s, rgba(15, 23, 42, 0.13));
+          font-family: inherit;
+          font-size: 13px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          flex: none;
+          cursor: pointer;
+          box-sizing: border-box;
+        }
+        .pd-btn svg { width: 16px; height: 16px; display: block; }
+        .pd-icon-btn {
+          width: 38px;
+          height: 38px;
+          border-radius: 12px;
+          background: var(--surf);
+          border: 1px solid var(--bd3s, rgba(15, 23, 42, 0.13));
+          color: var(--t5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex: none;
+          cursor: pointer;
+          box-sizing: border-box;
+        }
+        .pd-icon-btn svg { width: 19px; height: 19px; display: block; }
+
+        .pd-card {
+          background: var(--surf);
+          border: 1px solid var(--bd2);
+          border-radius: 14px;
+          box-sizing: border-box;
+        }
+        .pd-stats { padding: 14px 16px; display: flex; align-items: center; }
+        .pd-stat-main { width: 230px; padding-right: 18px; flex: none; }
+        .pd-stat-row { display: flex; align-items: flex-end; gap: 8px; }
+        .pd-stat-pct {
+          font-size: 30px;
+          line-height: 1;
+          font-weight: 700;
+          color: var(--ink);
+          letter-spacing: -0.03em;
+        }
+        .pd-stat-pct span { font-size: 17px; }
+        .pd-stat-frac {
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--v3-t2);
+          padding-bottom: 2px;
+          white-space: nowrap;
+        }
+        .pd-stat-col { flex: 1; min-width: 0; padding: 0 16px; border-left: 1px solid var(--bd2); }
+        .pd-stat-l { font-size: 12px; font-weight: 500; color: var(--v3-t2); white-space: nowrap; }
+        .pd-stat-v {
+          font-variant-numeric: tabular-nums;
+          font-size: 20px;
+          font-weight: 700;
+          color: var(--ink);
+          margin-top: 3px;
+          letter-spacing: -0.02em;
+          white-space: nowrap;
+        }
+        .pd-stat-v.good { color: var(--st-ahead); }
+        .pd-stat-v.bad { color: var(--st-debt); }
+
+        .pd-filter { display: flex; align-items: center; gap: 12px; }
+        .pd-legend { display: flex; gap: 14px; flex: none; }
+        .pd-legend > div { display: flex; align-items: center; gap: 6px; }
+        .pd-legend-t { font-size: 12px; font-weight: 500; color: var(--v3-t2); white-space: nowrap; }
+        .pd-legend-dot { width: 7px; height: 7px; border-radius: 9px; }
+        .pd-legend-sq { width: 12px; height: 12px; border-radius: 4px; border: 1px solid var(--bd3s, rgba(15, 23, 42, 0.13)); }
+
+        /* Chiziq balandligi chizmada joyiga qarab farq qiladi:
+           ro'yxatda ingichkaroq, statistika kartasida qalinroq. */
+        .pd-item .pbar { height: 5px; }
+        .pd-stat-main .pbar { height: 7px; }
+        /* Desktopda "Yangi loyiha" sarlavhada turadi — suzuvchi tugma
+           ikkinchi marta kerak emas. */
+        #screen-projects #projects-fab { display: none !important; }
+        .pd-cal { padding: 14px; }
+        .pd-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .pd-cal-wd {
+          font-size: 11.5px;
+          font-weight: 600;
+          color: var(--v3-t3);
+          text-align: center;
+          white-space: nowrap;
+        }
+        .pd-day {
+          height: 64px;
+          border-radius: 10px;
+          background: var(--surf);
+          border: 1px solid var(--bd2);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          box-sizing: border-box;
+        }
+        .pd-day.done { background: var(--st-ahead-bg); }
+        .pd-day.future { border-color: transparent; }
+        .pd-day.today {
+          background: var(--brand);
+          border-color: var(--brand);
+        }
+        .pd-day-n {
+          font-variant-numeric: tabular-nums;
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--ink);
+        }
+        .pd-day.future .pd-day-n { color: var(--v3-t3); }
+        .pd-day.today .pd-day-n { color: #fff; font-weight: 700; }
+        .pd-dots { display: flex; gap: 3px; justify-content: center; margin-top: 4px; height: 6px; }
+        .pd-dot { width: 6px; height: 6px; border-radius: 9px; }
+        .pd-dot.k { background: var(--type-post); }
+        .pd-dot.s { background: var(--type-story); }
+        .pd-day.today .pd-dot { background: #fff; }
+
         /* ══ "BUGUN" — desktop maketi (v3) ═══════════════════════════ */
         .d2-grid {
           display: grid;
@@ -4879,6 +5207,8 @@
           white-space: nowrap;
           cursor: pointer;
         }
+        /* Loyihalar sahifasida segmentlar balandroq (chizma bo'yicha). */
+        .d2-seg.lg button { height: 30px; }
         .d2-seg button.on {
           background: var(--surf);
           box-shadow: 0 1px 2px rgba(14, 23, 38, 0.1);
@@ -7313,7 +7643,10 @@
           list = list.filter((p) => projPct(p) >= 100);
 
         if (list.length === 0) {
-          body.innerHTML = `<div class="empty"><div class="empty-ico">⌕</div><div class="empty-t">Hech narsa topilmadi</div><div class="empty-s">Qidiruv yoki filtrni o'zgartirib ko'ring.</div></div>`;
+          body.innerHTML =
+            `<div class="mobile-only"><div class="empty"><div class="empty-ico">⌕</div><div class="empty-t">Hech narsa topilmadi</div><div class="empty-s">Qidiruv yoki filtrni o'zgartirib ko'ring.</div></div></div>` +
+            buildProjectsDesktopHtml();
+          restorePdeskSearchFocus();
           return;
         }
 
@@ -7364,58 +7697,279 @@
             .join("");
           html += `</div>`;
         }
-        html += `</div>${buildProjectsDesktopHtml(overdue, active)}`;
+        html += `</div>${buildProjectsDesktopHtml()}`;
         body.innerHTML = html;
+        restorePdeskSearchFocus();
       }
 
-      // Loyihalar — katta ekranda kartochka to'ri (list o'rniga)
-      // Loyihalar — katta ekranda 3 ustunli board (Linear'dagi board
-      // g'oyasi, lekin bizning data modelimizga mos real bosqichlar
-      // bilan: har bir loyiha doim faol bo'lgani uchun Backlog/Planned
-      // tushunchasi yo'q — Qarzdor/Faol/Tugagan real holatlar).
-      function buildProjectsDesktopHtml(overdue, active) {
+      // ── LOYIHALAR — desktop ikki panelli ko'rinish (v3) ─────────────
+      // Chapda loyihalar ro'yxati (holatiga qarab guruhlangan), o'ngda
+      // tanlangan loyihaning batafsil ko'rinishi. Mobil ko'rinish
+      // o'zgarishsiz qoladi — u renderProjectsScreen ichida quriladi.
+      let pdeskId = null;
+      let pdeskQuery = "";
+      let pdeskCalFilter = "all";
+      let pdeskSearchFocused = false;
+
+      function setPdeskProject(id) {
+        pdeskId = id;
+        renderProjectsScreen();
+      }
+      function setPdeskFilter(key) {
+        pdeskCalFilter = key;
+        renderProjectsScreen();
+      }
+      function onPdeskSearch(el) {
+        pdeskQuery = el.value;
+        pdeskSearchFocused = true;
+        renderProjectsScreen();
+      }
+
+      // Loyihaning davri bo'yicha kutilgan va haqiqiy bajarilgan ish
+      // farqi — "Reja bo'yicha +2" ustuni uchun.
+      // "Rejada" yashil ko'rsatiladi (haftalik rejani bajargan). Ko'k
+      // "onplan" ranglari faqat tanlangan qator foni uchun qoladi, shu
+      // sabab matn/nuqta rangi alohida xaritadan olinadi.
+      const ST_COLOR = { debt: "debt", behind: "behind", mid: "mid", onplan: "ahead", ahead: "ahead" };
+
+      function projPlanDelta(p) {
+        const total = p.k + p.s;
+        const expected = Math.round(projElapsedFrac(p) * total);
+        return p.doneK + p.doneS - expected;
+      }
+
+      function pdPeriodText(p) {
+        const ps = parseISO(p.periodStart);
+        const pe = parseISO(p.periodEnd);
+        const m = (d) => MONTHS[d.getMonth()].toLowerCase();
+        const range =
+          ps.getMonth() === pe.getMonth()
+            ? `${ps.getDate()}–${pe.getDate()} ${m(pe)}`
+            : `${ps.getDate()} ${m(ps)} – ${pe.getDate()} ${m(pe)}`;
+        const d = projDaysInfo(p);
+        return `${range} · ${d.text}`;
+      }
+
+      function pdTeamHtml(p) {
+        const list = (p.assignees || []).slice(0, 4);
+        if (!list.length) return "";
+        const extra = (p.assignees || []).length - list.length;
+        const avs = list
+          .map((a) => {
+            const letter = (a.firstName || a.username || "?").slice(0, 1).toUpperCase();
+            const name = shortPersonName(a.firstName, a.lastName, "@" + a.username);
+            return `<div><div class="avatar" style="background:${personColor(a.username)};color:#fff" title="${escHtml(name)}">${escHtml(letter)}${avatarImg(a.avatar_url)}</div></div>`;
+          })
+          .join("");
+        const more = extra > 0 ? `<div><div class="avatar" style="background:var(--nav-badge-bg);color:var(--v3-t2)">+${extra}</div></div>` : "";
+        return `<div class="pd-team">${avs}${more}</div>`;
+      }
+
+      // Kalendar — qaysi post/stories qaysi kuni belgilangani
+      // (checkDetails.workDate) asosida. Faqat HAQIQATNI ko'rsatadi:
+      // yashil — o'sha kuni ish qilingan, oq — qilinmagan, ko'k — bugun.
+      // "Rejalashtirilgan kun" degan tushuncha ma'lumotda yo'q.
+      function pdCalendarHtml(p) {
+        const start = parseISO(p.periodStart);
+        const end = parseISO(p.periodEnd);
         const today = todayDate();
-        const cardFor = (p) => {
-          if (p.outstandingDebt) {
-            const daysAgo = daysBetween(parseISO(p.outstandingDebt.periodEnd), today);
-            const rem = p.outstandingDebt.remainingPosts + p.outstandingDebt.remainingStories;
-            return `<div class="pcard" style="margin-bottom:10px" onclick="openTracker('${escArg(p.id)}')">
-              <div class="pcard-top">
-                <div class="r-name">${escHtml(p.label)}</div>
-                <span class="debt-badge">${daysAgo} kun</span>
-              </div>
-              <div class="r-sub">${rem} vazifa qoldi</div>
-            </div>`;
-          }
-          const pc = projPct(p);
-          const dl = projDaysLeft(p);
-          return `<div class="pcard" style="margin-bottom:10px" onclick="openTracker('${escArg(p.id)}')">
-            <div class="pcard-top">
-              <div class="r-name">${escHtml(p.label)}</div>
-              <div class="pcard-pct num">${pc}%</div>
-            </div>
-            <div class="hist-track" style="margin-bottom:9px"><div class="hist-fill" style="width:${pc}%"></div></div>
-            <div class="r-sub">${dl >= 0 ? dl + " kun qoldi" : "muddat tugagan"}</div>
+        const todayIso = isoOf(today);
+
+        const byDay = {};
+        Object.entries(p.checkDetails || {}).forEach(([key, d]) => {
+          if (!d || !d.workDate) return;
+          const day = String(d.workDate).slice(0, 10);
+          const type = key.split("-")[0];
+          if (!byDay[day]) byDay[day] = { k: 0, s: 0 };
+          byDay[day][type === "k" ? "k" : "s"]++;
+        });
+
+        const WD = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
+        let cells = WD.map((w) => `<div class="pd-cal-wd">${w}</div>`).join("");
+        // Dushanbadan boshlanadigan hafta: getDay() 0=yakshanba.
+        const lead = (start.getDay() + 6) % 7;
+        cells += `<div></div>`.repeat(lead);
+
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          const iso = isoOf(d);
+          const info = byDay[iso];
+          const isToday = iso === todayIso;
+          const isFuture = iso > todayIso;
+          const showK = pdeskCalFilter !== "s";
+          const showS = pdeskCalFilter !== "k";
+          const nK = info && showK ? info.k : 0;
+          const nS = info && showS ? info.s : 0;
+          const dots =
+            `<span class="pd-dot k"></span>`.repeat(Math.min(nK, 3)) +
+            `<span class="pd-dot s"></span>`.repeat(Math.min(nS, 3));
+          const cls = [
+            "pd-day",
+            isToday ? "today" : nK + nS > 0 ? "done" : isFuture ? "future" : "",
+          ]
+            .filter(Boolean)
+            .join(" ");
+          cells += `<div class="${cls}">
+            <div class="pd-day-n">${d.getDate()}</div>
+            <div class="pd-dots">${dots}</div>
           </div>`;
-        };
-        const inProgress = active.filter((p) => projPct(p) < 100);
-        const finished = active.filter((p) => projPct(p) >= 100);
-        const cols = [
-          { label: "Qarzdor", items: overdue },
-          { label: "Faol", items: inProgress },
-          { label: "Tugagan", items: finished },
-        ];
-        const colsHtml = cols
+        }
+        return `<div class="pd-card pd-cal"><div class="pd-cal-grid">${cells}</div></div>`;
+      }
+
+      function pdDetailHtml(p) {
+        const st = projStatus(p);
+        const pc = projPct(p);
+        const done = p.doneK + p.doneS;
+        const total = p.k + p.s;
+        const left = Math.max(0, total - done);
+        const delta = projPlanDelta(p);
+        const deltaCls = delta > 0 ? " good" : delta < 0 ? " bad" : "";
+        const deltaText = delta > 0 ? `+${delta}` : String(delta);
+
+        const segs = [
+          { key: "all", label: `Hammasi ${total}` },
+          { key: "k", label: `Post ${p.doneK}/${p.k}` },
+          { key: "s", label: `Stories ${p.doneS}/${p.s}` },
+        ]
           .map(
-            (col) => `<div>
-              <div class="kanban-col-hdr"><span>${col.label}</span><span class="kanban-count">${col.items.length}</span></div>
-              ${col.items.map(cardFor).join("") || `<div style="font-size:12px;color:var(--t3);padding:4px 2px">Bo'sh</div>`}
-            </div>`,
+            (c) =>
+              `<button class="${pdeskCalFilter === c.key ? "on" : ""}" onclick="setPdeskFilter('${c.key}')">${c.label}</button>`,
           )
           .join("");
-        return `<div class="desktop-only"><div class="kanban" style="grid-template-columns:repeat(3,1fr)">${colsHtml}</div></div>`;
+
+        return `
+          <div class="pd-head">
+            <div class="pd-logo" style="cursor:pointer" title="Belgilash oynasini ochish" onclick="openTracker('${escArg(p.id)}')">${escHtml((p.label || "?").slice(0, 1).toUpperCase())}</div>
+            <div style="flex:1;min-width:0;cursor:pointer" title="Belgilash oynasini ochish" onclick="openTracker('${escArg(p.id)}')">
+              <div class="pd-name">${escHtml(p.label)}</div>
+              <div class="pd-sub">${escHtml(pdPeriodText(p))}</div>
+            </div>
+            ${pdTeamHtml(p)}
+            ${
+              isAdmin
+                ? `<button type="button" class="pd-btn" onclick="openProjectEditSheet('${escArg(p.id)}')">${ICON.edit}Tahrirlash</button>
+                   <button type="button" class="pd-icon-btn" title="Amallar" onclick="openProjectHistorySheet('${escArg(p.id)}','${escArg(p.label)}')">⋯</button>`
+                : ""
+            }
+          </div>
+
+          <div class="pd-card pd-stats">
+            <div class="pd-stat-main">
+              <div class="pd-stat-row">
+                <div class="pd-stat-pct">${pc}<span>%</span></div>
+                <div class="pd-stat-frac">${done}/${total}</div>
+                <div style="flex:1"></div>
+                ${statusPillHtml(st)}
+              </div>
+              <div style="margin-top:10px">${progressBarHtml(p, st)}</div>
+            </div>
+            <div class="pd-stat-col">
+              <div class="pd-stat-l">Post</div>
+              <div class="pd-stat-v">${p.doneK}/${p.k}</div>
+            </div>
+            <div class="pd-stat-col">
+              <div class="pd-stat-l">Stories</div>
+              <div class="pd-stat-v">${p.doneS}/${p.s}</div>
+            </div>
+            <div class="pd-stat-col">
+              <div class="pd-stat-l">Qolgan</div>
+              <div class="pd-stat-v${left ? " bad" : ""}">${left}</div>
+            </div>
+            <div class="pd-stat-col">
+              <div class="pd-stat-l">Reja bo'yicha</div>
+              <div class="pd-stat-v${deltaCls}">${deltaText}</div>
+            </div>
+          </div>
+
+          <div class="pd-filter">
+            <div class="d2-seg lg">${segs}</div>
+            <div style="flex:1"></div>
+            <div class="pd-legend">
+              <div><span class="pd-legend-dot" style="background:var(--type-post)"></span><span class="pd-legend-t">Post</span></div>
+              <div><span class="pd-legend-dot" style="background:var(--type-story)"></span><span class="pd-legend-t">Stories</span></div>
+              <div><span class="pd-legend-sq" style="background:var(--st-ahead-bg)"></span><span class="pd-legend-t">Bajarildi</span></div>
+            </div>
+          </div>
+
+          ${pdCalendarHtml(p)}`;
       }
 
+      function buildProjectsDesktopHtml() {
+        const q = pdeskQuery.toLowerCase().trim();
+        const list = projects.filter((p) => !q || p.label.toLowerCase().includes(q));
+
+        // Tanlangan loyiha ro'yxatdan chiqib ketgan bo'lsa (qidiruv
+        // tufayli) — birinchisiga o'tamiz.
+        let sel = list.find((p) => p.id === pdeskId) || list[0] || null;
+        if (sel) pdeskId = sel.id;
+
+        const needsAttention = list.filter((p) => ["debt", "behind", "mid"].includes(projStatus(p)));
+        const doingWell = list.filter((p) => !["debt", "behind", "mid"].includes(projStatus(p)));
+
+        const itemHtml = (p) => {
+          const st = projStatus(p);
+          const d = projDaysInfo(p);
+          return `<div class="pd-item${p.id === pdeskId ? " on" : ""}" onclick="setPdeskProject('${escArg(p.id)}')">
+            <div class="pd-item-top">
+              <div class="pd-item-name">${escHtml(p.label)}</div>
+              <div class="pd-item-pct">${projPct(p)}%</div>
+            </div>
+            <div style="margin-top:8px">${progressBarHtml(p, st)}</div>
+            <div class="pd-item-meta">
+              <span class="pd-item-dot" style="background:var(--st-${ST_COLOR[st]}-dot)"></span>
+              <span class="pd-item-st" style="color:var(--st-${ST_COLOR[st]})">${PROJ_STATUS_LABEL[st]}</span>
+              <span class="pd-item-own">· ${escHtml(projOwnerLabel(p))}</span>
+              <span class="pd-item-days${d.late ? " late" : ""}">${d.text}</span>
+            </div>
+          </div>`;
+        };
+
+        const groups =
+          (needsAttention.length
+            ? `<div class="pd-sec">Diqqat talab qiladi</div>${needsAttention.map(itemHtml).join("")}`
+            : "") +
+          (doingWell.length
+            ? `<div class="pd-sec">Yaxshi ketmoqda</div>${doingWell.map(itemHtml).join("")}`
+            : "") +
+          (list.length ? "" : `<div style="padding:18px 14px;font-size:13px;color:var(--v3-t3)">Hech narsa topilmadi</div>`);
+
+        const monthLabel = MONTHS[todayDate().getMonth()].toLowerCase();
+        return `<div class="pd-root">
+          <div class="pd-top">
+            <div style="flex:1;min-width:0">
+              <div class="pd-top-t">Loyihalar</div>
+              <div class="pd-top-s">${projects.length} faol · ${monthLabel} davri</div>
+            </div>
+            <div class="d2-seg lg">
+              <button class="on">Faol</button>
+              <button onclick="showTab('history')">Tarix</button>
+            </div>
+            ${isAdmin ? `<button type="button" class="pd-new" onclick="openNewProjectSheet()">${ICON.plus}Yangi loyiha</button>` : ""}
+          </div>
+          <div class="pd-body">
+            <div class="pd-list">
+              <div class="pd-search">
+                <div class="search-ico"></div>
+                <input id="pd-search" placeholder="Qidirish" value="${escHtml(pdeskQuery)}" oninput="onPdeskSearch(this)"/>
+              </div>
+              ${groups}
+            </div>
+            <div class="pd-main">
+              ${sel ? pdDetailHtml(sel) : `<div style="padding:40px 0;text-align:center;font-size:13px;color:var(--v3-t3)">Loyiha tanlanmagan</div>`}
+            </div>
+          </div>
+        </div>`;
+      }
+
+      // Qidiruv maydoniga har bosishda butun blok qayta chizilgani uchun
+      // fokus yo'qoladi — uni qaytaramiz va kursorni oxiriga qo'yamiz.
+      function restorePdeskSearchFocus() {
+        if (!pdeskSearchFocused) return;
+        const el = document.getElementById("pd-search");
+        if (!el) return;
+        el.focus();
+        el.setSelectionRange(el.value.length, el.value.length);
+      }
       // ── VAZIFALAR ─────────────────────────────────────────────────
       const TASK_STATUS_LABEL = {
         backlog: "Backlog",
