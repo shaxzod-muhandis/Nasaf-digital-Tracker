@@ -42,6 +42,24 @@ function getUsernameFromInitData(raw) {
   }
 }
 
+// Telegram profil rasmi — initData ichidagi `user.photo_url`. Bu
+// qiymat HMAC bilan imzolangan ma'lumotdan olinadi, ya'ni brauzer uni
+// o'zgartira olmaydi.
+//
+// Rasm HAR DOIM ham kelavermaydi: foydalanuvchi Telegram'da profil
+// rasmini kimlar ko'rishini cheklagan bo'lsa yoki ilova qanday
+// ochilganiga qarab maydon umuman bo'lmasligi mumkin. Shu sabab
+// bo'sh qiymat "rasm o'chirilgan" degani EMAS — bunday holda eski
+// rasm saqlanib qoladi.
+function getPhotoUrlFromInitData(raw) {
+  try {
+    const url = JSON.parse(new URLSearchParams(raw).get("user") || "{}").photo_url;
+    return typeof url === "string" && /^https:\/\//.test(url) ? url : null;
+  } catch {
+    return null;
+  }
+}
+
 function isAdminRole(role) {
   return role === "super_admin" || role === "admin";
 }
@@ -96,6 +114,17 @@ function createAuthMiddleware(db) {
         // bo'lmasligi kerak, ikkalasi doim sinxron yozilgani uchun).
         return res.status(403).json({ error: "Ruxsat yo'q", code: "FORBIDDEN", username });
       }
+      // Profil rasmi o'zgargan bo'lsa — yangilaymiz. Har so'rovda
+      // tekshiriladi, lekin yozish faqat manzil haqiqatan boshqa
+      // bo'lgandagina bo'ladi. So'rovni kutdirmaymiz: rasm yangilanishi
+      // javobga ta'sir qilmasligi kerak.
+      const photoUrl = getPhotoUrlFromInitData(initData);
+      if (photoUrl && photoUrl !== row.avatar_url) {
+        row.avatar_url = photoUrl;
+        db.query(`update users set avatar_url = $1 where id = $2`, [photoUrl, row.id]).catch((e) =>
+          console.error("Avatar yangilanmadi:", e.message),
+        );
+      }
       req.tgUser = row.username;
       req.user = row;
       next();
@@ -109,6 +138,7 @@ function createAuthMiddleware(db) {
 module.exports = {
   verifyTelegramInitData,
   getUsernameFromInitData,
+  getPhotoUrlFromInitData,
   isAdminRole,
   createAuthMiddleware,
 };

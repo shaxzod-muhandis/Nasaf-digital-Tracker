@@ -2695,6 +2695,22 @@
         align-items: center;
         gap: 11px;
       }
+      /* Telegram profil rasmi bosh harf USTIGA qo'yiladi (o'rniga
+         emas): rasm yuklanmasa yoki manzil o'lsa, onerror uni olib
+         tashlaydi va ostidagi rangli harf qayta ko'rinadi. */
+      .avatar,
+      .pf-avatar {
+        position: relative;
+        overflow: hidden;
+      }
+      .av-img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
       .avatar {
         width: 32px;
         height: 32px;
@@ -6294,6 +6310,11 @@
         return PERSON_COLORS[h % PERSON_COLORS.length];
       }
 
+      // Profil rasmi teglari. Manzil bo'lmasa — hech narsa, ya'ni
+      // avatarda rangli bosh harf qoladi.
+      function avatarImg(url) {
+        return url ? `<img class="av-img" src="${escHtml(url)}" alt="" onerror="this.remove()">` : "";
+      }
       function initials(label) {
         return String(label || "?")
           .split(/\s+/)
@@ -6627,13 +6648,9 @@
       const NCOIN_MARK = `<svg viewBox="0 0 24 24" fill="none" stroke="var(--nav-coin-mark)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 15.5v-7l5 7v-7"/></svg>`;
 
       function renderSidebar() {
-        document.getElementById("sidebar-avatar").textContent = (
-          myProfile?.firstName ||
-          currentUser ||
-          "?"
-        )
-          .slice(0, 1)
-          .toUpperCase();
+        const sbLetter = (myProfile?.firstName || currentUser || "?").slice(0, 1).toUpperCase();
+        document.getElementById("sidebar-avatar").innerHTML =
+          escHtml(sbLetter) + avatarImg(myProfile?.avatarUrl);
         // Chizmada bu yerda ism va familiya bosh harfi turadi ("Shaxzod S."),
         // @username emas: u uzun bo'lib, qirqilib ketardi. Profil hali
         // yuklanmagan bo'lsa — vaqtincha username.
@@ -10293,7 +10310,7 @@
               ? [u.job_title, u.phone].filter(Boolean).join(" · ") || `@${u.username}`
               : "profil hali to'ldirilmagan";
             return `<div class="list-row">
-              <div class="avatar" style="background:${personColor(u.username)};color:#fff">${u.username.slice(0, 1).toUpperCase()}</div>
+              <div class="avatar" style="background:${personColor(u.username)};color:#fff">${u.username.slice(0, 1).toUpperCase()}${avatarImg(u.avatar_url)}</div>
               <div style="flex:1;min-width:0">
                 <div class="r-name">${escHtml(displayName)}</div>
                 <div class="r-sub"${complete ? "" : ' style="color:var(--red)"'}>${escHtml(sub)}</div>
@@ -10317,7 +10334,7 @@
             return `<div class="pcard">
               <div class="pcard-top">
                 <div class="row" style="display:flex;align-items:center;gap:9px;min-width:0">
-                  <div class="avatar" style="flex-shrink:0;background:${personColor(u.username)};color:#fff">${u.username.slice(0, 1).toUpperCase()}</div>
+                  <div class="avatar" style="flex-shrink:0;background:${personColor(u.username)};color:#fff">${u.username.slice(0, 1).toUpperCase()}${avatarImg(u.avatar_url)}</div>
                   <div class="r-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(displayName)}</div>
                 </div>
                 <div class="m-actions-inline">
@@ -10664,7 +10681,7 @@
             : `@${u.username}`;
           html += `<div class="list-card" style="margin-bottom:10px">
             <div class="grp-hdr">
-              <div class="avatar" style="background:${personColor(u.username)};color:#fff">${u.username.slice(0, 1).toUpperCase()}</div>
+              <div class="avatar" style="background:${personColor(u.username)};color:#fff">${u.username.slice(0, 1).toUpperCase()}${avatarImg(u.avatar_url)}</div>
               <div style="flex:1;min-width:0">
                 <div class="grp-name">${escHtml(displayName)}</div>
                 <div class="grp-sub ${assigned.length === 0 ? "warn" : ""}">${u.job_title ? escHtml(u.job_title) + " · " : ""}${assigned.length === 0 ? "loyiha biriktirilmagan" : `@${escHtml(u.username)}`}</div>
@@ -11784,7 +11801,7 @@
             <div class="pf-col-left" style="display:flex;flex-direction:column;gap:18px">
               <div class="pf-card">
                 <div class="pf-avatar-row">
-                  <div class="pf-avatar">${initials(fullName)}</div>
+                  <div class="pf-avatar">${initials(fullName)}${avatarImg(p.avatarUrl)}</div>
                   <div style="flex:1;min-width:0">
                     <div class="pf-name">${escHtml(fullName)}</div>
                     <div class="pf-badges">
