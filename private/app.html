@@ -4312,6 +4312,26 @@
         cursor: pointer;
       }
       .v3-row + .v3-row { border-top: 1px solid var(--bd2); }
+      /* Qatordagi bitta bosishlik harakat tugmasi. Holat belgisining
+         o'rnida turadi: harakat mumkin bo'lsa tugma, bo'lmasa belgi. */
+      .v3-act {
+        height: 28px;
+        padding: 0 11px;
+        border-radius: 8px;
+        border: none;
+        font-family: inherit;
+        font-size: 11.5px;
+        font-weight: 600;
+        white-space: nowrap;
+        flex: none;
+        cursor: pointer;
+        background: var(--st-onplan-bg);
+        color: var(--st-onplan);
+      }
+      .v3-act.ok {
+        background: var(--st-ahead-bg);
+        color: var(--st-ahead);
+      }
       .v3-title {
         font-size: 14.5px;
         font-weight: 500;
@@ -6929,6 +6949,20 @@
           )
           .sort((a, b) => (a.dueDate || "").localeCompare(b.dueDate || ""));
       }
+      // Qatordan bitta bosishda bajariladigan keyingi qadam. Mantiq
+      // vazifa ekranidagi bilan bir xil (buildTaskStepperHtml) — bu
+      // yerda faqat ASOSIY harakat bor, ikkilamchilari ("Bajarolmadim",
+      // "Qaytarish") vazifa ekranida qoladi. "Navbatga qo'yish" ham
+      // yo'q: u muddat so'raydi, bitta bosishga sig'maydi.
+      function taskQuickStep(t) {
+        const canChange = isAdmin || t.assigneeUsername === currentUser;
+        if (!canChange) return null;
+        if (t.status === "todo") return { label: "Boshlash", status: "in_progress", ok: false };
+        if (t.status === "in_progress") return { label: "Tekshiruvga", status: "review", ok: false };
+        if (t.status === "review" && isAdmin) return { label: "Tasdiqlash", status: "done", ok: true };
+        return null;
+      }
+
       // Vazifa muddatining matni va rangi.
       function taskWhenInfo(task) {
         const todayIso = isoOf(todayDate());
@@ -7010,6 +7044,7 @@
               .slice(0, 6)
               .map((task) => {
                 const w = taskWhenInfo(task);
+                const step = taskQuickStep(task);
                 // Chizmada meta qatorida faqat loyiha nomi turadi — mas'ul
                 // emas. Mobil ekranda joy tor, ikkisi birga sig'maydi va
                 // vazifa nomi qirqilib ketardi.
@@ -7022,7 +7057,11 @@
                       <span class="v3-when ${w.cls}">${w.text}</span>
                     </div>
                   </div>
-                  <span class="type-pill${task.status === "in_progress" ? " alt" : ""}">${escHtml(TASK_STATUS_LABEL[task.status] || "")}</span>
+                  ${
+                    step
+                      ? `<button type="button" class="v3-act${step.ok ? " ok" : ""}" onclick="event.stopPropagation();setTaskStatus('${escArg(task.id)}','${step.status}',this)">${step.label}</button>`
+                      : `<span class="type-pill${task.status === "in_progress" ? " alt" : ""}">${escHtml(TASK_STATUS_LABEL[task.status] || "")}</span>`
+                  }
                 </div>`;
               })
               .join("")
