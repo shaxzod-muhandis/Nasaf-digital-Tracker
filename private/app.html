@@ -7873,7 +7873,7 @@
             </div>
             <div class="pd-stat-col">
               <div class="pd-stat-l">Qolgan</div>
-              <div class="pd-stat-v${left ? " bad" : ""}">${left}</div>
+              <div class="pd-stat-v">${left}</div>
             </div>
             <div class="pd-stat-col">
               <div class="pd-stat-l">Reja bo'yicha</div>
@@ -7949,7 +7949,7 @@
           <div class="pd-body">
             <div class="pd-list">
               <div class="pd-search">
-                <div class="search-ico"></div>
+                <div class="search-ico">${ICON.search}</div>
                 <input id="pd-search" placeholder="Qidirish" value="${escHtml(pdeskQuery)}" oninput="onPdeskSearch(this)"/>
               </div>
               ${groups}
