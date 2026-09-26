@@ -136,13 +136,21 @@ function formatUzPhone(str) {
   return out;
 }
 
+// Fayl bir marta o'qiladi va modul darajasida saqlanadi: deploy ichida
+// u o'zgarmaydi, har so'rovda 556 KB ni diskdan qayta o'qishning
+// ma'nosi yo'q.
+let _appHtmlCache = null;
 function sendAppHtml(res) {
   const appPath = path.join(process.cwd(), "private", "app.html");
   try {
-    const html = fs.readFileSync(appPath, "utf8");
+    if (_appHtmlCache === null) _appHtmlCache = fs.readFileSync(appPath, "utf8");
     res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-    res.send(html);
+    // "no-cache" — brauzer nusxani saqlaydi, lekin har safar
+    // "o'zgardimi?" deb so'raydi. O'zgarmagan bo'lsa ETag orqali 304
+    // qaytadi va 119 KB qayta yuklanmaydi. Avvalgi "no-store" esa
+    // saqlashni butunlay taqiqlab, har ochilishda to'liq yuklatardi.
+    res.setHeader("Cache-Control", "no-cache");
+    res.send(_appHtmlCache);
   } catch (e) {
     res.status(500).json({ error: "App topilmadi", detail: e.message });
   }
@@ -954,6 +962,24 @@ app.post("/api/announcements", auth, async (req, res) => {
 // Mavjud /api/activity-stats faqat bitta xodimniki (done_by bo'yicha
 // filtrlaydi), shu sabab alohida endpoint. Hisobga post/stories
 // belgilashlari va bajarilgan vazifalar kiradi.
+// Ro'yxatni cheklangan parallellik bilan qayta ishlaydi. Chegara
+// ulanishlar havzasi hajmiga teng (lib/db.js: max 3) — undan ko'p
+// qilishning ma'nosi yo'q, ortiqchasi baribir navbatda turadi.
+// Natija tartibi kirish tartibi bilan bir xil qoladi.
+async function mapWithLimit(items, limit, fn) {
+  const out = new Array(items.length);
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (next < items.length) {
+        const i = next++;
+        out[i] = await fn(items[i], i);
+      }
+    }),
+  );
+  return out;
+}
+
 app.get("/api/team-activity", auth, async (req, res) => {
   try {
     const end = todayTashkent();
@@ -1031,7 +1057,10 @@ app.get("/api/projects", auth, async (req, res) => {
     }
 
     const projects = [];
-    for (const project of projectsR.rows) {
+    // Har bir loyiha o'z yozuvlariga tegadi, shu sabab ularni
+    // parallel qayta ishlash xavfsiz. Ilgari sakkizta loyiha ketma-ket
+    // ishlanardi va har biri bir necha so'rov yuborardi.
+    const builtProjects = await mapWithLimit(projectsR.rows, 3, async (project) => {
       const summary = await getProjectCycleSummary(db, project);
       const checksR = await db.query(
         `select c.type, c.seq_number, c.work_date, c.editor_id, c.videographer_id,
@@ -1066,7 +1095,7 @@ app.get("/api/projects", auth, async (req, res) => {
           storyKind: c.story_kind,
         };
       });
-      projects.push({
+      return {
         id: project.slug,
         label: project.label,
         k: summary.cycle.posts_target,
@@ -1082,8 +1111,9 @@ app.get("/api/projects", auth, async (req, res) => {
         anchorDate: project.anchor_date,
         outstandingDebt: summary.outstandingDebt,
         assignees: assigneesByProject[project.id] || [],
-      });
-    }
+      };
+    });
+    projects.push(...builtProjects);
     res.json({ projects, isAdmin: isAdm });
   } catch (e) {
     res.status(500).json({ error: e.message });

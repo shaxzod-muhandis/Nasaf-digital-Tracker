@@ -13897,6 +13897,40 @@
           } catch (e) {}
         }
 
+        // Ma'lumot so'rovlari /api/auth javobiga bog'liq emas — ularning
+        // har biri o'zini initData bilan tasdiqlaydi. Shu sabab ular
+        // auth bilan BIR VAQTDA boshlanadi va yana bitta navbat kutish
+        // yo'qoladi. Ruxsati yo'q foydalanuvchida bu so'rovlar ham rad
+        // etiladi — zarari yo'q, chunki javob baribir ishlatilmaydi.
+        let profileIncomplete = false;
+        let showBirthdayGreeting = false;
+        const loadPerms = async () => {
+          try {
+            const r = await apiFetch("/api/permissions");
+            if (r.ok) perms = await r.json();
+          } catch (e) {}
+        };
+        const loadMe = async () => {
+          try {
+            const r = await apiFetch("/api/me");
+            if (r.ok) {
+              const d = await r.json();
+              myProfile = d.user;
+              if (typeof d.ncoinBalance === "number") myNcoinBalance = d.ncoinBalance;
+              profileIncomplete = !!d.profileIncomplete;
+              showBirthdayGreeting = !!d.showBirthdayGreeting;
+            }
+          } catch (e) {}
+        };
+        const dataReady = Promise.all([
+          loadPerms(),
+          loadMe(),
+          loadProjects(),
+          loadStaff(),
+          loadTasks(),
+          loadTags(),
+        ]);
+
         const initData = getInitData();
         if (initData) {
           try {
@@ -13937,29 +13971,14 @@
           }).catch(() => {});
         }
 
-        try {
-          const r = await apiFetch("/api/permissions");
-          if (r.ok) perms = await r.json();
-        } catch (e) {}
+        // Yuqorida boshlangan so'rovlarning hammasi tugashini kutamiz.
+        await dataReady;
 
-        let profileIncomplete = false;
-        let showBirthdayGreeting = false;
-        try {
-          const r = await apiFetch("/api/me");
-          if (r.ok) {
-            const d = await r.json();
-            myProfile = d.user;
-            if (typeof d.ncoinBalance === "number") myNcoinBalance = d.ncoinBalance;
-            profileIncomplete = !!d.profileIncomplete;
-            showBirthdayGreeting = !!d.showBirthdayGreeting;
-          }
-        } catch (e) {}
-
-        await loadProjects();
-        await loadStaff();
-        await loadTasks();
-        await loadTags();
-        await loadMyActivity();
+        // Faollik kartasi ilovaning ochilishini kutdirmaydi — fonda
+        // yuklanadi va kelgach o'z joyi qayta chiziladi.
+        loadMyActivity().then(() => {
+          if (document.getElementById("screen-today")?.classList.contains("active")) renderToday();
+        });
 
         document.getElementById("nav-admin").style.display = isAdmin
           ? "flex"
