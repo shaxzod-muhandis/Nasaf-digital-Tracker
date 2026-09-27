@@ -51,12 +51,21 @@ async function closeCycle(db, cycleId) {
   if (!cycle || cycle.status === "closed") return cycle;
   const { doneK, doneS } = await countDoneChecks(db, cycleId);
   const isDebt = doneK < cycle.posts_target || doneS < cycle.stories_target;
+  // Yopish ATOMAR bo'lishi shart. Yuqoridagi tekshiruv ("status ===
+  // 'closed' bo'lsa qaytamiz") o'qish va yozish orasida ochiq oyna
+  // qoldiradi: ikki so'rov bir vaqtda kelsa, ikkalasi ham davrni
+  // "hali ochiq" deb ko'radi, ikkalasi ham yopadi va ikkalasi ham
+  // loyiha bonusini beradi — har a'zoga +2 o'rniga +4 tushardi.
+  // Endi shart SQL ichida: qatorni faqat BITTA chaqiruv oladi.
   const r = await db.query(
     `update project_cycles set status = 'closed', is_debt = $2, closed_at = now()
-     where id = $1 returning *`,
+     where id = $1 and status = 'active' returning *`,
     [cycleId, isDebt],
   );
   const closed = r.rows[0];
+  // Qator qaytmadi — demak boshqa so'rov bizdan oldin ulgurgan va
+  // bonusni ham o'zi bergan.
+  if (!closed) return await getCycleById(db, cycleId);
   if (!isDebt) {
     await maybeAwardProjectBonus(db, closed).catch((e) => console.error("Loyiha bonusi xatosi:", e.message));
   }
@@ -85,7 +94,19 @@ async function maybeAwardProjectBonus(db, cycle) {
   const label = projR.rows[0]?.label || "Loyiha";
   const permR = await db.query(`select user_id from permissions where project_id = $1`, [cycle.project_id]);
 
+  // Ikkinchi himoya qatlami: shu davr uchun bonus allaqachon berilgan
+  // xodimlarga qayta berilmaydi. Atomar yopish yuqorida ta'minlangan,
+  // lekin bonus boshqa yo'l bilan ham chaqirilib qolsa, bu tekshiruv
+  // balansni shishishdan saqlaydi.
+  const paidR = await db.query(
+    `select user_id from ncoin_transactions
+     where reason = 'project_bonus' and reference_type = 'cycle' and reference_id = $1`,
+    [String(cycle.id)],
+  );
+  const alreadyPaid = new Set(paidR.rows.map((r) => String(r.user_id)));
+
   for (const row of permR.rows) {
+    if (alreadyPaid.has(String(row.user_id))) continue;
     try {
       await awardNcoin(db, {
         userId: row.user_id,
