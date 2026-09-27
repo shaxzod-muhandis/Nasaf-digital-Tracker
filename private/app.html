@@ -1948,38 +1948,44 @@
         background: var(--surf);
         border: 1px solid var(--bd2);
       }
+      /* Bajarilgan kun — yengil yashil fon (Loyihalar sahifasidagi
+         kalendar bilan bir xil til). Avval to'q ko'k bilan to'ldirilardi:
+         oyning yarmi to'q dog'larga aylanib, bugungi kun ham, kelayotgan
+         muddat ham ular orasida yo'qolib ketardi. */
       .cal-cell.done {
-        background: var(--brand);
-        color: #fff;
+        background: var(--st-ahead-bg);
+        border: 1px solid var(--bd2);
         cursor: pointer;
       }
       .cal-cell.done .cn {
-        font-weight: 600;
-        color: #fff;
-      }
-      /* bugungi kun bajarilgan bo'lsa — ko'k, lekin ramka bilan ajratiladi */
-      .cal-cell.done-today {
-        outline: 2px solid var(--ink);
-        outline-offset: -2px;
+        font-weight: 500;
+        color: var(--ink);
       }
       .cal-cell.done .cs {
         opacity: 1;
         font-size: 10px;
         font-weight: 700;
+        color: var(--st-ahead);
       }
-      .cal-cell.today {
-        background: var(--surf);
-        border: 2px solid var(--brand);
+      /* Bugungi kun — har doim to'q ko'k, bajarilgan-bajarilmaganidan
+         qat'i nazar. Ekranda yagona shunday katak bo'lgani uchun u
+         darhol ko'zga tashlanadi. */
+      .cal-cell.today,
+      .cal-cell.done-today {
+        background: var(--brand);
+        border: 1px solid var(--brand);
       }
-      .cal-cell.today .cn {
+      .cal-cell.today .cn,
+      .cal-cell.done-today .cn {
+        font-weight: 700;
+        color: #fff;
+      }
+      .cal-cell.today .cs,
+      .cal-cell.done-today .cs {
         font-weight: 600;
-        color: var(--ink);
-      }
-      .cal-cell.today .cs {
-        font-weight: 600;
-        font-size: 8.5px;
-        color: var(--t2);
-        opacity: 1;
+        font-size: 10px;
+        color: #fff;
+        opacity: 0.9;
       }
       .cal-legend {
         display: flex;
@@ -6299,13 +6305,16 @@
         const d = parseISO(iso);
         return `${d.getDate()}-${MONTHS[d.getMonth()].toLowerCase()} ${d.getFullYear()}`;
       }
-      function renderDateFieldHtml(id, value, placeholder) {
+      // `extraAttrs` — yashirin <input>ga qo'shiladigan atributlar
+      // (masalan onchange). Kun tanlanganda shu input'ga haqiqiy
+      // "change" hodisasi yuboriladi, ya'ni ular ishlayveradi.
+      function renderDateFieldHtml(id, value, placeholder, extraAttrs) {
         const hasVal = !!value;
         return `<div class="date-field${hasVal ? "" : " placeholder"}" id="${id}-field" onclick="openDatePicker('${id}')">
             <span class="date-field-ico">${ICON.calendar}</span>
             <span style="flex:1" id="${id}-label">${hasVal ? fmtDateField(value) : placeholder || "Sana tanlang"}</span>
           </div>
-          <input type="date" id="${id}" class="hidden-native" value="${value || ""}"/>`;
+          <input type="date" id="${id}" class="hidden-native" value="${value || ""}" ${extraAttrs || ""}/>`;
       }
       function openDatePicker(id) {
         closeDatePicker();
@@ -10123,7 +10132,7 @@
           ${type === "k" ? pickerPart : storyTypePart}
           <div class="f-group">
             <label class="f-label">Qaysi kuni chiqdi?</label>
-            <input type="date" class="f-input" id="cm-date" value="${workDate}"/>
+            ${renderDateFieldHtml("cm-date", workDate, "Sana tanlang")}
             <div class="f-hint">Kalendarda shu kun ko'k rangga o'tadi.</div>
           </div>
           <button class="btn btn-blue" id="cm-save" onclick="saveCheckModal('${escArg(slug)}','${type}',${num})">${already ? "Yangilash" : "Belgilash"}</button>
@@ -11439,7 +11448,7 @@
           </div>
           <div class="f-group"><label class="f-label">Telefon raqami</label><input class="f-input" id="ue-phone" value="${escHtml(u.phone || "")}" placeholder="+998 90 123 45 67" oninput="formatPhoneInput(this)"/></div>
           <div class="f-group"><label class="f-label">Lavozimi</label><input class="f-input" id="ue-job" value="${escHtml(u.job_title || "")}"/></div>
-          <div class="f-group"><label class="f-label">Tug'ilgan sana</label><input class="f-input" type="date" id="ue-birth" value="${u.birth_date ? String(u.birth_date).slice(0, 10) : ""}"/></div>
+          <div class="f-group"><label class="f-label">Tug'ilgan sana</label>${renderDateFieldHtml("ue-birth", u.birth_date ? String(u.birth_date).slice(0, 10) : "", "Sana tanlang")}</div>
           <button class="btn btn-blue" id="ue-save-btn" onclick="saveUserEdit('${escArg(username)}')" style="margin-bottom:18px">Saqlash</button>
           ${
             isSuperAdmin
@@ -12385,7 +12394,7 @@
                   </div>
                   <div class="f-group">
                     <label class="f-label">Tug'ilgan sana</label>
-                    <input class="f-input" type="date" id="pf-birth" value="${p.birthDate ? String(p.birthDate).slice(0, 10) : ""}" onchange="pfCheckDirty()"/>
+                    ${renderDateFieldHtml("pf-birth", p.birthDate ? String(p.birthDate).slice(0, 10) : "", "Sana tanlang", 'onchange="pfCheckDirty()"')}
                   </div>
                   <div class="f-group" style="margin-bottom:0">
                     <label class="f-label">Telegram</label>
@@ -13517,7 +13526,7 @@
             </div>
             <div class="f-group"><label class="f-label">Telefon raqami</label><input class="f-input" id="ob-phone" placeholder="+998 90 123 45 67" oninput="formatPhoneInput(this)"/></div>
             <div class="f-group"><label class="f-label">Lavozimi</label><input class="f-input" id="ob-job" placeholder="SMM manager"/></div>
-            <div class="f-group"><label class="f-label">Tug'ilgan sana (ixtiyoriy)</label><input class="f-input" type="date" id="ob-birth"/></div>
+            <div class="f-group"><label class="f-label">Tug'ilgan sana (ixtiyoriy)</label>${renderDateFieldHtml("ob-birth", "", "Sana tanlang")}</div>
             <div id="ob-err" style="color:var(--red);font-size:12px;margin-bottom:10px"></div>
             <button class="btn btn-blue" id="ob-save-btn" onclick="submitOnboarding()">Davom etish</button>
           </div>`;
