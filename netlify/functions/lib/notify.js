@@ -81,8 +81,11 @@ async function resolveRecipients(db, actorUsername, projectId) {
   const recipients = [];
   const seen = new Set();
   envIds.forEach((id) => {
-    recipients.push({ chatId: id });
+    // ENV ro'yxatining O'ZIDA ham bir xil id ikki marta yozilgan
+    // bo'lishi mumkin — shuning uchun bu yerda ham tekshiriladi.
+    if (seen.has(id)) return;
     seen.add(id);
+    recipients.push({ chatId: id });
   });
 
   const r = await db.query(
@@ -136,7 +139,14 @@ async function notifyCheckChange(db, { actorUserId, actorUsername, project, cycl
   if (actorUserId) {
     const ur = await db.query(`select telegram_chat_id from users where id = $1`, [actorUserId]);
     const chatId = ur.rows[0]?.telegram_chat_id;
-    if (chatId) jobs.push(sendMsg(db, chatId, text, { replyMarkup: appOpenButton() }));
+    // resolveRecipients aktyorni faqat BAZADAN olinadigan ro'yxatdan
+    // chiqaradi (username bo'yicha). ADMIN_CHAT_IDS ro'yxati esa
+    // to'g'ridan-to'g'ri chat id'lardan iborat va u yerda aktyorning
+    // o'zi ham bo'lishi mumkin — admin uchun odatda shunday. O'shanda
+    // u yuqorida allaqachon xabar olgan bo'ladi va bu yerda ikkinchi
+    // marta yuborilsa, aynan bir xil ikkita xabar kelardi.
+    const already = recipients.some((r) => String(r.chatId) === String(chatId));
+    if (chatId && !already) jobs.push(sendMsg(db, chatId, text, { replyMarkup: appOpenButton() }));
   }
 
   await Promise.allSettled(jobs);

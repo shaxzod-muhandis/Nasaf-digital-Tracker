@@ -1464,6 +1464,10 @@ app.patch("/api/checks", auth, async (req, res) => {
     }
 
     const ncoinRef = `${cycle.id}:${type}:${seq}`;
+    // Holat haqiqatan o'zgardimi. Bir xil so'rov ikki marta kelsa
+    // (masalan tugma ikki marta bosilsa), ikkinchisida hech narsa
+    // o'zgarmaydi — o'shanda bildirishnoma ham yuborilmasligi kerak.
+    let stateChanged = false;
     if (checked) {
       // Qayta belgilanganda ham tafsilotlar yangilanadi (modal qayta ochilsa).
       // `xmax = 0` — Postgres'ning haqiqatan yangi qator INSERT qilingani
@@ -1495,7 +1499,8 @@ app.patch("/api/checks", auth, async (req, res) => {
           storyKind,
         ],
       );
-      if (insR.rows[0]?.inserted) {
+      stateChanged = !!insR.rows[0]?.inserted;
+      if (stateChanged) {
         // Rol-asosli Ncoin taqsimoti — bitta post/stories bir nechta
         // odamga (video oluvchi, montaj qiluvchi, SMM menejer) coin
         // berishi mumkin. Har biriga alohida award + shaxsiy Telegram
@@ -1579,7 +1584,8 @@ app.patch("/api/checks", auth, async (req, res) => {
         `delete from checks where cycle_id = $1 and type = $2 and seq_number = $3 returning cycle_id`,
         [cycle.id, type, seq],
       );
-      if (delR.rows[0]) {
+      stateChanged = !!delR.rows[0];
+      if (stateChanged) {
         await reverseNcoin(db, {
           referenceType: "check",
           referenceId: ncoinRef,
@@ -1594,18 +1600,21 @@ app.patch("/api/checks", auth, async (req, res) => {
 
     const { doneK, doneS } = await countDoneChecks(db, cycle.id);
 
-    // Bildirishnoma javob bilan BIRGA kutiladi (serverless'da yo'qolmasligi uchun)
-    await notifyCheckChange(db, {
-      actorUserId: req.user.id,
-      actorUsername: req.user.username,
-      project,
-      cycle,
-      type,
-      seqNumber: seq,
-      checked: !!checked,
-      doneK,
-      doneS,
-    }).catch((e) => console.error("Bildirishnoma xatosi:", e.message));
+    // Bildirishnoma javob bilan BIRGA kutiladi (serverless'da
+    // yo'qolmasligi uchun) va FAQAT holat o'zgargan bo'lsa yuboriladi.
+    if (stateChanged) {
+      await notifyCheckChange(db, {
+        actorUserId: req.user.id,
+        actorUsername: req.user.username,
+        project,
+        cycle,
+        type,
+        seqNumber: seq,
+        checked: !!checked,
+        doneK,
+        doneS,
+      }).catch((e) => console.error("Bildirishnoma xatosi:", e.message));
+    }
 
     res.json({ ok: true, checked: !!checked, doneK, doneS, cycleStatus: cycle.status, isDebt: cycle.is_debt });
   } catch (e) {
@@ -3117,11 +3126,17 @@ app.post("/api/test-notify", auth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   if (!process.env.BOT_TOKEN) return res.status(500).json({ error: "BOT_TOKEN yo'q" });
   const text = `🔔 <b>Test xabar</b>\n✅ Nasaf Digital (Postgres) ishlayapti!\n👤 Admin: @${req.user.username}`;
-  const envIds = (process.env.ADMIN_CHAT_IDS || process.env.ALL_CHAT_IDS || "")
-    .replace(/['"]/g, "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter((s) => /^\d+$/.test(s));
+  // Takrorlar olib tashlanadi: ENV ro'yxatida bir xil id ikki marta
+  // yozilgan bo'lsa, xabar ham ikki marta ketardi.
+  const envIds = [
+    ...new Set(
+      (process.env.ADMIN_CHAT_IDS || process.env.ALL_CHAT_IDS || "")
+        .replace(/['"]/g, "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => /^\d+$/.test(s)),
+    ),
+  ];
   const usersR = await db.query(`select username, telegram_chat_id from users where telegram_chat_id is not null`);
   const sent = [];
   const sends = [];
