@@ -96,6 +96,8 @@
         --st-ahead-bg: #e8f6ec;
         --st-ahead-dot: #16a34a;
         --track: #e6e9ed;
+        /* Vazifalar doskasi ustuni foni (v3 dizayn: rgb(237,239,242)) */
+        --tb-col-bg: #edeff2;
         --marker: #0e1726;
         --type-post: #255f91;
         --type-post-bg: #eaf2f9;
@@ -194,6 +196,7 @@
         --st-ahead-bg: rgba(22, 163, 74, 0.18);
         --st-ahead-dot: #16a34a;
         --track: rgba(255, 255, 255, 0.12);
+        --tb-col-bg: rgba(255, 255, 255, 0.04);
         --marker: #e8ecf2;
         --type-post: #7fb3dd;
         --type-post-bg: rgba(47, 122, 185, 0.18);
@@ -3112,6 +3115,648 @@
         color: var(--red);
       }
 
+      /* ── VAZIFALAR — mobil va desktop uchun UMUMIY bo'laklar ────────── */
+      /* Segment (Hammasi / Menga / Men berganlar) — ikkala o'lchamda ham */
+      .tb-seg {
+        display: flex;
+        height: 28px;
+        background: var(--chip);
+        border-radius: 8px;
+        padding: 2px;
+        gap: 2px;
+        flex: none;
+      }
+      .tb-seg-btn {
+        height: 24px;
+        padding: 0 11px;
+        border: 0;
+        background: transparent;
+        border-radius: 6px;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--v3-t2);
+        cursor: pointer;
+        font-family: inherit;
+        white-space: nowrap;
+      }
+      .tb-seg-btn.active {
+        background: var(--surf);
+        color: var(--t5);
+        font-weight: 600;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+      }
+      /* Ustuvorlik ko'rsatkichi — 3 ta ustun (5/8/12px) */
+      .tb-pri {
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+        height: 12px;
+        flex: none;
+        margin-top: 3px;
+      }
+      .tb-pri i {
+        width: 3px;
+        border-radius: 1px;
+        display: block;
+      }
+
+      /* ── VAZIFALAR — mobil ro'yxat (v3) ─────────────────────────────── */
+      /* Vazifalar ro'yxati o'z chekka bo'shlig'ini o'zi beradi */
+      #screen-tasks .scroll {
+        padding: 0 0 calc(100px + env(safe-area-inset-bottom, 0px));
+      }
+      .tm-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 14px 16px 0;
+      }
+      /* Yuqoridagi 4 ta qisqa statistika kartasi */
+      .tm-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+      }
+      .tm-stat {
+        background: var(--surf);
+        border-radius: 12px;
+        padding: 9px 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        cursor: pointer;
+        border: 1px solid transparent;
+      }
+      .tm-stat.on { border-color: var(--brand); }
+      .tm-stat-n {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--t5);
+        font-variant-numeric: tabular-nums;
+        line-height: 1.1;
+      }
+      .tm-stat-lbl {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--v3-t3);
+        min-width: 0;
+      }
+      .tm-stat-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex: none;
+      }
+      .tm-stat-lbl span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      /* Guruh sarlavhasi + oq karta ichidagi qatorlar */
+      .tm-sec-hdr {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 2px 8px;
+      }
+      .tm-sec-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex: none;
+      }
+      .tm-sec-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--t5);
+      }
+      .tm-sec-count {
+        font-size: 12.5px;
+        color: var(--v3-t3);
+        font-variant-numeric: tabular-nums;
+      }
+      .tm-card {
+        background: var(--surf);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .tm-row {
+        display: flex;
+        gap: 12px;
+        padding: 12px 14px;
+        align-items: flex-start;
+        cursor: pointer;
+      }
+      .tm-row + .tm-row { border-top: 1px solid var(--bd1); }
+      .tm-row.muted { opacity: 0.6; }
+      .tm-row-main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .tm-row-title {
+        font-size: 14.5px;
+        font-weight: 500;
+        line-height: 1.35;
+        color: var(--t5);
+      }
+      .tm-row-meta {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex-wrap: wrap;
+      }
+      .tm-row-proj {
+        font-size: 11.5px;
+        color: var(--v3-t4);
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .tm-row-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+        flex: none;
+      }
+      .tm-row-due {
+        font-size: 11.5px;
+        font-weight: 500;
+        white-space: nowrap;
+      }
+      .tm-row-due.late { color: var(--red); }
+      .tm-row-due.soon { color: var(--amber); }
+      .tm-row-due.norm { color: var(--v3-t3); }
+      .tm-av {
+        width: 24px;
+        height: 24px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 600;
+        color: #fff;
+        flex: none;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* ── YANGI VAZIFA — mobil oyna (v3) ─────────────────────────────── */
+      .ntv3-ov {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.38);
+        z-index: 800;
+      }
+      .ntv3 {
+        position: absolute;
+        inset: 36px 0 0;
+        background: var(--bg);
+        border-radius: 22px 22px 0 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .ntv3-grab {
+        width: 38px;
+        height: 5px;
+        border-radius: 3px;
+        background: var(--track);
+        margin: 8px auto 0;
+        flex: none;
+      }
+      .ntv3-hdr {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px 12px;
+        flex: none;
+      }
+      .ntv3-title {
+        flex: 1;
+        text-align: center;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--ink, var(--t5));
+      }
+      .ntv3-hbtn {
+        border: 0;
+        background: transparent;
+        font-size: 14.5px;
+        font-family: inherit;
+        cursor: pointer;
+        padding: 4px 2px;
+        min-width: 58px;
+        white-space: nowrap;
+      }
+      .ntv3-hbtn.cancel { color: var(--v3-t2); text-align: left; }
+      .ntv3-hbtn.save { color: var(--brand); font-weight: 600; text-align: right; }
+      .ntv3-hbtn[disabled] { opacity: 0.45; cursor: default; }
+      .ntv3-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 16px calc(24px + env(safe-area-inset-bottom, 0px));
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .ntv3-card {
+        background: var(--surf);
+        border-radius: 14px;
+        padding: 4px 14px;
+      }
+      .ntv3-card input,
+      .ntv3-card textarea {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        font-family: inherit;
+        color: var(--ink, var(--t5));
+        outline: none;
+        padding: 12px 0;
+        resize: none;
+      }
+      .ntv3-card input {
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .ntv3-card textarea {
+        font-size: 14.5px;
+        line-height: 1.6;
+        border-top: 1px solid var(--bd1);
+        min-height: 78px;
+      }
+      .ntv3-card input::placeholder,
+      .ntv3-card textarea::placeholder { color: var(--v3-t4); font-weight: 400; }
+      .ntv3-props {
+        background: var(--surf);
+        border-radius: 14px;
+        padding: 0 14px;
+      }
+      .ntv3-row {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        height: 50px;
+        cursor: pointer;
+      }
+      .ntv3-row + .ntv3-row { border-top: 1px solid var(--bd1); }
+      .ntv3-ico {
+        width: 19px;
+        height: 19px;
+        color: var(--v3-t3);
+        flex: none;
+        display: flex;
+      }
+      .ntv3-lbl {
+        font-size: 14.5px;
+        font-weight: 500;
+        color: var(--t5);
+        flex: none;
+      }
+      .ntv3-val {
+        flex: 1;
+        min-width: 0;
+        text-align: right;
+        font-size: 14px;
+        color: var(--v3-t2);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .ntv3-val.empty { color: var(--v3-t4); }
+      .ntv3-chev {
+        width: 16px;
+        height: 16px;
+        color: var(--v3-t4);
+        flex: none;
+        display: flex;
+      }
+      .ntv3-hint {
+        font-size: 12.5px;
+        color: var(--v3-t3);
+        padding: 0 4px;
+      }
+      /* Tanlov oynasi (Kimga/Muddat/... ustiga chiqadi) */
+      .ntv3-pick-ov {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.38);
+        z-index: 820;
+        display: flex;
+        align-items: flex-end;
+      }
+      .ntv3-pick {
+        background: var(--bg);
+        border-radius: 18px 18px 0 0;
+        width: 100%;
+        max-height: 70vh;
+        overflow-y: auto;
+        padding: 14px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+      }
+      .ntv3-pick-t {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--ink, var(--t5));
+        margin-bottom: 12px;
+      }
+      .ntv3-opt {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 46px;
+        background: var(--surf);
+        border-radius: 12px;
+        padding: 0 14px;
+        margin-bottom: 8px;
+        font-size: 14.5px;
+        color: var(--t5);
+        cursor: pointer;
+      }
+      .ntv3-opt.on {
+        outline: 1.5px solid var(--brand);
+        color: var(--brand);
+        font-weight: 600;
+      }
+
+      /* ── VAZIFA DETALI — mobil (v3) ─────────────────────────────────── */
+      .tdm-hdr {
+        background: var(--surf);
+        border-bottom: 1px solid var(--bd1);
+        padding: calc(10px + var(--tg-safe-top)) 16px 10px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .tdm-iconbtn {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        border: 0;
+        background: var(--chip);
+        color: var(--t5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .tdm-hdr-mid {
+        flex: 1;
+        min-width: 0;
+        text-align: center;
+      }
+      .tdm-hdr-ref {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--t5);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .tdm-hdr-sub {
+        font-size: 11.5px;
+        color: var(--v3-t3);
+        margin-top: 1px;
+        font-variant-numeric: tabular-nums;
+      }
+      .tdm-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 14px 16px 0;
+      }
+      /* Muddat banneri */
+      .tdm-banner {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        background: var(--red-bg);
+        border: 1px solid rgba(220, 38, 38, 0.25);
+        border-radius: 12px;
+        padding: 12px 14px;
+      }
+      .tdm-banner.soft {
+        background: var(--amber-bg);
+        border-color: rgba(217, 119, 6, 0.25);
+      }
+      .tdm-banner-ico {
+        width: 20px;
+        height: 20px;
+        color: var(--red);
+        flex: none;
+        display: flex;
+      }
+      .tdm-banner.soft .tdm-banner-ico { color: var(--amber); }
+      .tdm-banner-t {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--red);
+      }
+      .tdm-banner.soft .tdm-banner-t { color: var(--amber); }
+      .tdm-banner-s {
+        font-size: 12px;
+        color: var(--v3-t2);
+        margin-top: 2px;
+      }
+      /* Asosiy karta: teg + sarlavha + tavsif */
+      .tdm-card {
+        background: var(--surf);
+        border-radius: 14px;
+        padding: 14px;
+      }
+      .tdm-title {
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1.35;
+        color: var(--ink, var(--t5));
+        margin-top: 10px;
+      }
+      .tdm-desc {
+        font-size: 15px;
+        font-weight: 400;
+        line-height: 1.75;
+        color: var(--v3-t2);
+        margin-top: 12px;
+        white-space: pre-wrap;
+      }
+      /* Xossalar kartasi */
+      .tdm-props {
+        background: var(--surf);
+        border-radius: 14px;
+        padding: 2px 14px;
+      }
+      .tdm-prop {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 44px;
+      }
+      .tdm-prop + .tdm-prop { border-top: 1px solid var(--bd1); }
+      .tdm-prop-lbl {
+        width: 108px;
+        flex: none;
+        font-size: 13px;
+        color: var(--v3-t3);
+      }
+      .tdm-prop-val {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13.5px;
+        font-weight: 500;
+        color: var(--t5);
+        justify-content: flex-end;
+        text-align: right;
+      }
+      .tdm-prop-val.link { color: var(--brand); }
+      /* Checklist */
+      .tdm-check-hdr {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 2px 0 6px;
+      }
+      .tdm-check-t {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--t5);
+        flex: 1;
+      }
+      .tdm-check-n {
+        font-size: 12.5px;
+        color: var(--v3-t3);
+        font-variant-numeric: tabular-nums;
+      }
+      .tdm-check-row {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        height: 40px;
+      }
+      .tdm-check-row + .tdm-check-row { border-top: 1px solid var(--bd1); }
+      .tdm-check-box {
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        border: 1.5px solid var(--track);
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .tdm-check-box.done {
+        background: var(--green);
+        border-color: var(--green);
+      }
+      .tdm-check-txt {
+        font-size: 14px;
+        color: var(--t5);
+        flex: 1;
+        min-width: 0;
+      }
+      .tdm-check-txt.done {
+        text-decoration: line-through;
+        color: var(--v3-t4);
+      }
+      /* Pastki panel: bosqich ko'rsatkichi + amal tugmasi */
+      /* Bo'sh bo'lsa (detal hali chizilmagan) — ko'rinmasin */
+      .tdm-bar:empty,
+      .tdm-hdr:empty {
+        display: none;
+      }
+      /* Ekran `min-height:100dvh` bo'lgani uchun (hujjatning o'zi
+         aylanadi) panel `sticky` qilinadi — ro'yxat uzun bo'lsa ham
+         pastda ko'rinib turadi. */
+      .tdm-bar {
+        position: sticky;
+        bottom: 0;
+        z-index: 5;
+        flex-shrink: 0;
+        background: var(--surf);
+        border-top: 1px solid var(--bd1);
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .tdm-steps {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .tdm-step-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--track);
+        flex: none;
+      }
+      .tdm-step-dot.done { background: var(--green); }
+      .tdm-step-dot.current {
+        width: 12px;
+        height: 12px;
+        background: var(--brand);
+        box-shadow: 0 0 0 4px rgba(47, 122, 185, 0.18);
+      }
+      .tdm-step-line {
+        height: 2px;
+        flex: 1;
+        background: var(--track);
+        margin: 0 6px;
+      }
+      .tdm-step-line.done { background: var(--green); }
+      .tdm-bar-row {
+        display: flex;
+        gap: 10px;
+      }
+      .tdm-act {
+        flex: 1;
+        height: 50px;
+        border-radius: 12px;
+        border: 0;
+        background: var(--brand);
+        color: #fff;
+        font-size: 15px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      .tdm-act.green { background: var(--green); }
+      .tdm-act[disabled] {
+        background: var(--chip);
+        color: var(--v3-t4);
+        cursor: default;
+      }
+      .tdm-more {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        border: 0;
+        background: var(--chip);
+        color: var(--t5);
+        font-size: 18px;
+        flex: none;
+        cursor: pointer;
+        font-family: inherit;
+      }
+
       /* ── VAZIFA DETALI PANELI ───────────────────────────────────────── */
       .td-hdr {
         background: var(--surf);
@@ -5392,6 +6037,231 @@
           margin-top: 12px;
         }
 
+        /* ══ VAZIFALAR — desktop doska (v3) ══════════════════════════ */
+        /* Filtr qatori: segment + uzuq chiziqli chiplar + Arxiv.
+           Sarlavha ostida, doskadan tashqarida turadi. */
+        .tb-filters {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 14px 24px 0;
+          flex-wrap: wrap;
+        }
+        .tb-div {
+          width: 1px;
+          height: 22px;
+          background: var(--bd1);
+          flex: none;
+        }
+        .tb-chip {
+          height: 32px;
+          padding: 0 11px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          border: 1px dashed var(--track);
+          border-radius: 8px;
+          background: transparent;
+          font-size: 12.5px;
+          font-weight: 500;
+          color: var(--v3-t2);
+          cursor: pointer;
+          font-family: inherit;
+          white-space: nowrap;
+        }
+        .tb-chip:hover { border-color: var(--v3-t4); }
+        .tb-chip.on {
+          border-style: solid;
+          border-color: var(--brand);
+          color: var(--brand);
+          background: var(--brand-bg, rgba(47, 122, 185, 0.08));
+        }
+        .tb-chip .tb-chip-chev {
+          width: 13px;
+          height: 13px;
+          color: var(--v3-t4);
+          flex: none;
+          display: flex;
+        }
+        .tb-chip.on .tb-chip-chev { color: var(--brand); }
+        .tb-archive {
+          height: 32px;
+          padding: 0 11px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          border: 0;
+          background: transparent;
+          border-radius: 8px;
+          font-size: 12.5px;
+          font-weight: 500;
+          color: var(--v3-t2);
+          cursor: pointer;
+          font-family: inherit;
+          white-space: nowrap;
+        }
+        .tb-archive:hover { background: var(--chip); }
+        .tb-archive.on { background: var(--chip); color: var(--t5); font-weight: 600; }
+        .tb-archive b { font-weight: 600; color: var(--v3-t3); font-variant-numeric: tabular-nums; }
+
+        /* Doska: ustunlar teng kenglikda, butun balandlikni egallaydi */
+        .tb-board {
+          display: grid;
+          gap: 12px;
+          padding: 14px 24px 24px;
+          align-items: start;
+          flex: 1;
+          min-height: 0;
+        }
+        .tb-col {
+          background: var(--tb-col-bg);
+          border-radius: 14px;
+          padding: 10px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          min-width: 0;
+        }
+        .tb-col-hdr {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 2px 4px 4px;
+        }
+        .tb-col-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          flex: none;
+        }
+        .tb-col-title {
+          font-size: 13.5px;
+          font-weight: 600;
+          color: var(--t5);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .tb-col-count {
+          font-size: 12.5px;
+          color: var(--v3-t3);
+          font-variant-numeric: tabular-nums;
+          flex: none;
+        }
+        .tb-col-add {
+          width: 20px;
+          height: 20px;
+          border: 0;
+          background: transparent;
+          border-radius: 6px;
+          color: var(--v3-t3);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex: none;
+          font-family: inherit;
+        }
+        .tb-col-add:hover { background: var(--chip); color: var(--t5); }
+
+        /* Kartochka */
+        .tb-card {
+          background: var(--surf);
+          border-radius: 12px;
+          padding: 11px 12px;
+          cursor: pointer;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+        }
+        .tb-card:hover { box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1); }
+        .tb-card.muted { opacity: 0.62; }
+        .tb-card-top {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .tb-ref {
+          font-size: 11px;
+          font-weight: 500;
+          color: var(--v3-t4);
+          font-variant-numeric: tabular-nums;
+          letter-spacing: 0.02em;
+          flex: 1;
+        }
+        .tb-av {
+          width: 22px;
+          height: 22px;
+          border-radius: 7px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 10.5px;
+          font-weight: 600;
+          color: #fff;
+          flex: none;
+          position: relative;
+          overflow: hidden;
+        }
+        .tb-card-title {
+          font-size: 14px;
+          font-weight: 500;
+          line-height: 1.4;
+          color: var(--t5);
+        }
+        .tb-card-meta {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .tb-checkn {
+          font-size: 11.5px;
+          color: var(--v3-t3);
+          font-variant-numeric: tabular-nums;
+          display: flex;
+          align-items: center;
+          gap: 3px;
+        }
+        .tb-card-foot {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .tb-due {
+          font-size: 11.5px;
+          font-weight: 500;
+          flex: none;
+        }
+        .tb-due.late { color: var(--red); }
+        .tb-due.soon { color: var(--amber); }
+        .tb-due.norm { color: var(--v3-t3); }
+        .tb-proj {
+          font-size: 11.5px;
+          color: var(--v3-t4);
+          flex: 1;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          text-align: right;
+        }
+        .tb-more {
+          font-size: 12px;
+          color: var(--v3-t3);
+          text-align: center;
+          padding: 6px 0 2px;
+          cursor: pointer;
+        }
+        .tb-more:hover { color: var(--brand); }
+        .tb-col-empty {
+          font-size: 12px;
+          color: var(--v3-t4);
+          text-align: center;
+          padding: 10px 0;
+        }
+
         /* ── Kontent ustuni: sidebar uchun joy + kengroq o'qish maydoni ── */
         .screen {
           margin-left: 224px;
@@ -5418,7 +6288,6 @@
         #screen-projects .hdr,
         #screen-projects .scroll,
         #screen-tasks .hdr,
-        #screen-tasks .scroll,
         #screen-tracker .trk-hdr,
         #screen-admin .hdr,
         #screen-admin .scroll,
@@ -5437,7 +6306,6 @@
         body.sidebar-collapsed #screen-projects .hdr,
         body.sidebar-collapsed #screen-projects .scroll,
         body.sidebar-collapsed #screen-tasks .hdr,
-        body.sidebar-collapsed #screen-tasks .scroll,
         body.sidebar-collapsed #screen-tracker .trk-hdr,
         body.sidebar-collapsed #screen-admin .hdr,
         body.sidebar-collapsed #screen-admin .scroll,
@@ -5447,6 +6315,12 @@
         }
         body.sidebar-collapsed #screen-tracker .trk-main {
           padding-left: 20px;
+        }
+        /* Vazifalar doskasi — filtr qatori va ustunlar bir xil chekkada
+           turishi uchun padding'ni ichkaridagi .tb-filters/.tb-board
+           o'zi beradi (umumiy 32px/20px qoidasi bu yerda qo'llanmaydi). */
+        #screen-tasks .scroll {
+          padding: 0 0 24px;
         }
         #screen-history .hdr,
         #screen-history .scroll,
@@ -5993,12 +6867,11 @@
           <div class="hdr-sub" id="tasks-summary">—</div>
         </div>
         <div class="desktop-flex" id="tasks-desktop-actions" style="align-items: center; gap: 10px">
-          <div class="search-box" style="margin-top: 0; width: 240px; flex: none">
+          <div class="search-box" style="margin-top: 0; width: 240px; height: 38px; flex: none">
             <div class="search-ico"></div>
-            <input id="tasks-search" placeholder="Vazifa, xodim, tag" oninput="renderTasksBody()" />
+            <input id="tasks-search" placeholder="Vazifa, xodim, teg" oninput="renderTasksBody()" />
           </div>
-          <button class="btn btn-soft" style="width: auto; height: 40px; padding: 0 16px; white-space: nowrap; display: flex; align-items: center; gap: 6px" onclick="openTasksFilterSheet()">Filtr <span class="mini-chevron" style="color: var(--chev)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></button>
-          <button class="btn btn-blue" id="tasks-new-btn" style="width: auto; height: 40px; padding: 0 18px; white-space: nowrap; display: none; align-items: center; justify-content: center" onclick="openNewTaskSheet()">+ Yangi vazifa</button>
+          <button class="btn btn-blue" id="tasks-new-btn" style="width: auto; height: 38px; padding: 0 16px; white-space: nowrap; display: none; align-items: center; justify-content: center" onclick="openNewTaskSheet()">Yangi vazifa</button>
         </div>
         <div id="me-avatar-tasks" class="hdr-avatar-btn mobile-only" onclick="openProfilePage()">?</div>
       </div>
@@ -6146,14 +7019,16 @@
 
     <!-- ── VAZIFA DETALI (sahifa, modal emas) ────────────────────────── -->
     <div class="screen" id="screen-taskdetail">
-      <div class="td-hdr">
+      <div class="td-hdr desktop-flex">
         <div class="detail-breadcrumb" id="td-breadcrumb"></div>
         <div class="td-counter" id="td-counter"></div>
         <button class="detail-nav-btn" id="td-prev-btn" onclick="stepTaskDetail(-1)">‹</button>
         <button class="detail-nav-btn" id="td-next-btn" onclick="stepTaskDetail(1)">›</button>
         <button class="detail-nav-btn" onclick="closeTaskDetailScreen()">✕</button>
       </div>
+      <div class="tdm-hdr mobile-only" id="tdm-hdr"></div>
       <div class="scroll" id="td-body" style="padding-bottom: 28px"></div>
+      <div class="tdm-bar mobile-only" id="tdm-bar"></div>
     </div>
 
     <!-- ── PROFIL (sahifa, modal emas) ─────────────────────────────── -->
@@ -6515,15 +7390,17 @@
       let announcementUsersList = null; // xodimlar ro'yxati (E'lon tabida "Tanlangan xodimlarga" uchun) — birinchi ochilganda yuklanadi
       let announcementMode = "all"; // "all" | "selected"
       let announcementSelected = new Set(); // tanlangan xodim username'lari
-      let taskBoardFilter = { assignee: "", priority: "", tag: "", q: "" };
-      let taskScope = "menda"; // mobil va desktop: "menda" | "jamoada" — ikkalasida ham baravar
+      let taskBoardFilter = { assignee: "", priority: "", tag: "", project: "", q: "" };
+      // v3 Vazifalar: segment (Hammasi / Menga / Men berganlar) va Arxiv
+      // ko'rinishi — mobil va desktop bir xil holatdan o'qiydi.
+      let taskSeg = "hammasi"; // hammasi | menga | menberdim
+      let taskArchiveOpen = false; // "Arxiv N" bosilganda — arxiv ustuni ko'rinadi
       let taskScopeInitialized = false; // renderTasksScreen()dagi bir martalik aqlli standart uchun
       let taskStatusChip = "all"; // mobil: status-chip filtri
-      let taskOpenFilter = "ochiq"; // desktop board: "ochiq" | "barchasi" (Bajarildi/Arxiv ustunlarini ko'rsatish)
       let taskDetailNav = { ids: [], index: -1 }; // detal panelida oldingi/keyingi
       let taskDetailTab = "comments"; // "Izohlar" / "Faoliyat" — vazifa yangi ochilganda "comments"ga qaytadi
       let taskDetailActivityCache = []; // oxirgi yuklangan activity — tab almashtirishda qayta so'rov yubormaslik uchun
-      let taskEmployeeExpanded = new Set(); // mobil "Jamoada" — kengaytirilgan xodimlar
+      let taskColExpanded = new Set(); // doska ustuni "+ yana N ta" bosilgan
       const POSITION_LABELS = {
         montajchi: "Montajchi",
         mobilograf: "Mobilograf",
@@ -8029,9 +8906,9 @@
         if (!dateStr) return Infinity;
         return daysBetween(parseISO(String(dateStr).slice(0, 10)), todayDate());
       }
-      // Faol vazifalarda nisbiy matn (Bugun/N kun) — dizaynga mos;
-      // Bajarildi/Arxiv kartochkalarida esa taqvim sanasi ko'rsatiladi
-      // (buildTaskCardHtml'da alohida, bu funksiyani chaqirmasdan).
+      // Faol vazifalarda nisbiy matn (Bugun/N kun) — vazifa detali
+      // sahifasida ishlatiladi. Doska va mobil ro'yxatdagi muddat
+      // yorlig'i esa alohida — tbDueInfo().
       function dueChipInfo(dueDate) {
         if (!dueDate) return { text: "—", cls: "" };
         const diff = daysBetween(todayDate(), parseISO(dueDate));
@@ -8061,21 +8938,6 @@
         let h = 0;
         for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
         return TAG_PALETTE[h % TAG_PALETTE.length];
-      }
-      function renderTagChipsHtml(tags, muted) {
-        if (!tags || !tags.length) return "";
-        const chips = tags
-          .map((t) => {
-            const c = muted ? { bg: "var(--chip3)", ink: "var(--t3)" } : tagColor(t.name);
-            return `<span class="tag-chip" style="background:${c.bg};color:${c.ink}">${escHtml(t.name)}</span>`;
-          })
-          .join("");
-        return `<div class="kcard-tags">${chips}</div>`;
-      }
-      function taskAvatarHtml(t, sizeCls, muted) {
-        if (!t.assigneeName) return "";
-        const bg = personColor(t.assigneeUsername || t.assigneeName);
-        return `<div class="avatar${sizeCls ? " " + sizeCls : ""}" style="background:${bg};color:#fff${muted ? ";opacity:.6" : ""}" title="${escHtml(t.assigneeName)}">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}</div>`;
       }
       // Xodimlar yuklamasi — faqat OCHIQ (hali yopilmagan) vazifalar
       // bo'yicha, shu ro'yxatdagi (allaqachon rolga qarab scope qilingan)
@@ -8119,15 +8981,6 @@
         taskStatusChip = key;
         renderTasksBody();
       }
-      function setTaskScope(mode) {
-        taskScope = mode;
-        renderTasksBody();
-      }
-      function toggleEmployeeGroup(username) {
-        if (taskEmployeeExpanded.has(username)) taskEmployeeExpanded.delete(username);
-        else taskEmployeeExpanded.add(username);
-        renderTasksBody();
-      }
       async function renderTasksScreen() {
         // Vazifa yaratish — har qanday xodim uchun ochiq (faqat "Bajarildi"
         // deb belgilash admin uchun cheklangan, buttonlar darajasida
@@ -8154,7 +9007,10 @@
         // qo'lda boshqasini tanlasa, shu holatda qoladi.
         if (!taskScopeInitialized) {
           taskScopeInitialized = true;
-          taskScope = isAdmin ? "jamoada" : "menda";
+          // Oddiy xodim avval o'ziga tegishli vazifalarni ko'radi; admin
+          // esa odatda o'ziga vazifa biriktirmaydi — u "Hammasi"dan
+          // boshlaydi. Faqat BIR marta, screen birinchi ochilganda.
+          taskSeg = isAdmin ? "hammasi" : "menga";
         }
         renderTasksBody();
       }
@@ -8171,57 +9027,10 @@
         }
         if (taskBoardFilter.assignee) out = out.filter((t) => t.assigneeUsername === taskBoardFilter.assignee);
         if (taskBoardFilter.priority) out = out.filter((t) => t.priority === taskBoardFilter.priority);
+        if (taskBoardFilter.project) out = out.filter((t) => t.projectSlug === taskBoardFilter.project);
         if (taskBoardFilter.tag) out = out.filter((t) => (t.tags || []).some((tag) => tag.id === taskBoardFilter.tag));
         return out;
       }
-      function openTasksFilterSheet() {
-        const workload = computeWorkload(tasksList);
-        const assigneeOptions = workload
-          .map((w) => `<option value="${escArg(w.username)}"${taskBoardFilter.assignee === w.username ? " selected" : ""}>${escHtml(w.name)}</option>`)
-          .join("");
-        const { body } = makeSheet("Filtr");
-        body.innerHTML = `
-          <div class="f-group">
-            <label class="f-label">Xodim</label>
-            <select class="f-input" id="tf-assignee">
-              <option value="">— Hammasi —</option>
-              ${assigneeOptions}
-            </select>
-          </div>
-          <div class="f-group">
-            <label class="f-label">Ustuvorlik</label>
-            <select class="f-input" id="tf-priority">
-              <option value="">— Hammasi —</option>
-              ${Object.entries(TASK_PRIORITY_LABEL)
-                .map(([k, lbl]) => `<option value="${k}"${taskBoardFilter.priority === k ? " selected" : ""}>${lbl}</option>`)
-                .join("")}
-            </select>
-          </div>
-          <div class="f-group">
-            <label class="f-label">Tag</label>
-            <select class="f-input" id="tf-tag">
-              <option value="">— Hammasi —</option>
-              ${tagsList.map((t) => `<option value="${escArg(t.id)}"${taskBoardFilter.tag === t.id ? " selected" : ""}>${escHtml(t.name)}</option>`).join("")}
-            </select>
-          </div>
-          <div class="f-row">
-            <button class="btn btn-soft" onclick="clearTaskFilters()">Tozalash</button>
-            <button class="btn btn-blue" onclick="applyTasksFilterSheet()">Qo'llash</button>
-          </div>`;
-      }
-      function applyTasksFilterSheet() {
-        taskBoardFilter.assignee = document.getElementById("tf-assignee")?.value || "";
-        taskBoardFilter.priority = document.getElementById("tf-priority")?.value || "";
-        taskBoardFilter.tag = document.getElementById("tf-tag")?.value || "";
-        document.querySelector(".overlay")?.remove();
-        renderTasksBody();
-      }
-      function clearTaskFilters() {
-        taskBoardFilter = { assignee: "", priority: "", tag: "", q: "" };
-        document.querySelector(".overlay")?.remove();
-        renderTasksBody();
-      }
-
       function renderTasksBody() {
         const body = document.getElementById("tasks-body");
         if (!tasksList.length) {
@@ -8232,13 +9041,23 @@
         }
 
         const open = tasksList.filter((t) => !["done", "failed", "cancelled"].includes(t.status));
-        const late = open.filter((t) => t.dueDate && t.dueDate < isoOf(todayDate()));
         const workload = computeWorkload(tasksList);
+        // Sarlavha osti — dizayn bo'yicha shaxsiy xulosa: nechta vazifa
+        // aynan MENGA biriktirilgan va ulardan nechtasi 2 kun ichida
+        // tugaydi (kechikkanlar ham shu songa kiradi).
+        const mine = open.filter((t) => t.assigneeUsername === currentUser);
+        const soon = mine.filter((t) => {
+          if (!t.dueDate) return false;
+          return daysBetween(todayDate(), parseISO(t.dueDate)) <= 2;
+        });
         const sumEl = document.getElementById("tasks-summary");
-        if (sumEl) sumEl.textContent = `${open.length} ochiq · ${late.length} kechikkan · ${workload.length} xodim`;
+        if (sumEl)
+          sumEl.textContent = mine.length
+            ? `${mine.length} ta menga${soon.length ? ` · ${soon.length} tasi 2 kun ichida` : ""}`
+            : `${open.length} ochiq · ${workload.length} xodim`;
 
         const filtered = applyTaskFilters(tasksList);
-        body.innerHTML = `${buildTasksMobileHtml(filtered, workload)}${buildTasksDesktopHtml(filtered, workload)}`;
+        body.innerHTML = `${buildTasksMobileHtml(filtered)}${buildTasksDesktopHtml(filtered)}`;
       }
 
       function sortTasksForBoard(items) {
@@ -8248,206 +9067,279 @@
           return (a.dueDate || "9999").localeCompare(b.dueDate || "9999");
         });
       }
-      // Vazifa kartochkasi — kanban USTUNIDA ham, mobil RO'YXATDA ham
-      // bir xil (bitta manba). Bajarildi/Arxiv ustunidagi kartochkalar
-      // "muted" (xira) uslubda — asosiy e'tibor faol ishga qaratiladi.
-      function buildTaskCardHtml(t) {
-        const col = taskBoardColumn(t);
-        const muted = col === "done" || col === "archive";
-        const due = t.dueDate ? dueChipInfo(t.dueDate) : null;
-        const critical = !muted && due && due.cls === "late";
-
-        let icon;
-        if (t.status === "done") icon = `<div class="kcard-check">✓</div>`;
-        else if (t.status === "failed") icon = `<div class="kcard-fail">✕</div>`;
-        else icon = priorityIcon(t.priority);
-
-        let noteBox = "";
-        if (t.status === "failed" && t.reason) {
-          noteBox = `<div class="kcard-reason">Bajarilmadi · ${escHtml(t.reason)}</div>`;
-        } else if (t.status === "cancelled") {
-          noteBox = `<div class="kcard-reason muted">Bekor qilingan</div>`;
-        } else if (t.status === "review") {
-          // Kim tekshirayotgani alohida saqlanmaydi — faqat "qachondan
-          // beri tekshiruvda" (oxirgi status o'zgarishi taxminan shu payt).
-          const ms = t.updatedAt ? Date.now() - new Date(t.updatedAt).getTime() : null;
-          const hrs = ms == null ? null : Math.max(0, Math.round(ms / 3600000));
-          const elapsed = hrs == null ? "" : hrs < 24 ? ` · ${hrs} soat` : ` · ${Math.round(hrs / 24)} kun`;
-          noteBox = `<div class="kcard-review">Tekshiruvda${elapsed}</div>`;
+      // ── VAZIFALAR DOSKASI (v3) ──────────────────────────────────────
+      // Ustuvorlik ko'rsatkichi — 3 ta ustun (3px kenglik, 5/8/12px
+      // balandlik): daraja qancha yuqori bo'lsa, shuncha ko'pi to'lgan.
+      // Shoshilinch — barchasi qizil.
+      function tbPriBarsHtml(priority) {
+        const level = { urgent: 3, high: 3, medium: 2, low: 1, no_priority: 0 }[priority] ?? 0;
+        const color =
+          priority === "urgent"
+            ? "var(--red)"
+            : { high: "var(--amber)", medium: "var(--brand)", low: "var(--v3-t3)" }[priority] || "var(--track)";
+        const bars = [5, 8, 12]
+          .map((h, i) => `<i style="height:${h}px;background:${i < level ? color : "var(--track)"}"></i>`)
+          .join("");
+        return `<span class="tb-pri" title="${escHtml(TASK_PRIORITY_LABEL[priority] || TASK_PRIORITY_LABEL.no_priority)}">${bars}</span>`;
+      }
+      // Qisqa raqam — dizaynda 4 belgi (masalan "4FC1").
+      function tbRef(id) {
+        return String(id).replace(/-/g, "").slice(0, 4).toUpperCase();
+      }
+      // Muddat yorlig'i: kechikkan — qizil, 2 kun ichida — amber,
+      // qolgani — kul rang. Yopilgan vazifalarda taqvim sanasi.
+      function tbDueInfo(t) {
+        const closed = ["done", "failed", "cancelled"].includes(t.status);
+        if (closed) {
+          const d = t.completedAt || t.updatedAt || t.dueDate;
+          return { text: d ? fmtDay(parseISO(String(d).slice(0, 10))) : "—", cls: "norm" };
         }
-
-        const footDate = muted
-          ? `<span class="due-chip" style="color:var(--chev)">${escHtml(fmtDay(parseISO(t.completedAt || t.updatedAt || t.dueDate || isoOf(todayDate()))))}</span>`
-          : due
-            ? `<span class="due-chip ${due.cls}">${due.text}</span>`
-            : "<span></span>";
-
-        return `<div class="kcard${muted ? " muted" : ""}${critical ? " critical" : ""}" onclick="openTaskActions('${escArg(t.id)}')">
-          <div style="display:flex;align-items:flex-start;gap:7px">
-            ${icon}
-            <div class="r-name" style="font-size:12.5px;flex:1;min-width:0;line-height:1.35;${muted ? "color:var(--t2);font-weight:500" : ""}">${escHtml(t.title)}</div>
-            ${isAdmin ? `<span onclick="event.stopPropagation();openTaskCardMenu('${escArg(t.id)}')" style="width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;color:var(--t3);font-size:13px;cursor:pointer;margin-top:-2px">⋯</span>` : ""}
+        if (!t.dueDate) return { text: "Muddatsiz", cls: "norm" };
+        const diff = daysBetween(todayDate(), parseISO(t.dueDate));
+        if (diff < 0) return { text: `${-diff} kun kechikdi`, cls: "late" };
+        if (diff === 0) return { text: "Bugun", cls: "late" };
+        if (diff <= 2) return { text: `${diff} kun qoldi`, cls: "soon" };
+        return { text: `${diff} kun`, cls: "norm" };
+      }
+      function tbAvatarHtml(t) {
+        if (!t.assigneeName) return "";
+        const bg = personColor(t.assigneeUsername || t.assigneeName);
+        return `<span class="tb-av" style="background:${bg}" title="${escHtml(t.assigneeName)}">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}</span>`;
+      }
+      function tbTagPillHtml(t) {
+        const tag = (t.tags || [])[0];
+        if (!tag) return "";
+        const c = tagColor(tag.name);
+        return `<span class="tag-chip" style="background:${c.bg};color:${c.ink}">${escHtml(tag.name)}</span>`;
+      }
+      function tbCardHtml(t) {
+        const muted = ["done", "failed", "cancelled"].includes(t.status);
+        const due = tbDueInfo(t);
+        const check =
+          t.checklistTotal > 0
+            ? `<span class="tb-checkn">&#9745; ${t.checklistDone}/${t.checklistTotal}</span>`
+            : "";
+        const pill = tbTagPillHtml(t);
+        const metaRow = pill || check ? `<div class="tb-card-meta">${pill}${check}</div>` : "";
+        return `<div class="tb-card${muted ? " muted" : ""}" onclick="openTaskActions('${escArg(t.id)}')">
+          <div class="tb-card-top">
+            ${tbPriBarsHtml(t.priority)}
+            <span class="tb-ref">${tbRef(t.id)}</span>
+            ${tbAvatarHtml(t)}
           </div>
-          ${renderTagChipsHtml(t.tags, muted)}
-          ${noteBox}
-          <div class="kcard-foot">
-            ${taskAvatarHtml(t, "avatar-sm", muted) || "<span></span>"}
-            <span class="r-sub" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${muted ? "color:var(--chev)" : ""}">${t.assigneeName ? `<b style="font-weight:600;${muted ? "" : "color:var(--t5)"}">${escHtml(t.assigneeName)}</b> · ` : ""}${escHtml(t.projectLabel || "Umumiy")}</span>
-            ${footDate}
+          <div class="tb-card-title">${escHtml(t.title)}</div>
+          ${metaRow}
+          <div class="tb-card-foot">
+            <span class="tb-due ${due.cls}">${escHtml(due.text)}</span>
+            <span class="tb-proj">${escHtml(t.projectLabel || "Umumiy")}</span>
           </div>
         </div>`;
       }
-      function buildWorkloadRowHtml(workload) {
-        if (!workload.length) return "";
-        const items = workload
-          .map(
-            (w) => `<div class="workload-item${w.late ? " warn" : ""}">
-              <div class="avatar" style="background:${personColor(w.username || w.name)};color:#fff">${escHtml(w.name.slice(0, 1).toUpperCase())}</div>
-              <div style="min-width:0">
-                <div class="workload-name">${escHtml(w.name)}</div>
-                <div class="workload-sub${w.late ? " warn" : ""}">${w.late ? w.late + " kechikkan · " : ""}${w.open} ochiq</div>
-              </div>
-            </div>`,
-          )
-          .join("");
-        return `<div class="workload-row">${items}</div>`;
+      // Segment: Hammasi / Menga / Men berganlar.
+      function tbApplySeg(list) {
+        if (taskSeg === "menga") return list.filter((t) => t.assigneeUsername === currentUser);
+        if (taskSeg === "menberdim") return list.filter((t) => t.createdByUsername === currentUser);
+        return list;
       }
-      // Vazifalar — katta ekranda 5 ustunli doska (dizayn asosida:
-      // Biriktirilgan/Jarayonda/Tekshiruvda/Bajarildi/Arxiv — taskBoardColumn()
-      // orqali mavjud 7 statusning vizual guruhlanishi). "Ochiq/Barchasi"
-      // — Bajarildi/Arxiv ustunlarini yashirish/ko'rsatish (faqat vizual,
-      // backend so'rovi o'zgarmaydi).
-      function buildTasksDesktopHtml(allTasks, workload) {
-        const scoped = taskScope === "menda" ? allTasks.filter((t) => t.assigneeUsername === currentUser) : allTasks;
-        const cols = taskOpenFilter === "barchasi" ? TASK_BOARD_COLUMNS : TASK_BOARD_COLUMNS.filter((c) => c.key !== "done" && c.key !== "archive");
-        const colsHtml = cols
-          .map((col) => {
-            const items = sortTasksForBoard(scoped.filter((t) => taskBoardColumn(t) === col.key));
-            // Bo'sh ustunda "Bo'sh" deb yozilmaydi — shunchaki jim turadi.
-            const cards = items.map(buildTaskCardHtml).join("");
-            const addBtn = col.key === "archive" ? "" : `<button class="kanban-add" onclick="openNewTaskSheet()" title="Yangi vazifa">+</button>`;
-            const addRow = col.key === "archive" ? "" : `<div class="kanban-add-row" onclick="openNewTaskSheet()">+ Vazifa</div>`;
-            const archiveNote = col.key === "archive" ? `<div class="kanban-archive-note">Yopilgan vazifalar 30 kundan keyin shu yerga o'tadi.</div>` : "";
-            return `<div>
-              <div class="kanban-col-hdr">
-                <span style="display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden">
-                  <span class="kanban-dot" style="${col.dot}"></span>
-                  <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${col.label}</span>
-                </span>
-                <span style="display:flex;align-items:center;gap:4px;flex-shrink:0">
-                  <span class="kanban-count">${items.length}</span>
-                  ${addBtn}
-                </span>
-              </div>
-              ${cards}
-              ${addRow}
-              ${archiveNote}
-            </div>`;
-          })
-          .join("");
-        return `<div class="desktop-only">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap">
-            <div class="seg" style="margin-top:0;width:180px">
-              <button class="seg-btn${taskScope === "menda" ? " active" : ""}" onclick="setTaskScope('menda')">Menda</button>
-              <button class="seg-btn${taskScope === "jamoada" ? " active" : ""}" onclick="setTaskScope('jamoada')">Jamoada</button>
-            </div>
-            <div class="chip-group">
-              <button class="chip-btn${taskOpenFilter === "ochiq" ? " active" : ""}" onclick="setTaskOpenFilter('ochiq')">Ochiq</button>
-              <button class="chip-btn${taskOpenFilter === "barchasi" ? " active" : ""}" onclick="setTaskOpenFilter('barchasi')">Barchasi</button>
-            </div>
-          </div>
-          ${buildWorkloadRowHtml(workload)}
-          ${
-            taskScope === "menda" && !scoped.length
-              ? `<div class="empty"><div class="empty-ico">✓</div><div class="empty-t">Sizga biriktirilgan vazifa yo'q</div><div class="empty-s">"Jamoada" tugmasi orqali boshqa xodimlarning vazifalarini ko'rishingiz mumkin.</div></div>`
-              : `<div class="kanban" style="grid-template-columns:repeat(${cols.length},1fr);margin-top:${workload.length ? "16px" : "0"}">${colsHtml}</div>`
-          }
-        </div>`;
-      }
-      function setTaskOpenFilter(v) {
-        taskOpenFilter = v;
+      function setTaskSeg(v) {
+        taskSeg = v;
+        // Eski mobil guruhlash ham shu segmentga ergashadi.
         renderTasksBody();
       }
-      // Mobil: status-chip filtri + Menda/Jamoada almashtirgich (hammaga
-      // ochiq). /api/tasks HAR BIR foydalanuvchiga barcha vazifalarni
-      // qaytaradi (backendda scope yo'q) — "Menda" filtri shu list ustida
-      // faqat frontendda qo'llanadi, "Jamoada"da esa xodim bo'yicha
-      // guruhlangan ko'rinishga o'tadi.
-      function buildTasksMobileHtml(allTasks, workload) {
-        const chipsHtml = TASK_BOARD_COLUMNS.map((col) => {
-          const count = allTasks.filter((t) => taskBoardColumn(t) === col.key).length;
-          return `<button class="chip-btn${taskStatusChip === col.key ? " active" : ""}" onclick="setTaskStatusChip('${col.key}')">${col.label} ${count}</button>`;
-        }).join("");
-        const allChip = `<button class="chip-btn${taskStatusChip === "all" ? " active" : ""}" onclick="setTaskStatusChip('all')">Hammasi</button>`;
-
-        // Menda/Jamoada — endi barcha xodimlarga ochiq (avval faqat
-        // admin uchun edi): Vazifalar bo'limidagi barcha o'zgarishlar
-        // hammaga ko'rinishi kerak degan talab bo'yicha.
-        const scopeToggle = `<div class="seg" style="margin-bottom:12px">
-              <button class="seg-btn${taskScope === "menda" ? " active" : ""}" onclick="setTaskScope('menda')">Menda</button>
-              <button class="seg-btn${taskScope === "jamoada" ? " active" : ""}" onclick="setTaskScope('jamoada')">Jamoada</button>
-            </div>`;
-
-        let scoped = allTasks;
-        if (taskScope === "menda") scoped = scoped.filter((t) => t.assigneeUsername === currentUser);
-
-        let bodyHtml;
-        if (taskScope === "jamoada") {
-          bodyHtml = buildTasksByEmployeeHtml(scoped, workload);
+      function toggleTaskArchive() {
+        taskArchiveOpen = !taskArchiveOpen;
+        renderTasksBody();
+      }
+      function expandTaskCol(key) {
+        taskColExpanded.add(key);
+        renderTasksBody();
+      }
+      // Uzuq chiziqli filtr chipi — bosilganda tanlov ro'yxati ochiladi.
+      function tbChipHtml(key, label, current) {
+        const chev = `<span class="tb-chip-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>`;
+        return `<button type="button" class="tb-chip${current ? " on" : ""}" onclick="openTaskFilterPicker('${key}')">${escHtml(current || label)}${chev}</button>`;
+      }
+      // Filtr tanlash oynasi — barcha to'rt chip uchun bitta funksiya.
+      function openTaskFilterPicker(key) {
+        const titles = { assignee: "Xodim", project: "Loyiha", priority: "Ustuvorlik", tag: "Teg" };
+        let options = [];
+        if (key === "assignee") {
+          options = computeWorkload(tasksList).map((w) => ({ v: w.username, label: w.name }));
+        } else if (key === "project") {
+          const seen = new Map();
+          tasksList.forEach((t) => {
+            if (t.projectSlug && !seen.has(t.projectSlug)) seen.set(t.projectSlug, t.projectLabel || t.projectSlug);
+          });
+          options = [...seen].map(([v, label]) => ({ v, label }));
+        } else if (key === "priority") {
+          options = Object.entries(TASK_PRIORITY_LABEL).map(([v, label]) => ({ v, label }));
         } else {
-          const byChip = taskStatusChip === "all" ? scoped : scoped.filter((t) => taskBoardColumn(t) === taskStatusChip);
-          const items = sortTasksForBoard(byChip);
-          bodyHtml = items.length
-            ? items.map(buildTaskCardHtml).join("")
-            : `<div class="empty"><div class="empty-ico">✓</div><div class="empty-t">Vazifa yo'q</div><div class="empty-s">Filtrni o'zgartirib ko'ring.</div></div>`;
+          options = tagsList.map((t) => ({ v: t.id, label: t.name }));
         }
+        const { body } = makeSheet(titles[key]);
+        const cur = taskBoardFilter[key];
+        const rows = [{ v: "", label: "Hammasi" }, ...options]
+          .map(
+            (o) =>
+              `<button type="button" class="btn ${o.v === cur ? "btn-blue" : "btn-soft"}" style="margin-bottom:8px;justify-content:flex-start;padding:0 14px" onclick="setTaskFilterValue('${key}','${escArg(o.v)}')">${escHtml(o.label)}</button>`,
+          )
+          .join("");
+        body.innerHTML = rows;
+      }
+      function setTaskFilterValue(key, value) {
+        taskBoardFilter[key] = value;
+        document.querySelector(".overlay")?.remove();
+        renderTasksBody();
+      }
+      // Chipda ko'rsatiladigan joriy qiymat matni (tanlanmagan bo'lsa "").
+      function tbChipCurrent(key) {
+        const v = taskBoardFilter[key];
+        if (!v) return "";
+        if (key === "assignee") return computeWorkload(tasksList).find((w) => w.username === v)?.name || v;
+        if (key === "project") return tasksList.find((t) => t.projectSlug === v)?.projectLabel || v;
+        if (key === "priority") return TASK_PRIORITY_LABEL[v] || v;
+        return tagsList.find((t) => t.id === v)?.name || v;
+      }
+      // Doska — 4 ustun (Biriktirilgan/Jarayonda/Tekshiruvda/Bajarildi),
+      // "Arxiv N" bosilganda beshinchisi qo'shiladi.
+      const TB_COL_LIMIT = 8;
+      function buildTasksDesktopHtml(allTasks) {
+        const scoped = tbApplySeg(allTasks);
+        const archiveCount = allTasks.filter((t) => taskBoardColumn(t) === "archive").length;
+        const cols = taskArchiveOpen ? TASK_BOARD_COLUMNS : TASK_BOARD_COLUMNS.filter((c) => c.key !== "archive");
 
-        return `<div class="mobile-only">
-          ${scopeToggle}
-          <div class="chips" style="margin-top:0">${allChip}${chipsHtml}</div>
-          <div style="margin-top:14px">${bodyHtml}</div>
-        </div>`;
-      }
-      // Har bir ochiq vazifa uchun bitta mini-bar — holatiga qarab rangli
-      // (kechikkan=qizil, jarayonda=ko'k, tekshiruvda=amber, boshqa=kul
-      // rang) — xodim kartasida "kimda qancha va qay holatda" ekanini bir
-      // qarashda ko'rsatadi (dizayndagi sparkline'ga mos).
-      function buildEmpBarsHtml(userTasks) {
-        const today = isoOf(todayDate());
-        const colorFor = (t) => {
-          if (t.dueDate && t.dueDate < today) return "var(--red)";
-          if (t.status === "in_progress") return "var(--brand)";
-          if (t.status === "review") return "var(--amber)";
-          return "var(--nav-off)";
-        };
-        return `<div class="emp-bars">${userTasks
-          .slice(0, 4)
-          .map((t) => `<div class="emp-bar" style="background:${colorFor(t)}"></div>`)
-          .join("")}</div>`;
-      }
-      // "Jamoada" — xodim bo'yicha guruhlangan, tap orqali kengaytiriladi.
-      function buildTasksByEmployeeHtml(list, workload) {
-        if (!workload.length) return `<div class="empty"><div class="empty-s">Hozircha hech kimga vazifa biriktirilmagan.</div></div>`;
-        return workload
-          .map((w) => {
-            const expanded = taskEmployeeExpanded.has(w.username);
-            const userTasks = sortTasksForBoard(
-              list.filter((t) => t.assigneeUsername === w.username && !["done", "failed", "cancelled"].includes(t.status)),
-            );
-            return `<div class="list-card${w.late ? " late" : ""}" style="margin-bottom:${expanded ? "0" : "10px"}">
-              <div class="list-row clickable" onclick="toggleEmployeeGroup('${escArg(w.username)}')">
-                <div class="avatar" style="background:${personColor(w.username || w.name)};color:#fff">${escHtml(w.name.slice(0, 1).toUpperCase())}</div>
-                <div style="flex:1;min-width:0">
-                  <div class="r-name">${escHtml(w.name)}</div>
-                  <div class="r-sub" style="${w.late ? "color:var(--red)" : ""}">${w.late ? w.late + " kechikkan · " : ""}${w.open} ochiq</div>
-                </div>
-                ${!expanded ? buildEmpBarsHtml(userTasks) : ""}
-                <div class="chev">${expanded ? "⌃" : "⌄"}</div>
+        const colsHtml = cols
+          .map((col, ci) => {
+            const items = sortTasksForBoard(scoped.filter((t) => taskBoardColumn(t) === col.key));
+            const expanded = taskColExpanded.has(col.key);
+            const shown = expanded ? items : items.slice(0, TB_COL_LIMIT);
+            const rest = items.length - shown.length;
+            const cards = shown.map(tbCardHtml).join("");
+            const addBtn =
+              ci === 0
+                ? `<button type="button" class="tb-col-add" title="Yangi vazifa" onclick="openNewTaskSheet()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>`
+                : "";
+            return `<div class="tb-col">
+              <div class="tb-col-hdr">
+                <span class="tb-col-dot" style="${col.dot}"></span>
+                <span class="tb-col-title">${col.label}</span>
+                <span class="tb-col-count">${items.length}</span>
+                <div style="flex:1"></div>
+                ${addBtn}
               </div>
-            </div>
-            ${expanded ? `<div style="margin:8px 0 14px">${userTasks.map(buildTaskCardHtml).join("") || `<div style="font-size:12px;color:var(--t3);padding:8px 4px">Ochiq vazifa yo'q</div>`}</div>` : ""}`;
+              ${cards || `<div class="tb-col-empty">—</div>`}
+              ${rest > 0 ? `<div class="tb-more" onclick="expandTaskCol('${col.key}')">+ yana ${rest} ta</div>` : ""}
+            </div>`;
           })
           .join("");
+
+        return `<div class="desktop-only" style="display:flex;flex-direction:column;min-height:100%">
+          <div class="tb-filters">
+            <div class="tb-seg">
+              <button type="button" class="tb-seg-btn${taskSeg === "hammasi" ? " active" : ""}" onclick="setTaskSeg('hammasi')">Hammasi</button>
+              <button type="button" class="tb-seg-btn${taskSeg === "menga" ? " active" : ""}" onclick="setTaskSeg('menga')">Menga</button>
+              <button type="button" class="tb-seg-btn${taskSeg === "menberdim" ? " active" : ""}" onclick="setTaskSeg('menberdim')">Men berganlar</button>
+            </div>
+            <div class="tb-div"></div>
+            ${tbChipHtml("assignee", "Xodim", tbChipCurrent("assignee"))}
+            ${tbChipHtml("project", "Loyiha", tbChipCurrent("project"))}
+            ${tbChipHtml("priority", "Ustuvorlik", tbChipCurrent("priority"))}
+            ${tbChipHtml("tag", "Teg", tbChipCurrent("tag"))}
+            <div style="flex:1"></div>
+            <button type="button" class="tb-archive${taskArchiveOpen ? " on" : ""}" onclick="toggleTaskArchive()">Arxiv <b>${archiveCount}</b></button>
+          </div>
+          <div class="tb-board" style="grid-template-columns:repeat(${cols.length},minmax(0,1fr))">${colsHtml}</div>
+        </div>`;
+      }
+      // ── VAZIFALAR — mobil ro'yxat (v3) ────────────────────────────
+      // Tepada 4 ta qisqa statistika kartasi (bosilsa — o'sha guruh
+      // bo'yicha filtr), ostida holat bo'yicha guruhlangan ro'yxat.
+      // Segment (Hammasi/Menga/Men berganlar) desktop bilan BIR XIL
+      // holatdan (taskSeg) o'qiladi — pastki qismda alohida tugma yo'q,
+      // sarlavha ostidagi segment ikkala o'lchamda ham amal qiladi.
+      // Yorliqlar qisqartirilgan ("Jarayonda"/"Tekshiruvda" emas) — 375px
+      // enli ekranda to'rtta karta bir qatorga sig'ishi uchun; pastdagi
+      // guruh sarlavhalarida to'liq nomlar saqlanadi.
+      const TM_STATS = [
+        { key: "assigned", label: "Yangi" },
+        { key: "in_progress", label: "Jarayon" },
+        { key: "review", label: "Tekshiruv" },
+        { key: "done", label: "Bajarildi" },
+      ];
+      function tmRowHtml(t) {
+        const muted = ["done", "failed", "cancelled"].includes(t.status);
+        const due = tbDueInfo(t);
+        const pill = tbTagPillHtml(t);
+        const av = t.assigneeName
+          ? `<span class="tm-av" style="background:${personColor(t.assigneeUsername || t.assigneeName)}" title="${escHtml(t.assigneeName)}">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}</span>`
+          : "";
+        return `<div class="tm-row${muted ? " muted" : ""}" onclick="openTaskActions('${escArg(t.id)}')">
+          ${tbPriBarsHtml(t.priority)}
+          <div class="tm-row-main">
+            <div class="tm-row-title">${escHtml(t.title)}</div>
+            <div class="tm-row-meta">
+              ${pill}
+              <span class="tm-row-proj">${escHtml(t.projectLabel || "Umumiy")}</span>
+            </div>
+          </div>
+          <div class="tm-row-right">
+            <span class="tm-row-due ${due.cls}">${escHtml(due.text)}</span>
+            ${av}
+          </div>
+        </div>`;
+      }
+      function setTaskStatChip(key) {
+        taskStatusChip = taskStatusChip === key ? "all" : key;
+        renderTasksBody();
+      }
+      function buildTasksMobileHtml(allTasks) {
+        const scoped = tbApplySeg(allTasks);
+        const counts = {};
+        TASK_BOARD_COLUMNS.forEach((c) => (counts[c.key] = scoped.filter((t) => taskBoardColumn(t) === c.key).length));
+
+        const statsHtml = TM_STATS.map((st) => {
+          const col = TASK_BOARD_COLUMNS.find((c) => c.key === st.key);
+          return `<div class="tm-stat${taskStatusChip === st.key ? " on" : ""}" onclick="setTaskStatChip('${st.key}')">
+            <div class="tm-stat-n">${counts[st.key]}</div>
+            <div class="tm-stat-lbl"><span class="tm-stat-dot" style="${col.dot}"></span><span>${st.label}</span></div>
+          </div>`;
+        }).join("");
+
+        // Ko'rsatiladigan guruhlar: stat kartasi tanlangan bo'lsa faqat
+        // o'sha bittasi, aks holda barchasi (arxiv — faqat "Arxiv"
+        // tanlanganda, u ham desktopdagi kabi ixtiyoriy).
+        const groupKeys =
+          taskStatusChip === "all"
+            ? TASK_BOARD_COLUMNS.filter((c) => c.key !== "archive" || taskArchiveOpen).map((c) => c.key)
+            : [taskStatusChip];
+
+        const secsHtml = groupKeys
+          .map((key) => {
+            const col = TASK_BOARD_COLUMNS.find((c) => c.key === key);
+            const items = sortTasksForBoard(scoped.filter((t) => taskBoardColumn(t) === key));
+            if (!items.length) return "";
+            return `<div>
+              <div class="tm-sec-hdr">
+                <span class="tm-sec-dot" style="${col.dot}"></span>
+                <span class="tm-sec-title">${col.label}</span>
+                <span class="tm-sec-count">${items.length}</span>
+              </div>
+              <div class="tm-card">${items.map(tmRowHtml).join("")}</div>
+            </div>`;
+          })
+          .join("");
+
+        const segHtml = `<div class="tb-seg" style="width:100%">
+            <button type="button" class="tb-seg-btn${taskSeg === "hammasi" ? " active" : ""}" style="flex:1" onclick="setTaskSeg('hammasi')">Hammasi</button>
+            <button type="button" class="tb-seg-btn${taskSeg === "menga" ? " active" : ""}" style="flex:1" onclick="setTaskSeg('menga')">Menga</button>
+            <button type="button" class="tb-seg-btn${taskSeg === "menberdim" ? " active" : ""}" style="flex:1" onclick="setTaskSeg('menberdim')">Men berganlar</button>
+          </div>`;
+
+        return `<div class="mobile-only tm-wrap">
+          ${segHtml}
+          <div class="tm-stats">${statsHtml}</div>
+          ${secsHtml || `<div class="empty"><div class="empty-ico">✓</div><div class="empty-t">Vazifa yo'q</div><div class="empty-s">Filtrni o'zgartirib ko'ring.</div></div>`}
+        </div>`;
       }
       function taskShortRef(id) {
         return id.slice(0, 8).toUpperCase();
@@ -8565,6 +9457,174 @@
           ${actionsHtml ? `<div style="margin-top:17px">${actionsHtml}</div>` : ""}
           ${hintHtml}`;
       }
+      // ── VAZIFA DETALI — mobil ko'rinish (v3) ──────────────────────
+      // Joriy holatdan kelib chiqib BITTA asosiy amal tugmasi; qolgan
+      // amallar "⋯" menyusida (desktopdagi buildTaskStepperHtml bilan
+      // bir xil qoidalar, faqat mobil uchun bitta tugmaga yig'ilgan).
+      function taskPrimaryAction(t, canChangeStatus) {
+        if (!canChangeStatus) return null;
+        if (["done", "failed", "cancelled"].includes(t.status)) return null;
+        if (t.status === "backlog")
+          return { label: "Navbatga qo'yish", onclick: `openSetDueDateForm('${escArg(t.id)}')` };
+        if (t.status === "todo")
+          return { label: "Ishni boshladim", onclick: `setTaskStatus('${escArg(t.id)}','in_progress',this)` };
+        if (t.status === "in_progress")
+          return { label: "Tekshiruvga yubordim", onclick: `setTaskStatus('${escArg(t.id)}','review',this)` };
+        if (t.status === "review") {
+          if (isAdmin) return { label: "Tasdiqlash", cls: "green", onclick: `setTaskStatus('${escArg(t.id)}','done',this)` };
+          return { label: "Admin tasdiqlashini kutmoqda", disabled: true };
+        }
+        return null;
+      }
+      function openTaskMobileMenu(id) {
+        const t = tasksList.find((x) => x.id === id);
+        if (!t) return;
+        const canChangeStatus = isAdmin || t.assigneeUsername === currentUser;
+        const open = !["done", "failed", "cancelled"].includes(t.status);
+        const close = () => `document.querySelector('.overlay')?.remove();`;
+        const items = [];
+        if (canChangeStatus && open && isAdmin && t.status !== "review")
+          items.push(`<button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="${close()}setTaskStatus('${escArg(t.id)}','done')">Darhol bajarildi</button>`);
+        if (canChangeStatus && open && t.status === "review" && isAdmin)
+          items.push(`<button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="${close()}setTaskStatus('${escArg(t.id)}','in_progress')">Qaytarish</button>`);
+        if (canChangeStatus && open && t.status !== "backlog")
+          items.push(`<button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="${close()}openTaskFailForm('${escArg(t.id)}')">Bajarolmadim</button>`);
+        if (isAdmin && open && t.dueDate)
+          items.push(`<button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="${close()}openPushDueDateForm('${escArg(t.id)}')">Muddatni surish</button>`);
+        if (isAdmin) {
+          items.push(`<button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="${close()}openEditTaskSheet('${escArg(t.id)}')">Tahrirlash</button>`);
+          items.push(`<button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="${close()}duplicateTask('${escArg(t.id)}')">Nusxalash</button>`);
+          items.push(`<button type="button" class="btn btn-danger" onclick="${close()}deleteTask('${escArg(t.id)}','${escArg(t.title)}')">O'chirish</button>`);
+        }
+        const { body } = makeSheet(t.title);
+        body.innerHTML = items.join("") || `<div style="font-size:13px;color:var(--t3)">Amal mavjud emas</div>`;
+      }
+      // Sarlavha (ref · holat, sanoq) va pastki panel (bosqichlar + amal)
+      function renderTaskDetailMobileChrome(t, canChangeStatus) {
+        const hdr = document.getElementById("tdm-hdr");
+        if (hdr) {
+          const nav = taskDetailNav;
+          const scopeWord = taskSeg === "menga" ? " menga" : taskSeg === "menberdim" ? " men berganlar" : "";
+          const counter = nav.index >= 0 && nav.ids.length ? `${nav.index + 1} / ${nav.ids.length}${scopeWord}` : "";
+          hdr.innerHTML = `
+            <button type="button" class="tdm-iconbtn" onclick="closeTaskDetailScreen()" aria-label="Orqaga">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <div class="tdm-hdr-mid">
+              <div class="tdm-hdr-ref">${tbRef(t.id)} · ${escHtml(TASK_STATUS_LABEL[t.status])}</div>
+              <div class="tdm-hdr-sub">${escHtml(counter)}</div>
+            </div>
+            <button type="button" class="tdm-iconbtn" onclick="openTaskMobileMenu('${escArg(t.id)}')" aria-label="Menyu">⋯</button>`;
+        }
+
+        const bar = document.getElementById("tdm-bar");
+        if (!bar) return;
+        const steps = TASK_BOARD_COLUMNS.slice(0, 4);
+        const curIdx = Math.max(0, steps.findIndex((c) => c.key === taskBoardColumn(t)));
+        const closed = ["failed", "cancelled"].includes(t.status);
+        const stepsHtml = closed
+          ? ""
+          : `<div class="tdm-steps">${steps
+              .map((st, i) => {
+                const cls = i < curIdx ? "done" : i === curIdx ? "current" : "";
+                const line = i < steps.length - 1 ? `<div class="tdm-step-line${i < curIdx ? " done" : ""}"></div>` : "";
+                return `<div class="tdm-step-dot${cls ? " " + cls : ""}"></div>${line}`;
+              })
+              .join("")}</div>`;
+        const act = taskPrimaryAction(t, canChangeStatus);
+        const actHtml = act
+          ? `<button type="button" class="tdm-act${act.cls ? " " + act.cls : ""}"${act.disabled ? " disabled" : ""}${act.onclick ? ` onclick="${act.onclick}"` : ""}>${escHtml(act.label)}</button>`
+          : `<button type="button" class="tdm-act" disabled>${escHtml(TASK_STATUS_LABEL[t.status])}</button>`;
+        bar.innerHTML = `${stepsHtml}
+          <div class="tdm-bar-row">
+            ${actHtml}
+            <button type="button" class="tdm-more" onclick="openTaskMobileMenu('${escArg(t.id)}')">⋯</button>
+          </div>`;
+      }
+      function buildTaskDetailMobileHtml(t, canChangeStatus) {
+        const isOpen = !["done", "failed", "cancelled"].includes(t.status);
+        const daysLeft = t.dueDate ? daysBetween(todayDate(), parseISO(t.dueDate)) : null;
+
+        let banner = "";
+        if (isOpen && daysLeft !== null && daysLeft <= 2) {
+          const late = daysLeft < 0;
+          const today = daysLeft === 0;
+          const title = late ? `Muddat ${Math.abs(daysLeft)} kun oldin tugagan` : today ? "Muddat bugun tugaydi" : `Muddatga ${daysLeft} kun qoldi`;
+          banner = `<div class="tdm-banner${late || today ? "" : " soft"}">
+            <span class="tdm-banner-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+            <div style="flex:1;min-width:0">
+              <div class="tdm-banner-t">${title}</div>
+              <div class="tdm-banner-s">${escHtml(fmtDay(parseISO(t.dueDate)))}${taskWorkStateLabel(t.status) ? " · " + taskWorkStateLabel(t.status) : ""}</div>
+            </div>
+          </div>`;
+        }
+
+        const pill = tbTagPillHtml(t);
+        const reasonHtml =
+          t.status === "failed" && t.reason
+            ? `<div class="tdm-banner" style="margin-top:12px"><div style="flex:1"><div class="tdm-banner-t">Bajarilmadi</div><div class="tdm-banner-s">${escHtml(t.reason)}</div></div></div>`
+            : "";
+
+        const av = t.assigneeName
+          ? `<span class="tm-av" style="background:${personColor(t.assigneeUsername || t.assigneeName)}">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}</span>`
+          : "";
+
+        return `<div class="mobile-only tdm-wrap">
+          ${banner}
+          <div class="tdm-card">
+            ${pill}
+            <div class="tdm-title">${escHtml(t.title)}</div>
+            ${t.description ? `<div class="tdm-desc">${escHtml(t.description)}</div>` : ""}
+            ${reasonHtml}
+          </div>
+          <div class="tdm-props">
+            <div class="tdm-prop">
+              <div class="tdm-prop-lbl">Mas'ul</div>
+              <div class="tdm-prop-val">${av}${escHtml(t.assigneeName || "Biriktirilmagan")}</div>
+            </div>
+            <div class="tdm-prop">
+              <div class="tdm-prop-lbl">Ustuvorlik</div>
+              <div class="tdm-prop-val">${tbPriBarsHtml(t.priority)}${escHtml(TASK_PRIORITY_LABEL[t.priority])}</div>
+            </div>
+            <div class="tdm-prop">
+              <div class="tdm-prop-lbl">Loyiha</div>
+              <div class="tdm-prop-val link">${escHtml(t.projectLabel || "Umumiy")}</div>
+            </div>
+            <div class="tdm-prop">
+              <div class="tdm-prop-lbl">Biriktirdi</div>
+              <div class="tdm-prop-val">${t.createdByUsername ? "@" + escHtml(t.createdByUsername) : "—"}</div>
+            </div>
+          </div>
+          <div class="tdm-card" id="tdm-checklist" style="display:none"></div>
+        </div>`;
+      }
+      // Checklist — mobil kartaga chizish (desktopdagi #td-checklist bilan
+      // bir xil ma'lumotdan, bitta so'rov).
+      function renderTaskChecklistMobile(taskId, items, canEdit) {
+        const el = document.getElementById("tdm-checklist");
+        if (!el) return;
+        if (!items.length) {
+          el.style.display = "none";
+          el.innerHTML = "";
+          return;
+        }
+        el.style.display = "";
+        const done = items.filter((it) => it.done).length;
+        el.innerHTML = `
+          <div class="tdm-check-hdr">
+            <div class="tdm-check-t">Checklist</div>
+            <div class="tdm-check-n">${done} / ${items.length}</div>
+          </div>
+          ${items
+            .map(
+              (it) => `<div class="tdm-check-row">
+                <div class="tdm-check-box${it.done ? " done" : ""}" ${canEdit ? `onclick="toggleChecklistItem('${escArg(taskId)}','${escArg(it.id)}',${!it.done})"` : ""}>${it.done ? "✓" : ""}</div>
+                <div class="tdm-check-txt${it.done ? " done" : ""}">${escHtml(it.text)}</div>
+              </div>`,
+            )
+            .join("")}`;
+      }
+
       // Vazifa detali — chapda tavsif+checklist+izoh/faoliyat, o'ngda
       // keyingi qadam va xossalar (dizayn asosida). Prev/next joriy
       // ro'yxat bo'yicha.
@@ -8622,7 +9682,8 @@
         const stepperHtml = buildTaskStepperHtml(t, canChangeStatus);
 
         document.getElementById("td-body").innerHTML = `
-          <div class="task-detail-grid two-col">
+          ${buildTaskDetailMobileHtml(t, canChangeStatus)}
+          <div class="desktop-only"><div class="task-detail-grid two-col">
             <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
               ${overdueBannerHtml}
               <div class="td-card">
@@ -8694,7 +9755,8 @@
                   : ""
               }
             </div>
-          </div>`;
+          </div></div>`;
+        renderTaskDetailMobileChrome(t, canChangeStatus);
         loadTaskActivity(t.id);
         loadTaskChecklist(t.id, canChangeStatus);
       }
@@ -8759,6 +9821,7 @@
         }
       }
       function renderTaskChecklist(taskId, items, canEdit) {
+        renderTaskChecklistMobile(taskId, items, canEdit);
         const target = document.getElementById("td-checklist");
         if (!target) return;
         // Bandlar ham, qo'shish imkoniyati ham bo'lmasa (masalan o'zgartira
@@ -9403,7 +10466,13 @@
         }
         el.innerHTML = lines.map((l) => `<div class="f-hint">${l}</div>`).join("");
       }
+      // Katta ekranda — avvalgi to'liq forma; mobilda — v3 dizaynidagi
+      // alohida oyna (sarlavha + ikkita karta + xossalar ro'yxati).
       async function openNewTaskSheet() {
+        if (window.matchMedia("(min-width: 860px)").matches) return openNewTaskSheetDesktop();
+        return openNewTaskSheetMobile();
+      }
+      async function openNewTaskSheetDesktop() {
         ntStatus = "todo";
         ntSelectedTagIds = new Set();
         const { body } = makeSheet("Yangi vazifa");
@@ -9479,6 +10548,165 @@
           </div>
           <button class="btn btn-blue" id="nt-save-btn" onclick="createTask()">Yaratish</button>`;
       }
+      // ── YANGI VAZIFA — mobil oyna (v3) ────────────────────────────
+      // Barcha tanlovlar shu obyektda saqlanadi (mobilda <select> yo'q —
+      // har bir qator o'z tanlov oynasini ochadi).
+      let ntv3 = null;
+      let ntv3Users = [];
+      function closeNtv3Pick() {
+        document.querySelector(".ntv3-pick-ov")?.remove();
+      }
+      function closeNtv3() {
+        closeNtv3Pick();
+        document.querySelector(".ntv3-ov")?.remove();
+        ntv3 = null;
+      }
+      const NTV3_ICONS = {
+        kimga: `<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>`,
+        muddat: `<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>`,
+        ustuvorlik: `<path d="M4 20V10M10 20V4M16 20v-7M22 20v-3"/>`,
+        loyiha: `<path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.5L10 3.5H4a2 2 0 0 0-2 2V18a2 2 0 0 0 2 2Z"/>`,
+        teglar: `<path d="M20.6 13.4 12 4.8H4.8V12l8.6 8.6a2 2 0 0 0 2.8 0l4.4-4.4a2 2 0 0 0 0-2.8Z"/><circle cx="8.5" cy="8.5" r="1.2"/>`,
+      };
+      function ntv3Row(key, label, value, placeholder) {
+        const empty = !value;
+        return `<div class="ntv3-row" onclick="openNtv3Pick('${key}')">
+          <span class="ntv3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${NTV3_ICONS[key]}</svg></span>
+          <span class="ntv3-lbl">${label}</span>
+          <span class="ntv3-val${empty ? " empty" : ""}">${escHtml(empty ? placeholder : value)}</span>
+          <span class="ntv3-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>
+        </div>`;
+      }
+      function renderNtv3Props() {
+        const el = document.getElementById("ntv3-props");
+        if (!el || !ntv3) return;
+        const user = ntv3Users.find((u) => u.username === ntv3.assigneeUsername);
+        const proj = projects.find((p) => (p.slug || p.id) === ntv3.projectSlug);
+        const tagNames = tagsList.filter((t) => ntv3.tagIds.has(t.id)).map((t) => t.name);
+        el.innerHTML =
+          ntv3Row("kimga", "Kimga", user ? userDisplayLabel(user) : "", "Tanlang") +
+          ntv3Row("muddat", "Muddat", ntv3.dueDate ? fmtDay(parseISO(ntv3.dueDate)) : "", "Sana") +
+          ntv3Row("ustuvorlik", "Ustuvorlik", TASK_PRIORITY_LABEL[ntv3.priority] || "", "Oddiy") +
+          ntv3Row("loyiha", "Loyiha", proj ? proj.label : "", "Umumiy") +
+          ntv3Row("teglar", "Teglar", tagNames.join(", "), "Yo'q");
+      }
+      function openNtv3Pick(key) {
+        if (!ntv3) return;
+        closeNtv3Pick();
+        const titles = { kimga: "Kimga", muddat: "Muddat", ustuvorlik: "Ustuvorlik", loyiha: "Loyiha", teglar: "Teglar" };
+        let inner = "";
+        if (key === "muddat") {
+          // Sana — mavjud maxsus sana maydoni (kalendar) qayta ishlatiladi.
+          inner = `${renderDateFieldHtml("ntv3-due", ntv3.dueDate || "", "Sana tanlang")}
+            <button type="button" class="btn btn-blue" style="margin-top:12px" onclick="applyNtv3Due()">Tanlash</button>`;
+        } else {
+          let opts = [];
+          if (key === "kimga") opts = [{ v: "", label: "Tanlanmagan" }, ...ntv3Users.map((u) => ({ v: u.username, label: userDisplayLabel(u) }))];
+          else if (key === "ustuvorlik") opts = Object.entries(TASK_PRIORITY_LABEL).map(([v, label]) => ({ v, label }));
+          else if (key === "loyiha") opts = [{ v: "", label: "Umumiy" }, ...projects.map((p) => ({ v: p.slug || p.id, label: p.label }))];
+          else opts = tagsList.map((t) => ({ v: t.id, label: t.name }));
+
+          const cur = { kimga: ntv3.assigneeUsername, ustuvorlik: ntv3.priority, loyiha: ntv3.projectSlug }[key];
+          inner = opts
+            .map((o) => {
+              const on = key === "teglar" ? ntv3.tagIds.has(o.v) : cur === o.v;
+              return `<div class="ntv3-opt${on ? " on" : ""}" onclick="pickNtv3('${key}','${escArg(o.v)}')">${escHtml(o.label)}</div>`;
+            })
+            .join("") || `<div style="font-size:13px;color:var(--t3);padding:6px 2px">Ro'yxat bo'sh</div>`;
+          if (key === "teglar") inner += `<button type="button" class="btn btn-soft" style="margin-top:6px" onclick="closeNtv3Pick()">Tayyor</button>`;
+        }
+        const ov = document.createElement("div");
+        ov.className = "ntv3-pick-ov";
+        ov.onclick = (e) => {
+          if (e.target === ov) closeNtv3Pick();
+        };
+        ov.innerHTML = `<div class="ntv3-pick"><div class="ntv3-pick-t">${titles[key]}</div>${inner}</div>`;
+        document.body.appendChild(ov);
+        if (key === "muddat") applyStaticIcons?.();
+      }
+      function applyNtv3Due() {
+        ntv3.dueDate = document.getElementById("ntv3-due")?.value || "";
+        closeNtv3Pick();
+        renderNtv3Props();
+      }
+      function pickNtv3(key, value) {
+        if (key === "teglar") {
+          if (ntv3.tagIds.has(value)) ntv3.tagIds.delete(value);
+          else ntv3.tagIds.add(value);
+          renderNtv3Props();
+          openNtv3Pick("teglar");
+          return;
+        }
+        if (key === "kimga") ntv3.assigneeUsername = value;
+        if (key === "ustuvorlik") ntv3.priority = value;
+        if (key === "loyiha") ntv3.projectSlug = value;
+        closeNtv3Pick();
+        renderNtv3Props();
+      }
+      async function openNewTaskSheetMobile() {
+        ntv3 = { assigneeUsername: "", dueDate: "", priority: "no_priority", projectSlug: "", tagIds: new Set() };
+        const ov = document.createElement("div");
+        ov.className = "ntv3-ov";
+        ov.onclick = (e) => {
+          if (e.target === ov) closeNtv3();
+        };
+        ov.innerHTML = `<div class="ntv3">
+          <div class="ntv3-grab"></div>
+          <div class="ntv3-hdr">
+            <button type="button" class="ntv3-hbtn cancel" onclick="closeNtv3()">Bekor</button>
+            <div class="ntv3-title">Yangi vazifa</div>
+            <button type="button" class="ntv3-hbtn save" id="ntv3-save" onclick="createTaskMobile(this)">Saqlash</button>
+          </div>
+          <div class="ntv3-body">
+            <div class="ntv3-card">
+              <input id="ntv3-title" placeholder="Vazifa nomi" autocomplete="off"/>
+              <textarea id="ntv3-desc" placeholder="Tavsif (ixtiyoriy)"></textarea>
+            </div>
+            <div class="ntv3-props" id="ntv3-props"></div>
+            <div class="ntv3-hint">Xodimga Telegram orqali xabar boradi.</div>
+          </div>
+        </div>`;
+        document.body.appendChild(ov);
+        renderNtv3Props();
+        try {
+          const res = await apiFetch("/api/users/directory");
+          if (res.ok) ntv3Users = (await res.json()).users || [];
+        } catch (e) {}
+        renderNtv3Props();
+      }
+      async function createTaskMobile(btn) {
+        if (!ntv3) return;
+        const title = document.getElementById("ntv3-title")?.value.trim();
+        if (!title) return showToast("⚠ Nomi kerak");
+        if (!ntv3.dueDate) return showToast("⚠ Muddat (deadline) kerak");
+        const description = document.getElementById("ntv3-desc")?.value.trim();
+        const body = {
+          title,
+          description: description || undefined,
+          projectSlug: ntv3.projectSlug || undefined,
+          status: "todo",
+          priority: ntv3.priority,
+          dueDate: ntv3.dueDate,
+          tagIds: [...ntv3.tagIds],
+          notifyTelegram: true,
+        };
+        if (ntv3.assigneeUsername) body.assigneeUsername = ntv3.assigneeUsername;
+        setBtnLoading(btn, true, "…");
+        try {
+          const res = await apiFetch("/api/tasks", { method: "POST", body: JSON.stringify(body) });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || "Xato");
+          closeNtv3();
+          const notifyNote = describeNotifyResult(data.notify);
+          showToast("✅ Vazifa yaratildi" + notifyNote, notifyNote.includes("⚠") ? 4000 : 2200);
+          await loadTasks();
+          refreshAllViews();
+        } catch (e) {
+          showToast("⚠ " + e.message);
+          setBtnLoading(btn, false);
+        }
+      }
+
       // POST/PATCH /api/tasks javobidagi `notify` ({attempted, ok, reason})
       // obyektini o'qib beriladigan matnga aylantiradi — admin xabar
       // borgan-bormaganini darhol ko'radi (avval sukut bo'yicha jim

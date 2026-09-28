@@ -1658,6 +1658,8 @@ function shapeTaskRow(row) {
     updatedAt: row.updated_at,
     completedAt: row.completed_at,
     tags: [],
+    checklistTotal: 0,
+    checklistDone: 0,
   };
 }
 
@@ -1675,6 +1677,30 @@ async function attachTags(tasks) {
   r.rows.forEach((row) => {
     const t = byId.get(row.task_id);
     if (t) t.tags.push({ id: row.id, name: row.name });
+  });
+  return tasks;
+}
+
+// Checklist bandlari SONI (jami / bajarilgan) — doskadagi kartochkada
+// "\u2611 2/3" ko'rsatish uchun. Bandlarning o'zi emas, faqat sanoq —
+// bitta agregat so'rov, N+1 yo'q (bandlar hamon vazifa detali ochilganda
+// /api/tasks/:id/checklist orqali alohida yuklanadi).
+async function attachChecklistCounts(tasks) {
+  if (!tasks.length) return tasks;
+  const byId = new Map(tasks.map((t) => [t.id, t]));
+  const r = await db.query(
+    `select task_id, count(*)::int as total, (count(*) filter (where done))::int as done
+     from task_checklist_items
+     where task_id = any($1::uuid[])
+     group by task_id`,
+    [tasks.map((t) => t.id)],
+  );
+  r.rows.forEach((row) => {
+    const t = byId.get(row.task_id);
+    if (t) {
+      t.checklistTotal = row.total;
+      t.checklistDone = row.done;
+    }
   });
   return tasks;
 }
@@ -1723,7 +1749,7 @@ app.get("/api/tasks", auth, async (req, res) => {
       `${TASK_ROW_SQL} ${where} order by (t.status in ('done','cancelled')), t.due_date nulls last, t.created_at desc`,
       values,
     );
-    const tasks = await attachTags(r.rows.map(shapeTaskRow));
+    const tasks = await attachChecklistCounts(await attachTags(r.rows.map(shapeTaskRow)));
     res.json({ tasks });
   } catch (e) {
     res.status(500).json({ error: e.message });
