@@ -9060,12 +9060,35 @@
         body.innerHTML = `${buildTasksMobileHtml(filtered)}${buildTasksDesktopHtml(filtered)}`;
       }
 
+      // Vazifalar HAR JOYDA bitta ketma-ketlikda turadi:
+      // bajarilmaganlar (Biriktirilgan) → Jarayonda → Tekshiruvda →
+      // Bajarildi → Arxiv. Guruhlangan ko'rinishda bu guruhlar tartibi,
+      // aralash ro'yxatda esa saralashning BIRINCHI mezoni; ustuvorlik
+      // va muddat faqat shundan keyin hisobga olinadi.
+      const TASK_ORDER = TASK_BOARD_COLUMNS.map((c) => c.key);
+      function taskOrderRank(t) {
+        const i = TASK_ORDER.indexOf(taskBoardColumn(t));
+        return i === -1 ? TASK_ORDER.length : i;
+      }
       function sortTasksForBoard(items) {
         return [...items].sort((a, b) => {
+          const st = taskOrderRank(a) - taskOrderRank(b);
+          if (st !== 0) return st;
           const pr = (TASK_PRIORITY_RANK[a.priority] ?? 4) - (TASK_PRIORITY_RANK[b.priority] ?? 4);
           if (pr !== 0) return pr;
           return (a.dueDate || "9999").localeCompare(b.dueDate || "9999");
         });
+      }
+      // Ekranda AYNAN KO'RINAYOTGAN vazifalar, ko'rinish tartibida.
+      // Vazifa detalidagi "oldingi/keyingi" va "N / M" sanog'i shu
+      // ro'yxat bo'yicha yuradi — avval xom `tasksList` tartibi
+      // ishlatilardi va u ekrandagi tartibga mos kelmasdi.
+      function visibleTasksInOrder() {
+        let list = tbApplySeg(applyTaskFilters(tasksList));
+        if (!taskArchiveOpen) list = list.filter((t) => taskBoardColumn(t) !== "archive");
+        const isMobile = !window.matchMedia("(min-width: 860px)").matches;
+        if (isMobile && taskStatusChip !== "all") list = list.filter((t) => taskBoardColumn(t) === taskStatusChip);
+        return sortTasksForBoard(list);
       }
       // ── VAZIFALAR DOSKASI (v3) ──────────────────────────────────────
       // Ustuvorlik ko'rsatkichi — 3 ta ustun (3px kenglik, 5/8/12px
@@ -9352,7 +9375,12 @@
       function openTaskActions(id) {
         const t = tasksList.find((x) => x.id === id);
         if (!t) return;
-        taskDetailNav = { ids: tasksList.map((x) => x.id), index: tasksList.findIndex((x) => x.id === id) };
+        // Vazifa boshqa ekrandan ochilgan bo'lsa (masalan "Bugun"), u
+        // ko'rinayotgan ro'yxatda bo'lmasligi mumkin — o'shanda butun
+        // ro'yxat, lekin baribir shu ketma-ketlikda.
+        let nav = visibleTasksInOrder();
+        if (!nav.some((x) => x.id === id)) nav = sortTasksForBoard(tasksList);
+        taskDetailNav = { ids: nav.map((x) => x.id), index: nav.findIndex((x) => x.id === id) };
         taskDetailTab = "comments";
         openSubScreen("screen-taskdetail", closeTaskDetailScreen);
         renderTaskDetailSheet(t);
