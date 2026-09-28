@@ -6105,13 +6105,21 @@
         .tb-archive b { font-weight: 600; color: var(--v3-t3); font-variant-numeric: tabular-nums; }
 
         /* Doska: ustunlar teng kenglikda, butun balandlikni egallaydi */
+        /* Doska ekranning butun eni va bo'yini egallaydi. Ustunlar
+           kamida 240px, qolgan joyni teng bo'lishadi; sig'masa doska
+           gorizontal aylanadi. Vertikal aylanish har bir ustun ICHIDA
+           bo'ladi — sahifaning o'zi aylanmaydi (haqiqiy kanban). */
         .tb-board {
           display: grid;
+          grid-auto-flow: column;
+          grid-auto-columns: minmax(240px, 1fr);
           gap: 12px;
           padding: 14px 24px 24px;
-          align-items: start;
+          align-items: stretch;
           flex: 1;
           min-height: 0;
+          overflow-x: auto;
+          overflow-y: hidden;
         }
         .tb-col {
           background: var(--tb-col-bg);
@@ -6121,7 +6129,10 @@
           flex-direction: column;
           gap: 8px;
           min-width: 0;
+          min-height: 0;
+          overflow-y: auto;
         }
+        .tb-col-hdr { position: sticky; top: -10px; background: var(--tb-col-bg); z-index: 1; }
         .tb-col-hdr {
           display: flex;
           align-items: center;
@@ -6318,9 +6329,32 @@
         }
         /* Vazifalar doskasi — filtr qatori va ustunlar bir xil chekkada
            turishi uchun padding'ni ichkaridagi .tb-filters/.tb-board
-           o'zi beradi (umumiy 32px/20px qoidasi bu yerda qo'llanmaydi). */
+           o'zi beradi (umumiy 32px/20px qoidasi bu yerda qo'llanmaydi).
+           `max-width: none` — aks holda umumiy `.scroll` qoidasidagi
+           880px doskani tor qilib qo'yadi. */
+        /* `.screen` odatda `min-height:100dvh` — kontent bilan o'sadi.
+           Doska esa aynan ekran bo'yicha turishi va ustunlar o'z ichida
+           aylanishi kerak, shuning uchun bu ekranda balandlik qat'iy. */
+        #screen-tasks.screen {
+          height: 100vh;
+          height: 100dvh;
+          min-height: 0;
+        }
         #screen-tasks .scroll {
-          padding: 0 0 24px;
+          max-width: none;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+          overflow: hidden;
+        }
+        /* `.desktop-only` `display:block !important` beradi — doska
+           ustuni bo'lishi uchun uni qaytadan flex qilamiz. */
+        .tb-root {
+          display: flex !important;
+          flex-direction: column;
+          flex: 1;
+          min-height: 0;
         }
         #screen-history .hdr,
         #screen-history .scroll,
@@ -9225,7 +9259,9 @@
       }
       // Doska — 4 ustun (Biriktirilgan/Jarayonda/Tekshiruvda/Bajarildi),
       // "Arxiv N" bosilganda beshinchisi qo'shiladi.
-      const TB_COL_LIMIT = 8;
+      // Ustun endi o'zi aylanadi — shuning uchun chegara kattaroq
+      // (faqat DOM haddan tashqari katta bo'lib ketmasligi uchun).
+      const TB_COL_LIMIT = 25;
       function buildTasksDesktopHtml(allTasks) {
         const scoped = tbApplySeg(allTasks);
         const archiveCount = allTasks.filter((t) => taskBoardColumn(t) === "archive").length;
@@ -9256,7 +9292,7 @@
           })
           .join("");
 
-        return `<div class="desktop-only" style="display:flex;flex-direction:column;min-height:100%">
+        return `<div class="desktop-only tb-root">
           <div class="tb-filters">
             <div class="tb-seg">
               <button type="button" class="tb-seg-btn${taskSeg === "hammasi" ? " active" : ""}" onclick="setTaskSeg('hammasi')">Hammasi</button>
@@ -9271,7 +9307,7 @@
             <div style="flex:1"></div>
             <button type="button" class="tb-archive${taskArchiveOpen ? " on" : ""}" onclick="toggleTaskArchive()">Arxiv <b>${archiveCount}</b></button>
           </div>
-          <div class="tb-board" style="grid-template-columns:repeat(${cols.length},minmax(0,1fr))">${colsHtml}</div>
+          <div class="tb-board">${colsHtml}</div>
         </div>`;
       }
       // ── VAZIFALAR — mobil ro'yxat (v3) ────────────────────────────
