@@ -2484,8 +2484,14 @@ app.get("/api/ncoin/admin/nshop-stats", auth, async (req, res) => {
     );
     // Xodimlar Ncoin reytingi — kim qancha ishlab topgan/sarflagan,
     // eng ko'p ishlab topgandan boshlab (jamoa faolligini bir qarashda
-    // ko'rish uchun). Faqat oddiy xodimlar (adminlar kirmaydi — ular
-    // "ishlab topish" auditoriyasi emas).
+    // ko'rish uchun).
+    //
+    // Adminlar ham kiradi. Avval ular chiqarib tashlangan edi ("ishlab
+    // topish auditoriyasi emas" degan mulohaza bilan), lekin endi ular
+    // ham coin oladi: vazifa biriktirgani uchun bonus, loyihada SMM
+    // roli bo'lsa post/stories uchun. Ularni yashirish jadvalni
+    // noto'g'ri qilardi — berilgan coinlarning bir qismi hech qayerda
+    // ko'rinmasdi va jami hisobga kelmasdi.
     const employeesR = await db.query(
       `select u.username, u.first_name, u.last_name, u.job_title,
               coalesce(sum(t.amount) filter (where t.amount > 0), 0)::float as earned,
@@ -2493,7 +2499,7 @@ app.get("/api/ncoin/admin/nshop-stats", auth, async (req, res) => {
               coalesce(sum(t.amount), 0)::float as balance
        from users u
        left join ncoin_transactions t on t.user_id = u.id
-       where u.role = 'employee' and u.is_active = true
+       where u.is_active = true
        group by u.id, u.username, u.first_name, u.last_name, u.job_title
        order by earned desc, u.username asc`,
     );

@@ -11707,7 +11707,7 @@
               .map(
                 (e, i) => `<tr>
                   <td style="width:36px;color:var(--t3);font-variant-numeric:tabular-nums">${i + 1}</td>
-                  <td class="dtbl-name">${escHtml(e.name)}${e.jobTitle ? `<div style="font-weight:400;font-size:11.5px;color:var(--t3);margin-top:1px">${escHtml(e.jobTitle)}</div>` : ""}</td>
+                  <td class="dtbl-name">${escHtml(e.name)}<div style="font-weight:400;font-size:11.5px;color:var(--t3);margin-top:1px">@${escHtml(e.username)}${e.jobTitle ? " · " + escHtml(e.jobTitle) : ""}</div></td>
                   <td><div style="display:flex;align-items:center;gap:5px;color:var(--green)"><span class="n-badge" style="width:16px;height:16px;font-size:9.5px;background:var(--green)">N</span>${fmtNcoin(e.earned)}</div></td>
                   <td><div style="display:flex;align-items:center;gap:5px;color:var(--t3)"><span class="n-badge" style="width:16px;height:16px;font-size:9.5px">N</span>${fmtNcoin(e.spent)}</div></td>
                   <td style="font-weight:600;color:var(--ink)">${fmtNcoin(e.balance)}</td>
