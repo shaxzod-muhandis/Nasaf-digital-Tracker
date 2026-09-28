@@ -363,6 +363,8 @@
         margin-top: 1px;
       }
       .hdr-avatar-btn {
+        position: relative;
+        overflow: hidden;
         width: 34px;
         height: 34px;
         border-radius: 10px;
@@ -8184,13 +8186,21 @@
         }
         return html;
       }
+      // Sarlavhadagi profil tugmasi (Bugun va Vazifalar ekranlarida) —
+      // Telegram profil rasmi bo'lsa o'sha, bo'lmasa bosh harf.
+      function renderMeAvatars() {
+        const letter = escHtml((currentUser || "?").slice(0, 1).toUpperCase());
+        const html = letter + avatarImg(myProfile?.avatarUrl);
+        ["me-avatar", "me-avatar-tasks"].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.innerHTML = html;
+        });
+      }
       function renderToday() {
         const body = document.getElementById("today-body");
         const today = todayDate();
         document.getElementById("today-date-label").textContent = fmtDay(today);
-        document.getElementById("me-avatar").textContent = (currentUser || "?")
-          .slice(0, 1)
-          .toUpperCase();
+        renderMeAvatars();
         const npBtn = document.getElementById("today-new-project-btn");
         if (npBtn) npBtn.style.display = isAdmin ? "flex" : "none";
 
@@ -8353,8 +8363,10 @@
           <div class="v3-card">${dueRows}</div>
         </div>`;
 
-        // Mening loyihalarim
-        const projRows = projects
+        // Mening loyihalarim — bajarilish foizi bo'yicha kattadan
+        // kichikka (desktopdagi jadval bilan bir xil tartib).
+        const projRows = [...projects]
+          .sort((a, b) => projPct(b) - projPct(a))
           .map((p) => {
             const st = projStatus(p);
             const d = projDaysInfo(p);
@@ -15329,9 +15341,7 @@
         // ham xuddi shunday avatar-tugma bor, harflari shu yerda
         // darhol to'ldiriladi (renderToday() kutilmaydi, chunki bu
         // xodimlar "Bugun"ga umuman kirmaydi).
-        const meAvatarInitial = (currentUser || "?").slice(0, 1).toUpperCase();
-        document.getElementById("me-avatar").textContent = meAvatarInitial;
-        document.getElementById("me-avatar-tasks").textContent = meAvatarInitial;
+        renderMeAvatars();
 
         renderSidebar();
         // Ko'rinish (mobil/desktop) faqat CSS orqali hal qilinadi
