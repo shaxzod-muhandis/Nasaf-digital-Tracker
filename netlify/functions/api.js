@@ -1631,6 +1631,7 @@ const TASK_ROW_SQL = `
     au.username as assignee_username,
     coalesce(au.full_name, au.username) as assignee_user_name,
     au.job_title as assignee_job_title,
+    au.avatar_url as assignee_avatar_url,
     ast.full_name as assignee_staff_name,
     cu.username as created_by_username
   from tasks t
@@ -1653,6 +1654,9 @@ function shapeTaskRow(row) {
     assigneeUsername: row.assignee_username || null,
     assigneeName: row.assignee_user_name || row.assignee_staff_name || null,
     assigneeJobTitle: row.assignee_job_title || null,
+    // Telegram profil rasmi — vazifa kartochkalaridagi avatar uchun
+    // (bo'lmasa, rangli harf ko'rinadi).
+    assigneeAvatarUrl: row.assignee_avatar_url || null,
     createdByUsername: row.created_by_username,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

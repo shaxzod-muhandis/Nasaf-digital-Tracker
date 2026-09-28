@@ -2719,6 +2719,11 @@
         height: 100%;
         object-fit: cover;
         display: block;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+      }
+      .av-img.ok {
+        opacity: 1;
       }
       .avatar {
         width: 32px;
@@ -7562,8 +7567,14 @@
 
       // Profil rasmi teglari. Manzil bo'lmasa — hech narsa, ya'ni
       // avatarda rangli bosh harf qoladi.
+      // Telegram profil rasmi avatar ustiga qo'yiladi. Rasm YUKLANGANDAN
+      // keyingina ko'rinadi (`.ok`), yuklanmasa o'zini o'chiradi —
+      // ikkala holatda ham ostidagi rangli harf zaxira bo'lib turadi va
+      // brauzerning "buzuq rasm" ikonkasi hech qachon ko'rinmaydi.
       function avatarImg(url) {
-        return url ? `<img class="av-img" src="${escHtml(url)}" alt="" onerror="this.remove()">` : "";
+        return url
+          ? `<img class="av-img" src="${escHtml(url)}" alt="" onerror="this.remove()" onload="this.classList.add('ok')">`
+          : "";
       }
       function initials(label) {
         return String(label || "?")
@@ -9158,10 +9169,17 @@
         if (diff <= 2) return { text: `${diff} kun qoldi`, cls: "soon" };
         return { text: `${diff} kun`, cls: "norm" };
       }
-      function tbAvatarHtml(t) {
+      // Vazifadagi mas'ul avatari — Telegram profil rasmi bo'lsa o'sha,
+      // bo'lmasa (yoki rasm yuklanmasa) rangli harf ko'rinadi. Rasm
+      // `.av-img` orqali ustiga qo'yiladi; `onerror` da o'zini o'chiradi,
+      // shuning uchun harf doim zaxira bo'lib turadi.
+      function taskPersonAvatarHtml(t, cls) {
         if (!t.assigneeName) return "";
         const bg = personColor(t.assigneeUsername || t.assigneeName);
-        return `<span class="tb-av" style="background:${bg}" title="${escHtml(t.assigneeName)}">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}</span>`;
+        return `<span class="${cls}" style="background:${bg}" title="${escHtml(t.assigneeName)}">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}${avatarImg(t.assigneeAvatarUrl)}</span>`;
+      }
+      function tbAvatarHtml(t) {
+        return taskPersonAvatarHtml(t, "tb-av");
       }
       function tbTagPillHtml(t) {
         const tag = (t.tags || [])[0];
@@ -9329,9 +9347,7 @@
         const muted = ["done", "failed", "cancelled"].includes(t.status);
         const due = tbDueInfo(t);
         const pill = tbTagPillHtml(t);
-        const av = t.assigneeName
-          ? `<span class="tm-av" style="background:${personColor(t.assigneeUsername || t.assigneeName)}" title="${escHtml(t.assigneeName)}">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}</span>`
-          : "";
+        const av = taskPersonAvatarHtml(t, "tm-av");
         return `<div class="tm-row${muted ? " muted" : ""}" onclick="openTaskActions('${escArg(t.id)}')">
           ${tbPriBarsHtml(t.priority)}
           <div class="tm-row-main">
@@ -9629,9 +9645,7 @@
             ? `<div class="tdm-banner" style="margin-top:12px"><div style="flex:1"><div class="tdm-banner-t">Bajarilmadi</div><div class="tdm-banner-s">${escHtml(t.reason)}</div></div></div>`
             : "";
 
-        const av = t.assigneeName
-          ? `<span class="tm-av" style="background:${personColor(t.assigneeUsername || t.assigneeName)}">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}</span>`
-          : "";
+        const av = taskPersonAvatarHtml(t, "tm-av");
 
         return `<div class="mobile-only tdm-wrap">
           ${banner}
@@ -9790,7 +9804,7 @@
                       : `<span class="td-badge-dot" style="${colDot};display:inline-block;margin-right:6px"></span>${escHtml(TASK_STATUS_LABEL[t.status])}`
                   }</div>
                 </div>
-                <div class="detail-prop-row"><div class="detail-prop-label">Mas'ul</div><div class="detail-prop-val" style="display:flex;align-items:center;gap:8px;justify-content:flex-end">${t.assigneeName ? `<div class="avatar avatar-sm" style="background:${personColor(t.assigneeUsername || t.assigneeName)};color:#fff">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}</div>` : ""}${escHtml(t.assigneeName || "Biriktirilmagan")}</div></div>
+                <div class="detail-prop-row"><div class="detail-prop-label">Mas'ul</div><div class="detail-prop-val" style="display:flex;align-items:center;gap:8px;justify-content:flex-end">${t.assigneeName ? `<div class="avatar avatar-sm" style="background:${personColor(t.assigneeUsername || t.assigneeName)};color:#fff">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}${avatarImg(t.assigneeAvatarUrl)}</div>` : ""}${escHtml(t.assigneeName || "Biriktirilmagan")}</div></div>
                 <div class="detail-prop-row">
                   <div class="detail-prop-label">Ustuvorlik</div>
                   <div class="detail-prop-val">${
