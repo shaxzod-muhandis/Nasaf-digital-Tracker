@@ -231,16 +231,22 @@ const PROFILE_REQUIRED_FIELDS = ["first_name", "last_name", "phone", "job_title"
 // kerak (deploy va migratsiya bir vaqtda bo'lmasligi mumkin), shuning
 // uchun ustun yo'qligi (PostgreSQL xato kodi 42703) alohida ushlanadi
 // va funksiya shunchaki "ovoz yo'q" deb javob beradi.
-let celebrationSoundSupported = true;
+// Ustun topilmasa so'rov VAQTINCHA o'chiriladi (har so'rovda xatoga
+// urilib turmaslik uchun), lekin butunlay emas: migratsiya qo'llangach
+// ilova o'zi tiklanishi kerak — issiq serverless instansiya qayta ishga
+// tushishini kutib o'tirmasdan.
+const CELEBRATION_SOUND_RETRY_MS = 5 * 60 * 1000;
+let celebrationSoundOffUntil = 0;
 
 async function getCelebrationSoundUrl(userId) {
-  if (!celebrationSoundSupported) return null;
+  if (Date.now() < celebrationSoundOffUntil) return null;
   try {
     const r = await db.query(`select celebration_sound_url from users where id = $1`, [userId]);
+    celebrationSoundOffUntil = 0;
     return r.rows[0]?.celebration_sound_url || null;
   } catch (e) {
     if (e.code === "42703") {
-      celebrationSoundSupported = false;
+      celebrationSoundOffUntil = Date.now() + CELEBRATION_SOUND_RETRY_MS;
       console.warn("celebration_sound_url ustuni yo'q — 0016 migratsiyasi qo'llanmagan");
       return null;
     }
@@ -283,12 +289,12 @@ app.post("/api/me/celebration-sound", auth, async (req, res) => {
       await db.query(`update users set celebration_sound_url = $1 where id = $2`, [blob.url, req.user.id]);
     } catch (e) {
       if (e.code === "42703") {
-        celebrationSoundSupported = false;
+        celebrationSoundOffUntil = Date.now() + CELEBRATION_SOUND_RETRY_MS;
         return res.status(503).json({ error: "Bu imkoniyat hali yoqilmagan (baza yangilanishi kerak)" });
       }
       throw e;
     }
-    celebrationSoundSupported = true;
+    celebrationSoundOffUntil = 0;
     res.json({ ok: true, url: blob.url });
   } catch (e) {
     res.status(500).json({ error: e.message });
