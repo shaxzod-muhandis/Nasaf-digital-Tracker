@@ -222,6 +222,89 @@ app.post("/api/register-chat", auth, async (req, res) => {
 // ── PROFIL (o'zi haqida ko'rish/tahrirlash) ──────────────────────────
 const PROFILE_REQUIRED_FIELDS = ["first_name", "last_name", "phone", "job_title"];
 
+// ── TABRIK OVOZI ────────────────────────────────────────────────────
+// Har bir xodim devor ekranidagi (TV) tabrigi uchun o'z qisqa ovozini
+// qo'ya oladi; qo'ymasa — standart qarsaklar ijro etiladi.
+//
+// `users.celebration_sound_url` ustuni 0016 migratsiyasida qo'shiladi.
+// Migratsiya hali qo'llanmagan bo'lsa ham ilova ISHLASHDA DAVOM ETISHI
+// kerak (deploy va migratsiya bir vaqtda bo'lmasligi mumkin), shuning
+// uchun ustun yo'qligi (PostgreSQL xato kodi 42703) alohida ushlanadi
+// va funksiya shunchaki "ovoz yo'q" deb javob beradi.
+let celebrationSoundSupported = true;
+
+async function getCelebrationSoundUrl(userId) {
+  if (!celebrationSoundSupported) return null;
+  try {
+    const r = await db.query(`select celebration_sound_url from users where id = $1`, [userId]);
+    return r.rows[0]?.celebration_sound_url || null;
+  } catch (e) {
+    if (e.code === "42703") {
+      celebrationSoundSupported = false;
+      console.warn("celebration_sound_url ustuni yo'q — 0016 migratsiyasi qo'llanmagan");
+      return null;
+    }
+    throw e;
+  }
+}
+
+// Ovoz fayli: 5 soniyalik qisqa audio. Davomiylik brauzerda tekshiriladi
+// (serverda audio dekodlash uchun kutubxona yo'q), bu yerda esa TUR va
+// HAJM cheklanadi — 2MB dan katta fayl 5 soniyalik klip bo'lishi mumkin
+// emas.
+const CELEBRATION_AUDIO_TYPES = {
+  "audio/mpeg": "mp3",
+  "audio/mp3": "mp3",
+  "audio/wav": "wav",
+  "audio/x-wav": "wav",
+  "audio/ogg": "ogg",
+  "audio/mp4": "m4a",
+  "audio/x-m4a": "m4a",
+  "audio/aac": "aac",
+  "audio/webm": "webm",
+};
+
+app.post("/api/me/celebration-sound", auth, async (req, res) => {
+  try {
+    const dataUrl = req.body.audioBase64;
+    if (!dataUrl || typeof dataUrl !== "string") return res.status(400).json({ error: "Audio fayl kerak" });
+    const match = dataUrl.match(/^data:([a-z0-9/\-+.]+);base64,(.+)$/i);
+    if (!match) return res.status(400).json({ error: "Fayl formati noto'g'ri" });
+    const [, mimeType, base64Data] = match;
+    const ext = CELEBRATION_AUDIO_TYPES[mimeType.toLowerCase()];
+    if (!ext) return res.status(400).json({ error: "Faqat MP3, WAV, OGG, M4A yoki AAC qabul qilinadi" });
+    const buffer = Buffer.from(base64Data, "base64");
+    const MAX_BYTES = 2 * 1024 * 1024;
+    if (buffer.length > MAX_BYTES) return res.status(400).json({ error: "Fayl hajmi 2MB dan oshmasligi kerak" });
+
+    const filename = `celebration/${req.user.username}-${Date.now()}.${ext}`;
+    const blob = await blobPut(filename, buffer, { access: "public", contentType: mimeType });
+    try {
+      await db.query(`update users set celebration_sound_url = $1 where id = $2`, [blob.url, req.user.id]);
+    } catch (e) {
+      if (e.code === "42703") {
+        celebrationSoundSupported = false;
+        return res.status(503).json({ error: "Bu imkoniyat hali yoqilmagan (baza yangilanishi kerak)" });
+      }
+      throw e;
+    }
+    celebrationSoundSupported = true;
+    res.json({ ok: true, url: blob.url });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete("/api/me/celebration-sound", auth, async (req, res) => {
+  try {
+    await db.query(`update users set celebration_sound_url = null where id = $1`, [req.user.id]);
+    res.json({ ok: true });
+  } catch (e) {
+    if (e.code === "42703") return res.json({ ok: true });
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get("/api/me", auth, async (req, res) => {
   const u = req.user;
   // Balans shu yerda qaytariladi — menyudagi Ncoin belgisi uchun.
@@ -234,6 +317,15 @@ app.get("/api/me", auth, async (req, res) => {
     console.error("Balans o'qilmadi:", e.message);
   }
   const profileIncomplete = PROFILE_REQUIRED_FIELDS.some((f) => !u[f]);
+  // Tabrik ovozi — Profil sahifasida ko'rsatish uchun (alohida yengil
+  // so'rov; auth'dagi asosiy select'ga tegilmadi, chunki u migratsiya
+  // qo'llanmaguncha xato berardi).
+  let celebrationSoundUrl = null;
+  try {
+    celebrationSoundUrl = await getCelebrationSoundUrl(u.id);
+  } catch (e) {
+    console.error("Tabrik ovozi o'qilmadi:", e.message);
+  }
   // birth_date/birthday_ack_date "YYYY-MM-DD" satr sifatida qaytadi
   // (lib/pg-types.js — pg'ning Date obyektiga aylantirishi vaqt zonasi
   // bo'yicha noto'g'ri natija berishi mumkinligi uchun ataylab o'chirilgan).
@@ -254,6 +346,7 @@ app.get("/api/me", auth, async (req, res) => {
       role: u.role,
       isAdmin: isAdminRole(u.role),
       isSuperAdmin: u.role === "super_admin",
+      celebrationSoundUrl,
     },
     ncoinBalance,
     profileIncomplete,

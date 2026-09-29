@@ -13695,6 +13695,7 @@
                   <button type="button" class="btn btn-soft desktop-only" style="width:auto;height:38px;padding:0 15px;flex:none" onclick="pfUploadAvatarStub()">Rasm yuklash</button>
                 </div>
               </div>
+              ${pfCelebrationSoundCardHtml()}
               <div class="pf-card">
                 <div class="pf-card-hdr">Shaxsiy ma'lumotlar</div>
                 <div class="pf-card-body">
@@ -13745,6 +13746,126 @@
         pfUpdateSaveBar([]);
         if (isAdmin) pfLoadGiftUserOptions();
       }
+      // ── TABRIK OVOZI ────────────────────────────────────────────────
+      // Devor ekranida (TV) xodimning ishi bajarilgani haqida tabrik
+      // chiqqanda ijro etiladigan qisqa ovoz. Qo'yilmagan bo'lsa —
+      // standart qarsaklar. Fayl Vercel Blob'ga yuklanadi, bazada
+      // faqat URL saqlanadi.
+      const PF_SOUND_MAX_SEC = 5;
+      let pfSoundPreview = null;
+
+      function pfCelebrationSoundCardHtml() {
+        const url = myProfile?.celebrationSoundUrl;
+        const state = url
+          ? `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <span class="pf-badge" style="color:#16a34a;background:rgba(22,163,74,.12)">O'z ovozingiz qo'yilgan</span>
+              <button type="button" class="btn btn-soft" style="width:auto;height:36px;padding:0 14px" onclick="pfPlayCelebrationSound()">▶ Eshitish</button>
+              <button type="button" class="btn btn-soft" style="width:auto;height:36px;padding:0 14px" onclick="pfPickCelebrationSound()">Almashtirish</button>
+              <button type="button" class="btn btn-soft" style="width:auto;height:36px;padding:0 14px;color:var(--red)" onclick="pfRemoveCelebrationSound(this)">O'chirish</button>
+            </div>`
+          : `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <span class="pf-badge" style="color:var(--t5);background:var(--chip)">Standart: qarsaklar</span>
+              <button type="button" class="btn btn-blue" style="width:auto;height:36px;padding:0 14px" onclick="pfPickCelebrationSound()">Ovoz yuklash</button>
+            </div>`;
+        return `<div class="pf-card">
+          <div class="pf-card-hdr">Tabrik ovozi</div>
+          <div class="pf-card-body">
+            <div class="f-hint" style="margin:0 0 12px">
+              Devor ekranida ishingiz bajarilgani haqida tabrik chiqqanda shu ovoz ijro etiladi.
+              Eng ko'pi ${PF_SOUND_MAX_SEC} soniya, 2MB gacha (MP3, WAV, OGG, M4A).
+            </div>
+            ${state}
+            <input type="file" id="pf-sound-input" accept="audio/*" style="display:none" onchange="handlePfSoundSelect(this)"/>
+            <div id="pf-sound-msg" style="font-size:12px;margin-top:10px"></div>
+          </div>
+        </div>`;
+      }
+
+      function pfPickCelebrationSound() {
+        document.getElementById("pf-sound-input")?.click();
+      }
+
+      function pfPlayCelebrationSound() {
+        const url = myProfile?.celebrationSoundUrl;
+        if (!url) return;
+        if (pfSoundPreview) pfSoundPreview.pause();
+        pfSoundPreview = new Audio(url);
+        // Uzunroq fayl yuklangan bo'lsa ham — TVdagi kabi faqat
+        // birinchi 5 soniyasi eshitiladi.
+        pfSoundPreview.play().catch(() => showToast("⚠ Ovozni ijro etib bo'lmadi"));
+        setTimeout(() => pfSoundPreview?.pause(), PF_SOUND_MAX_SEC * 1000);
+      }
+
+      // Faylning DAVOMIYLIGI shu yerda tekshiriladi — serverda audio
+      // dekodlaydigan kutubxona yo'q, brauzerda esa bu bepul.
+      function pfAudioDuration(file) {
+        return new Promise((resolve) => {
+          const url = URL.createObjectURL(file);
+          const a = new Audio();
+          const done = (v) => {
+            URL.revokeObjectURL(url);
+            resolve(v);
+          };
+          a.onloadedmetadata = () => done(a.duration);
+          a.onerror = () => done(null);
+          a.src = url;
+        });
+      }
+
+      async function handlePfSoundSelect(input) {
+        const file = input.files?.[0];
+        input.value = "";
+        if (!file) return;
+        const msg = document.getElementById("pf-sound-msg");
+        const say = (text, color) => {
+          if (msg) {
+            msg.textContent = text;
+            msg.style.color = color || "var(--t3)";
+          }
+        };
+        if (file.size > 2 * 1024 * 1024) return say("⚠ Fayl 2MB dan katta", "var(--red)");
+
+        const dur = await pfAudioDuration(file);
+        if (dur === null) return say("⚠ Bu faylni o'qib bo'lmadi", "var(--red)");
+        if (dur > PF_SOUND_MAX_SEC + 0.5) {
+          return say(`⚠ Ovoz ${Math.round(dur)} soniya — ${PF_SOUND_MAX_SEC} soniyadan qisqa fayl tanlang`, "var(--red)");
+        }
+
+        say("Yuklanmoqda…");
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            const res = await apiFetch("/api/me/celebration-sound", {
+              method: "POST",
+              body: JSON.stringify({ audioBase64: reader.result }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || "Xato");
+            if (myProfile) myProfile.celebrationSoundUrl = data.url;
+            showToast("✅ Tabrik ovozi saqlandi");
+            renderProfilePage();
+          } catch (e) {
+            say("⚠ " + e.message, "var(--red)");
+          }
+        };
+        reader.onerror = () => say("⚠ Faylni o'qib bo'lmadi", "var(--red)");
+        reader.readAsDataURL(file);
+      }
+
+      async function pfRemoveCelebrationSound(btn) {
+        setBtnLoading(btn, true, "…");
+        try {
+          const res = await apiFetch("/api/me/celebration-sound", { method: "DELETE" });
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
+          if (myProfile) myProfile.celebrationSoundUrl = null;
+          showToast("✅ Standart qarsaklarga qaytarildi");
+          renderProfilePage();
+        } catch (e) {
+          showToast("⚠ " + e.message);
+          setBtnLoading(btn, false);
+        }
+      }
+
       // ── ADMIN: boshqa xodimga Ncoin qo'shish/ayirish ────────────────
       // Profil sahifasidan to'g'ridan-to'g'ri — avval faqat bir martalik
       // skriptlar bilan qilinardi, endi doimiy UI. Ledger'ga oddiy
