@@ -4797,6 +4797,7 @@
       .st-pill.st-mid { background: var(--st-mid-bg); color: var(--st-mid); --dot: var(--st-mid-dot); }
       .st-pill.st-onplan { background: var(--st-ahead-bg); color: var(--st-ahead); --dot: var(--st-ahead-dot); }
       .st-pill.st-ahead { background: var(--st-ahead-bg); color: var(--st-ahead); --dot: var(--st-ahead-dot); }
+      .st-pill.st-done { background: var(--st-ahead-bg); color: var(--st-ahead); --dot: var(--st-ahead-dot); }
 
       /* Progress chizig'i + kutilgan joy ko'rsatkichi */
       .pbar {
@@ -4827,6 +4828,7 @@
       .st-fill-mid { background: var(--st-mid-dot); }
       .st-fill-onplan { background: var(--st-ahead-dot); }
       .st-fill-ahead { background: var(--st-ahead-dot); }
+      .st-fill-done { background: var(--st-ahead-dot); }
 
       /* Tur belgisi — vazifa holati (Post/Stories o'rnida) */
       .type-pill {
@@ -8103,11 +8105,15 @@
       const PROJ_MID_MIN_PCT = 50;
       function projStatus(p) {
         if (p.outstandingDebt) return "debt";
+        // To'liq bajarilgan — eng yaxshi holat, alohida. Tempo bilan
+        // solishtirishning ma'nosi yo'q: ish tugagan.
+        if (p.doneK >= p.k && p.doneS >= p.s) return "done";
         const pc = projPct(p);
         if (pc >= projExpectedPct(p)) return "onplan";
         return pc >= PROJ_MID_MIN_PCT ? "mid" : "behind";
       }
       const PROJ_STATUS_LABEL = {
+        done: "Bajarildi",
         debt: "Qarz",
         behind: "Ortda",
         mid: "O'rtacha",
@@ -8125,7 +8131,9 @@
         const pc = Math.max(0, Math.min(100, projPct(p)));
         const exp = Math.max(0, Math.min(100, projExpectedPct(p)));
         const marker =
-          status === "debt" ? "" : `<span class="pbar-marker" style="left:${exp}%"></span>`;
+          status === "debt" || status === "done"
+            ? ""
+            : `<span class="pbar-marker" style="left:${exp}%"></span>`;
         return `<span class="pbar"><span class="pbar-fill st-fill-${status}" style="width:${pc}%"></span>${marker}</span>`;
       }
 
@@ -8673,7 +8681,7 @@
       // "Rejada" yashil ko'rsatiladi (haftalik rejani bajargan). Ko'k
       // "onplan" ranglari faqat tanlangan qator foni uchun qoladi, shu
       // sabab matn/nuqta rangi alohida xaritadan olinadi.
-      const ST_COLOR = { debt: "debt", behind: "behind", mid: "mid", onplan: "ahead", ahead: "ahead" };
+      const ST_COLOR = { debt: "debt", behind: "behind", mid: "mid", onplan: "ahead", ahead: "ahead", done: "ahead" };
 
       function projPlanDelta(p) {
         const total = p.k + p.s;
