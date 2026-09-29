@@ -238,26 +238,34 @@ const PROFILE_REQUIRED_FIELDS = ["first_name", "last_name", "phone", "job_title"
 const CELEBRATION_SOUND_RETRY_MS = 5 * 60 * 1000;
 let celebrationSoundOffUntil = 0;
 
-async function getCelebrationSoundUrl(userId) {
-  if (Date.now() < celebrationSoundOffUntil) return null;
+async function getCelebrationSound(userId) {
+  if (Date.now() < celebrationSoundOffUntil) return { url: null, start: 0 };
   try {
-    const r = await db.query(`select celebration_sound_url from users where id = $1`, [userId]);
+    const r = await db.query(
+      `select celebration_sound_url, celebration_sound_start from users where id = $1`,
+      [userId],
+    );
     celebrationSoundOffUntil = 0;
-    return r.rows[0]?.celebration_sound_url || null;
+    return {
+      url: r.rows[0]?.celebration_sound_url || null,
+      start: Number(r.rows[0]?.celebration_sound_start) || 0,
+    };
   } catch (e) {
     if (e.code === "42703") {
       celebrationSoundOffUntil = Date.now() + CELEBRATION_SOUND_RETRY_MS;
-      console.warn("celebration_sound_url ustuni yo'q — 0016 migratsiyasi qo'llanmagan");
-      return null;
+      console.warn("celebration_sound ustunlari yo'q — 0016/0017 migratsiyasi qo'llanmagan");
+      return { url: null, start: 0 };
     }
     throw e;
   }
 }
 
-// Ovoz fayli: 5 soniyalik qisqa audio. Davomiylik brauzerda tekshiriladi
-// (serverda audio dekodlash uchun kutubxona yo'q), bu yerda esa TUR va
-// HAJM cheklanadi — 2MB dan katta fayl 5 soniyalik klip bo'lishi mumkin
-// emas.
+// Ovoz fayli — TO'LIQ qo'shiq bo'lishi mumkin. Xodim uning ichidan
+// 10 soniyalik parchani o'zi tanlaydi (boshlanish nuqtasi alohida
+// saqlanadi), fayl kesilmaydi: serverda audio qayta ishlash
+// kutubxonasi yo'q va uni qo'shish bu loyihaning "minimal
+// bog'liqlik" yondashuviga zid. Bu yerda faqat TUR va HAJM
+// cheklanadi.
 const CELEBRATION_AUDIO_TYPES = {
   "audio/mpeg": "mp3",
   "audio/mp3": "mp3",
@@ -280,13 +288,17 @@ app.post("/api/me/celebration-sound", auth, async (req, res) => {
     const ext = CELEBRATION_AUDIO_TYPES[mimeType.toLowerCase()];
     if (!ext) return res.status(400).json({ error: "Faqat MP3, WAV, OGG, M4A yoki AAC qabul qilinadi" });
     const buffer = Buffer.from(base64Data, "base64");
-    const MAX_BYTES = 2 * 1024 * 1024;
-    if (buffer.length > MAX_BYTES) return res.status(400).json({ error: "Fayl hajmi 2MB dan oshmasligi kerak" });
+    const MAX_BYTES = 10 * 1024 * 1024;
+    if (buffer.length > MAX_BYTES) return res.status(400).json({ error: "Fayl hajmi 10MB dan oshmasligi kerak" });
 
     const filename = `celebration/${req.user.username}-${Date.now()}.${ext}`;
     const blob = await blobPut(filename, buffer, { access: "public", contentType: mimeType });
+    // Yangi fayl — parcha boshidan boshlanadi, keyin xodim siljitadi.
     try {
-      await db.query(`update users set celebration_sound_url = $1 where id = $2`, [blob.url, req.user.id]);
+      await db.query(
+        `update users set celebration_sound_url = $1, celebration_sound_start = 0 where id = $2`,
+        [blob.url, req.user.id],
+      );
     } catch (e) {
       if (e.code === "42703") {
         celebrationSoundOffUntil = Date.now() + CELEBRATION_SOUND_RETRY_MS;
@@ -301,9 +313,32 @@ app.post("/api/me/celebration-sound", auth, async (req, res) => {
   }
 });
 
+// Xodim tanlagan 10 soniyalik parchaning boshlanish nuqtasi.
+app.patch("/api/me/celebration-sound", auth, async (req, res) => {
+  try {
+    const startSec = Number(req.body.startSec);
+    if (!Number.isFinite(startSec) || startSec < 0) {
+      return res.status(400).json({ error: "Boshlanish nuqtasi noto'g'ri" });
+    }
+    await db.query(`update users set celebration_sound_start = $1 where id = $2`, [
+      Math.round(startSec * 10) / 10,
+      req.user.id,
+    ]);
+    res.json({ ok: true });
+  } catch (e) {
+    if (e.code === "42703") {
+      return res.status(503).json({ error: "Bu imkoniyat hali yoqilmagan (baza yangilanishi kerak)" });
+    }
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.delete("/api/me/celebration-sound", auth, async (req, res) => {
   try {
-    await db.query(`update users set celebration_sound_url = null where id = $1`, [req.user.id]);
+    await db.query(
+      `update users set celebration_sound_url = null, celebration_sound_start = 0 where id = $1`,
+      [req.user.id],
+    );
     res.json({ ok: true });
   } catch (e) {
     if (e.code === "42703") return res.json({ ok: true });
@@ -326,9 +361,9 @@ app.get("/api/me", auth, async (req, res) => {
   // Tabrik ovozi — Profil sahifasida ko'rsatish uchun (alohida yengil
   // so'rov; auth'dagi asosiy select'ga tegilmadi, chunki u migratsiya
   // qo'llanmaguncha xato berardi).
-  let celebrationSoundUrl = null;
+  let celebrationSound = { url: null, start: 0 };
   try {
-    celebrationSoundUrl = await getCelebrationSoundUrl(u.id);
+    celebrationSound = await getCelebrationSound(u.id);
   } catch (e) {
     console.error("Tabrik ovozi o'qilmadi:", e.message);
   }
@@ -352,7 +387,8 @@ app.get("/api/me", auth, async (req, res) => {
       role: u.role,
       isAdmin: isAdminRole(u.role),
       isSuperAdmin: u.role === "super_admin",
-      celebrationSoundUrl,
+      celebrationSoundUrl: celebrationSound.url,
+      celebrationSoundStart: celebrationSound.start,
     },
     ncoinBalance,
     profileIncomplete,

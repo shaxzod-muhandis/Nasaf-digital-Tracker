@@ -3494,6 +3494,77 @@
         font-weight: 600;
       }
 
+      /* ── TABRIK OVOZI — parcha tanlash ─────────────────────────────── */
+      .pfs-file {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        background: var(--surf2);
+        border: 1px solid var(--bd1);
+        border-radius: 12px;
+        padding: 11px 13px;
+      }
+      .pfs-note {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: rgba(47, 122, 185, 0.12);
+        color: var(--brand);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        font-size: 16px;
+      }
+      .pfs-file-t { font-size: 13.5px; font-weight: 600; color: var(--t5); }
+      .pfs-file-s { font-size: 12px; color: var(--t3); margin-top: 2px; }
+      /* Qo'shiq chizig'i — tanlangan 10 soniyalik oyna ajratib turadi */
+      .pfs-track {
+        position: relative;
+        height: 40px;
+        border-radius: 10px;
+        background: var(--chip);
+        overflow: hidden;
+        margin-top: 14px;
+      }
+      .pfs-window {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        background: var(--brand);
+        opacity: 0.85;
+        border-radius: 8px;
+      }
+      .pfs-playhead {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--marker);
+        display: none;
+      }
+      .pfs-times {
+        display: flex;
+        align-items: center;
+        margin-top: 8px;
+        font-size: 12.5px;
+        color: var(--t3);
+        font-variant-numeric: tabular-nums;
+      }
+      .pfs-times b { color: var(--t5); font-weight: 600; }
+      .pfs-range {
+        width: 100%;
+        margin: 12px 0 2px;
+        accent-color: var(--brand);
+      }
+      .pfs-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      .pfs-actions .btn { width: auto; height: 38px; padding: 0 14px; }
+
       /* ── VAZIFA DETALI — mobil (v3) ─────────────────────────────────── */
       .tdm-hdr {
         background: var(--surf);
@@ -13752,72 +13823,186 @@
           </div>`;
         pfOriginalValues = pfCollectValues();
         pfUpdateSaveBar([]);
+        pfInitSoundTrimmer();
         if (isAdmin) pfLoadGiftUserOptions();
       }
       // ── TABRIK OVOZI ────────────────────────────────────────────────
       // Devor ekranida (TV) xodimning ishi bajarilgani haqida tabrik
-      // chiqqanda ijro etiladigan qisqa ovoz. Qo'yilmagan bo'lsa —
-      // standart qarsaklar. Fayl Vercel Blob'ga yuklanadi, bazada
-      // faqat URL saqlanadi.
-      const PF_SOUND_MAX_SEC = 5;
-      let pfSoundPreview = null;
+      // chiqqanda ijro etiladigan ovoz. Xodim TO'LIQ qo'shiq yuklaydi
+      // va uning ichidan 10 soniyalik parchani o'zi tanlaydi — fayl
+      // kesilmaydi, faqat boshlanish nuqtasi saqlanadi va TV o'sha
+      // joydan 10 soniya ijro etadi. Qo'yilmagan bo'lsa — qarsaklar.
+      const PF_SOUND_CLIP_SEC = 10;
+      const PF_SOUND_MAX_MB = 10;
+      let pfSound = { duration: 0, start: 0, audio: null, raf: 0, stopTimer: 0 };
+
+      function pfFmtTime(sec) {
+        sec = Math.max(0, Math.floor(sec || 0));
+        return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
+      }
 
       function pfCelebrationSoundCardHtml() {
         const url = myProfile?.celebrationSoundUrl;
-        const state = url
-          ? `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-              <span class="pf-badge" style="color:#16a34a;background:rgba(22,163,74,.12)">O'z ovozingiz qo'yilgan</span>
-              <button type="button" class="btn btn-soft" style="width:auto;height:36px;padding:0 14px" onclick="pfPlayCelebrationSound()">▶ Eshitish</button>
-              <button type="button" class="btn btn-soft" style="width:auto;height:36px;padding:0 14px" onclick="pfPickCelebrationSound()">Almashtirish</button>
-              <button type="button" class="btn btn-soft" style="width:auto;height:36px;padding:0 14px;color:var(--red)" onclick="pfRemoveCelebrationSound(this)">O'chirish</button>
+        const body = url
+          ? `<div class="pfs-file">
+              <div class="pfs-note">♪</div>
+              <div style="flex:1;min-width:0">
+                <div class="pfs-file-t">Qo'shiq yuklangan</div>
+                <div class="pfs-file-s" id="pfs-meta">Uzunligi aniqlanmoqda…</div>
+              </div>
+            </div>
+            <div id="pfs-trim" style="display:none">
+              <div class="pfs-track" id="pfs-track">
+                <div class="pfs-window" id="pfs-window"></div>
+                <div class="pfs-playhead" id="pfs-playhead"></div>
+              </div>
+              <div class="pfs-times">
+                <span>Tanlangan: <b id="pfs-from">0:00</b> → <b id="pfs-to">0:10</b></span>
+                <span style="flex:1"></span>
+                <span id="pfs-total"></span>
+              </div>
+              <input type="range" class="pfs-range" id="pfs-range" min="0" max="0" step="0.5" value="0"
+                     oninput="pfTrimInput(this.value)" onchange="pfTrimCommit(this.value)"/>
+            </div>
+            <div class="pfs-actions">
+              <button type="button" class="btn btn-blue" id="pfs-play" onclick="pfPlayClip()">▶ Eshitish</button>
+              <button type="button" class="btn btn-soft" onclick="pfPickCelebrationSound()">Almashtirish</button>
+              <button type="button" class="btn btn-soft" style="color:var(--red)" onclick="pfRemoveCelebrationSound(this)">O'chirish</button>
             </div>`
-          : `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-              <span class="pf-badge" style="color:var(--t5);background:var(--chip)">Standart: qarsaklar</span>
-              <button type="button" class="btn btn-blue" style="width:auto;height:36px;padding:0 14px" onclick="pfPickCelebrationSound()">Ovoz yuklash</button>
+          : `<div class="pfs-file">
+              <div class="pfs-note" style="background:var(--chip);color:var(--t3)">♪</div>
+              <div style="flex:1;min-width:0">
+                <div class="pfs-file-t">Standart: qarsaklar</div>
+                <div class="pfs-file-s">O'z qo'shig'ingizni yuklashingiz mumkin</div>
+              </div>
+            </div>
+            <div class="pfs-actions">
+              <button type="button" class="btn btn-blue" onclick="pfPickCelebrationSound()">Qo'shiq yuklash</button>
             </div>`;
         return `<div class="pf-card">
           <div class="pf-card-hdr">Tabrik ovozi</div>
           <div class="pf-card-body">
             <div class="f-hint" style="margin:0 0 12px">
               Devor ekranida ishingiz bajarilgani haqida tabrik chiqqanda shu ovoz ijro etiladi.
-              Eng ko'pi ${PF_SOUND_MAX_SEC} soniya, 2MB gacha (MP3, WAV, OGG, M4A).
+              To'liq qo'shiq yuklang — ichidan ${PF_SOUND_CLIP_SEC} soniyalik parchani o'zingiz tanlaysiz.
+              ${PF_SOUND_MAX_MB}MB gacha (MP3, WAV, OGG, M4A).
             </div>
-            ${state}
+            ${body}
             <input type="file" id="pf-sound-input" accept="audio/*" style="display:none" onchange="handlePfSoundSelect(this)"/>
             <div id="pf-sound-msg" style="font-size:12px;margin-top:10px"></div>
           </div>
         </div>`;
       }
 
-      function pfPickCelebrationSound() {
-        document.getElementById("pf-sound-input")?.click();
+      // Qo'shiq uzunligi yuklangach parcha tanlagich ko'rinadi.
+      function pfInitSoundTrimmer() {
+        const url = myProfile?.celebrationSoundUrl;
+        pfStopClip();
+        if (!url || !document.getElementById("pfs-trim")) return;
+        pfSound.start = Number(myProfile?.celebrationSoundStart) || 0;
+        const a = new Audio();
+        a.preload = "metadata";
+        a.onloadedmetadata = () => {
+          pfSound.duration = a.duration || 0;
+          const meta = document.getElementById("pfs-meta");
+          if (meta) meta.textContent = "Uzunligi " + pfFmtTime(pfSound.duration);
+          const maxStart = Math.max(0, pfSound.duration - PF_SOUND_CLIP_SEC);
+          const trim = document.getElementById("pfs-trim");
+          // Qo'shiqning o'zi 10 soniyadan qisqa bo'lsa — tanlaydigan
+          // narsa yo'q, butunlay ijro etiladi.
+          if (maxStart <= 0) return;
+          const range = document.getElementById("pfs-range");
+          if (range) {
+            range.max = String(maxStart);
+            range.value = String(Math.min(pfSound.start, maxStart));
+          }
+          const total = document.getElementById("pfs-total");
+          if (total) total.textContent = "Qo'shiq " + pfFmtTime(pfSound.duration);
+          if (trim) trim.style.display = "";
+          pfTrimInput(Math.min(pfSound.start, maxStart));
+        };
+        a.onerror = () => {
+          const meta = document.getElementById("pfs-meta");
+          if (meta) meta.textContent = "Faylni o'qib bo'lmadi";
+        };
+        a.src = url;
       }
 
-      function pfPlayCelebrationSound() {
+      function pfTrimInput(value) {
+        const start = Number(value) || 0;
+        pfSound.start = start;
+        const win = document.getElementById("pfs-window");
+        if (win && pfSound.duration > 0) {
+          win.style.left = (start / pfSound.duration) * 100 + "%";
+          win.style.width = Math.min(100, (PF_SOUND_CLIP_SEC / pfSound.duration) * 100) + "%";
+        }
+        const from = document.getElementById("pfs-from");
+        const to = document.getElementById("pfs-to");
+        if (from) from.textContent = pfFmtTime(start);
+        if (to) to.textContent = pfFmtTime(start + PF_SOUND_CLIP_SEC);
+      }
+
+      async function pfTrimCommit(value) {
+        const startSec = Number(value) || 0;
+        try {
+          const res = await apiFetch("/api/me/celebration-sound", {
+            method: "PATCH",
+            body: JSON.stringify({ startSec }),
+          });
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
+          if (myProfile) myProfile.celebrationSoundStart = startSec;
+        } catch (e) {
+          showToast("⚠ " + e.message);
+        }
+      }
+
+      function pfStopClip() {
+        if (pfSound.raf) cancelAnimationFrame(pfSound.raf);
+        pfSound.raf = 0;
+        if (pfSound.stopTimer) clearTimeout(pfSound.stopTimer);
+        pfSound.stopTimer = 0;
+        if (pfSound.audio) {
+          try { pfSound.audio.pause(); } catch (e) {}
+          pfSound.audio = null;
+        }
+        const btn = document.getElementById("pfs-play");
+        if (btn) btn.textContent = "▶ Eshitish";
+        const head = document.getElementById("pfs-playhead");
+        if (head) head.style.display = "none";
+      }
+
+      // Aynan TVdagidek: tanlangan nuqtadan 10 soniya.
+      function pfPlayClip() {
         const url = myProfile?.celebrationSoundUrl;
         if (!url) return;
-        if (pfSoundPreview) pfSoundPreview.pause();
-        pfSoundPreview = new Audio(url);
-        // Uzunroq fayl yuklangan bo'lsa ham — TVdagi kabi faqat
-        // birinchi 5 soniyasi eshitiladi.
-        pfSoundPreview.play().catch(() => showToast("⚠ Ovozni ijro etib bo'lmadi"));
-        setTimeout(() => pfSoundPreview?.pause(), PF_SOUND_MAX_SEC * 1000);
+        if (pfSound.audio) return pfStopClip();
+        const a = new Audio(url);
+        pfSound.audio = a;
+        a.currentTime = pfSound.start;
+        a.play().catch(() => {
+          showToast("⚠ Ovozni ijro etib bo'lmadi");
+          pfStopClip();
+        });
+        const btn = document.getElementById("pfs-play");
+        if (btn) btn.textContent = "⏸ To'xtatish";
+        const head = document.getElementById("pfs-playhead");
+        if (head) head.style.display = "block";
+        // To'xtatish QAT'IY taymer bilan — quyidagi rAF faqat
+        // ko'rsatkichni suradi va sahifa fonga o'tsa to'xtab qoladi,
+        // shuning uchun unga tayanib bo'lmaydi.
+        pfSound.stopTimer = setTimeout(pfStopClip, PF_SOUND_CLIP_SEC * 1000);
+        const tick = () => {
+          if (!pfSound.audio) return;
+          const t = pfSound.audio.currentTime;
+          if (t >= pfSound.start + PF_SOUND_CLIP_SEC || pfSound.audio.ended) return pfStopClip();
+          if (head && pfSound.duration > 0) head.style.left = (t / pfSound.duration) * 100 + "%";
+          pfSound.raf = requestAnimationFrame(tick);
+        };
+        pfSound.raf = requestAnimationFrame(tick);
       }
 
-      // Faylning DAVOMIYLIGI shu yerda tekshiriladi — serverda audio
-      // dekodlaydigan kutubxona yo'q, brauzerda esa bu bepul.
-      function pfAudioDuration(file) {
-        return new Promise((resolve) => {
-          const url = URL.createObjectURL(file);
-          const a = new Audio();
-          const done = (v) => {
-            URL.revokeObjectURL(url);
-            resolve(v);
-          };
-          a.onloadedmetadata = () => done(a.duration);
-          a.onerror = () => done(null);
-          a.src = url;
-        });
+      function pfPickCelebrationSound() {
+        document.getElementById("pf-sound-input")?.click();
       }
 
       async function handlePfSoundSelect(input) {
@@ -13831,14 +14016,9 @@
             msg.style.color = color || "var(--t3)";
           }
         };
-        if (file.size > 2 * 1024 * 1024) return say("⚠ Fayl 2MB dan katta", "var(--red)");
-
-        const dur = await pfAudioDuration(file);
-        if (dur === null) return say("⚠ Bu faylni o'qib bo'lmadi", "var(--red)");
-        if (dur > PF_SOUND_MAX_SEC + 0.5) {
-          return say(`⚠ Ovoz ${Math.round(dur)} soniya — ${PF_SOUND_MAX_SEC} soniyadan qisqa fayl tanlang`, "var(--red)");
+        if (file.size > PF_SOUND_MAX_MB * 1024 * 1024) {
+          return say(`⚠ Fayl ${PF_SOUND_MAX_MB}MB dan katta`, "var(--red)");
         }
-
         say("Yuklanmoqda…");
         const reader = new FileReader();
         reader.onload = async () => {
@@ -13849,8 +14029,11 @@
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data.error || "Xato");
-            if (myProfile) myProfile.celebrationSoundUrl = data.url;
-            showToast("✅ Tabrik ovozi saqlandi");
+            if (myProfile) {
+              myProfile.celebrationSoundUrl = data.url;
+              myProfile.celebrationSoundStart = 0;
+            }
+            showToast("✅ Qo'shiq saqlandi — endi parchani tanlang");
             renderProfilePage();
           } catch (e) {
             say("⚠ " + e.message, "var(--red)");
@@ -13865,7 +14048,10 @@
         try {
           const res = await apiFetch("/api/me/celebration-sound", { method: "DELETE" });
           if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
-          if (myProfile) myProfile.celebrationSoundUrl = null;
+          if (myProfile) {
+            myProfile.celebrationSoundUrl = null;
+            myProfile.celebrationSoundStart = 0;
+          }
           showToast("✅ Standart qarsaklarga qaytarildi");
           renderProfilePage();
         } catch (e) {
