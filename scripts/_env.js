@@ -6,7 +6,17 @@
 const fs = require("fs");
 const path = require("path");
 
-function loadEnv(file = path.join(__dirname, "..", ".env")) {
+// `.env.local` — `vercel env pull` shu nomga yozadi va u odatda
+// `.env`dan ustun turadi (standart konventsiya). Ikkalasi ham o'qiladi:
+// avval `.env.local`, keyin `.env` — birinchi topilgan qiymat qoladi.
+function loadEnv(file) {
+  if (file) return loadEnvFile(file);
+  const root = path.join(__dirname, "..");
+  loadEnvFile(path.join(root, ".env.local"));
+  loadEnvFile(path.join(root, ".env"));
+}
+
+function loadEnvFile(file) {
   if (!fs.existsSync(file)) return;
   const content = fs.readFileSync(file, "utf8");
   content.split("\n").forEach((line) => {
