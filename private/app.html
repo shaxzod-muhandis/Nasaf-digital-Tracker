@@ -8107,7 +8107,7 @@
         if (p.outstandingDebt) return "debt";
         // To'liq bajarilgan — eng yaxshi holat, alohida. Tempo bilan
         // solishtirishning ma'nosi yo'q: ish tugagan.
-        if (p.doneK >= p.k && p.doneS >= p.s) return "done";
+        if ((p.k > 0 || p.s > 0) && p.doneK >= p.k && p.doneS >= p.s) return "done";
         const pc = projPct(p);
         if (pc >= projExpectedPct(p)) return "onplan";
         return pc >= PROJ_MID_MIN_PCT ? "mid" : "behind";
