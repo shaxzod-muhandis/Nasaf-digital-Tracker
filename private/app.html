@@ -3325,7 +3325,12 @@
       }
       .ntv3 {
         position: absolute;
-        inset: 36px 0 0;
+        /* Telegram Mini App to'liq ekran rejimida yuqorida o'zining
+           paneli turadi (yopish tugmasi va h.k.) — uning balandligi
+           `--tg-safe-top` da. Uni hisobga olmasak, oynaning sarlavha
+           qatori, ya'ni "Yaratish" tugmasi, o'sha panel ostida qolib
+           ketardi va bosib bo'lmasdi. */
+        inset: calc(36px + var(--tg-safe-top)) 0 0;
         background: var(--bg);
         border-radius: 22px 22px 0 0;
         display: flex;
@@ -10838,7 +10843,7 @@
           <div class="ntv3-hdr">
             <button type="button" class="ntv3-hbtn cancel" onclick="closeNtv3()">Bekor</button>
             <div class="ntv3-title">Yangi vazifa</div>
-            <button type="button" class="ntv3-hbtn save" id="ntv3-save" onclick="createTaskMobile(this)">Saqlash</button>
+            <button type="button" class="ntv3-hbtn save" id="ntv3-save" onclick="createTaskMobile(this)">Yaratish</button>
           </div>
           <div class="ntv3-body">
             <div class="ntv3-card">
