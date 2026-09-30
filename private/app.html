@@ -103,6 +103,8 @@
         --cwd-grab: #d3d8de;
         --cwd-radio: #c5cbd3;
         --cwd-chipbd: rgba(14, 23, 38, 0.13);
+        --tbl-hdr-bg: #fafbfc;
+        --cell-sub: #0b7f72;
         --marker: #0e1726;
         --type-post: #255f91;
         --type-post-bg: #eaf2f9;
@@ -206,6 +208,8 @@
         --cwd-grab: #3a4150;
         --cwd-radio: #4a5260;
         --cwd-chipbd: rgba(255, 255, 255, 0.14);
+        --tbl-hdr-bg: rgba(255, 255, 255, 0.03);
+        --cell-sub: #2dd4bf;
         --marker: #e8ecf2;
         --type-post: #7fb3dd;
         --type-post-bg: rgba(47, 122, 185, 0.18);
@@ -3616,6 +3620,187 @@
         margin-top: 12px;
       }
       .pfs-actions .btn { width: auto; height: 38px; padding: 0 14px; }
+
+      /* ── TABEL (TZ 10a–10d) ─────────────────────────────────────────── */
+      .tbl-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+      .tbl-month {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        height: 32px;
+        padding: 0 4px;
+        border-radius: 10px;
+        background: var(--surf);
+        border: 1px solid var(--bd1);
+      }
+      .tbl-month b { font-size: 13px; font-weight: 600; color: var(--t5); padding: 0 8px; white-space: nowrap; }
+      .tbl-month button {
+        width: 26px;
+        height: 26px;
+        border: 0;
+        background: transparent;
+        border-radius: 7px;
+        color: var(--v3-t2);
+        cursor: pointer;
+        font-family: inherit;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .tbl-month button:hover { background: var(--chip); }
+      .tbl-month button[disabled] { opacity: 0.35; cursor: default; }
+      /* KPI kartalari */
+      .tbl-kpis { display: flex; gap: 12px; }
+      /* `.mobile-only` blok elementga aylantiradi — KPI qatori flex
+         bo'lib qolishi uchun qaytadan belgilanadi. */
+      .tbl-kpis.mobile-only { display: flex !important; }
+      .tbl-kpi {
+        flex: 1;
+        background: var(--surf);
+        border: 1px solid var(--bd1);
+        border-radius: 14px;
+        padding: 12px 14px;
+        min-width: 0;
+      }
+      .tbl-kpi-l { font-size: 12px; font-weight: 500; color: var(--v3-t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .tbl-kpi-v { display: flex; align-items: baseline; gap: 6px; margin-top: 4px; }
+      .tbl-kpi-n { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--ink, var(--t5)); }
+      .tbl-kpi-u { font-size: 12px; color: var(--v3-t2); }
+      /* Jadval */
+      .tbl-card { background: var(--surf); border: 1px solid var(--bd1); border-radius: 14px; overflow: hidden; }
+      .tbl-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 50px 50px 64px 76px 84px;
+        gap: 10px;
+        padding: 0 16px;
+        align-items: center;
+      }
+      .tbl-hdr { height: 36px; background: var(--tbl-hdr-bg); }
+      .tbl-hdr > div {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--v3-t2);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        text-align: center;
+      }
+      .tbl-hdr > div:first-child { text-align: left; }
+      .tbl-body-row {
+        height: 54px;
+        border-top: 1px solid var(--bd1);
+        cursor: pointer;
+      }
+      .tbl-body-row.on { background: var(--st-onplan-bg); box-shadow: inset 3px 0 0 var(--brand); }
+      .tbl-emp { display: flex; align-items: center; gap: 10px; min-width: 0; }
+      .tbl-av {
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        position: relative;
+        overflow: hidden;
+      }
+      .tbl-nm { font-size: 13.5px; font-weight: 600; color: var(--ink, var(--t5)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .tbl-pj { font-size: 12px; color: var(--v3-t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .tbl-n { font-size: 13.5px; font-variant-numeric: tabular-nums; text-align: center; white-space: nowrap; }
+      .tbl-n.plan { font-weight: 500; color: var(--t5); }
+      .tbl-n.own { font-weight: 600; color: var(--ink, var(--t5)); }
+      .tbl-n.sub { font-weight: 600; color: var(--st-onplan); }
+      .tbl-n.extra { font-weight: 600; color: var(--st-ahead); }
+      .tbl-n.zero { font-weight: 600; color: var(--v3-t3); }
+      .tbl-pay {
+        height: 22px;
+        padding: 0 8px;
+        border-radius: 7px;
+        font-size: 11.5px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        white-space: nowrap;
+      }
+      .tbl-pay.full { background: var(--st-ahead-bg); color: var(--st-ahead); }
+      .tbl-pay.partial { background: var(--st-behind-bg); color: var(--st-behind); }
+      .tbl-pay.noproject { background: var(--chip); color: var(--v3-t2); }
+      /* O'ng panel */
+      .tbl-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; overflow-y: auto; }
+      .tbl-side-card { background: var(--surf); border: 1px solid var(--bd1); border-radius: 14px; padding: 14px 16px; box-sizing: border-box; }
+      .tbl-side-av { width: 38px; height: 38px; border-radius: 13px; font-size: 15px; }
+      .tbl-side-nm { font-size: 15px; font-weight: 700; color: var(--ink, var(--t5)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .tbl-side-sub { font-size: 12px; color: var(--v3-t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .tbl-bar { height: 7px; border-radius: 99px; background: var(--track); position: relative; margin-top: 12px; }
+      .tbl-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 99px; display: block; }
+      .tbl-legendrow { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+      .tbl-legendrow span { font-size: 12.5px; white-space: nowrap; }
+      /* Kataklar */
+      .tbl-gridhdr { display: flex; align-items: center; margin-bottom: 10px; gap: 8px; }
+      .tbl-gridhdr b { font-size: 13px; font-weight: 600; color: var(--ink, var(--t5)); flex: 1; }
+      .tbl-gridhdr span { font-size: 11.5px; color: var(--v3-t2); }
+      .tbl-cells { display: flex; flex-wrap: wrap; gap: 6px; }
+      .tbl-cell {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11.5px;
+        font-weight: 600;
+        color: #fff;
+        box-sizing: border-box;
+        position: relative;
+        cursor: pointer;
+      }
+      .tbl-cell.sub { background: var(--surf); border: 2px solid var(--cell-sub); color: var(--cell-sub); font-weight: 700; }
+      .tbl-cell.sub i {
+        position: absolute;
+        right: -5px;
+        top: -5px;
+        width: 14px;
+        height: 14px;
+        border-radius: 5px;
+        background: var(--cell-sub);
+        color: #fff;
+        font-size: 8.5px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1.5px solid var(--surf);
+        font-style: normal;
+      }
+      .tbl-cell.missing {
+        border: 1.5px dashed rgba(220, 38, 38, 0.55);
+        background: var(--red-bg);
+        color: var(--red);
+      }
+      .tbl-legend { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--bd1); display: flex; gap: 14px; flex-wrap: wrap; }
+      .tbl-legend div { display: flex; align-items: center; gap: 6px; }
+      .tbl-legend i { width: 12px; height: 12px; border-radius: 4px; box-sizing: border-box; display: block; }
+      .tbl-legend span { font-size: 12px; font-weight: 500; color: var(--v3-t2); white-space: nowrap; }
+      /* Almashuvlar ro'yxati */
+      .tbl-subrow { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--bd1); }
+      .tbl-subrow:last-child { border-bottom: 0; }
+      .tbl-subchip {
+        height: 22px;
+        padding: 0 8px;
+        border-radius: 7px;
+        background: var(--st-onplan-bg);
+        color: var(--st-onplan);
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        flex: none;
+        white-space: nowrap;
+      }
+      .tbl-subav { width: 22px; height: 22px; border-radius: 7px; font-size: 9px; }
 
       /* ── BELGILASH · KIM BAJARDI (TZ 10e) ───────────────────────────── */
       .cwd-ov {
@@ -8331,7 +8516,9 @@
         }
         await loadProjects();
         histState.loaded = false;
-        worklog = null; // tabel qayta yuklansin
+        worklog = null;
+        tabelData = null; // Tabel qayta yuklansin
+        tabelEmp = null;
         refreshAllViews();
         return data;
       }
@@ -12783,89 +12970,271 @@
         );
       }
 
-      // ── TABEL: oy davomida kim qaysi loyihada nima qilgan ─────────
-      function shiftMonth(delta) {
-        const [y, m] = worklogMonth.split("-").map(Number);
-        const d = new Date(y, m - 1 + delta, 1);
-        worklogMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-        worklog = null;
-        renderWorklogTab(document.getElementById("admin-body"));
+      // ── TABEL (TZ 10a–10d) ────────────────────────────────────────
+      // Kim qaysi post va stories'ni bajargani. Chapda oy bo'yicha hamma
+      // xodim, o'ngda tanlangan xodimning har bir ishi katakcha ko'rinishida.
+      let tabelData = null;
+      let tabelSel = null; // tanlangan xodim (username)
+      let tabelEmp = null; // o'ng panel ma'lumoti
+      let tabelFilter = "all"; // all | full | sub
+
+      function tabelInitials(name) {
+        return (name || "?").trim().slice(0, 1).toUpperCase();
       }
+      function tabelNum(v, cls) {
+        return `<div class="tbl-n ${v ? cls : "zero"}">${v ? (cls === "extra" ? "+" + v : v) : "—"}</div>`;
+      }
+
       async function renderWorklogTab(c) {
         if (!worklogMonth) worklogMonth = isoOf(todayDate()).slice(0, 7);
-        const [wy, wm] = worklogMonth.split("-").map(Number);
-        const header = `
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
-            <button class="icon-btn" onclick="shiftMonth(-1)">‹</button>
-            <div style="font-weight:600;font-size:14px;color:var(--ink)">${MONTHS[wm - 1]} ${wy}</div>
-            <button class="icon-btn" onclick="shiftMonth(1)">›</button>
-          </div>`;
-        if (!worklog) {
-          c.innerHTML =
-            header + `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        if (!tabelData) {
+          c.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
           try {
-            const r = await apiFetch(`/api/worklog?month=${worklogMonth}`);
-            if (!r.ok)
-              throw new Error((await r.json().catch(() => ({}))).error || "Xato");
-            worklog = await r.json();
+            const r = await apiFetch(`/api/tabel?month=${worklogMonth}`);
+            if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
+            tabelData = await r.json();
           } catch (e) {
-            c.innerHTML =
-              header +
-              `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
+            c.innerHTML = `<div class="empty"><div class="empty-t">Yuklab bo'lmadi</div><div class="empty-s">${escHtml(e.message)}</div>
+              <button class="btn btn-soft" style="width:auto;padding:0 16px;margin-top:12px" onclick="tabelReload()">Qayta urinish</button></div>`;
             return;
           }
-          if (adminActiveTab !== "worklog") return; // tab almashib ketgan
+          if (adminActiveTab !== "worklog") return;
+          if (!tabelSel && tabelData.employees.length) tabelSelect(tabelData.employees[0].username, true);
         }
+        tabelRender(c);
+      }
 
-        const section = (title, list, unit) => {
-          if (!list.length)
-            return `<div class="sec-upper">${title}</div><div class="empty" style="padding:16px 0"><div class="empty-s">Bu oyda yozuv yo'q</div></div>`;
-          return (
-            `<div class="sec-upper">${title} · ${list.length}</div>` +
-            list
-              .map((s, i) => {
-                const byProject = {};
-                s.items.forEach((it) => {
-                  (byProject[it.project] = byProject[it.project] || []).push(it);
-                });
-                const detail = Object.keys(byProject)
-                  .map((proj) => {
-                    const items = byProject[proj]
-                      .map(
-                        (it) =>
-                          `${it.type === "k" ? "Post" : "Stories"} ${it.seqNumber} (${String(it.workDate).slice(8, 10)}-kun)`,
-                      )
-                      .join(", ");
-                    return `<div class="hist-assignees" style="margin-top:6px"><b style="color:var(--ink)">${escHtml(proj)}</b> — ${escHtml(items)}</div>`;
-                  })
-                  .join("");
-                const id = `wl-${title.replace(/\W/g, "")}-${i}`;
-                return `<div class="hist-card" id="${id}">
-                  <div class="hist-head" onclick="document.getElementById('${id}').classList.toggle('open')">
-                    <div class="avatar mute">${initials(s.name)}</div>
-                    <div style="flex:1;min-width:0">
-                      <div class="hist-name">${escHtml(s.name)}</div>
-                      <div class="hist-date">${Object.keys(byProject).length} loyiha</div>
+      function tabelReload() {
+        tabelData = null;
+        tabelEmp = null;
+        renderWorklogTab(document.getElementById("admin-body"));
+      }
+      function tabelShiftMonth(delta) {
+        const [y, m] = worklogMonth.split("-").map(Number);
+        const d = new Date(Date.UTC(y, m - 1 + delta, 1));
+        worklogMonth = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+        tabelSel = null;
+        tabelReload();
+      }
+      function tabelSetFilter(f) {
+        tabelFilter = f;
+        tabelRender(document.getElementById("admin-body"));
+      }
+      async function tabelSelect(username, silent) {
+        tabelSel = username;
+        tabelEmp = null;
+        if (!silent) tabelRender(document.getElementById("admin-body"));
+        try {
+          const r = await apiFetch(`/api/tabel/employee/${encodeURIComponent(username)}?month=${worklogMonth}`);
+          if (r.ok) tabelEmp = await r.json();
+        } catch (e) {}
+        if (adminActiveTab === "worklog") tabelRender(document.getElementById("admin-body"));
+      }
+
+      function tabelFiltered() {
+        const list = tabelData?.employees || [];
+        if (tabelFilter === "full") return list.filter((e) => e.payStatus === "full");
+        if (tabelFilter === "sub") return list.filter((e) => e.substituted > 0);
+        return list;
+      }
+
+      function tabelRender(c) {
+        if (!c || !tabelData) return;
+        const [wy, wm] = worklogMonth.split("-").map(Number);
+        const t = tabelData.totals;
+        const list = tabelFiltered();
+        const fullCount = tabelData.employees.filter((e) => e.payStatus === "full").length;
+        const subCount = tabelData.employees.filter((e) => e.substituted > 0).length;
+
+        const head = `<div class="tbl-head" style="margin-bottom:14px">
+          <div class="tbl-month">
+            <button onclick="tabelShiftMonth(-1)">‹</button>
+            <b>${MONTHS[wm - 1]} ${wy}</b>
+            <button onclick="tabelShiftMonth(1)">›</button>
+          </div>
+          <div style="flex:1"></div>
+          <button class="btn btn-soft" style="width:auto;height:32px;padding:0 14px" onclick="tabelExport()">Eksport</button>
+        </div>`;
+
+        // Desktop (10a) — 4 ta karta; mobil (10c) — 3 ta, chunki 390px
+        // enda to'rtta yorliq ("O'rniga bajarildi" kabi) sig'maydi va
+        // kesilib qolardi. TZ'ning mobil ekrani ham aynan uchtasini
+        // ko'rsatadi: O'zi · O'rniga · Qolgan.
+        const kpis = `<div class="tbl-kpis desktop-flex" style="margin-bottom:14px">
+          <div class="tbl-kpi"><div class="tbl-kpi-l">Reja</div><div class="tbl-kpi-v"><div class="tbl-kpi-n">${t.plan}</div><div class="tbl-kpi-u">ish</div></div></div>
+          <div class="tbl-kpi"><div class="tbl-kpi-l">O'zi bajardi</div><div class="tbl-kpi-v"><div class="tbl-kpi-n">${t.own}</div><div class="tbl-kpi-u">${t.ownPct}%</div></div></div>
+          <div class="tbl-kpi"><div class="tbl-kpi-l">O'rniga bajarildi</div><div class="tbl-kpi-v"><div class="tbl-kpi-n" style="color:var(--st-onplan)">${t.substituted}</div><div class="tbl-kpi-u">ish</div></div></div>
+          <div class="tbl-kpi"><div class="tbl-kpi-l">Bajarilmagan</div><div class="tbl-kpi-v"><div class="tbl-kpi-n" style="color:var(--red)">${t.missing}</div><div class="tbl-kpi-u">ish</div></div></div>
+        </div>
+        <div class="tbl-kpis mobile-only" style="margin-bottom:14px">
+          <div class="tbl-kpi"><div class="tbl-kpi-l">O'zi</div><div class="tbl-kpi-v"><div class="tbl-kpi-n">${t.own}</div></div></div>
+          <div class="tbl-kpi"><div class="tbl-kpi-l">O'rniga</div><div class="tbl-kpi-v"><div class="tbl-kpi-n" style="color:var(--st-onplan)">${t.substituted}</div></div></div>
+          <div class="tbl-kpi"><div class="tbl-kpi-l">Qolgan</div><div class="tbl-kpi-v"><div class="tbl-kpi-n" style="color:var(--red)">${t.missing}</div></div></div>
+        </div>`;
+
+        const chips = `<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+          ${[["all", `Hammasi ${tabelData.employees.length}`], ["full", `To'liq ${fullCount}`], ["sub", `Almashuv bor ${subCount}`]]
+            .map(([k, lbl]) => `<button type="button" class="cwd-reason${tabelFilter === k ? " on" : ""}" onclick="tabelSetFilter('${k}')">${lbl}</button>`)
+            .join("")}
+        </div>`;
+
+        const rows = list.length
+          ? list
+              .map(
+                (e) => `<div class="tbl-row tbl-body-row${tabelSel === e.username ? " on" : ""}" onclick="tabelSelect('${escArg(e.username)}')">
+              <div class="tbl-emp">
+                <span class="tbl-av" style="background:${personColor(e.username || e.name)}">${escHtml(tabelInitials(e.name))}${avatarImg(e.avatarUrl)}</span>
+                <span style="min-width:0">
+                  <span class="tbl-nm" style="display:block">${escHtml(e.name)}</span>
+                  <span class="tbl-pj" style="display:block">${escHtml(e.projects.map((p) => p.label).join(", ") || "Loyihaga biriktirilmagan")}</span>
+                </span>
+              </div>
+              ${tabelNum(e.plan, "plan")}
+              ${tabelNum(e.own, "own")}
+              ${tabelNum(e.substituted, "sub")}
+              ${tabelNum(e.extra, "extra")}
+              <div style="display:flex;justify-content:center"><span class="tbl-pay ${e.payStatus}">${escHtml(e.payLabel)}</span></div>
+            </div>`,
+              )
+              .join("")
+          : `<div class="empty" style="padding:28px 0"><div class="empty-s">Bu oyda yozuv yo'q</div></div>`;
+
+        const table = `<div class="tbl-card">
+          <div class="tbl-row tbl-hdr">
+            <div>Xodim · loyiha</div><div>Reja</div><div>O'zi</div><div>O'rniga</div><div>Qo'shimcha</div><div>Oylik</div>
+          </div>
+          ${rows}
+        </div>`;
+
+        // ── Mobil ro'yxat (10c) ──
+        const mobile = list.length
+          ? list
+              .map((e) => {
+                const pctW = e.plan ? Math.min(100, Math.round((e.own / e.plan) * 100)) : 0;
+                const marks = [
+                  e.substituted ? `${e.substituted} ta o'rniga` : "",
+                  e.extra ? `+${e.extra} qo'shimcha` : "",
+                ].filter(Boolean).join(" · ");
+                return `<div class="tm-card" style="margin-bottom:10px"><div class="tm-row" onclick="tabelOpenEmployee('${escArg(e.username)}')">
+                  <span class="tbl-av" style="background:${personColor(e.username || e.name)}">${escHtml(tabelInitials(e.name))}${avatarImg(e.avatarUrl)}</span>
+                  <div class="tm-row-main">
+                    <div class="tm-row-title" style="display:flex;align-items:center;gap:8px">
+                      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(e.name)}</span>
+                      <span class="tbl-pay ${e.payStatus}">${escHtml(e.payLabel)}</span>
                     </div>
-                    <div class="hist-pct num">${s.count}</div>
-                    <span class="hist-status done">${unit}</span>
-                    <span class="c-chev">▾</span>
+                    <div class="tm-row-proj">${escHtml(e.projects.map((p) => p.label).join(", ") || "Loyihaga biriktirilmagan")}</div>
+                    <div class="tbl-bar" style="margin-top:8px"><i style="width:${pctW}%;background:${personColor(e.username || e.name)}"></i></div>
+                    <div class="tm-row-proj" style="margin-top:6px">${e.plan ? `${e.own}/${e.plan}` : ""}${marks ? ` · ${marks}` : ""}</div>
                   </div>
-                  <div class="hist-body">${detail}</div>
-                </div>`;
+                </div></div>`;
               })
               .join("")
-          );
+          : `<div class="empty" style="padding:28px 0"><div class="empty-s">Bu oyda yozuv yo'q</div></div>`;
+
+        c.innerHTML = `${head}${kpis}${chips}
+          <div class="desktop-only">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 352px;gap:18px;align-items:start">
+              ${table}
+              <div class="tbl-side">${tabelSideHtml()}</div>
+            </div>
+          </div>
+          <div class="mobile-only">${mobile}</div>`;
+      }
+
+      // O'ng panel — tanlangan xodimning har bir ishi
+      function tabelSideHtml() {
+        if (!tabelSel) return `<div class="tbl-side-card"><div class="tbl-side-sub">Xodimni tanlang</div></div>`;
+        const e = tabelEmp;
+        if (!e) return `<div class="tbl-side-card"><div class="tbl-side-sub">Yuklanmoqda…</div></div>`;
+        const color = personColor(e.user.username || e.user.name);
+        const pctW = e.plan ? Math.min(100, Math.round((e.own / e.plan) * 100)) : 0;
+
+        const cells = (type, label) => {
+          const items = e.items.filter((i) => i.type === type);
+          if (!items.length) return "";
+          const ownN = items.filter((i) => i.status === "own").length;
+          const subN = items.filter((i) => i.status === "substituted").length;
+          const misN = items.filter((i) => i.status === "missing").length;
+          const sub = [ownN ? `${ownN} o'zi` : "", subN ? `${subN} boshqa` : "", misN ? `${misN} yo'q` : ""].filter(Boolean).join(" · ");
+          return `<div class="tbl-side-card">
+            <div class="tbl-gridhdr"><b>${label} · ${items.length}</b><span>${sub}</span></div>
+            <div class="tbl-cells">
+              ${items
+                .map((i) => {
+                  if (i.status === "own") return `<div class="tbl-cell" style="background:${color}" title="${escHtml(i.projectLabel)}">${i.seq}</div>`;
+                  if (i.status === "substituted") {
+                    const who = i.performer?.name || "";
+                    return `<div class="tbl-cell sub" title="${escHtml(who + (i.reasonLabel ? " · " + i.reasonLabel : ""))}">${i.seq}<i>${escHtml(tabelInitials(who))}</i></div>`;
+                  }
+                  return `<div class="tbl-cell missing" title="Bajarilmagan">${i.seq}</div>`;
+                })
+                .join("")}
+            </div>
+            ${
+              type === "s"
+                ? `<div class="tbl-legend">
+                    <div><i style="background:${color}"></i><span>O'zi bajardi</span></div>
+                    <div><i style="border:2px solid var(--cell-sub);background:var(--surf)"></i><span>Boshqa xodim bajardi</span></div>
+                    <div><i style="border:1.5px dashed rgba(220,38,38,.55);background:var(--red-bg)"></i><span>Bajarilmagan</span></div>
+                  </div>`
+                : ""
+            }
+          </div>`;
         };
 
-        c.innerHTML =
-          header +
-          `<div class="f-hint" style="margin:-4px 0 14px">Post belgilanganda modalda tanlangan xodimlar shu yerga avtomatik tushadi.</div>` +
-          `<div class="two-col">
-            <div>${section("Montajchilar", worklog.editors, "montaj")}</div>
-            <div>${section("Mobilograflar", worklog.videographers, "video")}</div>
-          </div>`;
+        const subs = e.substitutions.length
+          ? `<div class="tbl-side-card" style="padding:12px 16px 4px">
+              <div style="font-size:13px;font-weight:600;color:var(--ink,var(--t5));margin-bottom:2px">Uning o'rniga bajarganlar</div>
+              ${e.substitutions
+                .map(
+                  (sx) => `<div class="tbl-subrow">
+                    <span class="tbl-subchip">${sx.type === "k" ? "Post" : "Stories"} ${sx.seq}</span>
+                    <span style="flex:1;min-width:0;display:flex;align-items:center;gap:8px">
+                      <span class="tbl-av tbl-subav" style="background:${personColor(sx.performer?.username || sx.performer?.name || "?")}">${escHtml(tabelInitials(sx.performer?.name))}</span>
+                      <span style="min-width:0">
+                        <span class="tbl-nm" style="display:block;font-size:13px">${escHtml(sx.performer?.name || "—")}</span>
+                        <span class="tbl-pj" style="display:block;font-size:11.5px">${sx.workDate ? escHtml(fmtDay(parseISO(String(sx.workDate).slice(0, 10)))) : ""}${sx.reasonLabel ? " · " + escHtml(sx.reasonLabel) : ""}</span>
+                      </span>
+                    </span>
+                  </div>`,
+                )
+                .join("")}
+            </div>`
+          : "";
+
+        return `<div class="tbl-side-card">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="tbl-av tbl-side-av" style="background:${color}">${escHtml(tabelInitials(e.user.name))}${avatarImg(e.user.avatarUrl)}</span>
+              <span style="flex:1;min-width:0">
+                <span class="tbl-side-nm" style="display:block">${escHtml(e.user.name)}</span>
+                <span class="tbl-side-sub" style="display:block">${escHtml(e.projects.join(", ") || "Loyihaga biriktirilmagan")}${e.projects.length ? " · mas'ul" : ""}</span>
+              </span>
+              <span class="tbl-pay ${e.payStatus}">${escHtml(e.payLabel)}</span>
+            </div>
+            <div class="tbl-bar"><i style="width:${pctW}%;background:${color}"></i></div>
+            <div class="tbl-legendrow">
+              <span style="font-weight:600;color:var(--ink,var(--t5))">O'zi ${e.own} / ${e.plan}</span>
+              ${e.substituted ? `<span style="font-weight:500;color:var(--st-onplan)">O'rniga ${e.substituted}</span>` : ""}
+              ${e.missing ? `<span style="font-weight:500;color:var(--red)">Qolgan ${e.missing}</span>` : ""}
+              ${e.extra ? `<span style="font-weight:500;color:var(--st-ahead)">Qo'shimcha +${e.extra}</span>` : ""}
+            </div>
+          </div>
+          ${cells("k", "Post")}
+          ${cells("s", "Stories")}
+          ${subs}`;
       }
+
+      // Mobilda xodim sahifasi (10d) — pastdan chiqadigan varaq
+      async function tabelOpenEmployee(username) {
+        await tabelSelect(username, true);
+        const { body } = makeSheet(tabelEmp?.user?.name || "Xodim");
+        body.innerHTML = `<div class="tbl-side">${tabelSideHtml()}</div>`;
+      }
+
+      function tabelExport() {
+        window.open(`/api/tabel/export?month=${worklogMonth}`, "_blank");
+      }
+
       function renderAdminProjectsTab(c) {
         const q = (document.getElementById("admin-search")?.value || "")
           .toLowerCase()
