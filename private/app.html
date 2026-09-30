@@ -3521,19 +3521,36 @@
       /* Qo'shiq chizig'i — tanlangan 10 soniyalik oyna ajratib turadi */
       .pfs-track {
         position: relative;
-        height: 40px;
+        height: 44px;
         border-radius: 10px;
         background: var(--chip);
         overflow: hidden;
         margin-top: 14px;
+        cursor: pointer;
+        touch-action: none; /* barmoq bilan surish uchun — sahifa aylanmasin */
+        user-select: none;
       }
       .pfs-window {
         position: absolute;
         top: 0;
         bottom: 0;
         background: var(--brand);
-        opacity: 0.85;
+        opacity: 0.9;
         border-radius: 8px;
+        cursor: grab;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+      }
+      .pfs-track.dragging .pfs-window { cursor: grabbing; opacity: 1; }
+      /* Ushlash belgisi — bu blok surilishini bildiradi */
+      .pfs-window i {
+        width: 2px;
+        height: 14px;
+        border-radius: 1px;
+        background: rgba(255, 255, 255, 0.75);
+        display: block;
       }
       .pfs-playhead {
         position: absolute;
@@ -13852,8 +13869,10 @@
               </div>
             </div>
             <div id="pfs-trim" style="display:none">
-              <div class="pfs-track" id="pfs-track">
-                <div class="pfs-window" id="pfs-window"></div>
+              <div class="pfs-track" id="pfs-track"
+                   onpointerdown="pfTrackDown(event)" onpointermove="pfTrackMove(event)"
+                   onpointerup="pfTrackUp()" onpointercancel="pfTrackUp()">
+                <div class="pfs-window" id="pfs-window"><i></i><i></i><i></i></div>
                 <div class="pfs-playhead" id="pfs-playhead"></div>
               </div>
               <div class="pfs-times">
@@ -13926,6 +13945,46 @@
           if (meta) meta.textContent = "Faylni o'qib bo'lmadi";
         };
         a.src = url;
+      }
+
+      // Ko'k blokni chiziq ustida bevosita surish. Blok ichiga bosilsa —
+      // ushlangan nuqtadan siljiydi; tashqarisiga bosilsa — blok o'sha
+      // joyga markazlanadi (slayder bilan bir xil natija, lekin tezroq).
+      let pfDrag = null;
+
+      function pfTrackDown(ev) {
+        const track = document.getElementById("pfs-track");
+        const maxStart = Math.max(0, pfSound.duration - PF_SOUND_CLIP_SEC);
+        if (!track || maxStart <= 0) return;
+        const rect = track.getBoundingClientRect();
+        const winW = (PF_SOUND_CLIP_SEC / pfSound.duration) * rect.width;
+        const winX = (pfSound.start / pfSound.duration) * rect.width;
+        const x = ev.clientX - rect.left;
+        pfDrag = {
+          rect,
+          maxStart,
+          grab: x >= winX && x <= winX + winW ? x - winX : winW / 2,
+        };
+        track.classList.add("dragging");
+        try { track.setPointerCapture(ev.pointerId); } catch (e) {}
+        pfTrackMove(ev);
+      }
+
+      function pfTrackMove(ev) {
+        if (!pfDrag) return;
+        const x = ev.clientX - pfDrag.rect.left - pfDrag.grab;
+        const sec = (x / pfDrag.rect.width) * pfSound.duration;
+        const start = Math.max(0, Math.min(pfDrag.maxStart, Math.round(sec * 2) / 2));
+        pfTrimInput(start);
+        const range = document.getElementById("pfs-range");
+        if (range) range.value = String(start);
+      }
+
+      function pfTrackUp() {
+        if (!pfDrag) return;
+        pfDrag = null;
+        document.getElementById("pfs-track")?.classList.remove("dragging");
+        pfTrimCommit(pfSound.start);
       }
 
       function pfTrimInput(value) {
