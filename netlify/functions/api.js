@@ -1361,14 +1361,18 @@ app.get("/api/projects", auth, async (req, res) => {
       const checksR = await db.query(
         `select c.type, c.seq_number, c.work_date, c.editor_id, c.videographer_id,
                 c.editor_user_id, c.videographer_user_id, c.story_kind,
+                c.assignee_id, c.performer_id, c.substitution_reason, c.substitution_note,
                 e.full_name as editor_name, v.full_name as videographer_name,
                 coalesce(eu.full_name, eu.username) as editor_user_name,
-                coalesce(vu.full_name, vu.username) as videographer_user_name
+                coalesce(vu.full_name, vu.username) as videographer_user_name,
+                pf.username as performer_username,
+                coalesce(nullif(trim(concat(pf.first_name, ' ', pf.last_name)), ''), pf.full_name, pf.username) as performer_name
            from checks c
            left join staff e on e.id = c.editor_id
            left join staff v on v.id = c.videographer_id
            left join users eu on eu.id = c.editor_user_id
            left join users vu on vu.id = c.videographer_user_id
+           left join users pf on pf.id = c.performer_id
           where c.cycle_id = $1`,
         [summary.cycle.id],
       );
@@ -1389,6 +1393,13 @@ app.get("/api/projects", auth, async (req, res) => {
           videographerUserId: c.videographer_user_id,
           videographerUserName: c.videographer_user_name,
           storyKind: c.story_kind,
+          // TABEL: kim mas'ul edi va kim bajardi
+          assigneeId: c.assignee_id,
+          performerId: c.performer_id,
+          performerName: c.performer_name,
+          performerUsername: c.performer_username,
+          substitutionReason: c.substitution_reason,
+          substitutionNote: c.substitution_note,
         };
       });
       return {
@@ -1715,7 +1726,14 @@ app.patch("/api/checks", auth, async (req, res) => {
     const workDate = req.body.workDate || null;
     // TABEL: ishni amalda kim bajargani. Berilmasa — eski xulq-atvor
     // saqlanadi (belgilagan kishining o'zi bajargan deb olinadi).
-    const performerIdRaw = req.body.performerId || null;
+    // Frontend username bilan ishlaydi — id'ga shu yerda o'giriladi.
+    let performerIdRaw = req.body.performerId || null;
+    if (!performerIdRaw && req.body.performerUsername) {
+      const pu = String(req.body.performerUsername).toLowerCase().replace("@", "");
+      const pr = await db.query(`select id from users where username = $1`, [pu]);
+      if (!pr.rows[0]) return res.status(404).json({ error: "Bajaruvchi topilmadi" });
+      performerIdRaw = pr.rows[0].id;
+    }
     const substitutionReason = req.body.substitutionReason || null;
     const substitutionNote = (req.body.substitutionNote || "").trim() || null;
     if (substitutionReason && !["sick", "vacation", "urgent", "other"].includes(substitutionReason)) {
