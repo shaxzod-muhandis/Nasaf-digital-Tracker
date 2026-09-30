@@ -5389,6 +5389,29 @@
         .sheet.wide {
           max-width: 920px;
         }
+        /* Belgilash oynasi (TZ 10e) mobil uchun pastdan chiqadigan
+           varaq shaklida chizilgan. Katta ekranda u butun oynani
+           egallab ketmasligi kerak — ilovaning boshqa modallari kabi
+           markazlashgan kartaga aylanadi. */
+        .cwd-ov {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+        }
+        .cwd {
+          position: relative;
+          top: auto;
+          left: auto;
+          right: auto;
+          bottom: auto;
+          width: 100%;
+          max-width: 520px;
+          max-height: 82vh;
+          border-radius: 20px;
+          padding: 18px 20px 20px;
+        }
+        .cwd-grab { display: none; }
         .sheet-handle {
           /* Pastdan tortib yopish ishorasi — faqat mobil bottom-sheet
              uchun ma'noli. Desktopda sheet markazlashgan modal bo'lgani
