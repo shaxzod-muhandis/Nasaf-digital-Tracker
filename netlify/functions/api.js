@@ -905,40 +905,61 @@ app.get("/api/tabel", auth, async (req, res) => {
       return agg.get(k);
     };
 
+    const cycleById = new Map(cycles.map((c) => [String(c.cycle_id), c]));
+    const projOf = (r, cyc) => {
+      const k = String(cyc.project_id);
+      if (!r.projects.has(k)) {
+        r.projects.set(k, {
+          projectId: k,
+          label: cyc.project_label,
+          slug: cyc.project_slug,
+          plan: 0,
+          own: 0,
+          substituted: 0,
+        });
+      }
+      return r.projects.get(k);
+    };
+
+    // REJA — TZ ta'rifi: "assignee = user bo'lgan ishlar soni".
+    // Bajarilgan ishda mas'ul yozuvning o'zida (snapshot), bajarilmagan
+    // ishda esa davrning joriy mas'uli. Shu ikkisi qo'shiladi — shunda
+    // oy o'rtasida mas'ul almashsa ham son to'g'ri chiqadi va `o'zi`
+    // hech qachon `reja`dan katta bo'lib qolmaydi.
+    const doneInCycle = new Map();
+    checksR.rows.forEach((ch) => {
+      const k = String(ch.cycle_id);
+      doneInCycle.set(k, (doneInCycle.get(k) || 0) + 1);
+    });
     cycles.forEach((c) => {
       if (!c.assignee_id) return;
+      const target = (c.posts_target || 0) + (c.stories_target || 0);
+      const undone = Math.max(0, target - (doneInCycle.get(String(c.cycle_id)) || 0));
+      if (!undone) return;
       const r = row(c.assignee_id);
-      const planned = (c.posts_target || 0) + (c.stories_target || 0);
-      r.plan += planned;
-      const pr = r.projects.get(String(c.project_id)) || {
-        projectId: String(c.project_id),
-        label: c.project_label,
-        slug: c.project_slug,
-        plan: 0,
-        own: 0,
-        substituted: 0,
-      };
-      pr.plan += planned;
-      r.projects.set(String(c.project_id), pr);
+      r.plan += undone;
+      projOf(r, c).plan += undone;
     });
 
-    const cycleById = new Map(cycles.map((c) => [String(c.cycle_id), c]));
     checksR.rows.forEach((ch) => {
       const cyc = cycleById.get(String(ch.cycle_id));
       if (!cyc) return;
       const a = ch.assignee_id && String(ch.assignee_id);
       const p = ch.performer_id && String(ch.performer_id);
+      if (a) {
+        const r = row(a);
+        r.plan++;
+        projOf(r, cyc).plan++;
+      }
       if (a && p && a === p) {
         const r = row(a);
         r.own++;
-        const pr = r.projects.get(String(cyc.project_id));
-        if (pr) pr.own++;
+        projOf(r, cyc).own++;
       } else {
         if (a) {
           const r = row(a);
           r.substituted++;
-          const pr = r.projects.get(String(cyc.project_id));
-          if (pr) pr.substituted++;
+          projOf(r, cyc).substituted++;
         }
         if (p) row(p).extra++;
       }
@@ -981,6 +1002,128 @@ app.get("/api/tabel", auth, async (req, res) => {
     totals.ownPct = totals.plan ? Math.round((totals.own / totals.plan) * 100) : 0;
 
     res.json({ month, totals, employees });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Bitta xodimning oy davomidagi HAR BIR post/stories'i — 10a o'ng
+// paneli va 10d ekrani uchun. Bajarilmagan ishlar uchun `checks`da
+// qator yo'q, shuning uchun ro'yxat reja bo'yicha 1..N qilib quriladi
+// va mavjud belgilar ustiga qo'yiladi.
+app.get("/api/tabel/employee/:username", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const month = tabelMonthGuard(req, res);
+  if (!month) return;
+  try {
+    const uname = String(req.params.username).toLowerCase().replace("@", "");
+    const uR = await db.query(
+      `select id, username, first_name, last_name, full_name, avatar_url from users where username = $1`,
+      [uname],
+    );
+    const user = uR.rows[0];
+    if (!user) return res.status(404).json({ error: "Xodim topilmadi" });
+
+    const cyclesR = await db.query(TABEL_CYCLES_SQL, [month]);
+    const myCycles = cyclesR.rows.filter((c) => String(c.assignee_id) === String(user.id));
+    const cycleIds = cyclesR.rows.map((c) => c.cycle_id);
+
+    const checksR = cycleIds.length
+      ? await db.query(
+          `select c.cycle_id, c.type, c.seq_number, c.work_date, c.assignee_id, c.performer_id,
+                  c.substitution_reason, c.substitution_note,
+                  pf.username as performer_username,
+                  coalesce(nullif(trim(concat(pf.first_name, ' ', pf.last_name)), ''), pf.full_name, pf.username) as performer_name
+             from checks c
+             left join users pf on pf.id = c.performer_id
+            where c.cycle_id = any($1::uuid[])`,
+          [cycleIds],
+        )
+      : { rows: [] };
+    const byKey = new Map(checksR.rows.map((c) => [`${c.cycle_id}:${c.type}:${c.seq_number}`, c]));
+
+    // Rejadagi har bir ish (bajarilgani ham, bajarilmagani ham)
+    const items = [];
+    myCycles.forEach((c) => {
+      [["k", c.posts_target], ["s", c.stories_target]].forEach(([type, total]) => {
+        for (let seq = 1; seq <= (total || 0); seq++) {
+          const ch = byKey.get(`${c.cycle_id}:${type}:${seq}`);
+          let status = "missing";
+          if (ch) status = String(ch.performer_id) === String(user.id) ? "own" : "substituted";
+          items.push({
+            cycleId: c.cycle_id,
+            projectId: c.project_id,
+            projectLabel: c.project_label,
+            projectSlug: c.project_slug,
+            type,
+            seq,
+            workDate: ch?.work_date || null,
+            status,
+            performer:
+              ch && ch.performer_id
+                ? { username: ch.performer_username, name: ch.performer_name }
+                : null,
+            reason: ch?.substitution_reason || null,
+            reasonLabel: ch?.substitution_reason ? TABEL_REASONS[ch.substitution_reason] : null,
+            note: ch?.substitution_note || null,
+          });
+        }
+      });
+    });
+
+    // Xodim boshqalar uchun bajargan ishlar (qo'shimcha)
+    const extra = checksR.rows
+      .filter((c) => String(c.performer_id) === String(user.id) && String(c.assignee_id) !== String(user.id))
+      .map((c) => {
+        const cyc = cyclesR.rows.find((x) => String(x.cycle_id) === String(c.cycle_id));
+        return {
+          type: c.type,
+          seq: c.seq_number,
+          projectLabel: cyc?.project_label || "",
+          workDate: c.work_date,
+          reasonLabel: c.substitution_reason ? TABEL_REASONS[c.substitution_reason] : null,
+        };
+      });
+
+    const plan = items.length;
+    const own = items.filter((i) => i.status === "own").length;
+    const substituted = items.filter((i) => i.status === "substituted").length;
+    const missing = items.filter((i) => i.status === "missing").length;
+    const pay = tabelPayStatus(plan, own);
+
+    res.json({
+      month,
+      user: {
+        username: user.username,
+        name:
+          [user.first_name, user.last_name].filter(Boolean).join(" ").trim() ||
+          user.full_name ||
+          user.username,
+        avatarUrl: user.avatar_url,
+      },
+      projects: [...new Set(myCycles.map((c) => c.project_label))],
+      plan,
+      own,
+      substituted,
+      missing,
+      extra: extra.length,
+      payStatus: pay.kind,
+      payLabel: pay.label,
+      payPct: pay.pct,
+      items,
+      // "Uning o'rniga bajarganlar" — boshqa xodim bajargan ishlari
+      substitutions: items
+        .filter((i) => i.status === "substituted")
+        .map((i) => ({
+          type: i.type,
+          seq: i.seq,
+          performer: i.performer,
+          workDate: i.workDate,
+          reasonLabel: i.reasonLabel,
+          note: i.note,
+        })),
+      extraItems: extra,
+    });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
