@@ -825,6 +825,167 @@ app.delete("/api/staff/:id", auth, async (req, res) => {
 
 // ── TABEL: oy davomida kim qaysi loyihada nima qilgan ────────────────
 // Hisob-kitob (pul) YO'Q — faqat belgilanganlar ro'yxati va soni.
+// ── TABEL ───────────────────────────────────────────────────────────
+// Har bir post/stories bo'yicha "kim mas'ul edi" va "kim bajardi".
+// Shu asosda xodimning oylik holati hisoblanadi.
+//
+// Model haqida: `checks` jadvalidagi qator faqat ish BAJARILGANDA
+// mavjud (0018 migratsiyasidagi izohga qarang). Shuning uchun:
+//   reja        = xodim mas'ul bo'lgan davrlarning post+stories maqsadi
+//   o'zi        = assignee = performer bo'lgan yozuvlar
+//   o'rniga     = assignee = xodim, performer boshqa
+//   qo'shimcha  = performer = xodim, assignee boshqa
+//   qolgan      = reja − (o'zi + o'rniga), manfiy bo'lsa 0
+const TABEL_REASONS = { sick: "Kasallik", vacation: "Ta'til", urgent: "Shoshilinch", other: "Boshqa" };
+
+function tabelMonthGuard(req, res) {
+  const month = String(req.query.month || todayTashkent().slice(0, 7));
+  if (!/^\d{4}-\d{2}$/.test(month)) {
+    res.status(400).json({ error: "month formati: YYYY-MM" });
+    return null;
+  }
+  return month;
+}
+
+// Berilgan oyga tegishli davrlar + har bir davrning mas'uli.
+// Davr oyga `period_start` bo'yicha biriktiriladi (davr oy o'rtasidan
+// boshlansa ham bitta oyga tegishli bo'ladi, ikki marta sanalmaydi).
+const TABEL_CYCLES_SQL = `
+  select pc.id as cycle_id, pc.project_id, pc.period_start, pc.period_end,
+         pc.posts_target, pc.stories_target, pc.status,
+         p.label as project_label, p.slug as project_slug,
+         (select perm.user_id from permissions perm
+           where perm.project_id = pc.project_id and perm.role = 'smm' limit 1) as assignee_id
+    from project_cycles pc
+    join projects p on p.id = pc.project_id
+   where to_char(pc.period_start, 'YYYY-MM') = $1
+`;
+
+function tabelPayStatus(plan, own) {
+  if (!plan) return { kind: "noproject", label: "Loyihasiz", pct: null };
+  if (own >= plan) return { kind: "full", label: "To'liq", pct: 100 };
+  return { kind: "partial", label: `${Math.round((own / plan) * 100)}%`, pct: Math.round((own / plan) * 100) };
+}
+
+app.get("/api/tabel", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const month = tabelMonthGuard(req, res);
+  if (!month) return;
+  try {
+    const cyclesR = await db.query(TABEL_CYCLES_SQL, [month]);
+    const cycles = cyclesR.rows;
+    const cycleIds = cycles.map((c) => c.cycle_id);
+
+    const usersR = await db.query(
+      `select id, username, first_name, last_name, full_name, avatar_url, is_active
+         from users where access_status is distinct from 'removed'`,
+    );
+    const userById = new Map(usersR.rows.map((u) => [String(u.id), u]));
+    const nameOf = (id) => {
+      const u = userById.get(String(id));
+      if (!u) return "—";
+      const n = [u.first_name, u.last_name].filter(Boolean).join(" ").trim();
+      return n || u.full_name || u.username;
+    };
+
+    // Bajarilgan ishlar — assignee/performer kesimida
+    const checksR = cycleIds.length
+      ? await db.query(
+          `select cycle_id, type, seq_number, assignee_id, performer_id, substitution_reason, work_date
+             from checks where cycle_id = any($1::uuid[])`,
+          [cycleIds],
+        )
+      : { rows: [] };
+
+    // Xodim bo'yicha yig'indi
+    const agg = new Map(); // userId -> {plan, own, substituted, extra, projects:Set}
+    const row = (id) => {
+      const k = String(id);
+      if (!agg.has(k)) agg.set(k, { userId: k, plan: 0, own: 0, substituted: 0, extra: 0, projects: new Map() });
+      return agg.get(k);
+    };
+
+    cycles.forEach((c) => {
+      if (!c.assignee_id) return;
+      const r = row(c.assignee_id);
+      const planned = (c.posts_target || 0) + (c.stories_target || 0);
+      r.plan += planned;
+      const pr = r.projects.get(String(c.project_id)) || {
+        projectId: String(c.project_id),
+        label: c.project_label,
+        slug: c.project_slug,
+        plan: 0,
+        own: 0,
+        substituted: 0,
+      };
+      pr.plan += planned;
+      r.projects.set(String(c.project_id), pr);
+    });
+
+    const cycleById = new Map(cycles.map((c) => [String(c.cycle_id), c]));
+    checksR.rows.forEach((ch) => {
+      const cyc = cycleById.get(String(ch.cycle_id));
+      if (!cyc) return;
+      const a = ch.assignee_id && String(ch.assignee_id);
+      const p = ch.performer_id && String(ch.performer_id);
+      if (a && p && a === p) {
+        const r = row(a);
+        r.own++;
+        const pr = r.projects.get(String(cyc.project_id));
+        if (pr) pr.own++;
+      } else {
+        if (a) {
+          const r = row(a);
+          r.substituted++;
+          const pr = r.projects.get(String(cyc.project_id));
+          if (pr) pr.substituted++;
+        }
+        if (p) row(p).extra++;
+      }
+    });
+
+    const employees = [...agg.values()]
+      .map((r) => {
+        const missing = Math.max(0, r.plan - r.own - r.substituted);
+        const pay = tabelPayStatus(r.plan, r.own);
+        const u = userById.get(r.userId);
+        return {
+          userId: r.userId,
+          username: u?.username || null,
+          name: nameOf(r.userId),
+          avatarUrl: u?.avatar_url || null,
+          isActive: u?.is_active !== false,
+          projects: [...r.projects.values()],
+          plan: r.plan,
+          own: r.own,
+          substituted: r.substituted,
+          extra: r.extra,
+          missing,
+          payStatus: pay.kind,
+          payLabel: pay.label,
+          payPct: pay.pct,
+        };
+      })
+      // Rejasi bor xodimlar birinchi, keyin faqat qo'shimcha ishlaganlar
+      .sort((a, b) => (b.plan - a.plan) || (b.own - a.own) || a.name.localeCompare(b.name));
+
+    const totals = employees.reduce(
+      (t, e) => ({
+        plan: t.plan + e.plan,
+        own: t.own + e.own,
+        substituted: t.substituted + e.substituted,
+        missing: t.missing + e.missing,
+      }),
+      { plan: 0, own: 0, substituted: 0, missing: 0 },
+    );
+    totals.ownPct = totals.plan ? Math.round((totals.own / totals.plan) * 100) : 0;
+
+    res.json({ month, totals, employees });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get("/api/worklog", auth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
@@ -1552,6 +1713,17 @@ app.patch("/api/checks", auth, async (req, res) => {
     const editorUserId = req.body.editorUserId || null;
     const videographerUserId = req.body.videographerUserId || null;
     const workDate = req.body.workDate || null;
+    // TABEL: ishni amalda kim bajargani. Berilmasa — eski xulq-atvor
+    // saqlanadi (belgilagan kishining o'zi bajargan deb olinadi).
+    const performerIdRaw = req.body.performerId || null;
+    const substitutionReason = req.body.substitutionReason || null;
+    const substitutionNote = (req.body.substitutionNote || "").trim() || null;
+    if (substitutionReason && !["sick", "vacation", "urgent", "other"].includes(substitutionReason)) {
+      return res.status(400).json({ error: "Noto'g'ri sabab" });
+    }
+    if (substitutionNote && substitutionNote.length > 200) {
+      return res.status(400).json({ error: "Izoh 200 belgidan oshmasligi kerak" });
+    }
     // storyKind faqat stories (type='s') uchun ma'noli — "info"
     // (gapirib beriladigan, standart) yoki "atmospheric" (atmosferali).
     const storyKind = type === "s" ? req.body.storyKind || "info" : null;
@@ -1598,6 +1770,42 @@ app.patch("/api/checks", auth, async (req, res) => {
       return res.status(400).json({ error: "seqNumber chegaradan tashqarida" });
     }
 
+    // ── TABEL: mas'ul va bajaruvchi ──────────────────────────────
+    // Mas'ul — loyihaning SMM roli berilgan xodimi (belgilash paytidagi
+    // holat, yozuvga snapshot qilinadi: keyin rol almashsa ham eski
+    // ishlar eski mas'ulda qoladi).
+    const asgR = await db.query(
+      `select user_id from permissions where project_id = $1 and role = 'smm' limit 1`,
+      [project.id],
+    );
+    const assigneeId = asgR.rows[0]?.user_id || null;
+    const performerId = performerIdRaw || req.user.id;
+    const isSubstitution = !!assigneeId && String(performerId) !== String(assigneeId);
+
+    if (checked) {
+      // Boshqa xodimni bajaruvchi qilib belgilash — faqat admin.
+      if (performerIdRaw && String(performerIdRaw) !== String(req.user.id) && !isAdm) {
+        return res.status(403).json({ error: "Boshqa xodimni bajaruvchi qilib faqat admin belgilay oladi" });
+      }
+      // Sabab — bajaruvchi mas'uldan farq qilsa majburiy (yangi oqimda,
+      // ya'ni bajaruvchi aniq tanlanganda).
+      if (performerIdRaw && isSubstitution && !substitutionReason) {
+        return res.status(422).json({ error: "Sababni tanlang" });
+      }
+      if (substitutionReason === "other" && !substitutionNote) {
+        return res.status(422).json({ error: "«Boshqa» uchun izoh yozing" });
+      }
+      // TZ'da "yopilgan oy faqat o'qish uchun" deyilgan, lekin bu
+      // yerda ataylab qilingan mavjud imkoniyat bor: yopilgan davrga
+      // qaytib QARZNI YOPISH (yuqoridagi `cycleId` shoxiga qarang).
+      // Uni bloklash qarzni yopish yo'lini butunlay uzib qo'yardi,
+      // shuning uchun yopilgan davrda faqat BAJARUVCHINI boshqa
+      // xodimga o'zgartirish cheklanadi — belgilashning o'zi ochiq.
+      if (cycle.status !== "active" && performerIdRaw && String(performerIdRaw) !== String(req.user.id) && req.user.role !== "super_admin") {
+        return res.status(409).json({ error: "Yopilgan davrda bajaruvchini faqat super admin o'zgartira oladi" });
+      }
+    }
+
     const ncoinRef = `${cycle.id}:${type}:${seq}`;
     // Holat haqiqatan o'zgardimi. Bir xil so'rov ikki marta kelsa
     // (masalan tugma ikki marta bosilsa), ikkinchisida hech narsa
@@ -1610,21 +1818,31 @@ app.patch("/api/checks", auth, async (req, res) => {
       // belgisi — shu orqali Ncoin faqat HAQIQIY yangi bajarilishda
       // beriladi, tafsilot yangilanganda qayta berilmaydi.
       const insR = await db.query(
-        `insert into checks (cycle_id, type, seq_number, done_by, editor_id, videographer_id, work_date, editor_user_id, videographer_user_id, story_kind)
-         values ($1,$2,$3,$4,$5,$6, coalesce($7::date, $8::date), $9, $10, $11)
+        `insert into checks (cycle_id, type, seq_number, done_by, editor_id, videographer_id, work_date, editor_user_id, videographer_user_id, story_kind,
+                             assignee_id, performer_id, substitution_reason, substitution_note, marked_by)
+         values ($1,$2,$3,$4,$5,$6, coalesce($7::date, $8::date), $9, $10, $11, $12, $13, $14, $15, $16)
          on conflict (cycle_id, type, seq_number) do update
            set editor_id           = excluded.editor_id,
                videographer_id     = excluded.videographer_id,
                work_date           = excluded.work_date,
                editor_user_id      = excluded.editor_user_id,
                videographer_user_id = excluded.videographer_user_id,
-               story_kind          = excluded.story_kind
+               story_kind          = excluded.story_kind,
+               done_by             = excluded.done_by,
+               assignee_id         = excluded.assignee_id,
+               performer_id        = excluded.performer_id,
+               substitution_reason = excluded.substitution_reason,
+               substitution_note   = excluded.substitution_note,
+               marked_by           = excluded.marked_by
          returning (xmax = 0) as inserted`,
         [
           cycle.id,
           type,
           seq,
-          req.user.id,
+          // `done_by` bajaruvchiga tenglashtiriladi — devor ekrani,
+          // Ncoin va faoliyat tasmasi shu ustundan foydalanadi, ya'ni
+          // ish haqiqatan bajargan kishiga hisoblanadi.
+          performerId,
           editorId,
           videographerId,
           workDate,
@@ -1632,6 +1850,11 @@ app.patch("/api/checks", auth, async (req, res) => {
           editorUserId,
           videographerUserId,
           storyKind,
+          assigneeId,
+          performerId,
+          isSubstitution ? substitutionReason : null,
+          isSubstitution ? substitutionNote : null,
+          req.user.id,
         ],
       );
       stateChanged = !!insR.rows[0]?.inserted;
