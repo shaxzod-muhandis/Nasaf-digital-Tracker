@@ -9524,6 +9524,11 @@
           ${secsHtml || `<div class="empty"><div class="empty-ico">✓</div><div class="empty-t">Vazifa yo'q</div><div class="empty-s">Filtrni o'zgartirib ko'ring.</div></div>`}
         </div>`;
       }
+      // Vazifani tahrirlash va o'chirish — admin yoki uni OCHGAN kishi.
+      // (Statusni o'zgartirish alohida qoida bo'yicha: admin yoki mas'ul.)
+      function canManageTask(t) {
+        return isAdmin || (!!t.createdByUsername && t.createdByUsername === currentUser);
+      }
       function taskShortRef(id) {
         return id.slice(0, 8).toUpperCase();
       }
@@ -9679,7 +9684,7 @@
           items.push(`<button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="${close()}openTaskFailForm('${escArg(t.id)}')">Bajarolmadim</button>`);
         if (isAdmin && open && t.dueDate)
           items.push(`<button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="${close()}openPushDueDateForm('${escArg(t.id)}')">Muddatni surish</button>`);
-        if (isAdmin) {
+        if (canManageTask(t)) {
           items.push(`<button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="${close()}openEditTaskSheet('${escArg(t.id)}')">Tahrirlash</button>`);
           items.push(`<button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="${close()}duplicateTask('${escArg(t.id)}')">Nusxalash</button>`);
           items.push(`<button type="button" class="btn btn-danger" onclick="${close()}deleteTask('${escArg(t.id)}','${escArg(t.title)}')">O'chirish</button>`);
@@ -9931,7 +9936,7 @@
                 <div class="detail-prop-row"><div class="detail-prop-label">Yaratilgan</div><div class="detail-prop-val">${t.createdAt ? fmtDay(new Date(t.createdAt)) : "—"}</div></div>
               </div>
               ${
-                isAdmin
+                canManageTask(t)
                   ? `<div class="td-bottom-actions">
                     <button type="button" class="td-bottom-link" onclick="openEditTaskSheet('${escArg(t.id)}')">Tahrirlash</button>
                     <button type="button" class="td-bottom-link" onclick="duplicateTask('${escArg(t.id)}')">Nusxalash</button>
@@ -10365,14 +10370,6 @@
       // to'g'ridan-to'g'ri tahrirlash/o'chirish (faqat admin, xuddi
       // vazifa detali sahifasi pastidagi tugmalar bilan bir xil
       // funksiyalarni chaqiradi).
-      function openTaskCardMenu(id) {
-        const t = tasksList.find((x) => x.id === id);
-        if (!t) return;
-        const { body } = makeSheet(t.title);
-        body.innerHTML = `
-          <button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="document.querySelector('.overlay')?.remove();openEditTaskSheet('${escArg(id)}')">✎ Tahrirlash</button>
-          <button type="button" class="btn btn-danger" onclick="document.querySelector('.overlay')?.remove();deleteTask('${escArg(id)}','${escArg(t.title)}')">🗑 O'chirish</button>`;
-      }
       function deleteTask(id, title) {
         showConfirmModal(
           `"${escHtml(title)}" ni o'chirish`,

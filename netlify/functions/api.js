@@ -1998,7 +1998,12 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
     let newAssigneeUserId = null;
 
     const isAdm = isAdminRole(req.user.role);
-    if (!isAdm) {
+    // Vazifani OCHGAN kishi ham uni to'liq tahrirlay oladi — admin
+    // bo'lmasa ham. Boshqalar (faqat mas'ul) avvalgidek faqat statusni
+    // o'zgartira oladi.
+    const isCreator = !!existing.created_by && String(existing.created_by) === String(req.user.id);
+    const canEditFields = isAdm || isCreator;
+    if (!canEditFields) {
       if (existing.assignee_user_id !== req.user.id) {
         return res.status(403).json({ error: "Bu vazifa sizga biriktirilmagan" });
       }
@@ -2009,7 +2014,7 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
 
     const sets = ["updated_at = now()"];
     const values = [];
-    if (isAdm) {
+    if (canEditFields) {
       if (typeof req.body.title === "string") {
         values.push(req.body.title.trim());
         sets.push(`title = $${values.length}`);
@@ -2079,7 +2084,11 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
       if (needsDueDate && !effectiveDueDate) {
         return res.status(400).json({ error: "Muddat (dueDate) kerak" });
       }
-      if (!isAdm && !existing.due_date && req.body.dueDate) {
+      // Diqqat: bu faqat "faqat mas'ul" yo'li uchun. Yaratuvchi/admin
+      // muddatni yuqoridagi maydonlar blokida beradi — bu yerda ham
+      // qo'shilsa `due_date` SET ro'yxatida IKKI MARTA paydo bo'lib,
+      // Postgres xato qaytarardi.
+      if (!canEditFields && !existing.due_date && req.body.dueDate) {
         values.push(req.body.dueDate);
         sets.push(`due_date = $${values.length}`);
       }
@@ -2247,9 +2256,17 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
   }
 });
 
+// Vazifani o'chirish — admin yoki uni OCHGAN kishi.
 app.delete("/api/tasks/:id", auth, async (req, res) => {
-  if (!requireAdmin(req, res)) return;
   try {
+    const r = await db.query(`select created_by from tasks where id = $1`, [req.params.id]);
+    const row = r.rows[0];
+    if (!row) return res.status(404).json({ error: "Vazifa topilmadi" });
+    const isAdm = isAdminRole(req.user.role);
+    const isCreator = !!row.created_by && String(row.created_by) === String(req.user.id);
+    if (!isAdm && !isCreator) {
+      return res.status(403).json({ error: "Faqat o'zingiz ochgan vazifani o'chira olasiz" });
+    }
     await db.query(`delete from tasks where id = $1`, [req.params.id]);
     res.json({ ok: true });
   } catch (e) {

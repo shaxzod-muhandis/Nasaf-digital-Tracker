@@ -182,6 +182,58 @@ async function main() {
     const r = await call("DELETE", `/api/tasks/${taskId}`, { user: "test_profileuser" });
     assert.strictEqual(r.status, 403);
   });
+
+  // ── Vazifani OCHGAN kishi uni tahrirlay va o'chira oladi ──────────
+  // (admin bo'lmasa ham, va o'ziga biriktirilmagan bo'lsa ham)
+  let ownTaskId;
+  await check("oddiy xodim boshqaga vazifa ocha oladi", async () => {
+    const r = await call("POST", "/api/tasks", {
+      user: "test_profileuser2",
+      body: { title: "Test vazifa ochgan", assigneeUsername: "test_profileuser", dueDate: "2099-01-01" },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.strictEqual(r.json.task.createdByUsername, "test_profileuser2");
+    ownTaskId = r.json.task.id;
+  });
+  await check("ochgan xodim o'z vazifasini tahrirlay oladi", async () => {
+    const r = await call("PATCH", `/api/tasks/${ownTaskId}`, {
+      user: "test_profileuser2",
+      body: { title: "Test vazifa ochgan — tahrirlandi", priority: "high" },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.strictEqual(r.json.task.title, "Test vazifa ochgan — tahrirlandi");
+    assert.strictEqual(r.json.task.priority, "high");
+  });
+  await check("ochgan xodim muddatni ham o'zgartira oladi (due_date ikki marta yozilmaydi)", async () => {
+    const r = await call("PATCH", `/api/tasks/${ownTaskId}`, {
+      user: "test_profileuser2",
+      body: { dueDate: "2099-02-02", status: "in_progress" },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.strictEqual(r.json.task.dueDate, "2099-02-02");
+  });
+  await check("mas'ul (ochmagan) xodim uni tahrirlay olmaydi (400)", async () => {
+    const r = await call("PATCH", `/api/tasks/${ownTaskId}`, {
+      user: "test_profileuser",
+      body: { title: "Ruxsatsiz nom" },
+    });
+    assert.strictEqual(r.status, 400);
+  });
+  await check("ochgan xodim ham 'Bajarildi' deb belgilay olmaydi (403)", async () => {
+    const r = await call("PATCH", `/api/tasks/${ownTaskId}`, {
+      user: "test_profileuser2",
+      body: { status: "done" },
+    });
+    assert.strictEqual(r.status, 403);
+  });
+  await check("mas'ul (ochmagan) xodim uni o'chira olmaydi (403)", async () => {
+    const r = await call("DELETE", `/api/tasks/${ownTaskId}`, { user: "test_profileuser" });
+    assert.strictEqual(r.status, 403);
+  });
+  await check("ochgan xodim o'z vazifasini o'chira oladi", async () => {
+    const r = await call("DELETE", `/api/tasks/${ownTaskId}`, { user: "test_profileuser2" });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+  });
   await check("'bajarilmadi' sababsiz saqlanmaydi (400)", async () => {
     const r = await call("PATCH", `/api/tasks/${taskId}`, {
       user: "test_profileuser",
