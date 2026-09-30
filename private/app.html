@@ -104,6 +104,7 @@
         --cwd-radio: #c5cbd3;
         --cwd-chipbd: rgba(14, 23, 38, 0.13);
         --tbl-hdr-bg: #fafbfc;
+        --tbl-sub-bg: #fbfcff;
         --cell-sub: #0b7f72;
         --marker: #0e1726;
         --type-post: #255f91;
@@ -209,6 +210,7 @@
         --cwd-radio: #4a5260;
         --cwd-chipbd: rgba(255, 255, 255, 0.14);
         --tbl-hdr-bg: rgba(255, 255, 255, 0.03);
+        --tbl-sub-bg: rgba(47, 122, 185, 0.07);
         --cell-sub: #2dd4bf;
         --marker: #e8ecf2;
         --type-post: #7fb3dd;
@@ -3728,6 +3730,45 @@
       .tbl-pay.full { background: var(--st-ahead-bg); color: var(--st-ahead); }
       .tbl-pay.partial { background: var(--st-behind-bg); color: var(--st-behind); }
       .tbl-pay.noproject { background: var(--chip); color: var(--v3-t2); }
+      /* Segment (Xodimlar | Loyihalar) — TZ 10a/10b */
+      .tbl-seg { display: flex; padding: 3px; border-radius: 11px; background: var(--chip); gap: 2px; width: max-content; }
+      .tbl-seg button {
+        flex: none;
+        height: 28px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--v3-t2);
+        cursor: pointer;
+        font-family: inherit;
+        white-space: nowrap;
+      }
+      .tbl-seg button.on {
+        background: var(--surf);
+        box-shadow: 0 1px 2px rgba(14, 23, 38, 0.1);
+        font-weight: 600;
+        color: var(--ink, var(--t5));
+      }
+      /* Loyiha jadvali (10b) */
+      .tbl-prow {
+        display: grid;
+        grid-template-columns: 90px 80px minmax(0, 1fr) minmax(0, 1.3fr) 110px;
+        gap: 12px;
+        padding: 0 16px;
+        align-items: center;
+      }
+      .tbl-prow.body { height: 48px; border-top: 1px solid var(--bd1); }
+      .tbl-prow.body.sub { background: var(--tbl-sub-bg); }
+      .tbl-pdate { font-size: 12.5px; color: var(--v3-t2); white-space: nowrap; }
+      .tbl-pcell { display: flex; align-items: center; gap: 8px; min-width: 0; }
+      .tbl-pcell .tbl-av { width: 22px; height: 22px; border-radius: 7px; font-size: 9px; }
+      .tbl-pasg { font-size: 13px; font-weight: 500; color: var(--v3-t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .tbl-pperf { font-size: 13px; font-weight: 600; color: var(--ink, var(--t5)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .tbl-parrow { color: var(--v3-t3); flex: none; display: flex; }
+
       /* O'ng panel */
       .tbl-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; overflow-y: auto; }
       .tbl-side-card { background: var(--surf); border: 1px solid var(--bd1); border-radius: 14px; padding: 14px 16px; box-sizing: border-box; }
@@ -5559,6 +5600,13 @@
           display: flex !important;
         }
         .mobile-only {
+          display: none !important;
+        }
+        /* `.tbl-kpis.mobile-only` asosiy CSS'da `display:flex !important`
+           bilan belgilangan (blokka aylanib ketmasligi uchun) — u
+           yuqoridagi qoidadan kuchliroq, shuning uchun katta ekranda
+           aniq yashiriladi. */
+        .tbl-kpis.mobile-only {
           display: none !important;
         }
         #bottom-nav {
@@ -12977,6 +13025,10 @@
       let tabelSel = null; // tanlangan xodim (username)
       let tabelEmp = null; // o'ng panel ma'lumoti
       let tabelFilter = "all"; // all | full | sub
+      let tabelView = "employees"; // employees | projects (TZ 10a / 10b)
+      let tabelProjSlug = null;
+      let tabelProj = null;
+      let tabelProjFilter = "all"; // all | sub | missing
 
       function tabelInitials(name) {
         return (name || "?").trim().slice(0, 1).toUpperCase();
@@ -13072,11 +13124,42 @@
           <div class="tbl-kpi"><div class="tbl-kpi-l">Qolgan</div><div class="tbl-kpi-v"><div class="tbl-kpi-n" style="color:var(--red)">${t.missing}</div></div></div>
         </div>`;
 
-        const chips = `<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+        const seg = `<div class="tbl-seg">
+            <button class="${tabelView === "employees" ? "on" : ""}" onclick="tabelSetView('employees')">Xodimlar</button>
+            <button class="${tabelView === "projects" ? "on" : ""}" onclick="tabelSetView('projects')">Loyihalar</button>
+          </div>`;
+
+        const chips = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+          ${seg}
+          <div style="flex:1"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
           ${[["all", `Hammasi ${tabelData.employees.length}`], ["full", `To'liq ${fullCount}`], ["sub", `Almashuv bor ${subCount}`]]
             .map(([k, lbl]) => `<button type="button" class="cwd-reason${tabelFilter === k ? " on" : ""}" onclick="tabelSetFilter('${k}')">${lbl}</button>`)
             .join("")}
+          </div>
         </div>`;
+
+        if (tabelView === "projects") {
+          c.innerHTML = `${head}${kpis}
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+              ${seg}
+              <select class="f-input" style="width:auto;height:32px;padding:0 10px;font-size:13px" onchange="tabelSetProject(this.value)">
+                ${projects.map((pr) => `<option value="${escArg(pr.id)}"${tabelProjSlug === pr.id ? " selected" : ""}>${escHtml(pr.label)}</option>`).join("")}
+              </select>
+              <div style="flex:1"></div>
+              ${
+                tabelProj
+                  ? `<div class="tbl-seg">
+                      ${[["all", `Hammasi ${tabelProj.counts.all}`], ["sub", `Almashuv ${tabelProj.counts.sub}`], ["missing", `Bajarilmagan ${tabelProj.counts.missing}`]]
+                        .map(([k, lbl]) => `<button class="${tabelProjFilter === k ? "on" : ""}" onclick="tabelSetProjFilter('${k}')">${lbl}</button>`)
+                        .join("")}
+                    </div>`
+                  : ""
+              }
+            </div>
+            ${tabelProjectHtml()}`;
+          return;
+        }
 
         const rows = list.length
           ? list
@@ -13231,8 +13314,110 @@
         body.innerHTML = `<div class="tbl-side">${tabelSideHtml()}</div>`;
       }
 
-      function tabelExport() {
-        window.open(`/api/tabel/export?month=${worklogMonth}`, "_blank");
+      async function tabelSetView(v) {
+        tabelView = v;
+        if (v === "projects") {
+          if (!tabelProjSlug) tabelProjSlug = projects[0]?.id || null;
+          await tabelLoadProject();
+        }
+        tabelRender(document.getElementById("admin-body"));
+      }
+      async function tabelSetProject(slug) {
+        tabelProjSlug = slug;
+        await tabelLoadProject();
+        tabelRender(document.getElementById("admin-body"));
+      }
+      async function tabelSetProjFilter(f) {
+        tabelProjFilter = f;
+        await tabelLoadProject();
+        tabelRender(document.getElementById("admin-body"));
+      }
+      async function tabelLoadProject() {
+        if (!tabelProjSlug) return;
+        tabelProj = null;
+        try {
+          const r = await apiFetch(
+            `/api/tabel/project/${encodeURIComponent(tabelProjSlug)}?month=${worklogMonth}&filter=${tabelProjFilter}`,
+          );
+          if (r.ok) tabelProj = await r.json();
+        } catch (e) {}
+      }
+
+      function tabelProjectHtml() {
+        const d = tabelProj;
+        if (!d) return `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        if (!d.rows.length) return `<div class="empty"><div class="empty-s">Bu oyda yozuv yo'q</div></div>`;
+        const person = (u, cls) =>
+          u
+            ? `<span class="tbl-av" style="background:${personColor(u.username || u.name)}">${escHtml(tabelInitials(u.name))}</span><span class="${cls}">${escHtml(u.name)}</span>`
+            : `<span class="tbl-pasg">—</span>`;
+
+        const rows = d.rows
+          .map((r) => {
+            const isSub = r.status === "substituted";
+            const statusCell =
+              r.status === "missing"
+                ? `<span class="tbl-pay" style="background:var(--red-bg);color:var(--red)">Bajarilmagan</span>`
+                : isSub
+                  ? `<span class="tbl-subchip">${escHtml(r.reasonLabel || "Almashuv")}</span>`
+                  : `<span class="tbl-pay full">O'zi</span>`;
+            return `<div class="tbl-prow body${isSub ? " sub" : ""}">
+              <div><span class="tbl-subchip">${r.type === "k" ? "Post" : "Stories"} ${r.seq}</span></div>
+              <div class="tbl-pdate">${r.workDate ? escHtml(fmtDay(parseISO(String(r.workDate).slice(0, 10)))) : "—"}</div>
+              <div class="tbl-pcell">${person(r.assignee, "tbl-pasg")}</div>
+              <div class="tbl-pcell">
+                ${isSub ? `<span class="tbl-parrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg></span>` : ""}
+                ${person(r.performer, "tbl-pperf")}
+              </div>
+              <div>${statusCell}</div>
+            </div>`;
+          })
+          .join("");
+
+        const helpers = d.helpers.length
+          ? `<div class="tbl-side-card" style="margin-top:12px">
+              <div style="font-size:13px;font-weight:600;color:var(--ink,var(--t5));margin-bottom:8px">Tashqaridan yordam</div>
+              ${d.helpers
+                .map(
+                  (h) => `<div class="tbl-subrow">
+                    <span class="tbl-av tbl-subav" style="background:${personColor(h.username || h.name)}">${escHtml(tabelInitials(h.name))}</span>
+                    <span style="flex:1;min-width:0" class="tbl-nm">${escHtml(h.name)}</span>
+                    <span class="tbl-n extra">+${h.count}</span>
+                  </div>`,
+                )
+                .join("")}
+            </div>`
+          : "";
+
+        return `<div class="tbl-card">
+            <div class="tbl-prow tbl-hdr">
+              <div>Ish</div><div>Sana</div><div>Rejada mas'ul</div><div>Kim bajardi</div><div>Holat</div>
+            </div>
+            ${rows}
+          </div>
+          ${helpers}`;
+      }
+
+      // CSV `window.open` bilan ochilmaydi: eksport endpointi ham
+      // Telegram initData sarlavhasini talab qiladi, yangi oyna esa
+      // uni yubormaydi (401 bo'lardi). Shuning uchun fayl apiFetch
+      // orqali olinadi va brauzerda saqlanadi.
+      async function tabelExport() {
+        try {
+          const r = await apiFetch(`/api/tabel/export?month=${worklogMonth}`);
+          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
+          const blob = await r.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `tabel-${worklogMonth}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 2000);
+        } catch (e) {
+          showToast("⚠ " + e.message);
+        }
       }
 
       function renderAdminProjectsTab(c) {

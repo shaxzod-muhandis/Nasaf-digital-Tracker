@@ -1129,6 +1129,166 @@ app.get("/api/tabel/employee/:username", auth, async (req, res) => {
   }
 });
 
+// Loyiha kesimi (10b): har bir ish uchun rejada kim mas'ul edi va
+// amalda kim bajardi.
+app.get("/api/tabel/project/:slug", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const month = tabelMonthGuard(req, res);
+  if (!month) return;
+  try {
+    const cyclesR = await db.query(TABEL_CYCLES_SQL, [month]);
+    const cycles = cyclesR.rows.filter((c) => c.project_slug === req.params.slug);
+    if (!cycles.length) return res.json({ month, rows: [], helpers: [], assignee: null, projectLabel: null });
+
+    const cycleIds = cycles.map((c) => c.cycle_id);
+    const checksR = await db.query(
+      `select c.cycle_id, c.type, c.seq_number, c.work_date, c.assignee_id, c.performer_id,
+              c.substitution_reason, c.substitution_note,
+              coalesce(nullif(trim(concat(af.first_name, ' ', af.last_name)), ''), af.full_name, af.username) as assignee_name,
+              af.username as assignee_username,
+              coalesce(nullif(trim(concat(pf.first_name, ' ', pf.last_name)), ''), pf.full_name, pf.username) as performer_name,
+              pf.username as performer_username
+         from checks c
+         left join users af on af.id = c.assignee_id
+         left join users pf on pf.id = c.performer_id
+        where c.cycle_id = any($1::uuid[])`,
+      [cycleIds],
+    );
+    const byKey = new Map(checksR.rows.map((c) => [`${c.cycle_id}:${c.type}:${c.seq_number}`, c]));
+
+    const asgR = cycles[0].assignee_id
+      ? await db.query(
+          `select username, coalesce(nullif(trim(concat(first_name, ' ', last_name)), ''), full_name, username) as name
+             from users where id = $1`,
+          [cycles[0].assignee_id],
+        )
+      : { rows: [] };
+
+    const rows = [];
+    cycles.forEach((c) => {
+      [["k", c.posts_target], ["s", c.stories_target]].forEach(([type, total]) => {
+        for (let seq = 1; seq <= (total || 0); seq++) {
+          const ch = byKey.get(`${c.cycle_id}:${type}:${seq}`);
+          const assignee = ch
+            ? { username: ch.assignee_username, name: ch.assignee_name }
+            : asgR.rows[0] || null;
+          let status = "missing";
+          if (ch) {
+            status =
+              String(ch.performer_id) === String(ch.assignee_id) ? "own" : "substituted";
+          }
+          rows.push({
+            type,
+            seq,
+            workDate: ch?.work_date || null,
+            assignee,
+            performer: ch && ch.performer_id ? { username: ch.performer_username, name: ch.performer_name } : null,
+            status,
+            reason: ch?.substitution_reason || null,
+            reasonLabel: ch?.substitution_reason ? TABEL_REASONS[ch.substitution_reason] : null,
+            note: ch?.substitution_note || null,
+          });
+        }
+      });
+    });
+
+    // "Tashqaridan yordam" — loyiha mas'uli bo'lmagan, lekin ish bajargan xodimlar
+    const helpers = new Map();
+    rows
+      .filter((r) => r.status === "substituted" && r.performer)
+      .forEach((r) => {
+        const k = r.performer.username;
+        helpers.set(k, { ...r.performer, count: (helpers.get(k)?.count || 0) + 1 });
+      });
+
+    const filter = String(req.query.filter || "all");
+    const filtered =
+      filter === "sub" ? rows.filter((r) => r.status === "substituted")
+      : filter === "missing" ? rows.filter((r) => r.status === "missing")
+      : rows;
+
+    res.json({
+      month,
+      projectLabel: cycles[0].project_label,
+      assignee: asgR.rows[0] || null,
+      counts: {
+        all: rows.length,
+        sub: rows.filter((r) => r.status === "substituted").length,
+        missing: rows.filter((r) => r.status === "missing").length,
+      },
+      rows: filtered,
+      helpers: [...helpers.values()],
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// CSV eksport — xodim, loyiha, ish, sana, mas'ul, bajaruvchi, sabab.
+app.get("/api/tabel/export", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const month = tabelMonthGuard(req, res);
+  if (!month) return;
+  try {
+    const cyclesR = await db.query(TABEL_CYCLES_SQL, [month]);
+    const cycles = cyclesR.rows;
+    const cycleIds = cycles.map((c) => c.cycle_id);
+    const checksR = cycleIds.length
+      ? await db.query(
+          `select c.cycle_id, c.type, c.seq_number, c.work_date, c.assignee_id, c.performer_id,
+                  c.substitution_reason, c.substitution_note,
+                  coalesce(nullif(trim(concat(af.first_name, ' ', af.last_name)), ''), af.full_name, af.username) as assignee_name,
+                  coalesce(nullif(trim(concat(pf.first_name, ' ', pf.last_name)), ''), pf.full_name, pf.username) as performer_name
+             from checks c
+             left join users af on af.id = c.assignee_id
+             left join users pf on pf.id = c.performer_id
+            where c.cycle_id = any($1::uuid[])`,
+          [cycleIds],
+        )
+      : { rows: [] };
+    const byKey = new Map(checksR.rows.map((c) => [`${c.cycle_id}:${c.type}:${c.seq_number}`, c]));
+
+    const esc = (v) => {
+      const t = v == null ? "" : String(v);
+      return /[",;\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
+    };
+    const lines = ["Loyiha;Ish;Sana;Rejada mas'ul;Kim bajardi;Holat;Sabab;Izoh"];
+    cycles.forEach((c) => {
+      [["k", "Post", c.posts_target], ["s", "Stories", c.stories_target]].forEach(([type, label, total]) => {
+        for (let seq = 1; seq <= (total || 0); seq++) {
+          const ch = byKey.get(`${c.cycle_id}:${type}:${seq}`);
+          const status = !ch
+            ? "Bajarilmagan"
+            : String(ch.performer_id) === String(ch.assignee_id)
+              ? "O'zi bajardi"
+              : "O'rniga bajarildi";
+          lines.push(
+            [
+              c.project_label,
+              `${label} ${seq}`,
+              ch?.work_date || "",
+              ch?.assignee_name || "",
+              ch?.performer_name || "",
+              status,
+              ch?.substitution_reason ? TABEL_REASONS[ch.substitution_reason] : "",
+              ch?.substitution_note || "",
+            ]
+              .map(esc)
+              .join(";"),
+          );
+        }
+      });
+    });
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="tabel-${month}.csv"`);
+    // BOM — Excel UTF-8 ni to'g'ri o'qishi uchun
+    res.send("﻿" + lines.join("\n"));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get("/api/worklog", auth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
