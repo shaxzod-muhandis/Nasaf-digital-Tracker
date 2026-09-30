@@ -3375,11 +3375,32 @@
       .ntv3-body {
         flex: 1;
         overflow-y: auto;
-        padding: 0 16px calc(24px + env(safe-area-inset-bottom, 0px));
+        padding: 0 16px 20px;
         display: flex;
         flex-direction: column;
         gap: 12px;
       }
+      /* Yaratish tugmasi pastda, doim ko'rinib turadi — forma uzun
+         bo'lsa ham uni qidirib yurish kerak emas. */
+      .ntv3-foot {
+        flex: none;
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+        border-top: 1px solid var(--bd1);
+        background: var(--surf);
+      }
+      .ntv3-submit {
+        width: 100%;
+        height: 52px;
+        border: 0;
+        border-radius: 14px;
+        background: var(--brand);
+        color: #fff;
+        font-size: 16px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      .ntv3-submit[disabled] { opacity: 0.6; }
       .ntv3-card {
         background: var(--surf);
         border-radius: 14px;
@@ -10843,7 +10864,7 @@
           <div class="ntv3-hdr">
             <button type="button" class="ntv3-hbtn cancel" onclick="closeNtv3()">Bekor</button>
             <div class="ntv3-title">Yangi vazifa</div>
-            <button type="button" class="ntv3-hbtn save" id="ntv3-save" onclick="createTaskMobile(this)">Yaratish</button>
+            <div class="ntv3-hbtn" aria-hidden="true"></div>
           </div>
           <div class="ntv3-body">
             <div class="ntv3-card">
@@ -10852,6 +10873,9 @@
             </div>
             <div class="ntv3-props" id="ntv3-props"></div>
             <div class="ntv3-hint">Xodimga Telegram orqali xabar boradi.</div>
+          </div>
+          <div class="ntv3-foot">
+            <button type="button" class="ntv3-submit" id="ntv3-save" onclick="createTaskMobile(this)">Vazifani yaratish</button>
           </div>
         </div>`;
         document.body.appendChild(ov);
