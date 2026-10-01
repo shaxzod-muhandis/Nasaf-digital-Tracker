@@ -532,8 +532,19 @@ app.get("/api/users", auth, async (req, res) => {
 // maydonlar (telefon, tug'ilgan kun va h.k.) qaytarilmaydi.
 app.get("/api/users/directory", auth, async (req, res) => {
   try {
+    // `can_smm` — post/stories ishini kim bajara olishi. Bu ishni
+    // montajchi yoki dizayner emas, SMM qiladi; rahbariyat (CEO/COO,
+    // ya'ni admin va super admin) ham qiladi. Lavozim nomi erkin
+    // yoziladi ("SMM", "SMM manager"), shuning uchun nom bo'yicha
+    // ham, loyihadagi `smm` roli bo'yicha ham tekshiriladi.
     const r = await db.query(
-      `select id, username, first_name, last_name, job_title, avatar_url from users where is_active order by username`,
+      `select u.id, u.username, u.first_name, u.last_name, u.job_title, u.avatar_url,
+              (u.job_title ilike '%smm%'
+               or u.role in ('admin', 'super_admin')
+               or exists (select 1 from permissions pm where pm.user_id = u.id and pm.role = 'smm')) as can_smm
+         from users u
+        where u.is_active and u.access_status is distinct from 'removed'
+        order by u.username`,
     );
     res.json({ users: r.rows });
   } catch (e) {

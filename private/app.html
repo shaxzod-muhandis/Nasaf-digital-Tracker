@@ -12089,8 +12089,12 @@
         const isSub = !!cwd.assigneeUsername && cwd.performerId !== cwd.assigneeUsername;
         const showPickers = cwd.type === "k" || cwd.storyKind === "atmospheric";
 
-        // Mas'ul birinchi, keyin qolgan faol xodimlar
-        const others = cwd.directory.filter((u) => u.username !== cwd.assigneeUsername);
+        // Mas'ul birinchi, keyin bu ishni bajara oladigan xodimlar.
+        // Post/stories — SMM ishi: uni montajchi, mobilograf yoki
+        // dizayner emas, boshqa SMM yoki rahbariyat (CEO/COO) bajaradi.
+        const others = cwd.directory.filter(
+          (u) => u.username !== cwd.assigneeUsername && (u.can_smm || u.canSmm),
+        );
         const assigneeHtml = cwd.assignee
           ? cwdPersonRowHtml(cwd.assignee, true)
           : `<div class="cwd-role" style="padding:2px 2px 6px">Bu loyihada rejadagi mas'ul belgilanmagan — Ruxsatlar bo'limidan «SMM» roli beriladi.</div>`;
@@ -12144,7 +12148,7 @@
           <div class="cwd-title">Kim bajardi?</div>
           <div class="cwd-list">
             ${assigneeHtml}
-            ${others.length ? `<div class="cwd-grouplbl">Boshqa xodim</div>` : ""}
+            ${others.length ? `<div class="cwd-grouplbl">Boshqa xodim</div>` : `<div class="cwd-role" style="padding:8px 2px 0">Bu ishni bajara oladigan boshqa xodim yo'q — post va stories ishini SMM yoki rahbariyat bajaradi.</div>`}
             ${others.map((u) => cwdPersonRowHtml(u, false)).join("")}
           </div>
           ${reasonsHtml}
