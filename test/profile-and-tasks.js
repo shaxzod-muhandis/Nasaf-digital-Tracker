@@ -307,6 +307,83 @@ async function main() {
     assert.strictEqual(r.status, 200);
   });
 
+  console.log("── ISH VAQTI (oraliq: startDate → dueDate) ───────");
+  let rangeTaskId;
+  await check("vazifa ish oynasi bilan yaratiladi", async () => {
+    const r = await call("POST", "/api/tasks", {
+      user: "shaxzodshokirov",
+      body: {
+        title: "Test vazifa oraliq",
+        assigneeUsername: "test_profileuser",
+        startDate: "2099-05-10",
+        dueDate: "2099-05-20",
+        notifyTelegram: false,
+      },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.strictEqual(r.json.task.startDate, "2099-05-10");
+    assert.strictEqual(r.json.task.dueDate, "2099-05-20");
+    rangeTaskId = r.json.task.id;
+  });
+  await check("teskari oraliq bilan yaratib bo'lmaydi (400)", async () => {
+    const r = await call("POST", "/api/tasks", {
+      user: "shaxzodshokirov",
+      body: {
+        title: "Test vazifa teskari",
+        startDate: "2099-05-20",
+        dueDate: "2099-05-10",
+        notifyTelegram: false,
+      },
+    });
+    assert.strictEqual(r.status, 400, JSON.stringify(r.json));
+  });
+  await check("boshlanish sanasini keyin ham qo'yish mumkin", async () => {
+    const r = await call("PATCH", `/api/tasks/${rangeTaskId}`, {
+      user: "shaxzodshokirov",
+      body: { startDate: "2099-05-12" },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.strictEqual(r.json.task.startDate, "2099-05-12");
+    assert.strictEqual(r.json.task.dueDate, "2099-05-20");
+  });
+  await check("faqat muddatni oldinga surish oraliqni teskari qila olmaydi (400)", async () => {
+    // Bazadagi boshlanish 12-may; muddatni 5-mayga surish teskari
+    // oraliq hosil qilardi, so'rovda esa faqat bitta tomon berilgan.
+    const r = await call("PATCH", `/api/tasks/${rangeTaskId}`, {
+      user: "shaxzodshokirov",
+      body: { dueDate: "2099-05-05" },
+    });
+    assert.strictEqual(r.status, 400, JSON.stringify(r.json));
+  });
+  await check("boshlanish sanasini bo'shatib bo'ladi", async () => {
+    const r = await call("PATCH", `/api/tasks/${rangeTaskId}`, {
+      user: "shaxzodshokirov",
+      body: { startDate: "" },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.strictEqual(r.json.task.startDate, null);
+  });
+  await check("boshlanish sanasi o'zgarishi jurnalga yoziladi", async () => {
+    const r = await call("GET", `/api/tasks/${rangeTaskId}/activity`, { user: "shaxzodshokirov" });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    const kinds = (r.json.activity || []).map((a) => a.kind);
+    assert.ok(kinds.includes("start_change"), `start_change yo'q: ${kinds.join(",")}`);
+  });
+  await check("oraliqsiz (faqat muddatli) eski uslub ham ishlaydi", async () => {
+    const r = await call("POST", "/api/tasks", {
+      user: "shaxzodshokirov",
+      body: { title: "Test vazifa muddatli", dueDate: "2099-06-01", notifyTelegram: false },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.strictEqual(r.json.task.startDate, null);
+    assert.strictEqual(r.json.task.dueDate, "2099-06-01");
+    await call("DELETE", `/api/tasks/${r.json.task.id}`, { user: "shaxzodshokirov" });
+  });
+  await check("tozalash: oraliq test vazifasi o'chiriladi", async () => {
+    const r = await call("DELETE", `/api/tasks/${rangeTaskId}`, { user: "shaxzodshokirov" });
+    assert.strictEqual(r.status, 200);
+  });
+
   console.log("── BACKLOG / PRIORITY ────────────────────────────");
   let backlogTaskId;
   await check("backlog vazifa muddatsiz yaratiladi (200)", async () => {

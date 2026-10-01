@@ -5350,6 +5350,68 @@
         color: #fff;
         font-weight: 600;
       }
+      /* ── Oraliq tanlash ────────────────────────────────────────────
+         Ikki chekka to'q, oradagi kunlar ochroq yo'lak bo'lib turadi.
+         Yo'lakning burchaklari faqat tashqi tomondan yumaloq — shunda
+         chekkalar oradagi kunlar bilan bitta uzluksiz chiziq bo'lib
+         ko'rinadi. */
+      .dp-day.in-range {
+        background: var(--nav-act-bg);
+        color: var(--nav-act-ink);
+        border-radius: 0;
+      }
+      /* Hafta qatori oxirida/boshida yo'lak kesilib qolmasin. */
+      .dp-days .dp-day.in-range:nth-child(7n + 1) {
+        border-radius: 8px 0 0 8px;
+      }
+      .dp-days .dp-day.in-range:nth-child(7n) {
+        border-radius: 0 8px 8px 0;
+      }
+      .dp-day.r-start:not(.r-only) {
+        border-radius: 8px 0 0 8px;
+      }
+      .dp-day.r-end:not(.r-only) {
+        border-radius: 0 8px 8px 0;
+      }
+      .dp-rangebar {
+        margin-top: 8px;
+        padding-top: 10px;
+        border-top: 1px solid var(--bd1);
+      }
+      .dp-range-txt {
+        font-size: 11.5px;
+        color: var(--t2);
+        text-align: center;
+        margin-bottom: 8px;
+        min-height: 15px;
+      }
+      .dp-range-btns {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .dp-ghost-btn,
+      .dp-done-btn {
+        flex: 1;
+        height: 32px;
+        border-radius: 9px;
+        font-family: inherit;
+        font-size: 12.5px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid var(--bd2);
+        background: var(--surf);
+        color: var(--t5);
+      }
+      .dp-done-btn {
+        border-color: transparent;
+        background: var(--brand);
+        color: #fff;
+      }
+      .dp-done-btn:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
       .dp-footer {
         display: flex;
         justify-content: center;
@@ -7866,6 +7928,45 @@
         const d = parseISO(iso);
         return `${d.getDate()}-${MONTHS[d.getMonth()].toLowerCase()} ${d.getFullYear()}`;
       }
+      // Oraliq yorlig'i: bir kun bo'lsa — bitta sana, bir oy ichida
+      // bo'lsa oy bir marta ("5–12 oktabr"), oylar har xil bo'lsa
+      // ikkalasi ham ("28-sentabr – 3-oktabr").
+      function fmtDateRangeField(startIso, endIso) {
+        if (!startIso && !endIso) return "";
+        if (!startIso) return fmtDateField(endIso);
+        if (!endIso) return fmtDateField(startIso);
+        if (startIso === endIso) return fmtDateField(startIso);
+        const a = parseISO(startIso);
+        const b = parseISO(endIso);
+        const mb = MONTHS[b.getMonth()].toLowerCase();
+        if (a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth()) {
+          return `${a.getDate()}–${b.getDate()}-${mb} ${b.getFullYear()}`;
+        }
+        const ma = MONTHS[a.getMonth()].toLowerCase();
+        const ay = a.getFullYear() === b.getFullYear() ? "" : ` ${a.getFullYear()}`;
+        return `${a.getDate()}-${ma}${ay} – ${b.getDate()}-${mb} ${b.getFullYear()}`;
+      }
+      // Oraliqdagi kunlar soni (ikkala chekka ham kiradi).
+      function rangeDayCount(startIso, endIso) {
+        if (!startIso || !endIso) return 0;
+        return daysBetween(parseISO(startIso), parseISO(endIso)) + 1;
+      }
+
+      // Oraliq maydoni — bitta kalendar bilan "qaysi kundan qaysi
+      // kungacha". Oxirgi sana ATAYLAB `${id}` nomli input'da turadi:
+      // u muddat (deadline), ya'ni oraliqni o'qimaydigan eski kod
+      // (`document.getElementById("et-due").value`) o'zgarishsiz
+      // ishlayveradi. Boshlanish sanasi qo'shimcha `${id}-start`da.
+      function renderDateRangeFieldHtml(id, startIso, endIso, placeholder, extraAttrs) {
+        const label = fmtDateRangeField(startIso, endIso);
+        return `<div class="date-field${label ? "" : " placeholder"}" id="${id}-field" onclick="openDateRangePicker('${id}')">
+            <span class="date-field-ico">${ICON.calendar}</span>
+            <span style="flex:1" id="${id}-label" data-ph="${escHtml(placeholder || "Vaqt oralig'ini tanlang")}">${label || placeholder || "Vaqt oralig'ini tanlang"}</span>
+          </div>
+          <input type="hidden" id="${id}-start" value="${startIso || ""}"/>
+          <input type="date" id="${id}" class="hidden-native" value="${endIso || ""}" ${extraAttrs || ""}/>`;
+      }
+
       // `extraAttrs` — yashirin <input>ga qo'shiladigan atributlar
       // (masalan onchange). Kun tanlanganda shu input'ga haqiqiy
       // "change" hodisasi yuboriladi, ya'ni ular ishlayveradi.
@@ -7877,19 +7978,39 @@
           </div>
           <input type="date" id="${id}" class="hidden-native" value="${value || ""}" ${extraAttrs || ""}/>`;
       }
-      function openDatePicker(id) {
+      function openDateRangePicker(id) {
+        openDatePicker(id, true);
+      }
+      function openDatePicker(id, range) {
         closeDatePicker();
         const trigger = document.getElementById(id + "-field");
         const hidden = document.getElementById(id);
         if (!trigger || !hidden) return;
+        const startEl = range ? document.getElementById(id + "-start") : null;
         const current = hidden.value ? parseISO(hidden.value) : todayDate();
         dpState = { id, viewYear: current.getFullYear(), viewMonth: current.getMonth() };
+        if (range) {
+          // Qayta ochilganda avvalgi oraliq ko'rinib turadi, lekin
+          // birinchi bosish uni yangidan boshlaydi — kalendarda odatiy
+          // xatti-harakat shu.
+          dpState.range = true;
+          dpState.start = startEl?.value || hidden.value || "";
+          dpState.end = hidden.value || "";
+          if (dpState.start) {
+            const sd = parseISO(dpState.start);
+            dpState.viewYear = sd.getFullYear();
+            dpState.viewMonth = sd.getMonth();
+          }
+        }
         const pop = document.createElement("div");
         pop.className = "datepicker-pop";
         pop.id = "dp-pop";
         document.body.appendChild(pop);
-        positionDatePicker(trigger, pop);
+        // Avval chiziladi, keyin joylashtiriladi: balandligi oyga (5 yoki
+        // 6 hafta) va rejimga (oraliqda pastda qo'shimcha panel bor)
+        // qarab o'zgaradi, shuning uchun uni taxmin qilib bo'lmaydi.
         renderDatePicker();
+        positionDatePicker(trigger, pop);
         document.addEventListener("mousedown", onDpOutsideClick);
         document.addEventListener("scroll", closeDatePicker, true);
       }
@@ -7899,8 +8020,12 @@
         let left = r.left;
         if (left + popW > window.innerWidth - 12) left = window.innerWidth - popW - 12;
         if (left < 12) left = 12;
+        const popH = pop.offsetHeight || 340;
         let top = r.bottom + 6;
-        if (top + 340 > window.innerHeight) top = Math.max(12, r.top - 346);
+        // Pastda sig'masa — maydonning tepasiga. U yerda ham sig'masa,
+        // ekran ichida qolishi uchun siljitiladi.
+        if (top + popH > window.innerHeight - 12) top = r.top - popH - 6;
+        if (top < 12) top = Math.max(12, window.innerHeight - popH - 12);
         pop.style.left = left + "px";
         pop.style.top = top + "px";
       }
@@ -7910,6 +8035,9 @@
         if (pop && !pop.contains(e.target) && !(trigger && trigger.contains(e.target))) closeDatePicker();
       }
       function closeDatePicker() {
+        // Oraliq rejimida tashqariga bosib yopish ham tanlanganini
+        // saqlaydi — "Tayyor"ni bosmagani uchun ish yo'qolmasligi kerak.
+        if (dpState?.range) commitDpRange();
         document.getElementById("dp-pop")?.remove();
         document.removeEventListener("mousedown", onDpOutsideClick);
         document.removeEventListener("scroll", closeDatePicker, true);
@@ -7930,8 +8058,10 @@
       function renderDatePicker() {
         const pop = document.getElementById("dp-pop");
         if (!pop || !dpState) return;
-        const { viewYear, viewMonth, id } = dpState;
-        const selectedIso = document.getElementById(id)?.value || "";
+        const { viewYear, viewMonth, id, range } = dpState;
+        const selectedIso = range ? "" : document.getElementById(id)?.value || "";
+        const start = range ? dpState.start : "";
+        const end = range ? dpState.end : "";
         const todayIso = isoOf(todayDate());
         const cells = buildCalGridCells(viewYear, viewMonth);
         const dayBtns = cells
@@ -7940,6 +8070,12 @@
             if (!c.iso) cls.push("other-month");
             if (c.iso === todayIso) cls.push("today");
             if (c.iso && c.iso === selectedIso) cls.push("selected");
+            if (c.iso && range) {
+              if (c.iso === start) cls.push("selected", "r-start");
+              if (c.iso === end) cls.push("selected", "r-end");
+              if (start && end && c.iso > start && c.iso < end) cls.push("in-range");
+              if (start && end && start === end) cls.push("r-only");
+            }
             return `<button type="button" class="${cls.join(" ")}" ${c.iso ? `onclick="selectDpDay('${c.iso}')"` : "disabled"}>${c.dNum}</button>`;
           })
           .join("");
@@ -7951,10 +8087,32 @@
           </div>
           <div class="dp-weekdays">${WD.map((w) => `<div class="dp-weekday">${w}</div>`).join("")}</div>
           <div class="dp-days">${dayBtns}</div>
-          <div class="dp-footer"><button type="button" class="dp-today-btn" onclick="selectDpDay('${todayIso}')">Bugun</button></div>`;
+          ${
+            range
+              ? `<div class="dp-rangebar">
+                   <div class="dp-range-txt">${dpRangeSummary()}</div>
+                   <div class="dp-range-btns">
+                     <button type="button" class="dp-ghost-btn" onclick="dpRangeReset()">Tozalash</button>
+                     <button type="button" class="dp-done-btn"${start ? "" : " disabled"} onclick="dpRangeDone()">Tayyor</button>
+                   </div>
+                 </div>`
+              : `<div class="dp-footer"><button type="button" class="dp-today-btn" onclick="selectDpDay('${todayIso}')">Bugun</button></div>`
+          }`;
+      }
+      // Pastdagi izoh — tanlash qaysi bosqichda ekanini aytadi, chunki
+      // bitta kalendarda "birinchi bosish — boshlanishi, ikkinchisi —
+      // tugashi" qoidasi o'z-o'zidan ko'rinmaydi.
+      function dpRangeSummary() {
+        if (!dpState) return "";
+        const { start, end } = dpState;
+        if (!start) return "Boshlanish kunini tanlang";
+        if (!end) return `${fmtDay(parseISO(start))} dan — tugash kunini tanlang`;
+        const n = rangeDayCount(start, end);
+        return `${fmtDateRangeField(start, end)} · ${n} kun`;
       }
       function selectDpDay(iso) {
         if (!dpState) return;
+        if (dpState.range) return selectDpRangeDay(iso);
         const hidden = document.getElementById(dpState.id);
         if (hidden) {
           hidden.value = iso;
@@ -7964,6 +8122,61 @@
         if (label) label.textContent = fmtDateField(iso);
         document.getElementById(dpState.id + "-field")?.classList.remove("placeholder");
         closeDatePicker();
+      }
+
+      // Bitta kalendarda oraliq tanlash: birinchi bosish — boshlanishi,
+      // ikkinchisi — tugashi, uchinchisi yangidan boshlaydi. Ikkinchi
+      // bosish boshlanishdan oldinroq bo'lsa, oraliq teskari emas, shu
+      // kundan boshlangan deb olinadi — foydalanuvchi fikrini
+      // o'zgartirgani xato emas.
+      function selectDpRangeDay(iso) {
+        if (!dpState) return;
+        if (!dpState.start || dpState.end) {
+          dpState.start = iso;
+          dpState.end = "";
+        } else if (iso < dpState.start) {
+          dpState.start = iso;
+        } else {
+          dpState.end = iso;
+        }
+        renderDatePicker();
+      }
+      function dpRangeReset() {
+        if (!dpState) return;
+        dpState.start = "";
+        dpState.end = "";
+        renderDatePicker();
+      }
+      function dpRangeDone() {
+        commitDpRange();
+        closeDatePicker();
+      }
+      // Oraliqni maydonga yozadi. Faqat bitta kun tanlangan bo'lsa —
+      // bir kunlik ish (boshlanishi ham, muddati ham o'sha kun).
+      function commitDpRange() {
+        if (!dpState || !dpState.range) return;
+        const { id } = dpState;
+        const start = dpState.start || "";
+        const end = dpState.end || start;
+        const startEl = document.getElementById(id + "-start");
+        const hidden = document.getElementById(id);
+        if (startEl) startEl.value = start;
+        if (hidden) {
+          hidden.value = end;
+          hidden.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        const label = document.getElementById(id + "-label");
+        const field = document.getElementById(id + "-field");
+        if (label) {
+          const txt = fmtDateRangeField(start, end);
+          if (txt) {
+            label.textContent = txt;
+            field?.classList.remove("placeholder");
+          } else {
+            label.textContent = label.dataset.ph || "Vaqt oralig'ini tanlang";
+            field?.classList.add("placeholder");
+          }
+        }
       }
 
       // ── IKONKALAR (chiziqli SVG, currentColor — bordir-plейсхолдер
@@ -9886,6 +10099,12 @@
           return { text: d ? fmtDay(parseISO(String(d).slice(0, 10))) : "—", cls: "norm" };
         }
         if (!t.dueDate) return { text: "Muddatsiz", cls: "norm" };
+        // Ish hali boshlanmagan bo'lsa, kartada muddatgacha qolgan kun
+        // emas, qachon boshlanishi ko'rsatiladi — aks holda hali
+        // navbati kelmagan vazifa shoshilinch ko'rinib qolardi.
+        if (t.startDate && isoOf(todayDate()) < t.startDate) {
+          return { text: `${fmtDay(parseISO(t.startDate))} dan`, cls: "norm" };
+        }
         const diff = daysBetween(todayDate(), parseISO(t.dueDate));
         if (diff < 0) return { text: `${-diff} kun kechikdi`, cls: "late" };
         if (diff === 0) return { text: "Bugun", cls: "late" };
@@ -10393,6 +10612,10 @@
               <div class="tdm-prop-val">${tbPriBarsHtml(t.priority)}${escHtml(TASK_PRIORITY_LABEL[t.priority])}</div>
             </div>
             <div class="tdm-prop">
+              <div class="tdm-prop-lbl">${t.startDate && t.dueDate && t.startDate !== t.dueDate ? "Ish vaqti" : "Muddat"}</div>
+              <div class="tdm-prop-val">${t.dueDate ? escHtml(fmtDateRangeField(t.startDate, t.dueDate)) : "Muddatsiz"}</div>
+            </div>
+            <div class="tdm-prop">
               <div class="tdm-prop-lbl">Loyiha</div>
               <div class="tdm-prop-val link">${escHtml(t.projectLabel || "Umumiy")}</div>
             </div>
@@ -10459,8 +10682,11 @@
         </div>`;
 
         const daysLeft = t.dueDate ? daysBetween(todayDate(), parseISO(t.dueDate)) : null;
+        // Oraliq bo'lsa — "5–12 oktabr", bo'lmasa avvalgidek bitta sana.
+        const hasRange = !!(t.startDate && t.dueDate && t.startDate !== t.dueDate);
+        const dueLabel = hasRange ? "Ish vaqti" : "Muddat";
         const dueText = t.dueDate
-          ? `${fmtDay(parseISO(t.dueDate))}${daysLeft !== null ? ` · ${daysLeft >= 0 ? daysLeft + " kun qoldi" : Math.abs(daysLeft) + " kun o'tdi"}` : ""}`
+          ? `${hasRange ? fmtDateRangeField(t.startDate, t.dueDate) : fmtDay(parseISO(t.dueDate))}${daysLeft !== null ? ` · ${daysLeft >= 0 ? daysLeft + " kun qoldi" : Math.abs(daysLeft) + " kun o'tdi"}` : ""}`
           : "—";
 
         const dueInfo = t.dueDate ? dueChipInfo(t.dueDate) : null;
@@ -10545,7 +10771,7 @@
                       : escHtml(TASK_PRIORITY_LABEL[t.priority])
                   }</div>
                 </div>
-                <div class="detail-prop-row"><div class="detail-prop-label">Muddat</div><div class="detail-prop-val"${dueInfo && dueInfo.cls === "late" && isOpenTask ? ` style="color:var(--red)"` : ""}>${dueText}</div></div>
+                <div class="detail-prop-row"><div class="detail-prop-label">${dueLabel}</div><div class="detail-prop-val"${dueInfo && dueInfo.cls === "late" && isOpenTask ? ` style="color:var(--red)"` : ""}>${dueText}</div></div>
                 <div class="detail-prop-row"><div class="detail-prop-label">Loyiha</div><div class="detail-prop-val">${escHtml(t.projectLabel || "Umumiy")}</div></div>
                 <div class="detail-prop-row"><div class="detail-prop-label">Biriktirdi</div><div class="detail-prop-val">${t.createdByUsername ? "@" + escHtml(t.createdByUsername) : "—"}</div></div>
                 <div class="detail-prop-row"><div class="detail-prop-label">Yaratilgan</div><div class="detail-prop-val">${t.createdAt ? fmtDay(new Date(t.createdAt)) : "—"}</div></div>
@@ -10715,6 +10941,8 @@
         if (a.kind === "priority_change") return `Ustuvorlik: ${TASK_PRIORITY_LABEL[oldV] || oldV} → ${TASK_PRIORITY_LABEL[newV] || newV}`;
         if (a.kind === "deadline_change")
           return `Muddat: ${oldV ? fmtDay(parseISO(oldV)) : "—"} → ${newV ? fmtDay(parseISO(newV)) : "—"}`;
+        if (a.kind === "start_change")
+          return `Boshlanishi: ${oldV ? fmtDay(parseISO(oldV)) : "—"} → ${newV ? fmtDay(parseISO(newV)) : "—"}`;
         if (a.kind === "assignment_change") return `Mas'ul: ${oldV} → ${newV}`;
         return a.detail;
       }
@@ -10820,14 +11048,15 @@
         const { body } = makeSheet("Navbatga qo'yish");
         body.innerHTML = `
           <div class="f-group">
-            <label class="f-label">Muddat (deadline) *</label>
-            ${renderDateFieldHtml("task-queue-due", "", "Sana tanlang")}
+            <label class="f-label">Ish vaqti (qaysi kundan qaysi kungacha) *</label>
+            ${renderDateRangeFieldHtml("task-queue-due", "", "", "Vaqt oralig'ini tanlang")}
           </div>
           <div id="task-queue-err" class="error-text" style="color:var(--red);font-size:12px;margin-bottom:10px"></div>
           <button class="btn btn-blue" id="task-queue-btn" onclick="submitSetDueDate('${escArg(id)}')">Tasdiqlash</button>`;
       }
       async function submitSetDueDate(id) {
         const dueDate = document.getElementById("task-queue-due")?.value;
+        const startDate = document.getElementById("task-queue-due-start")?.value || "";
         const errEl = document.getElementById("task-queue-err");
         if (!dueDate) {
           if (errEl) errEl.textContent = "Muddatni tanlang";
@@ -10841,7 +11070,7 @@
         try {
           const res = await apiFetch(`/api/tasks/${id}`, {
             method: "PATCH",
-            body: JSON.stringify({ status: "todo", dueDate }),
+            body: JSON.stringify({ status: "todo", startDate, dueDate }),
           });
           if (!res.ok)
             throw new Error((await res.json().catch(() => ({}))).error || "Xato");
@@ -11098,8 +11327,8 @@
             <select class="f-input" id="et-assignee">${userOptions}</select>
           </div>
           <div class="f-group">
-            <label class="f-label">Muddat (deadline)</label>
-            ${renderDateFieldHtml("et-due", t.dueDate || "", "Sana tanlang")}
+            <label class="f-label">Ish vaqti (qaysi kundan qaysi kungacha)</label>
+            ${renderDateRangeFieldHtml("et-due", t.startDate || "", t.dueDate || "", "Vaqt oralig'ini tanlang")}
           </div>
           <div class="f-group">
             <label class="f-label">Ustuvorlik</label>
@@ -11137,11 +11366,13 @@
         const projectSlug = document.getElementById("et-project")?.value || "";
         const assignee = document.getElementById("et-assignee")?.value || "";
         const dueDate = document.getElementById("et-due")?.value || "";
+        const startDate = document.getElementById("et-due-start")?.value || "";
         const priority = document.getElementById("et-priority")?.value || "no_priority";
         const body = {
           title,
           description,
           projectSlug,
+          startDate,
           dueDate,
           priority,
           tagIds: [...etSelectedTagIds],
@@ -11321,8 +11552,8 @@
             <div class="f-hint">Backlog — hali navbatga qo'yilmagan, muddat keyinroq kiritiladi.</div>
           </div>
           <div class="f-group" id="nt-due-group">
-            <label class="f-label">Muddat (deadline) *</label>
-            ${renderDateFieldHtml("nt-due", "", "Sana tanlang")}
+            <label class="f-label">Ish vaqti (qaysi kundan qaysi kungacha) *</label>
+            ${renderDateRangeFieldHtml("nt-due", "", "", "Vaqt oralig'ini tanlang")}
           </div>
           <div class="f-group">
             <label class="f-label">Ustuvorlik</label>
@@ -11383,7 +11614,7 @@
         const tagNames = tagsList.filter((t) => ntv3.tagIds.has(t.id)).map((t) => t.name);
         el.innerHTML =
           ntv3Row("kimga", "Kimga", user ? userDisplayLabel(user) : "", "Tanlang") +
-          ntv3Row("muddat", "Muddat", ntv3.dueDate ? fmtDay(parseISO(ntv3.dueDate)) : "", "Sana") +
+          ntv3Row("muddat", "Ish vaqti", fmtDateRangeField(ntv3.startDate, ntv3.dueDate), "Oraliq") +
           ntv3Row("ustuvorlik", "Ustuvorlik", TASK_PRIORITY_LABEL[ntv3.priority] || "", "Oddiy") +
           ntv3Row("loyiha", "Loyiha", proj ? proj.label : "", "Umumiy") +
           ntv3Row("teglar", "Teglar", tagNames.join(", "), "Yo'q");
@@ -11391,11 +11622,12 @@
       function openNtv3Pick(key) {
         if (!ntv3) return;
         closeNtv3Pick();
-        const titles = { kimga: "Kimga", muddat: "Muddat", ustuvorlik: "Ustuvorlik", loyiha: "Loyiha", teglar: "Teglar" };
+        const titles = { kimga: "Kimga", muddat: "Ish vaqti", ustuvorlik: "Ustuvorlik", loyiha: "Loyiha", teglar: "Teglar" };
         let inner = "";
         if (key === "muddat") {
-          // Sana — mavjud maxsus sana maydoni (kalendar) qayta ishlatiladi.
-          inner = `${renderDateFieldHtml("ntv3-due", ntv3.dueDate || "", "Sana tanlang")}
+          // Sana — mavjud maxsus sana maydoni (kalendar) qayta
+          // ishlatiladi, oraliq rejimida: qaysi kundan qaysi kungacha.
+          inner = `${renderDateRangeFieldHtml("ntv3-due", ntv3.startDate || "", ntv3.dueDate || "", "Vaqt oralig'ini tanlang")}
             <button type="button" class="btn btn-blue" style="margin-top:12px" onclick="applyNtv3Due()">Tanlash</button>`;
         } else {
           let opts = [];
@@ -11423,7 +11655,12 @@
         if (key === "muddat") applyStaticIcons?.();
       }
       function applyNtv3Due() {
+        // Kalendar hali ochiq bo'lsa, tanlanganini maydonga yozdiramiz —
+        // "Tayyor"ni bosmasdan to'g'ridan-to'g'ri "Tanlash"ni bosgan
+        // bo'lsa ham oraliq yo'qolmasligi kerak.
+        closeDatePicker();
         ntv3.dueDate = document.getElementById("ntv3-due")?.value || "";
+        ntv3.startDate = document.getElementById("ntv3-due-start")?.value || "";
         closeNtv3Pick();
         renderNtv3Props();
       }
@@ -11442,7 +11679,7 @@
         renderNtv3Props();
       }
       async function openNewTaskSheetMobile() {
-        ntv3 = { assigneeUsername: "", dueDate: "", priority: "no_priority", projectSlug: "", tagIds: new Set() };
+        ntv3 = { assigneeUsername: "", startDate: "", dueDate: "", priority: "no_priority", projectSlug: "", tagIds: new Set() };
         const ov = document.createElement("div");
         ov.className = "ntv3-ov";
         ov.onclick = (e) => {
@@ -11479,7 +11716,7 @@
         if (!ntv3) return;
         const title = document.getElementById("ntv3-title")?.value.trim();
         if (!title) return showToast("⚠ Nomi kerak");
-        if (!ntv3.dueDate) return showToast("⚠ Muddat (deadline) kerak");
+        if (!ntv3.dueDate) return showToast("⚠ Ish vaqtini tanlang");
         const description = document.getElementById("ntv3-desc")?.value.trim();
         const body = {
           title,
@@ -11487,6 +11724,7 @@
           projectSlug: ntv3.projectSlug || undefined,
           status: "todo",
           priority: ntv3.priority,
+          startDate: ntv3.startDate || "",
           dueDate: ntv3.dueDate,
           tagIds: [...ntv3.tagIds],
           notifyTelegram: true,
@@ -11525,7 +11763,8 @@
         const title = document.getElementById("nt-title")?.value.trim();
         if (!title) return showToast("⚠ Nomi kerak");
         const dueDate = document.getElementById("nt-due")?.value || "";
-        if (ntStatus !== "backlog" && !dueDate) return showToast("⚠ Muddat (deadline) kerak");
+        const startDate = document.getElementById("nt-due-start")?.value || "";
+        if (ntStatus !== "backlog" && !dueDate) return showToast("⚠ Ish vaqtini tanlang");
         const description = document.getElementById("nt-desc")?.value.trim();
         const projectSlug = document.getElementById("nt-project")?.value || undefined;
         const assignee = document.getElementById("nt-assignee")?.value || "";
@@ -11540,7 +11779,10 @@
           tagIds: [...ntSelectedTagIds],
           notifyTelegram,
         };
-        if (ntStatus !== "backlog") body.dueDate = dueDate;
+        if (ntStatus !== "backlog") {
+          body.dueDate = dueDate;
+          body.startDate = startDate;
+        }
         if (assignee.startsWith("u:")) body.assigneeUsername = assignee.slice(2);
         setBtnLoading(btn, true, "Yaratilmoqda…");
         try {

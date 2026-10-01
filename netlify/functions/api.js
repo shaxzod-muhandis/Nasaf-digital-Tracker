@@ -2328,9 +2328,20 @@ app.patch("/api/checks", auth, async (req, res) => {
 });
 
 // ── TASKS — muayyan xodimga biriktirilgan, muddati bor vazifalar ────
+// Ish oynasi teskari bo'lmasligi kerak. Bazadagi CHECK ham shuni
+// qo'riqlaydi, lekin u xatoni Postgres tilida qaytaradi — bu yerda
+// foydalanuvchi o'qiydigan xabar beriladi.
+function validateTaskRange(startDate, dueDate) {
+  if (!startDate || !dueDate) return null;
+  if (String(startDate) > String(dueDate)) {
+    return "Boshlanish sanasi muddatdan keyin bo'lishi mumkin emas";
+  }
+  return null;
+}
+
 const TASK_ROW_SQL = `
   select
-    t.id, t.title, t.description, t.due_date, t.status, t.reason, t.priority,
+    t.id, t.title, t.description, t.start_date, t.due_date, t.status, t.reason, t.priority,
     t.created_at, t.updated_at, t.completed_at,
     p.slug as project_slug, p.label as project_label,
     au.username as assignee_username,
@@ -2350,6 +2361,9 @@ function shapeTaskRow(row) {
     id: row.id,
     title: row.title,
     description: row.description,
+    // Ish oynasi: `startDate` — qachondan, `dueDate` — qachongacha
+    // (muddat). `startDate` ixtiyoriy: eski vazifalarda u yo'q.
+    startDate: row.start_date || null,
     dueDate: row.due_date,
     status: row.status,
     reason: row.reason,
@@ -2475,9 +2489,12 @@ app.post("/api/tasks", auth, async (req, res) => {
     const description = (req.body.description || "").trim() || null;
     const status = req.body.status === "backlog" ? "backlog" : "todo";
     const dueDate = req.body.dueDate || null;
+    const startDate = req.body.startDate || null;
     // Backlog — hali navbatga qo'yilmagan, muddat keyinroq ("To Do"ga
     // o'tkazilganda) kiritiladi. Boshqa har qanday holatda muddat shart.
     if (status !== "backlog" && !dueDate) return res.status(400).json({ error: "Muddat (dueDate) kerak" });
+    const rangeErr = validateTaskRange(startDate, dueDate);
+    if (rangeErr) return res.status(400).json({ error: rangeErr });
     const priority = req.body.priority || "no_priority";
     if (!["urgent", "high", "medium", "low", "no_priority"].includes(priority)) {
       return res.status(400).json({ error: "Noto'g'ri priority" });
@@ -2503,9 +2520,9 @@ app.post("/api/tasks", auth, async (req, res) => {
     }
 
     const ins = await db.query(
-      `insert into tasks (project_id, title, description, assignee_user_id, assignee_staff_id, due_date, created_by, status, priority)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9) returning id`,
-      [projectId, title, description, assigneeUserId, assigneeStaffId, dueDate, req.user.id, status, priority],
+      `insert into tasks (project_id, title, description, assignee_user_id, assignee_staff_id, start_date, due_date, created_by, status, priority)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) returning id`,
+      [projectId, title, description, assigneeUserId, assigneeStaffId, startDate, dueDate, req.user.id, status, priority],
     );
     const taskId = ins.rows[0].id;
 
@@ -2597,6 +2614,19 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
         values.push(req.body.dueDate || null);
         sets.push(`due_date = $${values.length}`);
       }
+      if (typeof req.body.startDate !== "undefined") {
+        values.push(req.body.startDate || null);
+        sets.push(`start_date = $${values.length}`);
+      }
+      // Oraliqni tekshirishda so'rovda berilmagan tomoni bazadagi
+      // qiymatdan olinadi — faqat bitta tomonini o'zgartirgan so'rov ham
+      // teskari oraliq hosil qila olmasligi kerak.
+      const nextStart =
+        typeof req.body.startDate !== "undefined" ? req.body.startDate || null : existing.start_date;
+      const nextDue =
+        typeof req.body.dueDate !== "undefined" ? req.body.dueDate || null : existing.due_date;
+      const rangeErr = validateTaskRange(nextStart, nextDue);
+      if (rangeErr) return res.status(400).json({ error: rangeErr });
       if (typeof req.body.priority === "string") {
         if (!["urgent", "high", "medium", "low", "no_priority"].includes(req.body.priority)) {
           return res.status(400).json({ error: "Noto'g'ri priority" });
@@ -2785,6 +2815,11 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
     if ((task.dueDate || "") !== (before.dueDate || "")) {
       await logTaskActivity(req.params.id, req.user.id, "deadline_change", {
         detail: `${before.dueDate || ""}:${task.dueDate || ""}`,
+      });
+    }
+    if ((task.startDate || "") !== (before.startDate || "")) {
+      await logTaskActivity(req.params.id, req.user.id, "start_change", {
+        detail: `${before.startDate || ""}:${task.startDate || ""}`,
       });
     }
     if ((task.assigneeName || "") !== (before.assigneeName || "")) {
