@@ -3672,10 +3672,17 @@
       .tbl-card { background: var(--surf); border: 1px solid var(--bd1); border-radius: 14px; overflow: hidden; }
       .tbl-row {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 50px 50px 64px 76px 84px;
+        grid-template-columns: minmax(0, 1fr) 50px 50px 64px 76px 62px 56px 84px;
         gap: 10px;
         padding: 0 16px;
         align-items: center;
+      }
+      /* Jadval va o'ng panel yonma-yon faqat keng ekranda. 1400px dan
+         tor bo'lsa panel jadval ostiga tushadi — aks holda sakkiz
+         ustunli jadvalga 620px qolib, xodim ismi kesilib ketardi. */
+      .tbl-layout { display: grid; grid-template-columns: minmax(0, 1fr) 352px; gap: 18px; align-items: start; }
+      @media (max-width: 1400px) {
+        .tbl-layout { grid-template-columns: minmax(0, 1fr); }
       }
       .tbl-hdr { height: 36px; background: var(--tbl-hdr-bg); }
       .tbl-hdr > div {
@@ -3762,6 +3769,7 @@
       }
       .tbl-prow.body { height: 48px; border-top: 1px solid var(--bd1); }
       .tbl-prow.body.sub { background: var(--tbl-sub-bg); }
+      .tbl-n.help { font-weight: 500; color: var(--v3-t2); }
       .tbl-pdate { font-size: 12.5px; color: var(--v3-t2); white-space: nowrap; }
       .tbl-pcell { display: flex; align-items: center; gap: 8px; min-width: 0; }
       .tbl-pcell .tbl-av { width: 22px; height: 22px; border-radius: 7px; font-size: 9px; }
@@ -13176,6 +13184,8 @@
               ${tabelNum(e.own, "own")}
               ${tabelNum(e.substituted, "sub")}
               ${tabelNum(e.extra, "extra")}
+              ${tabelNum(e.edited, "help")}
+              ${tabelNum(e.filmed, "help")}
               <div style="display:flex;justify-content:center"><span class="tbl-pay ${e.payStatus}">${escHtml(e.payLabel)}</span></div>
             </div>`,
               )
@@ -13184,7 +13194,7 @@
 
         const table = `<div class="tbl-card">
           <div class="tbl-row tbl-hdr">
-            <div>Xodim · loyiha</div><div>Reja</div><div>O'zi</div><div>O'rniga</div><div>Qo'shimcha</div><div>Oylik</div>
+            <div>Xodim · loyiha</div><div>Reja</div><div>O'zi</div><div>O'rniga</div><div>Qo'shimcha</div><div>Montaj</div><div>Video</div><div>Oylik</div>
           </div>
           ${rows}
         </div>`;
@@ -13197,6 +13207,8 @@
                 const marks = [
                   e.substituted ? `${e.substituted} ta o'rniga` : "",
                   e.extra ? `+${e.extra} qo'shimcha` : "",
+                  e.edited ? `${e.edited} montaj` : "",
+                  e.filmed ? `${e.filmed} video` : "",
                 ].filter(Boolean).join(" · ");
                 return `<div class="tm-card" style="margin-bottom:10px"><div class="tm-row" onclick="tabelOpenEmployee('${escArg(e.username)}')">
                   <span class="tbl-av" style="background:${personColor(e.username || e.name)}">${escHtml(tabelInitials(e.name))}${avatarImg(e.avatarUrl)}</span>
@@ -13216,7 +13228,7 @@
 
         c.innerHTML = `${head}${kpis}${chips}
           <div class="desktop-only">
-            <div style="display:grid;grid-template-columns:minmax(0,1fr) 352px;gap:18px;align-items:start">
+            <div class="tbl-layout">
               ${table}
               <div class="tbl-side">${tabelSideHtml()}</div>
             </div>

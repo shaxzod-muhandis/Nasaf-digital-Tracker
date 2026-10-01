@@ -891,7 +891,8 @@ app.get("/api/tabel", auth, async (req, res) => {
     // Bajarilgan ishlar — assignee/performer kesimida
     const checksR = cycleIds.length
       ? await db.query(
-          `select cycle_id, type, seq_number, assignee_id, performer_id, substitution_reason, work_date
+          `select cycle_id, type, seq_number, assignee_id, performer_id, substitution_reason, work_date,
+                  editor_user_id, videographer_user_id
              from checks where cycle_id = any($1::uuid[])`,
           [cycleIds],
         )
@@ -901,7 +902,8 @@ app.get("/api/tabel", auth, async (req, res) => {
     const agg = new Map(); // userId -> {plan, own, substituted, extra, projects:Set}
     const row = (id) => {
       const k = String(id);
-      if (!agg.has(k)) agg.set(k, { userId: k, plan: 0, own: 0, substituted: 0, extra: 0, projects: new Map() });
+      if (!agg.has(k))
+        agg.set(k, { userId: k, plan: 0, own: 0, substituted: 0, extra: 0, edited: 0, filmed: 0, projects: new Map() });
       return agg.get(k);
     };
 
@@ -963,6 +965,11 @@ app.get("/api/tabel", auth, async (req, res) => {
         }
         if (p) row(p).extra++;
       }
+      // Post/stories chiqishiga sababchi bo'lgan boshqa xodimlar —
+      // montaj qilgan va video olgan. Ular SMM mas'uli bo'lmasligi
+      // mumkin, lekin ishda qatnashgan va Tabelda ko'rinishi kerak.
+      if (ch.editor_user_id) row(ch.editor_user_id).edited++;
+      if (ch.videographer_user_id) row(ch.videographer_user_id).filmed++;
     });
 
     const employees = [...agg.values()]
@@ -981,6 +988,8 @@ app.get("/api/tabel", auth, async (req, res) => {
           own: r.own,
           substituted: r.substituted,
           extra: r.extra,
+          edited: r.edited,
+          filmed: r.filmed,
           missing,
           payStatus: pay.kind,
           payLabel: pay.label,
@@ -988,7 +997,13 @@ app.get("/api/tabel", auth, async (req, res) => {
         };
       })
       // Rejasi bor xodimlar birinchi, keyin faqat qo'shimcha ishlaganlar
-      .sort((a, b) => (b.plan - a.plan) || (b.own - a.own) || a.name.localeCompare(b.name));
+      .sort(
+        (a, b) =>
+          b.plan - a.plan ||
+          b.own - a.own ||
+          b.edited + b.filmed - (a.edited + a.filmed) ||
+          a.name.localeCompare(b.name),
+      );
 
     const totals = employees.reduce(
       (t, e) => ({
