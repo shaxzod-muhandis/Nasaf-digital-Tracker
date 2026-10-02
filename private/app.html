@@ -796,6 +796,38 @@
         font-size: 12px;
         color: var(--t3);
       }
+      /* "Oxirgi harakatlar" paneli tepasidagi umumiy Ncoin yig'indisi —
+         har bir qatordagi alohida summa yonida, tizimdagi jami manzara. */
+      .ncoin-tot {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        border-bottom: 1px solid var(--bd1);
+        background: var(--surf2);
+      }
+      .ncoin-tot-item {
+        padding: 11px 20px;
+        min-width: 0;
+      }
+      .ncoin-tot-item + .ncoin-tot-item {
+        border-left: 1px solid var(--bd1);
+      }
+      .ncoin-tot-lbl {
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--t3);
+      }
+      .ncoin-tot-val {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 4px;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--ink);
+        font-variant-numeric: tabular-nums;
+      }
       .nshop-purchase-row {
         padding: 13px 20px;
         display: flex;
@@ -14569,8 +14601,31 @@
           </div>
           <div class="nshop-panel">
             <div class="nshop-panel-hdr"><div class="nshop-panel-title">Oxirgi harakatlar</div></div>
+            ${ncoinTotalsHtml(s.employees)}
             ${activityHtml}
           </div>
+        </div>`;
+      }
+      // Tizimdagi umumiy Ncoin: qancha ishlab topilgan, qancha
+      // sarflangan va hozir xodimlar qo'lida qancha turibdi. Yuqoridagi
+      // "Xodimlar bo'yicha Ncoin" jadvalining o'sha ro'yxatidan
+      // yig'iladi — ya'ni ikkala raqam doim bir-biriga mos keladi va
+      // buning uchun qo'shimcha so'rov kerak emas.
+      function ncoinTotalsHtml(employees) {
+        if (!employees || !employees.length) return "";
+        const earned = employees.reduce((a, e) => a + (e.earned || 0), 0);
+        const spent = employees.reduce((a, e) => a + (e.spent || 0), 0);
+        const balance = employees.reduce((a, e) => a + (e.balance || 0), 0);
+        const item = (label, value, color) => `<div class="ncoin-tot-item">
+          <div class="ncoin-tot-lbl">${label}</div>
+          <div class="ncoin-tot-val"${color ? ` style="color:${color}"` : ""}>
+            <span class="n-badge" style="width:15px;height:15px;font-size:9px${color ? `;background:${color}` : ""}">N</span>${fmtNcoin(value)}
+          </div>
+        </div>`;
+        return `<div class="ncoin-tot">
+          ${item("Jami ishlandi", earned, "#16a34a")}
+          ${item("Jami sarflandi", spent, "var(--t3)")}
+          ${item("Hozirgi qoldiq", balance, "")}
         </div>`;
       }
       function nshopPurchaseTimeLabel(iso) {
