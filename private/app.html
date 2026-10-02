@@ -14418,7 +14418,11 @@
         const s = nshopAdminStats;
 
         const mobileHtml = `<div class="mobile-only">
-          <button class="btn btn-blue btn-sm" style="width:auto;padding:0 16px;margin-bottom:14px" onclick="openNShopProductSheet()">+ Mahsulot qo'shish</button>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <button class="btn btn-blue btn-sm" style="width:auto;padding:0 16px;margin:0" onclick="openNShopProductSheet()">+ Mahsulot qo'shish</button>
+            <div style="flex:1"></div>
+            <span class="stat-link" onclick="openNcoinAdminHistory()">Ncoin tarixi →</span>
+          </div>
           <div class="f-group">
             <input class="f-input" placeholder="Mahsulot qidirish" value="${escHtml(nshopAdminSearch)}" oninput="nshopAdminOnSearch(this.value)"/>
           </div>
@@ -14600,7 +14604,10 @@
             <div style="display:flex;flex-direction:column;gap:10px">${alertsHtml}</div>
           </div>
           <div class="nshop-panel">
-            <div class="nshop-panel-hdr"><div class="nshop-panel-title">Oxirgi harakatlar</div></div>
+            <div class="nshop-panel-hdr">
+              <div class="nshop-panel-title" style="flex:1">Oxirgi harakatlar</div>
+              <span class="stat-link" onclick="openNcoinAdminHistory()">To'liq tarix →</span>
+            </div>
             ${ncoinTotalsHtml(s.employees)}
             ${activityHtml}
           </div>
@@ -14627,6 +14634,95 @@
           ${item("Jami sarflandi", spent, "var(--t3)")}
           ${item("Hozirgi qoldiq", balance, "")}
         </div>`;
+      }
+      // ── TO'LIQ NCOIN TARIXI (admin) ──────────────────────────────
+      // NShop panelidagi "Oxirgi harakatlar" faqat oxirgi 6 tasini
+      // ko'rsatadi. Bu yerda butun tarix: kim, qachon, nima uchun va
+      // qancha olgan yoki ishlatgan — filtr va sahifalash bilan.
+      let ncAdmHist = null;
+      async function openNcoinAdminHistory() {
+        const { body } = makeSheet("Ncoin tarixi — hamma xodimlar");
+        ncAdmHist = { body, type: "all", username: "", rows: [], total: 0, earned: 0, spent: 0, hasMore: false, loading: false };
+        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        await ncAdmHistLoad(true);
+      }
+      function ncAdmHistSetType(type) {
+        if (!ncAdmHist || ncAdmHist.type === type) return;
+        ncAdmHist.type = type;
+        ncAdmHistLoad(true);
+      }
+      function ncAdmHistSetUser(username) {
+        if (!ncAdmHist) return;
+        ncAdmHist.username = username;
+        ncAdmHistLoad(true);
+      }
+      async function ncAdmHistLoad(reset) {
+        if (!ncAdmHist || ncAdmHist.loading) return;
+        ncAdmHist.loading = true;
+        if (reset) ncAdmHist.rows = [];
+        const q = new URLSearchParams({ type: ncAdmHist.type, limit: "50", offset: String(ncAdmHist.rows.length) });
+        if (ncAdmHist.username) q.set("username", ncAdmHist.username);
+        try {
+          const res = await apiFetch(`/api/ncoin/admin/history?${q}`);
+          const d = await res.json();
+          if (!res.ok) throw new Error(d.error || "Xato");
+          ncAdmHist.rows = ncAdmHist.rows.concat(d.transactions || []);
+          ncAdmHist.total = d.total;
+          ncAdmHist.earned = d.earned;
+          ncAdmHist.spent = d.spent;
+          ncAdmHist.hasMore = d.hasMore;
+          ncAdmHist.loading = false;
+          ncAdmHistRender();
+        } catch (e) {
+          ncAdmHist.loading = false;
+          ncAdmHist.body.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
+        }
+      }
+      function ncAdmHistRender() {
+        const { body, type, username, rows, total, earned, spent, hasMore } = ncAdmHist;
+        const chips = [
+          ["all", "Barchasi"],
+          ["earned", "Olingan"],
+          ["spent", "Ishlatilgan"],
+        ]
+          .map(([f, lbl]) => `<button type="button" class="chip-btn${type === f ? " active" : ""}" onclick="ncAdmHistSetType('${f}')">${lbl}</button>`)
+          .join("");
+
+        // Xodim bo'yicha filtr — ro'yxat NShop panelidagi xodimlar
+        // jadvalidan olinadi (qo'shimcha so'rovsiz).
+        const people = (nshopAdminStats?.employees || []).map(
+          (e) => `<option value="${escHtml(e.username)}"${e.username === username ? " selected" : ""}>${escHtml(e.name)}</option>`,
+        ).join("");
+
+        const sumHtml =
+          type === "spent"
+            ? `<div class="f-hint" style="margin:0">Jami ishlatilgan</div>
+               <div style="font-size:26px;font-weight:700;color:var(--red);margin-top:4px">−${fmtNcoin(spent)} Ncoin</div>`
+            : type === "earned"
+              ? `<div class="f-hint" style="margin:0">Jami olingan</div>
+                 <div style="font-size:26px;font-weight:700;color:#16a34a;margin-top:4px">+${fmtNcoin(earned)} Ncoin</div>`
+              : `<div class="f-hint" style="margin:0">Jami olingan / ishlatilgan</div>
+                 <div style="font-size:26px;font-weight:700;margin-top:4px"><span style="color:#16a34a">+${fmtNcoin(earned)}</span> <span style="color:var(--t4);font-weight:400">/</span> <span style="color:var(--red)">−${fmtNcoin(spent)}</span></div>
+                 <div class="f-hint" style="margin:4px 0 0">Qoldiq ${fmtNcoin(earned - spent)} Ncoin</div>`;
+
+        body.innerHTML = `
+          <div style="text-align:center;padding:4px 0 18px">${sumHtml}</div>
+          <div class="chip-group" style="margin-bottom:10px">${chips}</div>
+          <div class="f-group">
+            <select class="f-input" onchange="ncAdmHistSetUser(this.value)">
+              <option value="">Barcha xodimlar</option>
+              ${people}
+            </select>
+          </div>
+          ${
+            rows.length
+              ? `<div class="list-card">${rows
+                  .map((t) => ncoinHistoryRowHtml({ ...t, at: t.createdAt }))
+                  .join("")}</div>
+                 <div class="stat-foot" style="text-align:center;margin-top:12px">${rows.length} / ${total} ta yozuv</div>
+                 ${hasMore ? `<button type="button" class="btn btn-soft" style="margin-top:10px" onclick="ncAdmHistLoad(false)">Yana yuklash</button>` : ""}`
+              : `<div class="empty"><div class="empty-s">Yozuv topilmadi</div></div>`
+          }`;
       }
       function nshopPurchaseTimeLabel(iso) {
         const d = new Date(iso);

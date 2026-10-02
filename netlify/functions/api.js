@@ -3218,6 +3218,96 @@ app.get("/api/ncoin/admin/purchases", auth, async (req, res) => {
 // NShop boshqaruvi paneli — statistika kartochkalari + "e'tibor talab
 // qiladi" ro'yxati (kam qoldiq: to'liq zaxiraning 25% yoki undan kami,
 // arxivlanmagan mahsulotlar orasidan) + "bu oy sotildi" (Toshkent oyi).
+// Ncoin harakatlari ro'yxati — "kim, qachon, nima uchun, qancha".
+// `reference_id` turga qarab boshqa jadvalga ishora qiladi (mahsulot,
+// vazifa, davr+post raqami, davr), shuning uchun nomni chiqarish uchun
+// hammasi left join qilinadi. Bitta joyda saqlanadi, chunki uni ham
+// NShop paneli (oxirgi 6 ta), ham to'liq tarix ishlatadi — ikkalasida
+// yozuv AYNAN bir xil ko'rinishi kerak.
+const NCOIN_ACTIVITY_SQL = `
+  select t.created_at, t.amount, t.reason, t.reference_type,
+         u.username,
+         coalesce(nullif(trim(concat(u.first_name,' ',u.last_name)), ''), u.username) as user_name,
+         p.name as product_name,
+         tk.title as task_title,
+         pr.label as project_label,
+         split_part(t.reference_id, ':', 2) as check_type,
+         split_part(t.reference_id, ':', 3) as check_seq,
+         pr2.label as bonus_project_label
+    from ncoin_transactions t
+    join users u on u.id = t.user_id
+    left join ncoin_products p on p.id::text = t.reference_id and t.reference_type = 'product'
+    left join tasks tk on tk.id::text = t.reference_id and t.reference_type = 'task'
+    left join project_cycles pc on pc.id::text = split_part(t.reference_id, ':', 1) and t.reference_type = 'check'
+    left join projects pr on pr.id = pc.project_id
+    left join project_cycles pc2 on pc2.id::text = t.reference_id and t.reference_type = 'cycle'
+    left join projects pr2 on pr2.id = pc2.project_id
+`;
+function shapeNcoinActivityRow(row) {
+  let detail = row.product_name;
+  if (row.reference_type === "task") detail = row.task_title;
+  else if (row.reference_type === "check" && row.project_label) {
+    detail = `${row.project_label} — ${row.check_type === "k" ? "Post" : "Stories"} #${row.check_seq}`;
+  } else if (row.reference_type === "cycle" && row.bonus_project_label) {
+    detail = row.bonus_project_label;
+  }
+  return {
+    createdAt: row.created_at,
+    amount: Number(row.amount),
+    reason: row.reason,
+    username: row.username,
+    userName: row.user_name,
+    detail,
+  };
+}
+
+// To'liq Ncoin tarixi (admin) — hamma xodimlar bo'yicha, sahifalab.
+// NShop panelidagi "Oxirgi harakatlar" faqat oxirgi 6 tasini
+// ko'rsatadi; bu yerda butun tarix, filtr bilan ochiladi.
+app.get("/api/ncoin/admin/history", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const type = ["earned", "spent"].includes(req.query.type) ? req.query.type : "all";
+    const username = String(req.query.username || "").toLowerCase().replace("@", "").trim();
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200);
+    const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+
+    const where = [];
+    const values = [];
+    if (type === "earned") where.push("t.amount > 0");
+    else if (type === "spent") where.push("t.amount < 0");
+    if (username) {
+      values.push(username);
+      where.push(`u.username = $${values.length}`);
+    }
+    const whereSql = where.length ? ` where ${where.join(" and ")}` : "";
+
+    const rowsR = await db.query(
+      `${NCOIN_ACTIVITY_SQL}${whereSql} order by t.created_at desc limit ${limit} offset ${offset}`,
+      values,
+    );
+    // Jami — filtr bo'yicha, lekin sahifadan qat'i nazar: foydalanuvchi
+    // "yana yuklash"ni bosmasdan ham umumiy manzarani ko'rishi kerak.
+    const sumR = await db.query(
+      `select count(*)::int as total,
+              coalesce(sum(t.amount) filter (where t.amount > 0), 0)::float as earned,
+              coalesce(-sum(t.amount) filter (where t.amount < 0), 0)::float as spent
+         from ncoin_transactions t
+         join users u on u.id = t.user_id${whereSql}`,
+      values,
+    );
+    res.json({
+      transactions: rowsR.rows.map(shapeNcoinActivityRow),
+      total: sumR.rows[0].total,
+      earned: Number(sumR.rows[0].earned),
+      spent: Number(sumR.rows[0].spent),
+      hasMore: offset + rowsR.rows.length < sumR.rows[0].total,
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get("/api/ncoin/admin/nshop-stats", auth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
@@ -3251,23 +3341,7 @@ app.get("/api/ncoin/admin/nshop-stats", auth, async (req, res) => {
     // aniqlash mantig'i (mahsulot/vazifa/loyiha+post# nomi) qo'llaniladi,
     // faqat bitta userga emas — HAMMA xodimlar bo'yicha.
     const recentR = await db.query(
-      `select t.created_at, t.amount, t.reason, t.reference_type,
-              coalesce(nullif(trim(concat(u.first_name,' ',u.last_name)), ''), u.username) as user_name,
-              p.name as product_name,
-              tk.title as task_title,
-              pr.label as project_label,
-              split_part(t.reference_id, ':', 2) as check_type,
-              split_part(t.reference_id, ':', 3) as check_seq,
-              pr2.label as bonus_project_label
-       from ncoin_transactions t
-       join users u on u.id = t.user_id
-       left join ncoin_products p on p.id::text = t.reference_id and t.reference_type = 'product'
-       left join tasks tk on tk.id::text = t.reference_id and t.reference_type = 'task'
-       left join project_cycles pc on pc.id::text = split_part(t.reference_id, ':', 1) and t.reference_type = 'check'
-       left join projects pr on pr.id = pc.project_id
-       left join project_cycles pc2 on pc2.id::text = t.reference_id and t.reference_type = 'cycle'
-       left join projects pr2 on pr2.id = pc2.project_id
-       order by t.created_at desc limit 6`,
+      `${NCOIN_ACTIVITY_SQL} order by t.created_at desc limit 6`,
     );
     // Xodimlar Ncoin reytingi — kim qancha ishlab topgan/sarflagan,
     // eng ko'p ishlab topgandan boshlab (jamoa faolligini bir qarashda
@@ -3307,22 +3381,7 @@ app.get("/api/ncoin/admin/nshop-stats", auth, async (req, res) => {
         isVisible: row.is_visible,
         weeklySales: Number(row.weekly_sales),
       })),
-      recentActivity: recentR.rows.map((row) => {
-        let detail = row.product_name;
-        if (row.reference_type === "task") detail = row.task_title;
-        else if (row.reference_type === "check" && row.project_label) {
-          detail = `${row.project_label} — ${row.check_type === "k" ? "Post" : "Stories"} #${row.check_seq}`;
-        } else if (row.reference_type === "cycle" && row.bonus_project_label) {
-          detail = row.bonus_project_label;
-        }
-        return {
-          createdAt: row.created_at,
-          amount: Number(row.amount),
-          reason: row.reason,
-          userName: row.user_name,
-          detail,
-        };
-      }),
+      recentActivity: recentR.rows.map(shapeNcoinActivityRow),
       employees: employeesR.rows.map((row) => ({
         username: row.username,
         name: row.first_name ? `${row.first_name} ${row.last_name || ""}`.trim() : row.username,
