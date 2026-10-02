@@ -3,7 +3,8 @@
 // mavjud test fayllari (smoke.js, profile-and-tasks.js) bilan bir xil
 // uslub.
 
-require("../scripts/_env").loadEnv();
+// Testlar faqat alohida test bazasida ishlaydi — qarang: test/_db-guard.js
+require("./_db-guard").useTestDatabase();
 process.env.BOT_TOKEN = "";
 const assert = require("assert");
 const db = require("../netlify/functions/lib/db");

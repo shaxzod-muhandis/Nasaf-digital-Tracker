@@ -13,12 +13,23 @@ const path = require("path");
 const { Client } = require("pg");
 
 async function main() {
-  const connectionString = process.env.DATABASE_URL;
+  // `--test` bilan migratsiyalar TEST_DATABASE_URL'ga qo'llanadi —
+  // testlar uchun alohida bazani tayyorlashda shu ishlatiladi.
+  const useTest = process.argv.includes("--test");
+  const envName = useTest ? "TEST_DATABASE_URL" : "DATABASE_URL";
+  const connectionString = process.env[envName];
   if (!connectionString) {
-    console.error("❌ DATABASE_URL environment o'zgaruvchisi topilmadi.");
-    console.error("   .env faylida yoki shell'da DATABASE_URL='postgresql://...' o'rnating.");
+    console.error(`❌ ${envName} environment o'zgaruvchisi topilmadi.`);
+    console.error(`   .env.local faylida ${envName}='postgresql://...' o'rnating.`);
     process.exit(1);
   }
+  if (useTest && connectionString === process.env.DATABASE_URL) {
+    console.error("❌ TEST_DATABASE_URL asosiy baza bilan bir xil — to'xtatildi.");
+    process.exit(1);
+  }
+  try {
+    console.log(`📦 Baza: ${new URL(connectionString).host}${useTest ? " (test)" : ""}`);
+  } catch {}
 
   const dir = path.join(__dirname, "..", "supabase", "migrations");
   const files = fs

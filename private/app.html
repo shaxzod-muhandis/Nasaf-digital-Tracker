@@ -12398,6 +12398,10 @@
 
         // Rejadagi mas'ul — loyihaning SMM roli berilgan xodimi.
         const assignee = (p.assignees || []).find((a) => a.role === "smm") || null;
+        // Loyihaga biriktirilgan xodimlar (montajchi, mobilograf,
+        // dizayner...) — ishni amalda ular ham bajaradi, shuning uchun
+        // "Kim bajardi?" ro'yxatida o'zlarini tanlay olishlari kerak.
+        const projectUsernames = (p.assignees || []).map((a) => a.username);
         cwd = {
           slug,
           type,
@@ -12411,6 +12415,7 @@
           performerId: info.performerUsername || (assignee ? assignee.username : currentUser),
           reason: info.substitutionReason || null,
           note: info.substitutionNote || "",
+          projectUsernames,
           assignee,
           directory: [],
           info,
@@ -12465,12 +12470,18 @@
         const isSub = !!cwd.assigneeUsername && cwd.performerId !== cwd.assigneeUsername;
         const showPickers = cwd.type === "k" || cwd.storyKind === "atmospheric";
 
-        // Mas'ul birinchi, keyin bu ishni bajara oladigan xodimlar.
-        // Post/stories — SMM ishi: uni montajchi, mobilograf yoki
-        // dizayner emas, boshqa SMM yoki rahbariyat (CEO/COO) bajaradi.
-        const others = cwd.directory.filter(
-          (u) => u.username !== cwd.assigneeUsername && (u.can_smm || u.canSmm),
-        );
+        // Mas'ul birinchi, keyin ro'yxat ikki guruhga bo'linadi:
+        //   • loyiha jamoasi — shu loyihaga biriktirilgan xodimlar
+        //     (montajchi, mobilograf, dizayner): ishni amalda ular ham
+        //     bajaradi, shuning uchun o'zlarini tanlay oladilar;
+        //   • boshqa xodim — loyihada bo'lmasa ham post/stories ishini
+        //     bajara oladiganlar: SMM va rahbariyat (CEO/COO).
+        // Loyihaga aloqasi yo'q montajchi yoki dizayner ro'yxatga
+        // tushmaydi — bu ularning ishi emas.
+        const teamSet = new Set(cwd.projectUsernames || []);
+        const pool = cwd.directory.filter((u) => u.username !== cwd.assigneeUsername);
+        const team = pool.filter((u) => teamSet.has(u.username));
+        const others = pool.filter((u) => !teamSet.has(u.username) && (u.can_smm || u.canSmm));
         const assigneeHtml = cwd.assignee
           ? cwdPersonRowHtml(cwd.assignee, true)
           : `<div class="cwd-role" style="padding:2px 2px 6px">Bu loyihada rejadagi mas'ul belgilanmagan — Ruxsatlar bo'limidan «SMM» roli beriladi.</div>`;
@@ -12524,8 +12535,11 @@
           <div class="cwd-title">Kim bajardi?</div>
           <div class="cwd-list">
             ${assigneeHtml}
-            ${others.length ? `<div class="cwd-grouplbl">Boshqa xodim</div>` : `<div class="cwd-role" style="padding:8px 2px 0">Bu ishni bajara oladigan boshqa xodim yo'q — post va stories ishini SMM yoki rahbariyat bajaradi.</div>`}
+            ${team.length ? `<div class="cwd-grouplbl">Loyiha jamoasi</div>` : ""}
+            ${team.map((u) => cwdPersonRowHtml(u, false)).join("")}
+            ${others.length ? `<div class="cwd-grouplbl">Boshqa xodim</div>` : ""}
             ${others.map((u) => cwdPersonRowHtml(u, false)).join("")}
+            ${team.length || others.length ? "" : `<div class="cwd-role" style="padding:8px 2px 0">Boshqa xodim yo'q — loyihaga hali hech kim biriktirilmagan.</div>`}
           </div>
           ${reasonsHtml}
           <div style="margin-top:16px">

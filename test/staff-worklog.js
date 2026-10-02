@@ -10,7 +10,8 @@
 // Ishga tushirish:  npm run test:staff
 // ═══════════════════════════════════════════════════════════════════════
 
-require("../scripts/_env").loadEnv();
+// Testlar faqat alohida test bazasida ishlaydi — qarang: test/_db-guard.js
+require("./_db-guard").useTestDatabase();
 process.env.BOT_TOKEN = "";
 const assert = require("assert");
 const db = require("../netlify/functions/lib/db");
@@ -35,6 +36,9 @@ function initDataFor(username, id = 111) {
 async function cleanupTestData() {
   await db.query(`delete from projects where slug like 'wl_test%'`);
   await db.query(`delete from staff where full_name ilike 'test %'`);
+  // Ruxsatlar users/projects o'chganda cascade bilan ketadi, lekin
+  // test xodimining o'zi qolib ketmasligi kerak.
+  await db.query(`delete from users where username like 'test_wl_%'`);
 }
 
 process.once("SIGINT", async () => {
@@ -206,6 +210,50 @@ async function main() {
     const r = await call("GET", "/api/projects", { user: ADMIN });
     const p = r.json.projects.find((x) => x.id === slug);
     assert.ok(p.checkDetails["s-1"].workDate, "workDate bo'sh qoldi");
+  });
+
+  console.log("── LOYIHA A'ZOSI O'ZI BELGILAY OLADI ─────────────");
+  const TEAM = "test_wl_montajchi";
+  await check("loyihaga aloqasi yo'q xodim belgilay olmaydi (403)", async () => {
+    await call("POST", "/api/users", { user: ADMIN, body: { username: TEAM } });
+    const r = await call("PATCH", "/api/checks", {
+      user: TEAM,
+      body: { projectSlug: slug, type: "k", seqNumber: 4, checked: true },
+    });
+    assert.strictEqual(r.status, 403, JSON.stringify(r.json));
+    assert.strictEqual(r.json.code, "NO_PROJECT_PERMISSION");
+  });
+  await check("loyihaga biriktirilgach — montajchi ham belgilay oladi", async () => {
+    // Faqat shu test xodimi uchun yoziladi; boshqa xodimlarning
+    // ruxsatlariga tegmaydi.
+    const g = await call("PUT", "/api/permissions", { user: ADMIN, body: { [TEAM]: [slug] } });
+    assert.strictEqual(g.status, 200, JSON.stringify(g.json));
+    const role = await call("PATCH", "/api/permissions/role", {
+      user: ADMIN,
+      body: { username: TEAM, projectSlug: slug, role: "montajchi" },
+    });
+    assert.strictEqual(role.status, 200, JSON.stringify(role.json));
+    const r = await call("PATCH", "/api/checks", {
+      user: TEAM,
+      body: { projectSlug: slug, type: "k", seqNumber: 4, checked: true, workDate: "2026-08-21" },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+  });
+  await check("belgilagan o'zi loyiha jamoasi ro'yxatida chiqadi", async () => {
+    const r = await call("GET", "/api/projects", { user: ADMIN });
+    const pr = r.json.projects.find((x) => x.id === slug);
+    const unames = (pr.assignees || []).map((a) => a.username);
+    assert.ok(unames.includes(TEAM), `assignees: ${unames.join(",")}`);
+  });
+  await check("o'zi qo'ygan belgini olib ham tashlay oladi", async () => {
+    const r = await call("PATCH", "/api/checks", {
+      user: TEAM,
+      body: { projectSlug: slug, type: "k", seqNumber: 4, checked: false },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    const l = await call("GET", "/api/projects", { user: ADMIN });
+    const pr = l.json.projects.find((x) => x.id === slug);
+    assert.ok(!pr.checks["k-4"], "belgi olib tashlanmadi");
   });
 
   console.log("── TABEL (oylik yozuvlar) ────────────────────────");

@@ -4,7 +4,8 @@
 // Tizim faqat Telegram Mini App (X-Telegram-Init-Data) orqali ishlaydi —
 // alohida web-login/sessiya mavjud emas.
 
-require("../scripts/_env").loadEnv();
+// Testlar faqat alohida test bazasida ishlaydi — qarang: test/_db-guard.js
+require("./_db-guard").useTestDatabase();
 process.env.BOT_TOKEN = "";
 const assert = require("assert");
 const db = require("../netlify/functions/lib/db");

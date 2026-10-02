@@ -154,15 +154,43 @@ yaratishingiz ham mumkin.
 
 ## 7. Lokal test qilish
 
+### Avval: alohida test bazasi (MAJBURIY)
+
+Testlar haqiqiy Postgres'ga ulangan asl `api.js`ni real HTTP so'rovlar
+bilan sinaydi — ya'ni ular **haqiqiy yozuvlar yaratadi**: loyiha, xodim,
+vazifa, belgi, Ncoin. Shuning uchun ular **ishlab turgan bazada
+bajarilmaydi**: test o'rtasida uzilish bo'lsa real ma'lumot orasida
+qoldiq qoladi, va test paytidagi har bir yozuv real hisobotlarga
+(Tabel, Ncoin, devor ekrani) tushib turadi.
+
+1. Supabase'da **yangi, bo'sh** loyiha oching (bepul tarif yetarli).
+2. Uning connection string'ini `.env.local` ga yozing:
+
+   ```
+   TEST_DATABASE_URL='postgresql://postgres.xxxx:PAROL@aws-0-region.pooler.supabase.com:6543/postgres'
+   ```
+
+3. Sxemani test bazasiga qo'llang:
+
+   ```bash
+   npm run db:migrate:test
+   ```
+
+`TEST_DATABASE_URL` sozlanmagan bo'lsa testlar **ishga tushmaydi** —
+asosiy bazaga sukut bo'yicha tushib ketmasligi uchun (`test/_db-guard.js`).
+Ataylab asosiy bazada ishlatish kerak bo'lsa: `ALLOW_PROD_TESTS=1`.
+
+### Testlarni ishga tushirish
+
 ```bash
-node test/smoke.js
+npm test              # smoke: auth, loyiha/davr, ruxsat, check, rollover, cron
+npm run test:staff    # xodimlar, post tafsilotlari, tabel
+npm run test:profile  # profil, vazifalar, ish vaqti oralig'i, eskalatsiya
+npm run test:ncoin    # Ncoin hisob-kitobi
+npm run test:all      # hammasi ketma-ket
 ```
 
-Bu skript haqiqiy Postgres'ga ulangan asl `api.js`ni real HTTP so'rovlar
-bilan sinaydi (26 ta tekshiruv: autentifikatsiya, xodim/admin boshqaruvi,
-loyiha va davr yaratish, ruxsatlar, check belgilash, ko'p oylik rollover
-va qarz hisoblash, davrni tahrirlash/arxivlash, cron endpoint'lar). Barcha
-tekshiruvlar `✅` bo'lishi kerak.
+Barcha tekshiruvlar `✅` bo'lishi kerak.
 
 Netlify Functions'ni to'liq lokal muhitda (bot va Mini App bilan birga)
 sinash uchun:

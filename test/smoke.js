@@ -3,7 +3,8 @@
 // ilovasini haqiqiy HTTP so'rovlar bilan sinaydi. BOT_TOKEN atayin
 // o'rnatilmagan (test rejimi — initData imzosi tekshirilmaydi).
 
-require("../scripts/_env").loadEnv();
+// Testlar faqat alohida test bazasida ishlaydi — qarang: test/_db-guard.js
+require("./_db-guard").useTestDatabase();
 process.env.BOT_TOKEN = "";
 const assert = require("assert");
 const db = require("../netlify/functions/lib/db");

@@ -10,7 +10,9 @@
     "test": "node test/smoke.js",
     "test:staff": "node test/staff-worklog.js",
     "test:profile": "node test/profile-and-tasks.js",
-    "test:ncoin": "node test/ncoin.js"
+    "test:ncoin": "node test/ncoin.js",
+    "db:migrate:test": "node scripts/migrate.js --test",
+    "test:all": "npm test && npm run test:staff && npm run test:profile && npm run test:ncoin"
   },
   "dependencies": {
     "@vercel/blob": "^2.8.0",
