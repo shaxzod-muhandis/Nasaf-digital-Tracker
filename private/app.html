@@ -3740,6 +3740,11 @@
         flex-wrap: wrap;
         margin-bottom: 16px;
       }
+      /* Ichki `style` media-query'ni bosib ketardi — kenglik klassda. */
+      .tbx-head-main {
+        flex: 1;
+        min-width: 0;
+      }
       .tbx-h1 {
         font-size: 18px;
         font-weight: 600;
@@ -3751,6 +3756,117 @@
         color: var(--v3-t2);
         margin-top: 2px;
       }
+      /* ── Oy xulosasi ──────────────────────────────────────────── */
+      .tbx-sum {
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 14px;
+        padding: 16px 18px;
+        margin-bottom: 14px;
+      }
+      .tbx-sum-h {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--v3-t2);
+        margin-bottom: 12px;
+      }
+      .tbx-sum-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .tbx-sum-card {
+        min-width: 0;
+      }
+      .tbx-sum-card + .tbx-sum-card {
+        padding-left: 14px;
+        border-left: 1px solid var(--bd1);
+      }
+      .tbx-sum-l {
+        font-size: 11.5px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--v3-t3);
+      }
+      .tbx-sum-v {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        margin-top: 4px;
+      }
+      .tbx-sum-n {
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+        color: var(--ink);
+      }
+      .tbx-sum-n.bad {
+        color: var(--st-debt);
+      }
+      .tbx-sum-n.good {
+        color: var(--st-ahead);
+      }
+      .tbx-sum-n.warn {
+        color: var(--st-behind);
+      }
+      .tbx-sum-u {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--v3-t2);
+      }
+      .tbx-sum-note {
+        font-size: 11.5px;
+        color: var(--v3-t2);
+        margin-top: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .tbx-sum-note.up {
+        color: var(--st-ahead);
+        font-weight: 600;
+      }
+      .tbx-sum-note.down {
+        color: var(--st-debt);
+        font-weight: 600;
+      }
+      .tbx-sum-bar {
+        height: 6px;
+        border-radius: 99px;
+        background: var(--track);
+        overflow: hidden;
+        margin: 14px 0 12px;
+      }
+      .tbx-sum-bar i {
+        display: block;
+        height: 100%;
+        border-radius: 99px;
+        background: var(--brand);
+      }
+      .tbx-sum-worst {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        font-size: 12.5px;
+      }
+      .tbx-sum-worst-l {
+        color: var(--v3-t2);
+      }
+      .tbx-sum-worst-i {
+        padding: 3px 9px;
+        border-radius: 99px;
+        background: var(--st-debt-bg);
+        color: var(--st-debt);
+        font-weight: 500;
+        white-space: nowrap;
+      }
+      .tbx-sum-worst-i b {
+        font-weight: 700;
+      }
+
       .tbx-bar {
         display: flex;
         align-items: center;
@@ -4314,10 +4430,31 @@
         .tbx-legend {
           display: none;
         }
+        /* To'rtta ko'rsatkich 375px da yonma-yon sig'maydi — ikkitadan. */
+        .tbx-sum-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 14px 10px;
+        }
+        .tbx-sum-card + .tbx-sum-card {
+          padding-left: 0;
+          border-left: none;
+        }
+        .tbx-sum-card:nth-child(even) {
+          padding-left: 12px;
+          border-left: 1px solid var(--bd1);
+        }
+        .tbx-sum {
+          padding: 14px;
+        }
         /* Sarlavha oy tanlagich bilan yonma-yon sig'maydi — tor
            ustunga siqilib ketmasligi uchun o'z qatorini oladi. */
-        .tbx-head > div:first-child {
+        .tbx-head-main {
           flex: 1 0 100%;
+        }
+        /* Izoh qisqarib ketmasin — "o'tgan oy 64%" kabi ma'lumot
+           kartaning o'zida qolishi kerak. */
+        .tbx-sum-note {
+          white-space: normal;
         }
         .tbx-h2 {
           font-size: 12px;
@@ -14139,6 +14276,54 @@
         </div>`;
       }
 
+      // Oy xulosasi — Tabel ochilganda birinchi ko'rinadigan narsa:
+      // oy qanday o'tdi. Tafsilot (qaysi loyihada kim nima qildi)
+      // pastdagi jadvalda qoladi.
+      function tbxSummaryHtml() {
+        const s = tbx.summary;
+        if (!s) return "";
+        const over = tbxMonthOver();
+        const [, mm] = tbx.month.split("-").map(Number);
+
+        // O'tgan oy bilan solishtirish faqat oy tugagach ma'noli —
+        // oyning uchinchi kunida "80 punktga tushdi" deyish yolg'on
+        // bo'lardi, chunki oyning qolgan qismi hali oldinda.
+        let delta = "";
+        if (!over) {
+          delta = `<div class="tbx-sum-note">oy hali davom etmoqda</div>`;
+        } else if (s.deltaPct !== null && s.deltaPct !== 0) {
+          const up = s.deltaPct > 0;
+          delta = `<div class="tbx-sum-note ${up ? "up" : "down"}">${up ? "▲" : "▼"} ${Math.abs(s.deltaPct)} punkt · o'tgan oy ${s.prevDonePct}%</div>`;
+        } else if (s.deltaPct === 0) {
+          delta = `<div class="tbx-sum-note">o'tgan oy bilan bir xil</div>`;
+        }
+
+        const card = (label, value, unit, extra, cls) => `<div class="tbx-sum-card">
+          <div class="tbx-sum-l">${label}</div>
+          <div class="tbx-sum-v"><span class="tbx-sum-n${cls ? " " + cls : ""}">${value}</span>${unit ? `<span class="tbx-sum-u">${unit}</span>` : ""}</div>
+          ${extra || ""}
+        </div>`;
+
+        const worst = s.worst.length
+          ? `<div class="tbx-sum-worst">
+               <span class="tbx-sum-worst-l">${over ? "Eng ko'p bajarilmagani" : "Eng ko'p qolgani"}:</span>
+               ${s.worst.map((w) => `<span class="tbx-sum-worst-i">${escHtml(w.label)} <b>${w.missing}</b></span>`).join("")}
+             </div>`
+          : `<div class="tbx-sum-worst"><span class="tbx-sum-worst-l">Hamma loyihada reja bajarilgan ✓</span></div>`;
+
+        return `<div class="tbx-sum">
+          <div class="tbx-sum-h">${MONTHS[mm - 1]} qanday o'tdi</div>
+          <div class="tbx-sum-grid">
+            ${card("Reja", s.planned, "ish")}
+            ${card("Bajarildi", s.done, `${s.donePct}%`, delta)}
+            ${card(over ? "Bajarilmadi" : "Qoldi", s.missing, "ish", "", s.missing ? "bad" : "good")}
+            ${card("Zamena", s.substituted, "ish", s.unrecorded ? `<div class="tbx-sum-note">${s.unrecorded} ta bajaruvchi yozilmagan</div>` : "", s.substituted ? "warn" : "")}
+          </div>
+          <div class="tbx-sum-bar"><i style="width:${Math.min(100, s.donePct)}%"></i></div>
+          ${worst}
+        </div>`;
+      }
+
       function tbxRender(c) {
         if (!c || !tbx) return;
         const [y, mm] = worklogMonth.split("-").map(Number);
@@ -14146,7 +14331,7 @@
         const t = tbx.totals;
 
         const head = `<div class="tbx-head">
-          <div style="flex:1;min-width:0">
+          <div class="tbx-head-main">
             <div class="tbx-h1">Tabel</div>
             <div class="tbx-h2">Har loyihada kim qaysi rolda · sariq katakni bosing — kim zamena qilgani ochiladi</div>
           </div>
@@ -14214,6 +14399,7 @@
         </div>`;
 
         c.innerHTML = `${head}
+          ${tbxSummaryHtml()}
           <div class="tbx-bar">
             <div class="tbx-chips">${chips}</div>
             <div style="flex:1"></div>

@@ -1077,7 +1077,58 @@ async function buildTabelMatrix(month) {
     allOwn: projects.filter((p) => p.state === "own").length,
   };
 
-  return { month, roles: TABEL_ROLES, totals, projects };
+  // ── OY XULOSASI — "oy qanday o'tdi" ────────────────────────────────
+  // Ish birligi — bitta post yoki stories. Rollar bo'yicha qo'shib
+  // bo'lmaydi: bitta post uchta rolda uchta marta sanalardi, shuning
+  // uchun reja/bajarilgan davr maqsadi va `checks` soni bo'yicha
+  // olinadi. Zamena esa boshqa o'lcham — u hamma rollar bo'yicha
+  // yig'iladi, chunki har bir rolda alohida sodir bo'ladi.
+  const planned = cycles.reduce((n, c) => n + (c.posts_target || 0) + (c.stories_target || 0), 0);
+  const done = checksR.rows.length;
+  const substituted = projects.reduce((n, p) => n + p.substituted, 0);
+  const unrecorded = projects.reduce((n, p) => n + p.unrecorded, 0);
+
+  // O'tgan oy bilan solishtirish — "yaxshilandimi yoki yomonlashdimi"
+  // degan savolga javob. Bitta yengil so'rov, butun matritsani qayta
+  // qurmasdan.
+  const prev = (() => {
+    const [y, m] = month.split("-").map(Number);
+    const d = new Date(Date.UTC(y, m - 2, 1));
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+  })();
+  const prevR = await db.query(
+    `select coalesce(sum(pc.posts_target + pc.stories_target), 0)::int as planned,
+            (select count(*) from checks c
+               join project_cycles pc2 on pc2.id = c.cycle_id
+              where to_char(pc2.period_start, 'YYYY-MM') = $1)::int as done
+       from project_cycles pc
+      where to_char(pc.period_start, 'YYYY-MM') = $1`,
+    [prev],
+  );
+  const prevPlanned = prevR.rows[0]?.planned || 0;
+  const prevDone = prevR.rows[0]?.done || 0;
+  const prevPct = prevPlanned ? Math.round((prevDone / prevPlanned) * 100) : null;
+  const donePct = planned ? Math.round((done / planned) * 100) : 0;
+
+  const summary = {
+    planned,
+    done,
+    missing: Math.max(0, planned - done),
+    donePct,
+    substituted,
+    unrecorded,
+    prevMonth: prev,
+    prevDonePct: prevPct,
+    deltaPct: prevPct === null ? null : donePct - prevPct,
+    // Eng ko'p ish qolgan uchta loyiha — "muammo qayerda" degan
+    // savolga darhol javob.
+    worst: projects
+      .filter((p) => p.missing > 0)
+      .slice(0, 3)
+      .map((p) => ({ label: p.label, slug: p.slug, missing: p.missing })),
+  };
+
+  return { month, roles: TABEL_ROLES, totals, summary, projects };
 }
 
 app.get("/api/tabel/matrix", auth, async (req, res) => {
@@ -1102,12 +1153,40 @@ app.get("/api/tabel/export.xlsx", auth, async (req, res) => {
       state === "missing" ? S.MISSING : state === "sub" ? S.SUB : state === "own" ? S.OWN : S.PLAIN;
     const itemLabel = (it) => `${it.type === "k" ? "Post" : "Stories"} #${it.seq}`;
 
-    // ── 1-varaq: matritsa ────────────────────────────────────────────
+    // ── 1-varaq: oy xulosasi + matritsa ──────────────────────────────
+    // Fayl ko'pincha rahbariyatga ko'rsatish uchun ochiladi, shuning
+    // uchun birinchi ko'rinadigan narsa — oy qanday o'tgani.
+    const sm = m.summary;
+    const monthOver = month < new Date().toISOString().slice(0, 7);
+    const summaryRows = [
+      [{ v: `Tabel — ${month}`, s: S.BOLD }],
+      [
+        { v: "Reja", s: S.HEADER },
+        { v: "Bajarildi", s: S.HEADER },
+        { v: "Bajarilgani %", s: S.HEADER },
+        { v: monthOver ? "Bajarilmadi" : "Qoldi", s: S.HEADER },
+        { v: "Zamena", s: S.HEADER },
+        { v: "Bajaruvchi yozilmagan", s: S.HEADER },
+      ],
+      [
+        sm.planned,
+        sm.done,
+        `${sm.donePct}%`,
+        { v: sm.missing, s: sm.missing ? S.MISSING : S.OWN },
+        { v: sm.substituted, s: sm.substituted ? S.SUB : S.PLAIN },
+        sm.unrecorded,
+      ],
+      sm.prevDonePct !== null && monthOver
+        ? [{ v: `O'tgan oy (${sm.prevMonth}): ${sm.prevDonePct}% · farq ${sm.deltaPct > 0 ? "+" : ""}${sm.deltaPct} punkt` }]
+        : [{ v: monthOver ? "" : "Oy hali davom etmoqda" }],
+      [],
+    ];
+
     const header = [{ v: "Loyiha", s: S.HEADER }, { v: "Xodim", s: S.HEADER }];
     m.roles.forEach((r) => {
       header.push({ v: r.label, s: S.HEADER }, { v: "Bajarildi", s: S.HEADER }, { v: "Holat", s: S.HEADER });
     });
-    const matrixRows = [header];
+    const matrixRows = [...summaryRows, header];
     m.projects.forEach((p) => {
       const row = [p.label, p.staffCount];
       m.roles.forEach((r) => {
