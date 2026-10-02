@@ -7945,6 +7945,12 @@
         "Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun",
         "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr",
       ];
+      // Kartochka va ro'yxat qatori — zich joylar, to'liq oy nomi
+      // ("28-sentabr – 3-oktabr") sig'maydi.
+      const MONTHS_SHORT = [
+        "yan", "fev", "mar", "apr", "may", "iyn",
+        "iyl", "avg", "sen", "okt", "noy", "dek",
+      ];
 
       // ── SANA TANLAGICH — brauzerning nativ input[type=date] popover'i
       // dizayn tizimiga mos emas (hech qanday CSS bilan o'zgartirib
@@ -7977,6 +7983,17 @@
         const ma = MONTHS[a.getMonth()].toLowerCase();
         const ay = a.getFullYear() === b.getFullYear() ? "" : ` ${a.getFullYear()}`;
         return `${a.getDate()}-${ma}${ay} – ${b.getDate()}-${mb} ${b.getFullYear()}`;
+      }
+      // Ish oynasining qisqa yorlig'i: "3–8 okt" yoki oylar har xil
+      // bo'lsa "28 sen – 3 okt".
+      function fmtRangeShort(startIso, endIso) {
+        const a = parseISO(startIso);
+        const b = parseISO(endIso);
+        const mb = MONTHS_SHORT[b.getMonth()];
+        if (a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth()) {
+          return `${a.getDate()}–${b.getDate()} ${mb}`;
+        }
+        return `${a.getDate()} ${MONTHS_SHORT[a.getMonth()]} – ${b.getDate()} ${mb}`;
       }
       // Oraliqdagi kunlar soni (ikkala chekka ham kiradi).
       function rangeDayCount(startIso, endIso) {
@@ -10131,13 +10148,24 @@
           return { text: d ? fmtDay(parseISO(String(d).slice(0, 10))) : "—", cls: "norm" };
         }
         if (!t.dueDate) return { text: "Muddatsiz", cls: "norm" };
-        // Ish hali boshlanmagan bo'lsa, kartada muddatgacha qolgan kun
-        // emas, qachon boshlanishi ko'rsatiladi — aks holda hali
-        // navbati kelmagan vazifa shoshilinch ko'rinib qolardi.
-        if (t.startDate && isoOf(todayDate()) < t.startDate) {
-          return { text: `${fmtDay(parseISO(t.startDate))} dan`, cls: "norm" };
-        }
         const diff = daysBetween(todayDate(), parseISO(t.dueDate));
+        const cls = diff < 0 ? "late" : diff <= 2 ? "soon" : "norm";
+        // Ish oynasi bor bo'lsa — aynan o'sha oraliq ko'rsatiladi
+        // ("3–8 okt"). Avval faqat "3-oktabr dan" yozilardi: xodim
+        // qachon boshlashini ko'rardi-yu, qachongacha tugatishi
+        // kerakligini ko'rmasdi. Rang holatni aytadi: qizil —
+        // kechikkan, sariq — 2 kun ichida, kul rang — vaqt bor.
+        if (t.startDate && t.startDate !== t.dueDate) {
+          return { text: fmtRangeShort(t.startDate, t.dueDate), cls };
+        }
+        // Bir kunlik ishda oyna — o'sha kunning o'zi, shuning uchun
+        // "2 kun" emas, aynan qaysi kun ekani yoziladi.
+        if (t.startDate) {
+          const d = parseISO(t.startDate);
+          return { text: `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`, cls };
+        }
+        // Oraliqsiz (faqat muddatli) vazifada ko'rsatadigan oyna yo'q —
+        // avvalgidek muddatgacha qolgan vaqt yoziladi.
         if (diff < 0) return { text: `${-diff} kun kechikdi`, cls: "late" };
         if (diff === 0) return { text: "Bugun", cls: "late" };
         if (diff <= 2) return { text: `${diff} kun qoldi`, cls: "soon" };
