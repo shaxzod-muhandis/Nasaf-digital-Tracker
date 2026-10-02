@@ -2909,6 +2909,17 @@ async function findDebtBlockingProject(db, userId) {
   return null;
 }
 
+// Faqat balans — menyudagi Ncoin raqamini yangilash uchun. `/api/ncoin/me`
+// butun tranzaksiya tarixini qaytaradi va har bir amaldan keyin uni
+// tortib olish isrof bo'lardi; bu yerda bitta yengil so'rov.
+app.get("/api/ncoin/me/balance", auth, async (req, res) => {
+  try {
+    res.json({ balance: await getBalance(db, req.user.id) });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get("/api/ncoin/me", auth, async (req, res) => {
   try {
     const balance = await getBalance(db, req.user.id);

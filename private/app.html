@@ -8939,6 +8939,36 @@
         });
       }
 
+      // Menyudagi Ncoin raqami bitta shu funksiya orqali o'zgaradi —
+      // shu bilan birga profil sahifasidagi "Ncoin balansim" ham
+      // yangilanadi (ochiq bo'lsa), ya'ni ikkala joy hech qachon
+      // bir-biridan farq qilmaydi.
+      function setMyNcoinBalance(n) {
+        if (typeof n !== "number" || n === myNcoinBalance) return;
+        myNcoinBalance = n;
+        renderSidebar();
+        if (pfNcoinData) pfNcoinData.balance = n;
+        const pfVal = document.querySelector(".pf-ncoin-value");
+        if (pfVal) pfVal.textContent = fmtNcoin(n);
+      }
+      // Coin har xil sababdan o'zgaradi: ish belgilandi, vazifa yopildi,
+      // NShopdan xarid qilindi, admin qo'lda sozladi — va bularning bir
+      // qismini BOSHQA odam qiladi (masalan montajchi postni belgilasa,
+      // montaj qilgan xodim coin oladi). Shuning uchun balans har bir
+      // amaldan keyin va ilovaga qaytilganda qayta so'raladi.
+      let ncoinRefreshPending = false;
+      async function refreshMyNcoin() {
+        if (ncoinRefreshPending) return;
+        ncoinRefreshPending = true;
+        try {
+          const r = await apiFetch("/api/ncoin/me/balance");
+          if (r.ok) setMyNcoinBalance((await r.json()).balance);
+        } catch (e) {
+        } finally {
+          ncoinRefreshPending = false;
+        }
+      }
+
       function refreshAllViews() {
         const on = (id) =>
           document.getElementById(id).classList.contains("active");
@@ -8949,6 +8979,11 @@
         if (on("screen-history")) renderHistoryRows();
         if (on("screen-admin")) renderAdminActiveTab();
         if (on("screen-tracker")) renderTracker();
+        // Bu funksiya faqat biror amaldan keyin chaqiriladi (belgilash,
+        // vazifa holati, ruxsat...), shuning uchun balansni shu yerda
+        // bir marta so'rash yetarli — alohida chaqiruv joyini unutib
+        // qoldirish xavfi ham qolmaydi.
+        refreshMyNcoin();
       }
 
       // Barcha belgilashlar shu bitta funksiyadan o'tadi (Tracker, bugungi
@@ -15678,6 +15713,7 @@
             const ncoinRes = await apiFetch("/api/ncoin/me");
             if (ncoinRes.ok) {
               pfNcoinData = await ncoinRes.json();
+              setMyNcoinBalance(pfNcoinData.balance);
               renderProfilePage();
             }
           }
@@ -16013,6 +16049,9 @@
           const data = await res.json().catch(() => ({}));
           if (!res.ok) throw new Error(data.error || "Xatolik");
           document.querySelector(".overlay")?.remove();
+          // Javobda yangi balans bor — qo'shimcha so'rovsiz darhol
+          // qo'llaymiz, menyudagi raqam shu zahoti o'zgaradi.
+          setMyNcoinBalance(data.balance);
           showToast(`✅ ${data.product.name} sizniki! Yangi balans: ${fmtNcoin(data.balance)} Ncoin`);
           renderNShopScreen();
         } catch (e) {
@@ -17224,6 +17263,16 @@
         window
           .matchMedia("(min-width: 860px)")
           .addEventListener("change", refreshAllViews);
+
+        // Coinning bir qismini boshqa odam beradi (montajchi postni
+        // belgilasa, montaj qilgan xodim coin oladi; admin qo'lda
+        // qo'shadi). Ilova ochiq turganda bu o'zgarishlar bu yerga
+        // yetib kelmaydi, shuning uchun foydalanuvchi ilovaga qaytgan
+        // zahoti balans qayta so'raladi.
+        document.addEventListener("visibilitychange", () => {
+          if (!document.hidden) refreshMyNcoin();
+        });
+        window.addEventListener("focus", refreshMyNcoin);
 
         document.getElementById("loading").remove();
         // Jamoa faolligi — ilova ochilishini kutdirmasdan, fonda yuklanadi.
