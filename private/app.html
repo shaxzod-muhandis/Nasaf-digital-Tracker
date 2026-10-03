@@ -13115,7 +13115,12 @@
         const teamSet = new Set(cwd.projectUsernames || []);
         const pool = cwd.directory.filter((u) => u.username !== cwd.assigneeUsername);
         const team = pool.filter((u) => teamSet.has(u.username));
-        const others = pool.filter((u) => !teamSet.has(u.username) && (u.can_smm || u.canSmm));
+        // Loyihadan tashqaridagilarni faqat admin tanlay oladi (backend
+        // ham shunday tekshiradi). Oddiy xodimga ularni ko'rsatish
+        // ma'nosiz bo'lardi: tanlagan zahoti xato olardi.
+        const others = isAdmin
+          ? pool.filter((u) => !teamSet.has(u.username) && (u.can_smm || u.canSmm))
+          : pool.filter((u) => !teamSet.has(u.username) && u.username === currentUser);
         const assigneeHtml = cwd.assignee
           ? cwdPersonRowHtml(cwd.assignee, true)
           : `<div class="cwd-role" style="padding:2px 2px 6px">Bu loyihada rejadagi mas'ul belgilanmagan — Ruxsatlar bo'limidan «SMM» roli beriladi.</div>`;
@@ -13171,7 +13176,7 @@
             ${assigneeHtml}
             ${team.length ? `<div class="cwd-grouplbl">Loyiha jamoasi</div>` : ""}
             ${team.map((u) => cwdPersonRowHtml(u, false)).join("")}
-            ${others.length ? `<div class="cwd-grouplbl">Boshqa xodim</div>` : ""}
+            ${others.length ? `<div class="cwd-grouplbl">${isAdmin ? "Boshqa xodim" : "Men"}</div>` : ""}
             ${others.map((u) => cwdPersonRowHtml(u, false)).join("")}
             ${team.length || others.length ? "" : `<div class="cwd-role" style="padding:8px 2px 0">Boshqa xodim yo'q — loyihaga hali hech kim biriktirilmagan.</div>`}
           </div>

@@ -245,6 +245,42 @@ async function main() {
     const unames = (pr.assignees || []).map((a) => a.username);
     assert.ok(unames.includes(TEAM), `assignees: ${unames.join(",")}`);
   });
+  await check("jamoa a'zosi loyihadagi BOSHQA xodimni bajaruvchi qila oladi", async () => {
+    // Belgilash oynasi bajaruvchini sukut bo'yicha loyihaning SMM'iga
+    // qo'yadi. Avval bu faqat admin huquqi edi va jamoa a'zosi
+    // birinchi bosishdayoq 403 olardi — ya'ni umuman belgilay olmasdi.
+    const r = await call("PATCH", "/api/checks", {
+      user: TEAM,
+      body: {
+        projectSlug: slug,
+        type: "k",
+        seqNumber: 5,
+        checked: true,
+        performerUsername: EMP,
+        substitutionReason: "urgent",
+        workDate: "2026-08-22",
+      },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+  });
+  await check("loyihada ishlamaydigan xodimni bajaruvchi qila olmaydi (403)", async () => {
+    const r = await call("PATCH", "/api/checks", {
+      user: TEAM,
+      body: { projectSlug: slug, type: "k", seqNumber: 6, checked: true, performerUsername: ADMIN },
+    });
+    assert.strictEqual(r.status, 403, JSON.stringify(r.json));
+  });
+  await check("tozalash: qo'shimcha belgilar olib tashlanadi", async () => {
+    for (const n of [5, 6]) {
+      await call("PATCH", "/api/checks", {
+        user: ADMIN,
+        body: { projectSlug: slug, type: "k", seqNumber: n, checked: false },
+      });
+    }
+    const l = await call("GET", "/api/projects", { user: ADMIN });
+    const pr = l.json.projects.find((x) => x.id === slug);
+    assert.ok(!pr.checks["k-5"] && !pr.checks["k-6"], "belgilar qoldi");
+  });
   await check("o'zi qo'ygan belgini olib ham tashlay oladi", async () => {
     const r = await call("PATCH", "/api/checks", {
       user: TEAM,

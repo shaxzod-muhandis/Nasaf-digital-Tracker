@@ -2115,9 +2115,27 @@ app.patch("/api/checks", auth, async (req, res) => {
     const isSubstitution = !!assigneeId && String(performerId) !== String(assigneeId);
 
     if (checked) {
-      // Boshqa xodimni bajaruvchi qilib belgilash — faqat admin.
+      // Bajaruvchi — o'zi yoki SHU LOYIHAGA biriktirilgan xodim.
+      //
+      // Avval bu faqat admin huquqi edi, lekin oyna bajaruvchini sukut
+      // bo'yicha loyihaning SMM'iga qo'yadi — ya'ni loyiha jamoasining
+      // a'zosi (montajchi, mobilograf) bajarilgan ishni belgilamoqchi
+      // bo'lsa, birinchi bosishdayoq 403 olardi va umuman belgilay
+      // olmasdi.
+      //
+      // Loyihada ishlamaydigan xodimni ko'rsatish avvalgidek faqat
+      // adminga ochiq: belgilash Ncoin ham beradi, shuning uchun
+      // begona odamga ish yozib qo'yish yo'li ochiq qolmasligi kerak.
       if (performerIdRaw && String(performerIdRaw) !== String(req.user.id) && !isAdm) {
-        return res.status(403).json({ error: "Boshqa xodimni bajaruvchi qilib faqat admin belgilay oladi" });
+        const teamR = await db.query(
+          `select 1 from permissions where user_id = $1 and project_id = $2`,
+          [performerIdRaw, project.id],
+        );
+        if (!teamR.rows[0]) {
+          return res.status(403).json({
+            error: "Bu xodim bu loyihaga biriktirilmagan — uni bajaruvchi qilib faqat admin belgilay oladi",
+          });
+        }
       }
       // Sabab — bajaruvchi mas'uldan farq qilsa majburiy (yangi oqimda,
       // ya'ni bajaruvchi aniq tanlanganda).
