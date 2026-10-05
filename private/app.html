@@ -7,6 +7,10 @@
       content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
     />
     <meta name="format-detection" content="telephone=no" />
+    <!-- Server sahifani uzatishda bu joyga haqiqiy versiyani qo'yadi
+         (sendAppHtml). Lokal faylni to'g'ridan-to'g'ri ochganda
+         o'rinbosar matn qolaveradi va tekshiruv o'chadi. -->
+    <meta name="app-version" content="__APP_VERSION__" />
     <title>Nasaf Digital — Tracker</title>
     <script>
       // Saqlangan tema (agar bo'lsa) CSS chizishdan OLDIN qo'llanadi —
@@ -3756,6 +3760,151 @@
         color: var(--v3-t2);
         margin-top: 2px;
       }
+      /* ── BARMOQ UCHUN BOSISH MAYDONI ─────────────────────────────
+         Bu boshqaruvlar ro'yxat zichligi uchun ataylab past (24–29px),
+         lekin barmoq uchun shuncha joy kam. Ko'rinmas maydon ularni
+         ~44px gacha kengaytiradi: tartibga ta'sir qilmaydi, chunki
+         absolyut joylashgan. */
+      .tb-seg-btn,
+      .chip-btn,
+      .sec-hdr-a,
+      .tbx-chipbtn,
+      .cwd-reason,
+      .stat-link {
+        position: relative;
+      }
+      .tb-seg-btn::after,
+      .chip-btn::after,
+      .sec-hdr-a::after,
+      .tbx-chipbtn::after,
+      .cwd-reason::after,
+      .stat-link::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 50%;
+        height: 44px;
+        transform: translateY(-50%);
+      }
+      /* Juda past elementlarda (16px havola) yon tomonga ham biroz. */
+      .sec-hdr-a::after,
+      .stat-link::after {
+        left: -6px;
+        right: -6px;
+      }
+      .hdr-avatar-btn {
+        position: relative;
+      }
+      .hdr-avatar-btn::after {
+        content: "";
+        position: absolute;
+        inset: -5px;
+      }
+
+      /* ── KLAVIATURA BILAN YURISH ─────────────────────────────────
+         Telegram Desktop'da Tab bilan yurish mumkin, lekin hech qayerda
+         fokus ko'rinmasdi. `:focus-visible` — faqat klaviatura bilan
+         kelganda chiziladi, sichqoncha bosganda bezovta qilmaydi. */
+      :focus-visible {
+        outline: 2px solid var(--brand);
+        outline-offset: 2px;
+        border-radius: 6px;
+      }
+      .btn:focus-visible,
+      .chip-btn:focus-visible,
+      .tb-seg-btn:focus-visible,
+      .icon-btn:focus-visible {
+        outline-offset: 3px;
+      }
+
+      /* Internet yo'qligi — tepada, doimiy chiziq. */
+      .offline-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1900;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: calc(var(--tg-safe-top, 0px) + 7px) 14px 7px;
+        background: var(--st-debt);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 600;
+        text-align: center;
+      }
+      .offline-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 99px;
+        background: #fff;
+        flex: none;
+        animation: offlinePulse 1.4s ease-in-out infinite;
+      }
+      @keyframes offlinePulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.35; }
+      }
+
+      /* Yangi versiya banneri — pastda, ishni to'smaydigan tarzda. */
+      .new-version {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: calc(var(--tg-safe-bottom, 0px) + 74px);
+        z-index: 1800;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 10px 10px 14px;
+        border-radius: 12px;
+        background: var(--inkfill);
+        color: #fff;
+        box-shadow: 0 8px 24px rgba(14, 23, 38, 0.25);
+      }
+      .new-version-t {
+        flex: 1;
+        min-width: 0;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .new-version-btn {
+        height: 32px;
+        padding: 0 14px;
+        border: none;
+        border-radius: 9px;
+        background: #fff;
+        color: var(--inkfill);
+        font-family: inherit;
+        font-size: 12.5px;
+        font-weight: 700;
+        cursor: pointer;
+        flex: none;
+      }
+      .new-version-x {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 9px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer;
+        flex: none;
+      }
+      @media (min-width: 860px) {
+        .new-version {
+          left: auto;
+          right: 20px;
+          bottom: 20px;
+          width: 340px;
+        }
+      }
+
       /* ── Oy xulosasi ──────────────────────────────────────────── */
       .tbx-sum {
         background: var(--surf);
@@ -8931,13 +9080,80 @@
         const h = { "Content-Type": "application/json", ...(opts.headers || {}) };
         const id = getInitData();
         if (id) h["X-Telegram-Init-Data"] = id;
-        const res = await fetch(`${API}${url}`, { ...opts, headers: h });
-        if (res.status === 401 && !sessionExpiredShown) {
+        let res;
+        try {
+          res = await fetch(`${API}${url}`, { ...opts, headers: h });
+        } catch (e) {
+          // Tarmoq uzilgan. Avval bu xato jim yutilardi: ekranda eski
+          // ma'lumot turaverardi va xodim ko'rayotgan raqamlar
+          // eskirganini ham, amal bajarilmaganini ham bilmasdi.
+          showOffline();
+          throw e;
+        }
+        setOnline();
+        // 401 ikki xil bo'ladi: imzo umuman yo'q (Telegramdan tashqarida
+        // ochilgan — buning o'z ekrani bor) va imzo eskirgan. Faqat
+        // ikkinchisida "sessiya eskirdi" ko'rsatiladi, aks holda
+        // brauzerda ochgan odamga noto'g'ri sabab aytilardi.
+        if (res.status === 401 && !sessionExpiredShown && getInitData()) {
           sessionExpiredShown = true;
-          showSessionExpired();
+          res
+            .clone()
+            .json()
+            .then((d) => {
+              if (d?.code === "INVALID_SIGNATURE") showSessionExpired();
+            })
+            .catch(() => {});
         }
         return res;
       }
+
+      // ── ULANISH HOLATI ───────────────────────────────────────────
+      let offlineShown = false;
+      function showOffline() {
+        if (offlineShown) return;
+        offlineShown = true;
+        if (document.getElementById("offline-bar")) return;
+        const el = document.createElement("div");
+        el.id = "offline-bar";
+        el.className = "offline-bar";
+        el.innerHTML = `<span class="offline-dot"></span><span>Internet yo'q — ko'rsatilayotgan ma'lumot eskirgan bo'lishi mumkin</span>`;
+        document.body.appendChild(el);
+      }
+      function setOnline() {
+        if (!offlineShown) return;
+        offlineShown = false;
+        document.getElementById("offline-bar")?.remove();
+      }
+      // ── YANGI VERSIYA ────────────────────────────────────────────
+      // Telegram WebView yuklangan sahifani xotirada ushlaydi: deploy
+      // bo'lgach ham xodim eski ko'rinishni ko'raverardi va buni faqat
+      // ilovani butunlay yopib qayta ochish tuzatardi. Endi ilova
+      // o'zining versiyasini biladi va serverdagisi bilan solishtiradi.
+      const APP_VERSION = document.querySelector('meta[name="app-version"]')?.content || "";
+      let versionBannerShown = false;
+      async function checkAppVersion() {
+        // O'rinbosar matn — sahifa serverdan emas, faylda ochilgan.
+        if (!APP_VERSION || APP_VERSION.startsWith("__")) return;
+        if (versionBannerShown) return;
+        try {
+          const r = await fetch(`${API}/api/version`, { cache: "no-store" });
+          if (!r.ok) return;
+          const d = await r.json();
+          if (d.version && d.version !== APP_VERSION) showNewVersionBanner();
+        } catch (e) {}
+      }
+      function showNewVersionBanner() {
+        if (versionBannerShown) return;
+        versionBannerShown = true;
+        const el = document.createElement("div");
+        el.className = "new-version";
+        el.innerHTML = `<span class="new-version-t">Yangi versiya chiqdi</span>
+          <button type="button" class="new-version-btn" onclick="location.reload()">Yangilash</button>
+          <button type="button" class="new-version-x" aria-label="Yopish" onclick="this.parentElement.remove()">×</button>`;
+        document.body.appendChild(el);
+      }
+
       function showSessionExpired() {
         if (document.getElementById("session-expired")) return;
         const ov = document.createElement("div");
@@ -13855,8 +14071,8 @@
                     <div class="r-sub">${POSITION_LABELS[s.position] || s.position}</div>
                   </div>
                   <div class="m-actions-inline">
-                    <button class="icon-btn" onclick="openStaffEdit('${escArg(s.id)}')">${ICON.edit}</button>
-                    <button class="icon-btn danger" onclick="deleteStaff('${escArg(s.id)}','${escArg(s.fullName)}')">${ICON.trash}</button>
+                    <button class="icon-btn" aria-label="Tahrirlash" title="Tahrirlash" onclick="openStaffEdit('${escArg(s.id)}')">${ICON.edit}</button>
+                    <button class="icon-btn danger" aria-label="O'chirish" title="O'chirish" onclick="deleteStaff('${escArg(s.id)}','${escArg(s.fullName)}')">${ICON.trash}</button>
                   </div>
                 </div>`,
               )
@@ -13950,8 +14166,8 @@
               </div>
               ${userAccessBadgeHtml(u)}
               <div class="m-actions-inline">
-                <button class="icon-btn" onclick="openUserEditSheet('${escArg(u.username)}')">${ICON.edit}</button>
-                ${isSuperAdmin && u.access_status !== "removed" ? `<button class="icon-btn danger" onclick="deleteTelegramUser('${escArg(u.username)}','${escArg(displayName)}')">${ICON.trash}</button>` : ""}
+                <button class="icon-btn" aria-label="Xodimni tahrirlash" title="Xodimni tahrirlash" onclick="openUserEditSheet('${escArg(u.username)}')">${ICON.edit}</button>
+                ${isSuperAdmin && u.access_status !== "removed" ? `<button class="icon-btn danger" aria-label="Xodimni chiqarish" title="Xodimni chiqarish" onclick="deleteTelegramUser('${escArg(u.username)}','${escArg(displayName)}')">${ICON.trash}</button>` : ""}
               </div>
             </div>`;
           })
@@ -13971,8 +14187,8 @@
                   <div class="r-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(displayName)}</div>
                 </div>
                 <div class="m-actions-inline">
-                  <button class="icon-btn" onclick="openUserEditSheet('${escArg(u.username)}')">${ICON.edit}</button>
-                  ${isSuperAdmin && u.access_status !== "removed" ? `<button class="icon-btn danger" onclick="deleteTelegramUser('${escArg(u.username)}','${escArg(displayName)}')">${ICON.trash}</button>` : ""}
+                  <button class="icon-btn" aria-label="Xodimni tahrirlash" title="Xodimni tahrirlash" onclick="openUserEditSheet('${escArg(u.username)}')">${ICON.edit}</button>
+                  ${isSuperAdmin && u.access_status !== "removed" ? `<button class="icon-btn danger" aria-label="Xodimni chiqarish" title="Xodimni chiqarish" onclick="deleteTelegramUser('${escArg(u.username)}','${escArg(displayName)}')">${ICON.trash}</button>` : ""}
                 </div>
               </div>
               <div class="r-subrow">
@@ -14288,7 +14504,7 @@
               </div>
               <span class="tbx-chip">O'zi ${cell.own}</span>
               <span class="tbx-chip sub">Zamena ${cell.substituted}</span>
-              <button type="button" class="tbx-close" onclick="event.stopPropagation();tbxCloseCell()">${ICON.close}</button>
+              <button type="button" class="tbx-close" aria-label="Yopish" title="Yopish" onclick="event.stopPropagation();tbxCloseCell()">${ICON.close}</button>
             </div>
             <div class="tbx-dhint">Har katak — bitta ish. Rang — kim qilgani.</div>
             <div class="tbx-squares">${cells || `<div class="tbx-empty">Bu oyda bajarilgan ish yo'q</div>`}</div>
@@ -14481,8 +14697,8 @@
               </div>
               ${p.outstandingDebt ? `<span class="debt-badge">QARZ</span>` : ""}
               <div class="m-actions-inline">
-                <button class="icon-btn" onclick="openProjectEditSheet('${escArg(p.id)}')">${ICON.edit}</button>
-                <button class="icon-btn danger" onclick="archiveProject('${escArg(p.id)}','${escArg(p.label)}',this)">${ICON.trash}</button>
+                <button class="icon-btn" aria-label="Loyihani tahrirlash" title="Loyihani tahrirlash" onclick="openProjectEditSheet('${escArg(p.id)}')">${ICON.edit}</button>
+                <button class="icon-btn danger" aria-label="Loyihani arxivlash" title="Loyihani arxivlash" onclick="archiveProject('${escArg(p.id)}','${escArg(p.label)}',this)">${ICON.trash}</button>
               </div>
             </div>`,
           )
@@ -14497,8 +14713,8 @@
               </div>
               <div class="r-sub">${p.periodStart} – ${p.periodEnd}<br>Post ${p.doneK}/${p.k} · Stories ${p.doneS}/${p.s}</div>
               <div class="m-actions-inline" style="margin-top:12px">
-                <button class="icon-btn" onclick="openProjectEditSheet('${escArg(p.id)}')">${ICON.edit}</button>
-                <button class="icon-btn danger" onclick="archiveProject('${escArg(p.id)}','${escArg(p.label)}',this)">${ICON.trash}</button>
+                <button class="icon-btn" aria-label="Loyihani tahrirlash" title="Loyihani tahrirlash" onclick="openProjectEditSheet('${escArg(p.id)}')">${ICON.edit}</button>
+                <button class="icon-btn danger" aria-label="Loyihani arxivlash" title="Loyihani arxivlash" onclick="archiveProject('${escArg(p.id)}','${escArg(p.label)}',this)">${ICON.trash}</button>
               </div>
             </div>`,
           )
@@ -14614,7 +14830,7 @@
                 <div class="grp-sub ${assigned.length === 0 ? "warn" : ""}">${u.job_title ? escHtml(u.job_title) + " · " : ""}${assigned.length === 0 ? "loyiha biriktirilmagan" : `@${escHtml(u.username)}`}</div>
               </div>
               <div class="grp-count num">${assigned.length} loyiha</div>
-              <button class="icon-btn" onclick="openUserEditSheet('${escArg(u.username)}')">${ICON.edit}</button>
+              <button class="icon-btn" aria-label="Xodimni tahrirlash" title="Xodimni tahrirlash" onclick="openUserEditSheet('${escArg(u.username)}')">${ICON.edit}</button>
             </div>
             ${rows || `<div style="padding:12px 15px;font-size:12.5px;color:var(--t3)">Loyiha yo'q</div>`}
           </div>`;
@@ -15121,7 +15337,7 @@
             <div class="m-item-label">${escHtml(p.name)}</div>
             <div class="f-hint" style="margin:2px 0 0">🪙 ${fmtNcoin(p.price)} · qoldiq ${p.stock}/${p.stock_capacity} · ${p.sold_count} sotildi · ${p.is_visible ? "Ko'rinadi" : "Yashirilgan"}</div>
           </div>
-          <button type="button" class="icon-btn" onclick="openNShopProductMenu('${escArg(p.id)}')">⋯</button>
+          <button type="button" class="icon-btn" aria-label="Mahsulot amallari" title="Mahsulot amallari" onclick="openNShopProductMenu('${escArg(p.id)}')">⋯</button>
           <button type="button" class="btn btn-sm btn-soft" style="width:auto;padding:0 12px" onclick="toggleNShopVisible('${escArg(p.id)}',${p.is_visible})">${p.is_visible ? "Yashirish" : "Ko'rsatish"}</button>
           <button type="button" class="btn btn-sm btn-soft" style="width:auto;padding:0 12px" onclick="openNShopProductSheet('${escArg(p.id)}')">Tahrirlash</button>
         </div>`;
@@ -15150,8 +15366,8 @@
           <td><button type="button" class="tglsw brand ${p.is_visible ? "on" : ""}" onclick="toggleNShopVisible('${escArg(p.id)}',${p.is_visible})"><div class="knob"></div></button></td>
           <td style="text-align:right">
             <div style="display:flex;gap:6px;justify-content:flex-end">
-              <button type="button" class="icon-btn" onclick="openNShopProductSheet('${escArg(p.id)}')" title="Tahrirlash">✎</button>
-              <button type="button" class="icon-btn" onclick="openNShopProductMenu('${escArg(p.id)}')" title="Ko'proq">⋯</button>
+              <button type="button" class="icon-btn" aria-label="Mahsulot qo'shish" title="Mahsulot qo'shish" onclick="openNShopProductSheet('${escArg(p.id)}')" title="Tahrirlash">✎</button>
+              <button type="button" class="icon-btn" aria-label="Mahsulot amallari" title="Mahsulot amallari" onclick="openNShopProductMenu('${escArg(p.id)}')" title="Ko'proq">⋯</button>
             </div>
           </td>
         </tr>`;
@@ -17806,9 +18022,25 @@
         // yetib kelmaydi, shuning uchun foydalanuvchi ilovaga qaytgan
         // zahoti balans qayta so'raladi.
         document.addEventListener("visibilitychange", () => {
-          if (!document.hidden) refreshMyNcoin();
+          if (document.hidden) return;
+          refreshMyNcoin();
+          checkAppVersion();
         });
-        window.addEventListener("focus", refreshMyNcoin);
+        window.addEventListener("focus", () => {
+          refreshMyNcoin();
+          checkAppVersion();
+        });
+        // Ilova uzoq ochiq tursa, qaytib kirmasdan ham yangilanish
+        // borligini bilsin.
+        setTimeout(checkAppVersion, 60_000);
+        setInterval(checkAppVersion, 30 * 60_000);
+
+        // Brauzerning o'z signali — so'rov yuborilishini kutmasdan.
+        window.addEventListener("offline", showOffline);
+        window.addEventListener("online", () => {
+          setOnline();
+          refreshMyNcoin();
+        });
 
         document.getElementById("loading").remove();
         // Jamoa faolligi — ilova ochilishini kutdirmasdan, fonda yuklanadi.

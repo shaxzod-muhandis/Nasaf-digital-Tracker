@@ -13,6 +13,7 @@ const serverless = require("serverless-http");
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const crypto = require("crypto");
 const fs = require("fs");
 
 const db = require("./lib/db");
@@ -139,11 +140,26 @@ function formatUzPhone(str) {
 // Fayl bir marta o'qiladi va modul darajasida saqlanadi: deploy ichida
 // u o'zgarmaydi, har so'rovda 556 KB ni diskdan qayta o'qishning
 // ma'nosi yo'q.
+// Ilovaning joriy versiyasi — `app.html` mazmunidan hisoblangan qisqa
+// xesh. Telegram WebView yuklangan sahifani xotirada ushlab turadi va
+// deploydan keyin ham eski ko'rinishni ko'rsataverardi — foydalanuvchiga
+// har safar "ilovani yopib qayta oching" deyishga to'g'ri kelardi.
+// Endi sahifa o'z versiyasini biladi va yangisi chiqqanini o'zi sezadi.
 let _appHtmlCache = null;
-function sendAppHtml(res) {
+let _appVersion = null;
+function appVersion() {
+  if (_appVersion === null) loadAppHtml();
+  return _appVersion;
+}
+function loadAppHtml() {
   const appPath = path.join(process.cwd(), "private", "app.html");
+  const raw = fs.readFileSync(appPath, "utf8");
+  _appVersion = crypto.createHash("sha1").update(raw).digest("hex").slice(0, 12);
+  _appHtmlCache = raw.replace(/__APP_VERSION__/g, _appVersion);
+}
+function sendAppHtml(res) {
   try {
-    if (_appHtmlCache === null) _appHtmlCache = fs.readFileSync(appPath, "utf8");
+    if (_appHtmlCache === null) loadAppHtml();
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     // "no-cache" — brauzer nusxani saqlaydi, lekin har safar
     // "o'zgardimi?" deb so'raydi. O'zgarmagan bo'lsa ETag orqali 304
@@ -191,6 +207,14 @@ app.post("/api/auth", auth, (req, res) => {
 });
 
 // ── /api/register-chat ──────────────────────────────────────────────
+// Ilova versiyasi — mijoz o'zinikini shu bilan solishtiradi. Ataylab
+// auth'siz: bu maxfiy ma'lumot emas va sessiya eskirgan bo'lsa ham
+// "yangilash kerak" degan xabar ko'rsatilishi kerak.
+app.get("/api/version", (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  res.json({ version: appVersion() });
+});
+
 app.post("/api/register-chat", auth, async (req, res) => {
   try {
     const { chatId } = req.body;
