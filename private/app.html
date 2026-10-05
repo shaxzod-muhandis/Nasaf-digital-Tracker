@@ -10365,10 +10365,11 @@
           .trim();
         let list = projects.filter((p) => !q || p.label.toLowerCase().includes(q));
         if (projFilter === "debt") list = list.filter((p) => p.outstandingDebt);
+        // "Mening" — menga biriktirilgan loyihalar. Avval shart
+        // `isAdmin || ...` edi: admin uchun hamma loyiha o'tib ketardi
+        // va filtr "Hammasi"dan farq qilmasdi.
         else if (projFilter === "mine")
-          list = list.filter(
-            (p) => isAdmin || (perms[currentUser] || []).includes(p.id),
-          );
+          list = list.filter((p) => (perms[currentUser] || []).includes(p.id));
         else if (projFilter === "done")
           list = list.filter((p) => projPct(p) >= 100);
 
@@ -12731,8 +12732,11 @@
           .trim();
         const filtered = histState.rows
           .filter(({ project, cycle }) => {
-            const status =
-              cycle.status === "active" ? "active" : cycle.isDebt ? "debt" : "done";
+            // Qarz — "davom etmoqda"dan ustun. Avval `active` birinchi
+            // tekshirilardi, shuning uchun muddati o'tgan-u hali
+            // yopilmagan davr "Joriy" bo'lib qolardi va "Qarzli"
+            // filtriga hech qachon tushmasdi.
+            const status = cycle.isDebt ? "debt" : cycle.status === "active" ? "active" : "done";
             const hay =
               `${project.label} ${project.id} ${cycle.periodStart} ${cycle.periodEnd}`.toLowerCase();
             return (
@@ -12767,12 +12771,7 @@
               const done = (cycle.doneK || 0) + (cycle.doneS || 0);
               const total = (cycle.k || 0) + (cycle.s || 0);
               const percent = pct(done, total);
-              const status =
-                cycle.status === "active"
-                  ? "active"
-                  : cycle.isDebt
-                    ? "debt"
-                    : "done";
+              const status = cycle.isDebt ? "debt" : cycle.status === "active" ? "active" : "done";
               const statusLabel =
                 status === "active" ? "Joriy" : status === "debt" ? "Qarz" : "Tugagan";
               const assignees = Object.entries(perms)

@@ -1790,6 +1790,7 @@ app.get("/api/projects/:slug/cycles", auth, async (req, res) => {
       [project.id],
     );
     const cycles = [];
+    const today = todayTashkent();
     for (const c of cyclesR.rows) {
       const { doneK, doneS } = await countDoneChecks(db, c.id);
       const checksR = await db.query(`select type, seq_number from checks where cycle_id = $1`, [c.id]);
@@ -1797,6 +1798,13 @@ app.get("/api/projects/:slug/cycles", auth, async (req, res) => {
       checksR.rows.forEach((row) => {
         checksMap[`${row.type}-${row.seq_number}`] = true;
       });
+      // `is_debt` ustuni faqat davr YOPILGANDA yoziladi. Shu sababli
+      // muddati o'tgan, lekin hali yopilmagan davr bu yerda "qarz emas"
+      // bo'lib ko'rinardi va Tarixdagi "Qarzli" filtri aynan hozirgi
+      // qarzlarni topa olmasdi — Loyihalar ekrani esa o'sha davrlarni
+      // qarz deb ko'rsatib turardi. Endi ikkala joyda bitta ta'rif:
+      // muddat o'tgan va maqsadga yetilmagan bo'lsa — qarz.
+      const kechikkan = c.period_end < today && (doneK < c.posts_target || doneS < c.stories_target);
       cycles.push({
         cycleId: c.id,
         cycleIndex: c.cycle_index,
@@ -1807,7 +1815,7 @@ app.get("/api/projects/:slug/cycles", auth, async (req, res) => {
         doneK,
         doneS,
         status: c.status,
-        isDebt: c.is_debt,
+        isDebt: !!c.is_debt || kechikkan,
         checks: checksMap,
       });
     }
