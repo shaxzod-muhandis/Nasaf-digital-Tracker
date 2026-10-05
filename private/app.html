@@ -10335,6 +10335,26 @@
           </div>
         </div>`;
       }
+      // Qarz hajmi — bajarilmay qolgan post va stories soni. Ro'yxat
+      // shu bo'yicha kattadan kichikka saralanadi: eng og'ir qarz
+      // tepada turishi kerak, aks holda ro'yxat tasodifiy tartibda
+      // chiqib, qaysi loyiha eng muammoli ekani ko'rinmasdi.
+      function projDebtSize(p) {
+        const d = p.outstandingDebt;
+        if (!d) return 0;
+        return (d.remainingPosts || 0) + (d.remainingStories || 0);
+      }
+      function sortByDebt(list) {
+        return [...list].sort(
+          (a, b) =>
+            projDebtSize(b) - projDebtSize(a) ||
+            // Teng bo'lsa — muddati qachonroq o'tgani tepada.
+            String(a.outstandingDebt?.periodEnd || "").localeCompare(
+              String(b.outstandingDebt?.periodEnd || ""),
+            ) ||
+            a.label.localeCompare(b.label),
+        );
+      }
       function setProjFilter(k) {
         projFilter = k;
         renderProjectsScreen();
@@ -10382,7 +10402,7 @@
         }
 
         const today = todayDate();
-        const overdue = list.filter((p) => p.outstandingDebt);
+        const overdue = sortByDebt(list.filter((p) => p.outstandingDebt));
         const active = list.filter((p) => !p.outstandingDebt);
         let html = `<div class="mobile-only">`;
         if (overdue.length) {
@@ -10634,7 +10654,9 @@
         let sel = list.find((p) => p.id === pdeskId) || list[0] || null;
         if (sel) pdeskId = sel.id;
 
-        const needsAttention = list.filter((p) => ["debt", "behind", "mid"].includes(projStatus(p)));
+        const needsAttention = sortByDebt(
+          list.filter((p) => ["debt", "behind", "mid"].includes(projStatus(p))),
+        );
         const doingWell = list.filter((p) => !["debt", "behind", "mid"].includes(projStatus(p)));
 
         const itemHtml = (p) => {
