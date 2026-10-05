@@ -12,8 +12,24 @@
 
 const crypto = require("crypto");
 
+// `initData` qancha vaqt yaroqli. Telegram `auth_date` beradi va
+// tavsiyasi — eski ma'lumotni rad etish. Busiz bir marta qo'lga tushgan
+// satr (masalan brauzer tarixidan yoki log'dan) abadiy ishlayverardi.
+const INIT_DATA_MAX_AGE_SEC = 24 * 60 * 60;
+
 function verifyTelegramInitData(raw, botToken) {
-  if (!botToken) return true; // lokal test rejimi (eski kod bilan bir xil xulq-atvor)
+  // Imzosiz rejim — FAQAT lokal test uchun. Avval shunchaki
+  // `if (!botToken) return true` edi: production'da env o'zgaruvchisi
+  // yo'qolsa yoki yangi muhitga ko'chirilmasa, autentifikatsiya
+  // butunlay o'chib qolardi va har kim istalgan username bilan
+  // (shu jumladan super admin bo'lib) kira olardi.
+  if (!botToken) {
+    if (process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production") {
+      console.error("BOT_TOKEN sozlanmagan — production'da imzosiz kirishga ruxsat berilmaydi");
+      return false;
+    }
+    return true;
+  }
   try {
     const params = new URLSearchParams(raw);
     const hash = params.get("hash");
@@ -24,9 +40,21 @@ function verifyTelegramInitData(raw, botToken) {
       .map(([k, v]) => `${k}=${v}`)
       .join("\n");
     const secret = crypto.createHmac("sha256", "WebAppData").update(botToken).digest();
-    return (
-      crypto.createHmac("sha256", secret).update(checkStr).digest("hex") === hash
-    );
+    const expected = crypto.createHmac("sha256", secret).update(checkStr).digest("hex");
+    // Vaqt bo'yicha teng solishtirish — hash'ni belgima-belgi taxmin
+    // qilish yo'lini yopadi.
+    const a = Buffer.from(hash, "hex");
+    const b = Buffer.from(expected, "hex");
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return false;
+
+    // Muddat. `auth_date` — Unix soniya.
+    const authDate = Number(params.get("auth_date"));
+    if (!Number.isFinite(authDate)) return false;
+    const age = Math.floor(Date.now() / 1000) - authDate;
+    if (age > INIT_DATA_MAX_AGE_SEC) return false;
+    // Kelajakdagi sana ham shubhali (soat farqiga biroz yon beriladi).
+    if (age < -300) return false;
+    return true;
   } catch {
     return false;
   }

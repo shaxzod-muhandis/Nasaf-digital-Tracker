@@ -4,7 +4,7 @@ Bu hujjat `docs/ROADMAP.md`da rejalashtirilgan ishning birinchi ikki bosqichini
 (Faza 0: xavfsizlik tozalash, Faza 1: Supabase/Postgres'ga o'tish + davr
 motori) ishga tushirish uchun amaliy qo'llanma. Kodning o'zi allaqachon
 yozilgan va 26 ta integratsion test bilan tekshirilgan — bu qo'llanma faqat
-uni sizning haqiqiy Supabase va Netlify muhitingizga ulash bo'yicha.
+uni sizning haqiqiy Supabase va Vercel muhitingizga ulash bo'yicha.
 
 ## 0. Avval — XAVFSIZLIK: eski kalitlarni bekor qiling
 
@@ -18,15 +18,6 @@ kerak:
 1. **Telegram bot tokeni**: Telegram'da [@BotFather](https://t.me/BotFather) →
    botingizni tanlang → `/token` → "Revoke current token" → yangi token oling.
    Yangisini keyingi qadamlarda `BOT_TOKEN` sifatida ishlatasiz.
-2. **JSONBin API kaliti**: [jsonbin.io](https://jsonbin.io) dashboard →
-   API Keys → eski kalitni o'chiring (yoki "Regenerate") → yangisini oling.
-   Bu kalit endi faqat bir martalik migratsiya skripti uchun kerak bo'ladi
-   (pastga qarang), keyin butunlay tashlab yuborish mumkin.
-
-Migratsiya skriptini sinab ko'rishda eski kalit bilan JSONBin'ga **GET**
-so'rovi 403 (ruxsatsiz) qaytardi — demak u allaqachon amal qilmay qolgan
-yoki noto'g'ri bo'lishi mumkin. Har holda, yuqoridagi ikkala kalitni ham
-yangilashni tavsiya qilamiz.
 
 ## 1. Supabase loyihasini yaratish
 
@@ -38,7 +29,7 @@ yangilashni tavsiya qilamiz.
    ```
    postgresql://postgres.xxxxxxxxxxxx:[YOUR-PASSWORD]@aws-0-region.pooler.supabase.com:6543/postgres
    ```
-   Netlify Functions har chaqiriqda yangi (yoki qayta ishlatiladigan
+   Serverless funksiya har chaqiriqda yangi (yoki qayta ishlatiladigan
    "warm") ulanish ochishi mumkin bo'lgani uchun aynan **pooler** (6543)
    rejimi kerak — oddiy to'g'ridan-to'g'ri ulanish (5432) emas.
 
@@ -122,36 +113,6 @@ jadvaliga kiritadi. Agar avvalgi tizimda kimdir admin panelidan dinamik
 admin qilib tayinlangan bo'lsa, buni **Boshqaruv → Adminlar** bo'limidan
 qayta belgilashni unutmang — seed skripti buni bilmaydi.
 
-## 6. Eski JSONBin ma'lumotlarini ko'chirish (agar kerak bo'lsa)
-
-Agar hozirgi JSONBin'dagi bin'da haqiqiy loyihalar/belgilar bo'lsa va
-ularni yo'qotmasdan Postgres'ga o'tkazmoqchi bo'lsangiz:
-
-```bash
-# .env fayliga vaqtinchalik JSONBIN_BIN_ID va JSONBIN_KEY (yangi
-# rotatsiya qilingan) qiymatlarini qo'shing, keyin:
-
-node scripts/migrate-from-jsonbin.js --dry-run
-```
-
-`--dry-run` hech narsa yozmaydi — faqat nima ko'chirilishini konsolga
-chiqaradi (necha loyiha, necha foydalanuvchi, necha belgi topilgani).
-Natija to'g'ri ko'ringach:
-
-```bash
-node scripts/migrate-from-jsonbin.js --yes
-```
-
-**Muhim**: bu skript faqat **bo'sh** (yangi migratsiya qilingan, lekin
-hali loyihasiz) Postgres bazasida bir marta ishga tushirish uchun
-mo'ljallangan. Ikki marta ishga tushirish loyihalarni/belgilarni
-takrorlashi mumkin.
-
-Agar hozircha JSONBin'da jiddiy ma'lumot yo'q bo'lsa (masalan hali test
-bosqichida bo'lsangiz), bu qadamni butunlay o'tkazib yuborishingiz va
-`npm run db:seed`dan keyin admin panel orqali loyihalarni qo'lda qayta
-yaratishingiz ham mumkin.
-
 ## 7. Lokal test qilish
 
 ### Avval: alohida test bazasi (MAJBURIY)
@@ -192,34 +153,32 @@ npm run test:all      # hammasi ketma-ket
 
 Barcha tekshiruvlar `✅` bo'lishi kerak.
 
-Netlify Functions'ni to'liq lokal muhitda (bot va Mini App bilan birga)
+Ilovani to'liq lokal muhitda (bot va Mini App bilan birga)
 sinash uchun:
 
 ```bash
 npm run dev
 ```
 
-## 8. Netlify'ga deploy qilish
+## 8. Vercel'ga deploy qilish
 
-Netlify dashboard → Site settings → **Environment variables** bo'limida
-quyidagilarni qo'shing (qiymatlar `.env` fayldagi bilan bir xil, faqat
-`DATABASE_URL` — bu safar to'g'ridan-to'g'ri Supabase production
-qiymati):
+Loyiha Vercel'da ishlaydi. `vercel.json` hamma `/api/*` so'rovini bitta
+funksiyaga (`api/index.js`) yo'naltiradi — bu ataylab shunday: avval
+`api/[...path].js` catch-all funksiyasi ko'p segmentli yo'llarni
+(`/api/users/directory` kabi) noto'g'ri ishlatgan edi.
 
-| Nomi | Tavsif |
-|---|---|
-| `DATABASE_URL` | Supabase pooler ulanish satri |
-| `BOT_TOKEN` | Telegram bot tokeni |
-| `ADMIN_CHAT_IDS` | Bildirishnoma oluvchilar chat ID'lari (vergul bilan) |
-| `CRON_SECRET` | Cron so'rovlarini himoyalash uchun maxfiy so'z |
-
-So'ng oddiy `git push` (yoki Netlify CLI orqali) deploy qiling.
+1. Repo'ni Vercel loyihasiga ulang (har push avtomatik deploy bo'ladi).
+2. Project Settings → Environment Variables ga quyidagilarni qo'shing:
+   `DATABASE_URL`, `BOT_TOKEN`, `APP_URL`, `CRON_SECRET`,
+   `ADMIN_CHAT_IDS`, `BLOB_READ_WRITE_TOKEN`.
+3. `BOT_TOKEN` **majburiy**: usiz production'da hech kim kira olmaydi
+   (imzo tekshiruvi o'chmasligi uchun ataylab shunday).
+4. BotFather'da Mini App manzilini deploy URL'iga qo'ying.
 
 ## 9. Kunlik/davriy avtomatlashtirish (cron)
 
-**Tashqi xizmat sozlash shart emas** — `netlify/functions/scheduled-daily.js`
-Netlify'ning o'z ichki "Scheduled Functions" imkoniyati orqali (bu
-fayldagi `netlify.toml`da `schedule = "0 3 * * *"` — har kuni 03:00 UTC,
+**Tashqi xizmat sozlash shart emas** — Vercel Cron `vercel.json`dagi
+jadval bo'yicha (`"schedule": "0 3 * * *"` — har kuni 03:00 UTC,
 ya'ni 08:00 Toshkent vaqtida) avtomatik ishga tushadi va quyidagi uchta
 endpoint'ni ketma-ket, o'zi chaqiradi. Deploy qilinganidan keyin hech
 kim qo'lda hech narsa sozlashi shart emas.
@@ -251,7 +210,7 @@ talab qiladi:
 Barcha so'rovlar shunday ko'rinishda bo'lishi kerak:
 
 ```
-POST https://SIZNING-SAYTINGIZ.netlify.app/api/cycles/rollover
+POST https://SIZNING-SAYTINGIZ.vercel.app/api/cycles/rollover
 Header: X-Cron-Secret: <CRON_SECRET qiymati>
 ```
 
@@ -281,7 +240,7 @@ Header: X-Cron-Secret: <CRON_SECRET qiymati>
   yangi xodim qo'shish uchun kod deploy qilish shart emas, to'g'ridan-
   to'g'ri admin panelidan qo'shiladi.
 - **Adminlik xatosi tuzatildi**: eskiroq tizimda `POST /api/admins`
-  orqali admin qilingan xodim faqat Netlify funksiyasi "issiq" turgan
+  orqali admin qilingan xodim faqat funksiya "issiq" turgan
   vaqtgacha admin bo'lib qolar edi (xotirada saqlanardi), keyingi "sovuq
   start"da bu unutilardi. Endi bu ma'lumot bazada saqlanadi va doimiy.
 

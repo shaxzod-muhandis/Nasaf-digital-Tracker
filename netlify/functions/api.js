@@ -215,7 +215,7 @@ app.post("/api/register-chat", auth, async (req, res) => {
     );
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/register-chat");
   }
 });
 
@@ -309,7 +309,7 @@ app.post("/api/me/celebration-sound", auth, async (req, res) => {
     celebrationSoundOffUntil = 0;
     res.json({ ok: true, url: blob.url });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/me/celebration-sound");
   }
 });
 
@@ -329,7 +329,7 @@ app.patch("/api/me/celebration-sound", auth, async (req, res) => {
     if (e.code === "42703") {
       return res.status(503).json({ error: "Bu imkoniyat hali yoqilmagan (baza yangilanishi kerak)" });
     }
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "PATCH /api/me/celebration-sound");
   }
 });
 
@@ -342,7 +342,7 @@ app.delete("/api/me/celebration-sound", auth, async (req, res) => {
     res.json({ ok: true });
   } catch (e) {
     if (e.code === "42703") return res.json({ ok: true });
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "DELETE /api/me/celebration-sound");
   }
 });
 
@@ -424,7 +424,7 @@ app.patch("/api/me", auth, async (req, res) => {
     await db.query(`update users set ${sets.join(", ")} where id = $${values.length}`, values);
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "PATCH /api/me");
   }
 });
 
@@ -436,7 +436,7 @@ app.post("/api/me/birthday-ack", auth, async (req, res) => {
     await db.query(`update users set birthday_ack_date = $1 where id = $2`, [todayTashkent(), req.user.id]);
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/me/birthday-ack");
   }
 });
 
@@ -504,7 +504,7 @@ app.get("/api/activity-stats", auth, async (req, res) => {
       teamAvgDailyActivity: teamAvgR.rows[0]?.avg || 1,
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/activity-stats");
   }
 });
 
@@ -522,7 +522,7 @@ app.get("/api/users", auth, async (req, res) => {
     );
     res.json({ users: r.rows });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/users");
   }
 });
 
@@ -548,7 +548,7 @@ app.get("/api/users/directory", auth, async (req, res) => {
     );
     res.json({ users: r.rows });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/users/directory");
   }
 });
 
@@ -603,7 +603,7 @@ app.post("/api/users", auth, async (req, res) => {
     delete newUser.was_inserted;
     res.json({ ok: true, user: newUser });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/users");
   }
 });
 
@@ -641,7 +641,7 @@ app.patch("/api/users/:username/access", auth, async (req, res) => {
     }
     res.json({ ok: true, user: r.rows[0] });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "PATCH /api/users/:username/access");
   }
 });
 
@@ -680,7 +680,7 @@ app.patch("/api/users/:username", auth, async (req, res) => {
     if (!r.rows[0]) return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
     res.json({ ok: true, user: r.rows[0] });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "PATCH /api/users/:username");
   }
 });
 
@@ -696,7 +696,7 @@ app.get("/api/admins", auth, async (req, res) => {
       dynamicAdmins: r.rows.filter((u) => u.role === "admin").map((u) => u.username),
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/admins");
   }
 });
 
@@ -718,7 +718,7 @@ app.post("/api/admins", auth, async (req, res) => {
     const r = await db.query(`select username from users where role = 'admin' order by username`);
     res.json({ ok: true, admins: r.rows.map((x) => x.username) });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/admins");
   }
 });
 
@@ -730,7 +730,7 @@ app.delete("/api/admins/:username", auth, async (req, res) => {
     const r = await db.query(`select username from users where role = 'admin' order by username`);
     res.json({ ok: true, admins: r.rows.map((x) => x.username) });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "DELETE /api/admins/:username");
   }
 });
 
@@ -763,7 +763,7 @@ app.get("/api/staff", auth, async (req, res) => {
       positions: STAFF_POSITIONS,
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/staff");
   }
 });
 
@@ -791,7 +791,7 @@ app.post("/api/staff", auth, async (req, res) => {
       staff: { id: r.rows[0].id, fullName: r.rows[0].full_name, position: r.rows[0].position },
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/staff");
   }
 });
 
@@ -819,7 +819,7 @@ app.patch("/api/staff/:id", auth, async (req, res) => {
     ]);
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "PATCH /api/staff/:id");
   }
 });
 
@@ -830,7 +830,7 @@ app.delete("/api/staff/:id", auth, async (req, res) => {
     await db.query(`update staff set is_active = false where id = $1`, [req.params.id]);
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "DELETE /api/staff/:id");
   }
 });
 
@@ -848,6 +848,14 @@ app.delete("/api/staff/:id", auth, async (req, res) => {
 //   qo'shimcha  = performer = xodim, assignee boshqa
 //   qolgan      = reja − (o'zi + o'rniga), manfiy bo'lsa 0
 const { buildXlsx, STYLE: XLSX_STYLE } = require("./lib/xlsx");
+
+// Server xatosi — mijozga umumiy xabar, batafsili faqat log'ga.
+// Avval `e.message` to'g'ridan-to'g'ri javobga tushardi: Postgres
+// xatolari jadval va ustun nomlarini oshkor qilardi.
+function serverError(res, e, where) {
+  console.error(`[${where}]`, e && e.stack ? e.stack : e);
+  res.status(500).json({ error: "Server xatosi. Birozdan keyin qayta urinib ko'ring." });
+}
 
 const TABEL_REASONS = { sick: "Kasallik", vacation: "Ta'til", urgent: "Shoshilinch", other: "Boshqa" };
 
@@ -1138,7 +1146,7 @@ app.get("/api/tabel/matrix", auth, async (req, res) => {
   try {
     res.json(await buildTabelMatrix(month));
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/tabel/matrix");
   }
 });
 
@@ -1296,7 +1304,7 @@ app.get("/api/tabel/export.xlsx", auth, async (req, res) => {
     res.setHeader("Content-Disposition", `attachment; filename="tabel-${month}.xlsx"`);
     res.send(buf);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/tabel/export.xlsx");
   }
 });
 
@@ -1373,7 +1381,7 @@ app.get("/api/worklog", auth, async (req, res) => {
       totalMarked: r.rows.length,
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/worklog");
   }
 });
 
@@ -1395,7 +1403,7 @@ app.get("/api/permissions", auth, async (req, res) => {
     });
     res.json(out);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/permissions");
   }
 });
 
@@ -1459,7 +1467,7 @@ app.put("/api/permissions", auth, async (req, res) => {
     );
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "PUT /api/permissions");
   }
 });
 
@@ -1484,7 +1492,7 @@ app.get("/api/permissions/roles", auth, async (req, res) => {
     });
     res.json({ roles: out });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/permissions/roles");
   }
 });
 
@@ -1508,7 +1516,7 @@ app.patch("/api/permissions/role", auth, async (req, res) => {
     if (!r.rows[0]) return res.status(400).json({ error: "Avval loyihaga ruxsat bering" });
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "PATCH /api/permissions/role");
   }
 });
 
@@ -1625,7 +1633,7 @@ app.get("/api/team-activity", auth, async (req, res) => {
     const days = r.rows;
     res.json({ days, todayCount: days.length ? days[days.length - 1].count : 0 });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/team-activity");
   }
 });
 
@@ -1737,7 +1745,7 @@ app.get("/api/projects", auth, async (req, res) => {
     projects.push(...builtProjects);
     res.json({ projects, isAdmin: isAdm });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/projects");
   }
 });
 
@@ -1784,7 +1792,7 @@ app.get("/api/projects/:slug/cycles", auth, async (req, res) => {
       cycles,
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/projects/:slug/cycles");
   }
 });
 
@@ -1847,7 +1855,7 @@ app.post("/api/projects", auth, async (req, res) => {
       },
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/projects");
   }
 });
 
@@ -1923,7 +1931,7 @@ app.put("/api/projects/:slug", auth, async (req, res) => {
     }
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "PUT /api/projects/:slug");
   }
 });
 
@@ -2000,7 +2008,7 @@ app.post("/api/projects/:slug/fix-previous-cycle", auth, async (req, res) => {
 
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/projects/:slug/fix-previous-cycle");
   }
 });
 
@@ -2019,7 +2027,7 @@ app.delete("/api/projects/:slug", auth, async (req, res) => {
     if (active) await closeCycle(db, active.id);
     res.json({ ok: true, archived: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "DELETE /api/projects/:slug");
   }
 });
 
@@ -2167,6 +2175,69 @@ app.patch("/api/checks", auth, async (req, res) => {
       // (ON CONFLICT orqali eski qator yangilanmagani) haqidagi standart
       // belgisi — shu orqali Ncoin faqat HAQIQIY yangi bajarilishda
       // beriladi, tafsilot yangilanganda qayta berilmaydi.
+      // Ncoin oluvchilar INSERT'dan OLDIN aniqlanadi: shunda belgi va
+      // coinlar bitta tranzaksiyaga sig'adi. Avval ular keyin
+      // hisoblanardi va alohida yozilardi — o'rtada uzilish bo'lsa
+      // belgi qolib, coin berilmasdan ketardi, qayta urinish esa
+      // yordam bermasdi (`xmax = 0` qoidasi ikkinchi marta bermaydi).
+      const smmRows =
+        type === "k" || storyKind !== "atmospheric"
+          ? (await db.query(`select user_id from permissions where project_id = $1 and role = 'smm'`, [project.id])).rows
+          : [];
+      const recipients = [];
+      if (type === "k") {
+        if (videographerUserId) {
+          recipients.push({
+            userId: videographerUserId,
+            amount: 1,
+            reason: "post_video",
+            text: `"${project.label}" loyihasida post uchun video olganingiz uchun 1 Ncoin qo'shildi.`,
+          });
+        }
+        if (editorUserId) {
+          recipients.push({
+            userId: editorUserId,
+            amount: 1,
+            reason: "post_edit",
+            text: `"${project.label}" loyihasida post uchun video montaj qilganingiz uchun 1 Ncoin qo'shildi.`,
+          });
+        }
+        smmRows.forEach((r) =>
+          recipients.push({
+            userId: r.user_id,
+            amount: 1,
+            reason: "post_smm",
+            text: `"${project.label}" loyihasida yangi post chiqdi — 1 Ncoin qo'shildi.`,
+          }),
+        );
+      } else if (storyKind === "atmospheric") {
+        if (videographerUserId) {
+          recipients.push({
+            userId: videographerUserId,
+            amount: 0.1,
+            reason: "story_video",
+            text: `"${project.label}" loyihasida atmosferali stories uchun video olganingiz uchun 0.1 Ncoin qo'shildi.`,
+          });
+        }
+        if (editorUserId) {
+          recipients.push({
+            userId: editorUserId,
+            amount: 0.1,
+            reason: "story_edit",
+            text: `"${project.label}" loyihasida atmosferali stories uchun video montaj qilganingiz uchun 0.1 Ncoin qo'shildi.`,
+          });
+        }
+      } else {
+        smmRows.forEach((r) =>
+          recipients.push({
+            userId: r.user_id,
+            amount: 0.2,
+            reason: "story_smm",
+            text: `"${project.label}" loyihasida yangi stories chiqdi — 0.2 Ncoin qo'shildi.`,
+          }),
+        );
+      }
+
       const insR = await db.query(
         `insert into checks (cycle_id, type, seq_number, done_by, editor_id, videographer_id, work_date, editor_user_id, videographer_user_id, story_kind,
                              assignee_id, performer_id, substitution_reason, substitution_note, marked_by)
@@ -2209,82 +2280,31 @@ app.patch("/api/checks", auth, async (req, res) => {
       );
       stateChanged = !!insR.rows[0]?.inserted;
       if (stateChanged) {
-        // Rol-asosli Ncoin taqsimoti — bitta post/stories bir nechta
-        // odamga (video oluvchi, montaj qiluvchi, SMM menejer) coin
-        // berishi mumkin. Har biriga alohida award + shaxsiy Telegram
-        // xabari (fire-and-forget, xatolar boshqalarni to'xtatmaydi).
-        const recipients = [];
-        if (type === "k") {
-          if (videographerUserId) {
-            recipients.push({
-              userId: videographerUserId,
-              amount: 1,
-              reason: "post_video",
-              text: `"${project.label}" loyihasida post uchun video olganingiz uchun 1 Ncoin qo'shildi.`,
-            });
+        // Coinlar bitta tranzaksiyada beriladi: yoki hammasi yoziladi,
+        // yoki hech biri. Avval har biri alohida yozilib, xatosi
+        // shunchaki log'ga tushardi — o'shanda ish bajarilgan bo'lib
+        // ko'rinib, coin esa hech qachon berilmay qolardi.
+        try {
+          await db.withTransaction(async (c) => {
+            for (const rcp of recipients) {
+              await awardNcoin(c, {
+                userId: rcp.userId,
+                amount: rcp.amount,
+                reason: rcp.reason,
+                referenceType: "check",
+                referenceId: ncoinRef,
+              });
+            }
+          });
+          // Telegram xabari tranzaksiyadan TASHQARIDA: tashqi xizmat
+          // ishlamasligi coin yozuvini bekor qilmasligi kerak.
+          for (const rcp of recipients) {
+            notifyNcoinChange(db, rcp.userId, rcp.amount, rcp.text).catch((e) =>
+              console.error("Ncoin bildirishnomasi xatosi:", rcp.reason, e.message),
+            );
           }
-          if (editorUserId) {
-            recipients.push({
-              userId: editorUserId,
-              amount: 1,
-              reason: "post_edit",
-              text: `"${project.label}" loyihasida post uchun video montaj qilganingiz uchun 1 Ncoin qo'shildi.`,
-            });
-          }
-          const smmR = await db.query(`select user_id from permissions where project_id = $1 and role = 'smm'`, [
-            project.id,
-          ]);
-          smmR.rows.forEach((r) =>
-            recipients.push({
-              userId: r.user_id,
-              amount: 1,
-              reason: "post_smm",
-              text: `"${project.label}" loyihasida yangi post chiqdi — 1 Ncoin qo'shildi.`,
-            }),
-          );
-        } else if (storyKind === "atmospheric") {
-          if (videographerUserId) {
-            recipients.push({
-              userId: videographerUserId,
-              amount: 0.1,
-              reason: "story_video",
-              text: `"${project.label}" loyihasida atmosferali stories uchun video olganingiz uchun 0.1 Ncoin qo'shildi.`,
-            });
-          }
-          if (editorUserId) {
-            recipients.push({
-              userId: editorUserId,
-              amount: 0.1,
-              reason: "story_edit",
-              text: `"${project.label}" loyihasida atmosferali stories uchun video montaj qilganingiz uchun 0.1 Ncoin qo'shildi.`,
-            });
-          }
-        } else {
-          const smmR = await db.query(`select user_id from permissions where project_id = $1 and role = 'smm'`, [
-            project.id,
-          ]);
-          smmR.rows.forEach((r) =>
-            recipients.push({
-              userId: r.user_id,
-              amount: 0.2,
-              reason: "story_smm",
-              text: `"${project.label}" loyihasida yangi stories chiqdi — 0.2 Ncoin qo'shildi.`,
-            }),
-          );
-        }
-        for (const rcp of recipients) {
-          try {
-            await awardNcoin(db, {
-              userId: rcp.userId,
-              amount: rcp.amount,
-              reason: rcp.reason,
-              referenceType: "check",
-              referenceId: ncoinRef,
-            });
-            await notifyNcoinChange(db, rcp.userId, rcp.amount, rcp.text);
-          } catch (e) {
-            console.error("Ncoin berish xatosi:", rcp.reason, e.message);
-          }
+        } catch (e) {
+          console.error("[Ncoin berilmadi]", ncoinRef, e.message);
         }
       }
     } else {
@@ -2326,7 +2346,7 @@ app.patch("/api/checks", auth, async (req, res) => {
 
     res.json({ ok: true, checked: !!checked, doneK, doneS, cycleStatus: cycle.status, isDebt: cycle.is_debt });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "PATCH /api/checks");
   }
 });
 
@@ -2478,7 +2498,7 @@ app.get("/api/tasks", auth, async (req, res) => {
     const tasks = await attachChecklistCounts(await attachTags(r.rows.map(shapeTaskRow)));
     res.json({ tasks });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/tasks");
   }
 });
 
@@ -2570,7 +2590,7 @@ app.post("/api/tasks", auth, async (req, res) => {
 
     res.json({ ok: true, task, notify });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/tasks");
   }
 });
 
@@ -2860,7 +2880,7 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
 
     res.json({ ok: true, task, notify });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "PATCH /api/tasks/:id");
   }
 });
 
@@ -2878,7 +2898,7 @@ app.delete("/api/tasks/:id", auth, async (req, res) => {
     await db.query(`delete from tasks where id = $1`, [req.params.id]);
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "DELETE /api/tasks/:id");
   }
 });
 
@@ -2919,7 +2939,7 @@ app.get("/api/ncoin/me/balance", auth, async (req, res) => {
   try {
     res.json({ balance: await getBalance(db, req.user.id) });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/ncoin/me/balance");
   }
 });
 
@@ -2996,7 +3016,7 @@ app.get("/api/ncoin/me", auth, async (req, res) => {
       }),
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/ncoin/me");
   }
 });
 
@@ -3008,7 +3028,7 @@ app.post("/api/ncoin/ack", auth, async (req, res) => {
     await db.query(`update users set ncoin_seen_at = now() where id = $1`, [req.user.id]);
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/ncoin/ack");
   }
 });
 
@@ -3020,7 +3040,7 @@ app.get("/api/ncoin/products", auth, async (req, res) => {
     );
     res.json({ ok: true, products: r.rows.map(normalizeProduct) });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/ncoin/products");
   }
 });
 
@@ -3082,7 +3102,11 @@ app.post("/api/ncoin/purchase", auth, async (req, res) => {
       product: { id: result.product.id, name: result.product.name },
     });
   } catch (e) {
-    res.status(e.status || 500).json({ error: e.message });
+    // Bu yerda ataylab ikki xil: `e.status` qo'yilgan xatolar — bu
+    // biznes qoidalari ("qoldiq yetarli emas", "balans yetmaydi"), ular
+    // foydalanuvchiga ko'rsatilishi kerak. Qolgani — kutilmagan xato.
+    if (e && e.status) return res.status(e.status).json({ error: e.message });
+    serverError(res, e, "POST /api/ncoin/purchase");
   }
 });
 
@@ -3103,7 +3127,7 @@ app.get("/api/ncoin/admin/products", auth, async (req, res) => {
       products: r.rows.map((row) => ({ ...normalizeProduct(row), sold_count: Number(row.sold_count) })),
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/ncoin/admin/products");
   }
 });
 
@@ -3129,7 +3153,7 @@ app.post("/api/ncoin/admin/upload-image", auth, async (req, res) => {
     const blob = await blobPut(filename, buffer, { access: "public", contentType: mimeType });
     res.json({ ok: true, url: blob.url });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/ncoin/admin/upload-image");
   }
 });
 
@@ -3151,7 +3175,7 @@ app.post("/api/ncoin/admin/products", auth, async (req, res) => {
     res.json({ ok: true, product: normalizeProduct(r.rows[0]) });
   } catch (e) {
     if (e.code === "23505") return res.status(409).json({ error: "Shu nomli mahsulot allaqachon bor" });
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/ncoin/admin/products");
   }
 });
 
@@ -3185,7 +3209,7 @@ app.patch("/api/ncoin/admin/products/:id", auth, async (req, res) => {
     if (!r.rows[0]) return res.status(404).json({ error: "Mahsulot topilmadi" });
     res.json({ ok: true, product: normalizeProduct(r.rows[0]) });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "PATCH /api/ncoin/admin/products/:id");
   }
 });
 
@@ -3203,7 +3227,7 @@ app.delete("/api/ncoin/admin/products/:id", auth, async (req, res) => {
     if (!r.rows[0]) return res.status(404).json({ error: "Mahsulot topilmadi" });
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "DELETE /api/ncoin/admin/products/:id");
   }
 });
 
@@ -3225,7 +3249,7 @@ app.get("/api/ncoin/admin/purchases", auth, async (req, res) => {
     );
     res.json({ ok: true, purchases: r.rows.map((row) => ({ ...row, amount: Number(row.amount) })) });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/ncoin/admin/purchases");
   }
 });
 
@@ -3318,7 +3342,7 @@ app.get("/api/ncoin/admin/history", auth, async (req, res) => {
       hasMore: offset + rowsR.rows.length < sumR.rows[0].total,
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/ncoin/admin/history");
   }
 });
 
@@ -3406,7 +3430,7 @@ app.get("/api/ncoin/admin/nshop-stats", auth, async (req, res) => {
       })),
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/ncoin/admin/nshop-stats");
   }
 });
 
@@ -3442,7 +3466,7 @@ app.post("/api/ncoin/admin/adjust", auth, async (req, res) => {
     const name = user.first_name ? `${user.first_name} ${user.last_name || ""}`.trim() : user.username;
     res.json({ ok: true, name, amount });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/ncoin/admin/adjust");
   }
 });
 
@@ -3452,7 +3476,7 @@ app.get("/api/tags", auth, async (req, res) => {
     const r = await db.query(`select id, name from tags order by name`);
     res.json({ tags: r.rows });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/tags");
   }
 });
 
@@ -3473,7 +3497,7 @@ app.post("/api/tags", auth, async (req, res) => {
     }
     res.json({ ok: true, tag: ins.rows[0] });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/tags");
   }
 });
 
@@ -3492,7 +3516,7 @@ app.get("/api/project-templates", auth, async (req, res) => {
       })),
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/project-templates");
   }
 });
 
@@ -3523,7 +3547,7 @@ app.post("/api/project-templates", auth, async (req, res) => {
       template: { id: row.id, name: row.name, postsTarget: row.posts_target, storiesTarget: row.stories_target },
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/project-templates");
   }
 });
 
@@ -3533,7 +3557,7 @@ app.delete("/api/project-templates/:id", auth, async (req, res) => {
     await db.query(`delete from project_templates where id = $1`, [req.params.id]);
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "DELETE /api/project-templates/:id");
   }
 });
 
@@ -3579,7 +3603,7 @@ app.get("/api/tasks/:id/activity", auth, async (req, res) => {
       })),
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/tasks/:id/activity");
   }
 });
 
@@ -3592,7 +3616,7 @@ app.post("/api/tasks/:id/comments", auth, async (req, res) => {
     await logTaskActivity(req.params.id, req.user.id, "comment", { body: text });
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/tasks/:id/comments");
   }
 });
 
@@ -3609,7 +3633,7 @@ app.get("/api/tasks/:id/checklist", auth, async (req, res) => {
     );
     res.json({ items: r.rows });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/tasks/:id/checklist");
   }
 });
 
@@ -3628,7 +3652,7 @@ app.post("/api/tasks/:id/checklist", auth, async (req, res) => {
     );
     res.json({ ok: true, item: r.rows[0] });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/tasks/:id/checklist");
   }
 });
 
@@ -3657,7 +3681,7 @@ app.patch("/api/tasks/:id/checklist/:itemId", auth, async (req, res) => {
     if (!r.rows[0]) return res.status(404).json({ error: "Band topilmadi" });
     res.json({ ok: true, item: r.rows[0] });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "PATCH /api/tasks/:id/checklist/:itemId");
   }
 });
 
@@ -3668,7 +3692,7 @@ app.delete("/api/tasks/:id/checklist/:itemId", auth, async (req, res) => {
     await db.query(`delete from task_checklist_items where id = $1 and task_id = $2`, [req.params.itemId, req.params.id]);
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "DELETE /api/tasks/:id/checklist/:itemId");
   }
 });
 
@@ -3697,7 +3721,7 @@ app.post("/api/cycles/rollover", async (req, res) => {
     }
     res.json({ ok: true, caller: access.caller, projectsChecked: projR.rows.length, events });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/cycles/rollover");
   }
 });
 
@@ -3853,7 +3877,7 @@ app.post("/api/reminder/run", async (req, res) => {
       results,
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/reminder/run");
   }
 });
 
@@ -3907,7 +3931,7 @@ app.post("/api/birthdays/run", async (req, res) => {
       results,
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "POST /api/birthdays/run");
   }
 });
 
@@ -3934,6 +3958,21 @@ app.all("/api/cron-daily", async (req, res) => {
   const base = process.env.APP_URL || `https://${req.headers.host}`;
   const endpoints = ["/api/cycles/rollover", "/api/reminder/run", "/api/birthdays/run"];
   const results = [];
+
+  // Kundalik tozalash. Bu ikkala jadval ham cheksiz o'sardi:
+  // `notification_log` 40 kunda 4000 qatordan oshdi va bazadagi eng
+  // katta jadvalga aylandi, `wall_otp_codes` esa ishlatilgan kodlarni
+  // abadiy saqlab turardi. Ikkalasi ham faqat yaqin o'tmish uchun
+  // kerak — jurnal 60 kun, bir martalik kod esa 1 kun.
+  try {
+    const logR = await db.query(`delete from notification_log where created_at < now() - interval '60 days'`);
+    const otpR = await db.query(`delete from wall_otp_codes where created_at < now() - interval '1 day'`);
+    results.push({ path: "cleanup", deleted: { notificationLog: logR.rowCount, otpCodes: otpR.rowCount } });
+  } catch (e) {
+    console.error("[cron-daily cleanup]", e.message);
+    results.push({ path: "cleanup", error: "tozalash bajarilmadi" });
+  }
+
   for (const path of endpoints) {
     try {
       const r = await fetch(`${base}${path}`, {
@@ -3960,7 +3999,7 @@ app.get("/api/notifications", auth, async (req, res) => {
     );
     res.json({ notifications: r.rows });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    serverError(res, e, "GET /api/notifications");
   }
 });
 

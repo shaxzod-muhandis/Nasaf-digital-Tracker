@@ -8921,11 +8921,35 @@
       // ── UTILS ─────────────────────────────────────────────────────
       const getInitData = () => window.Telegram?.WebApp?.initData || "";
       const tg = () => window.Telegram?.WebApp;
+      // Telegram imzosi 24 soatdan keyin eskiradi. Ilova shuncha vaqt
+      // ochiq tursa (desktopda bo'ladigan holat), har bir so'rov 401
+      // qaytara boshlaydi va ekranda tushunarsiz xatolar chiqadi.
+      // Shuning uchun bunday javob bir marta ushlanib, foydalanuvchiga
+      // nima qilish kerakligi aytiladi.
+      let sessionExpiredShown = false;
       async function apiFetch(url, opts = {}) {
         const h = { "Content-Type": "application/json", ...(opts.headers || {}) };
         const id = getInitData();
         if (id) h["X-Telegram-Init-Data"] = id;
-        return fetch(`${API}${url}`, { ...opts, headers: h });
+        const res = await fetch(`${API}${url}`, { ...opts, headers: h });
+        if (res.status === 401 && !sessionExpiredShown) {
+          sessionExpiredShown = true;
+          showSessionExpired();
+        }
+        return res;
+      }
+      function showSessionExpired() {
+        if (document.getElementById("session-expired")) return;
+        const ov = document.createElement("div");
+        ov.id = "session-expired";
+        ov.className = "overlay";
+        ov.style.cssText = "display:flex;align-items:center;justify-content:center;padding:24px;z-index:2000";
+        ov.innerHTML = `<div class="sheet" style="position:static;max-width:360px;border-radius:18px;padding:22px">
+          <div style="font:600 16px inherit;color:var(--ink);margin-bottom:6px">Sessiya eskirdi</div>
+          <div style="font-size:13px;color:var(--t2);line-height:1.5">Ilova uzoq vaqt ochiq turgani uchun Telegram imzosi eskirdi. Ilovani yopib qaytadan oching.</div>
+          <button type="button" class="btn btn-blue" style="margin-top:16px" onclick="location.reload()">Yangilash</button>
+        </div>`;
+        document.body.appendChild(ov);
       }
       const pct = (d, t) => (t === 0 ? 0 : Math.round((d / t) * 100));
       function escHtml(s) {
