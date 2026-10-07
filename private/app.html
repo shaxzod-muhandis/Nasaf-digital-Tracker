@@ -3628,6 +3628,28 @@
         color: var(--ink, var(--t5));
         margin-bottom: 12px;
       }
+      /* Ko'p tanlovli ro'yxatdagi belgi — tanlanmaganda bo'sh kvadrat,
+         tanlanganda ko'k galochka. */
+      .ntv3-tick {
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        border: 1.5px solid var(--bd4);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        color: #fff;
+      }
+      .ntv3-tick.on {
+        background: var(--brand);
+        border-color: var(--brand);
+      }
+      .ntv3-tick svg {
+        width: 13px;
+        height: 13px;
+        stroke-width: 3;
+      }
       .ntv3-opt {
         display: flex;
         align-items: center;
@@ -3816,6 +3838,51 @@
       .tb-seg-btn:focus-visible,
       .icon-btn:focus-visible {
         outline-offset: 3px;
+      }
+
+      /* Mas'ul tanlagich — chiplar ichida kichik avatar.
+         `.chip-group` bitta qatorda yonma-yon turadi (teglar uchun
+         shunday qilingan), lekin bu yerda kimlar tanlanganini bir
+         qarashda ko'rish kerak — shuning uchun o'raladi. */
+      .asg-group {
+        flex-wrap: wrap;
+        max-height: 184px;
+        overflow-y: auto;
+        align-items: flex-start;
+      }
+      .asg-group .chip-btn {
+        white-space: nowrap;
+      }
+      .asg-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .asg-av {
+        width: 20px;
+        height: 20px;
+        border-radius: 7px;
+        color: #fff;
+        font-size: 9.5px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+      }
+      /* Kartochkadagi ustma-ust avatarlar */
+      .task-avs {
+        display: inline-flex;
+        align-items: center;
+        flex: none;
+      }
+      .task-avs > * {
+        box-shadow: 0 0 0 2px var(--surf);
+      }
+      .task-avs .more {
+        background: var(--chip2);
+        color: var(--v3-t2);
+        font-weight: 700;
       }
 
       /* Internet yo'qligi — tepada, doimiy chiziq. */
@@ -9292,7 +9359,7 @@
         };
         (allUsers || []).forEach(collect);
         (projects || []).forEach((p) => (p.assignees || []).forEach(collect));
-        (tasksList || []).forEach((t) => t?.assigneeUsername && names.add(t.assigneeUsername));
+        (tasksList || []).forEach((t) => taskAssignees(t).forEach((a) => names.add(a.username)));
         const map = {};
         let i = 0;
         [...names].sort().forEach((n) => {
@@ -9514,7 +9581,7 @@
       function myTaskScope() {
         return isAdmin
           ? tasksList
-          : tasksList.filter((t) => t.assigneeUsername === currentUser);
+          : tasksList.filter(taskIsMine);
       }
       // Bosh sahifadagi "Biriktirilgan vazifalar" kartasi — bekor
       // qilinganlar hisobga olinmaydi, arxiv Dashboard'da ko'rsatilmaydi.
@@ -9581,7 +9648,7 @@
             .slice(0, VISIBLE_CAP)
             .map((t) => {
               const overdue = t.dueDate && t.dueDate < today;
-              const who = isAdmin && t.assigneeName ? ` · ${escHtml(t.assigneeName)}` : "";
+              const who = isAdmin && taskAssignees(t).length ? ` · ${escHtml(taskAssigneeNames(t))}` : "";
               return `<div class="rail-item" style="cursor:pointer" onclick="openTaskActions('${escArg(t.id)}')">
                 <div class="task-dot${overdue ? " overdue" : ""}"></div>
                 <div style="flex:1;min-width:0">
@@ -10030,7 +10097,7 @@
       // "Qaytarish") vazifa ekranida qoladi. "Navbatga qo'yish" ham
       // yo'q: u muddat so'raydi, bitta bosishga sig'maydi.
       function taskQuickStep(t) {
-        const canChange = isAdmin || t.assigneeUsername === currentUser;
+        const canChange = isAdmin || taskIsMine(t);
         if (!canChange) return null;
         if (t.status === "todo") return { label: "Boshlash", status: "in_progress", ok: false };
         if (t.status === "in_progress") return { label: "Tekshiruvga", status: "review", ok: false };
@@ -10281,7 +10348,7 @@
               .slice(0, 5)
               .map((task) => {
                 const w = taskWhenInfo(task);
-                const who = task.assigneeName ? " · " + escHtml(task.assigneeName) : "";
+                const who = taskAssignees(task).length ? " · " + escHtml(taskAssigneeNames(task)) : "";
                 const color =
                   w.cls === "today" ? "var(--st-debt)" : w.cls === "soon" ? "var(--st-behind)" : "var(--t2)";
                 return `<div class="d2-item" onclick="openTaskActions('${escArg(task.id)}')">
@@ -10813,14 +10880,19 @@
         const today = isoOf(todayDate());
         const byUser = new Map();
         list.forEach((t) => {
-          if (!t.assigneeUsername) return;
+          const masullar = taskAssignees(t);
+          if (!masullar.length) return;
           if (["done", "failed", "cancelled"].includes(t.status)) return;
-          if (!byUser.has(t.assigneeUsername)) {
-            byUser.set(t.assigneeUsername, { username: t.assigneeUsername, name: t.assigneeName || t.assigneeUsername, open: 0, late: 0 });
-          }
-          const row = byUser.get(t.assigneeUsername);
-          row.open++;
-          if (t.dueDate && t.dueDate < today) row.late++;
+          // Umumiy vazifa har bir mas'ulning yukiga kiradi — ish
+          // ikkalasining ham ro'yxatida turibdi.
+          masullar.forEach((a) => {
+            if (!byUser.has(a.username)) {
+              byUser.set(a.username, { username: a.username, name: a.name || a.username, open: 0, late: 0 });
+            }
+            const row = byUser.get(a.username);
+            row.open++;
+            if (t.dueDate && t.dueDate < today) row.late++;
+          });
         });
         return [...byUser.values()].sort((a, b) => b.late - a.late || b.open - a.open);
       }
@@ -10888,11 +10960,12 @@
         if (q) {
           out = out.filter((t) => {
             if (t.title.toLowerCase().includes(q)) return true;
-            if (t.assigneeName && t.assigneeName.toLowerCase().includes(q)) return true;
+            if (taskAssigneeNames(t).toLowerCase().includes(q)) return true;
             return (t.tags || []).some((tag) => tag.name.toLowerCase().includes(q));
           });
         }
-        if (taskBoardFilter.assignee) out = out.filter((t) => t.assigneeUsername === taskBoardFilter.assignee);
+        if (taskBoardFilter.assignee)
+          out = out.filter((t) => taskAssignees(t).some((a) => a.username === taskBoardFilter.assignee));
         if (taskBoardFilter.priority) out = out.filter((t) => t.priority === taskBoardFilter.priority);
         if (taskBoardFilter.project) out = out.filter((t) => t.projectSlug === taskBoardFilter.project);
         if (taskBoardFilter.tag) out = out.filter((t) => (t.tags || []).some((tag) => tag.id === taskBoardFilter.tag));
@@ -10912,7 +10985,7 @@
         // Sarlavha osti — dizayn bo'yicha shaxsiy xulosa: nechta vazifa
         // aynan MENGA biriktirilgan va ulardan nechtasi 2 kun ichida
         // tugaydi (kechikkanlar ham shu songa kiradi).
-        const mine = open.filter((t) => t.assigneeUsername === currentUser);
+        const mine = open.filter(taskIsMine);
         const soon = mine.filter((t) => {
           if (!t.dueDate) return false;
           return daysBetween(todayDate(), parseISO(t.dueDate)) <= 2;
@@ -10961,6 +11034,95 @@
       // Ustuvorlik ko'rsatkichi — 3 ta ustun (3px kenglik, 5/8/12px
       // balandlik): daraja qancha yuqori bo'lsa, shuncha ko'pi to'lgan.
       // Shoshilinch — barchasi qizil.
+      // Mas'ul tanlagich — bir nechta odam tanlash uchun. Oddiy
+      // <select> bitta qiymat beradi, `multiple` esa telefonda juda
+      // noqulay; shuning uchun teglardagi kabi bosiladigan chiplar.
+      const asgSel = {}; // formId -> Set(username)
+      function asgInit(formId, usernames) {
+        asgSel[formId] = new Set(usernames || []);
+      }
+      function asgPickerHtml(formId, users) {
+        const chosen = asgSel[formId] || new Set();
+        const chips = users
+          .map((u) => {
+            const on = chosen.has(u.username);
+            return `<button type="button" class="chip-btn asg-chip${on ? " active" : ""}" onclick="asgToggle('${escArg(formId)}','${escArg(u.username)}')">
+              <span class="asg-av" style="background:${personColor(u.username)}">${escHtml((u.first_name || u.username || "?").slice(0, 1).toUpperCase())}</span>${escHtml(userDisplayLabel(u))}
+            </button>`;
+          })
+          .join("");
+        return `<div class="chip-group asg-group" id="${formId}-asg">${chips || `<div class="f-hint" style="margin:0">Xodim yo'q</div>`}</div>
+          <div class="f-hint" id="${formId}-asg-hint" style="margin:6px 0 0">${asgHintText(formId)}</div>`;
+      }
+      function asgHintText(formId) {
+        const n = (asgSel[formId] || new Set()).size;
+        if (!n) return "Hech kim tanlanmagan — vazifa biriktirilmay qoladi.";
+        if (n === 1) return "1 kishi tanlandi.";
+        return `${n} kishi tanlandi — umumiy vazifa. Bunday vazifaga Ncoin avtomatik berilmaydi.`;
+      }
+      function asgToggle(formId, username) {
+        const set = (asgSel[formId] ||= new Set());
+        if (set.has(username)) set.delete(username);
+        else set.add(username);
+        const host = document.getElementById(`${formId}-asg`);
+        if (host) {
+          [...host.querySelectorAll(".asg-chip")].forEach((b) => {
+            const u = b.getAttribute("onclick").match(/','([^']*)'\)/)?.[1];
+            b.classList.toggle("active", set.has(u));
+          });
+        }
+        const hint = document.getElementById(`${formId}-asg-hint`);
+        if (hint) hint.textContent = asgHintText(formId);
+        if (formId === "nt") updateNtWorkloadHint();
+      }
+      function asgValues(formId) {
+        return [...(asgSel[formId] || new Set())];
+      }
+
+      // ── VAZIFA MAS'ULLARI ────────────────────────────────────────
+      // Bitta vazifada bir nechta mas'ul bo'lishi mumkin. Backend
+      // `assignees` massivini qaytaradi; eski maydonlar (assigneeUsername
+      // va h.k.) birinchi mas'ulning nusxasi bo'lib qoladi. Shu yerda
+      // har doim massiv bilan ishlanadi — qolgan kod bitta/ko'p holatni
+      // farqlamasligi uchun.
+      function taskAssignees(t) {
+        if (Array.isArray(t?.assignees) && t.assignees.length) return t.assignees;
+        if (t?.assigneeUsername) {
+          return [
+            {
+              username: t.assigneeUsername,
+              name: t.assigneeName || t.assigneeUsername,
+              avatarUrl: t.assigneeAvatarUrl || null,
+              jobTitle: t.assigneeJobTitle || null,
+            },
+          ];
+        }
+        return [];
+      }
+      function taskIsMine(t) {
+        return taskAssignees(t).some((a) => a.username === currentUser);
+      }
+      function taskAssigneeNames(t) {
+        return taskAssignees(t)
+          .map((a) => a.name)
+          .join(", ");
+      }
+      // Kartochkada mas'ullar — ustma-ust avatarlar. Uchtadan ko'p bo'lsa
+      // qolganlari "+N" bo'lib ko'rsatiladi, aks holda qator kengayib
+      // ketardi.
+      function taskAvatarsHtml(t, cls) {
+        const list = taskAssignees(t);
+        if (!list.length) return "";
+        const korinadigan = list.slice(0, 3);
+        const qolgan = list.length - korinadigan.length;
+        const bitta = (a, i) =>
+          `<span class="${cls}" style="background:${personColor(a.username || a.name)};${i ? "margin-left:-7px" : ""}" title="${escHtml(a.name)}">${escHtml((a.name || "?").slice(0, 1).toUpperCase())}${avatarImg(a.avatarUrl)}</span>`;
+        const more = qolgan
+          ? `<span class="${cls} more" style="margin-left:-7px" title="${escHtml(list.slice(3).map((a) => a.name).join(", "))}">+${qolgan}</span>`
+          : "";
+        return `<span class="task-avs">${korinadigan.map(bitta).join("")}${more}</span>`;
+      }
+
       function tbPriBarsHtml(priority) {
         const level = { urgent: 3, high: 3, medium: 2, low: 1, no_priority: 0 }[priority] ?? 0;
         const color =
@@ -11013,9 +11175,7 @@
       // `.av-img` orqali ustiga qo'yiladi; `onerror` da o'zini o'chiradi,
       // shuning uchun harf doim zaxira bo'lib turadi.
       function taskPersonAvatarHtml(t, cls) {
-        if (!t.assigneeName) return "";
-        const bg = personColor(t.assigneeUsername || t.assigneeName);
-        return `<span class="${cls}" style="background:${bg}" title="${escHtml(t.assigneeName)}">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}${avatarImg(t.assigneeAvatarUrl)}</span>`;
+        return taskAvatarsHtml(t, cls);
       }
       function tbAvatarHtml(t) {
         return taskPersonAvatarHtml(t, "tb-av");
@@ -11051,7 +11211,7 @@
       }
       // Segment: Hammasi / Menga / Men berganlar.
       function tbApplySeg(list) {
-        if (taskSeg === "menga") return list.filter((t) => t.assigneeUsername === currentUser);
+        if (taskSeg === "menga") return list.filter(taskIsMine);
         if (taskSeg === "menberdim") return list.filter((t) => t.createdByUsername === currentUser);
         return list;
       }
@@ -11372,8 +11532,8 @@
         }
 
         const hintHtml =
-          actionsHtml && t.assigneeUsername && t.status !== "review"
-            ? `<div class="td-notify-hint">Har qadam Telegram orqali <b>@${escHtml(t.assigneeUsername)}</b>ga xabar qiladi</div>`
+          actionsHtml && taskAssignees(t).length && t.status !== "review"
+            ? `<div class="td-notify-hint">Har qadam Telegram orqali ${taskAssignees(t).map((a) => `<b>@${escHtml(a.username)}</b>`).join(", ")}ga xabar qiladi</div>`
             : "";
 
         return `<div class="rail-title" style="margin:0">Keyingi qadam</div>
@@ -11403,7 +11563,7 @@
       function openTaskMobileMenu(id) {
         const t = tasksList.find((x) => x.id === id);
         if (!t) return;
-        const canChangeStatus = isAdmin || t.assigneeUsername === currentUser;
+        const canChangeStatus = isAdmin || taskIsMine(t);
         const open = !["done", "failed", "cancelled"].includes(t.status);
         const close = () => `document.querySelector('.overlay')?.remove();`;
         const items = [];
@@ -11502,7 +11662,7 @@
           <div class="tdm-props">
             <div class="tdm-prop">
               <div class="tdm-prop-lbl">Mas'ul</div>
-              <div class="tdm-prop-val">${av}${escHtml(t.assigneeName || "Biriktirilmagan")}</div>
+              <div class="tdm-prop-val">${av}${escHtml(taskAssigneeNames(t) || "Biriktirilmagan")}</div>
             </div>
             <div class="tdm-prop">
               <div class="tdm-prop-lbl">Ustuvorlik</div>
@@ -11555,7 +11715,7 @@
       // keyingi qadam va xossalar (dizayn asosida). Prev/next joriy
       // ro'yxat bo'yicha.
       function renderTaskDetailSheet(t) {
-        const canChangeStatus = isAdmin || t.assigneeUsername === currentUser;
+        const canChangeStatus = isAdmin || taskIsMine(t);
         const nav = taskDetailNav;
 
         const bc = document.getElementById("td-breadcrumb");
@@ -11655,7 +11815,7 @@
                       : `<span class="td-badge-dot" style="${colDot};display:inline-block;margin-right:6px"></span>${escHtml(TASK_STATUS_LABEL[t.status])}`
                   }</div>
                 </div>
-                <div class="detail-prop-row"><div class="detail-prop-label">Mas'ul</div><div class="detail-prop-val" style="display:flex;align-items:center;gap:8px;justify-content:flex-end">${t.assigneeName ? `<div class="avatar avatar-sm" style="background:${personColor(t.assigneeUsername || t.assigneeName)};color:#fff">${escHtml(t.assigneeName.slice(0, 1).toUpperCase())}${avatarImg(t.assigneeAvatarUrl)}</div>` : ""}${escHtml(t.assigneeName || "Biriktirilmagan")}</div></div>
+                <div class="detail-prop-row"><div class="detail-prop-label">${taskAssignees(t).length > 1 ? "Mas'ullar" : "Mas'ul"}</div><div class="detail-prop-val" style="display:flex;align-items:center;gap:8px;justify-content:flex-end;flex-wrap:wrap">${taskAvatarsHtml(t, "avatar avatar-sm")}${escHtml(taskAssigneeNames(t) || "Biriktirilmagan")}</div></div>
                 <div class="detail-prop-row">
                   <div class="detail-prop-label">Ustuvorlik</div>
                   <div class="detail-prop-val">${
@@ -12008,7 +12168,11 @@
       async function setTaskStatus(id, status, btn) {
         if (status === "done") {
           const t = tasksList.find((x) => x.id === id);
-          if (t && t.status === "review") {
+          // Umumiy vazifaga (bir nechta mas'ul) Ncoin avtomatik
+          // berilmaydi — kim qancha hissa qo'shganini tizim bilmaydi.
+          // Shuning uchun so'rov ham chiqmaydi; kerak bo'lsa admin
+          // Profil → "Ncoin berish" orqali o'zi beradi.
+          if (t && t.status === "review" && taskAssignees(t).length <= 1) {
             promptTaskDoneCoin(id, btn);
             return;
           }
@@ -12020,7 +12184,8 @@
         const amount = taskNcoinAmount(t);
         // Biriktiruvchi ham coin oladi — FAQAT bajaruvchidan boshqa odam
         // bo'lsa (o'ziga o'zi biriktirib, o'zi bajargan bo'lsa yo'q).
-        const creatorGetsBonus = t.createdByUsername && t.createdByUsername !== t.assigneeUsername;
+        const creatorGetsBonus =
+          t.createdByUsername && !taskAssignees(t).some((a) => a.username === t.createdByUsername);
         const hint = creatorGetsBonus
           ? `Bu vazifa uchun xodimga ${amount}, biriktirgan @${escHtml(t.createdByUsername)}ga esa ${TASK_CREATOR_NCOIN_AMOUNT} Ncoin berilsinmi?`
           : `Bu vazifa uchun xodimga ${amount} Ncoin berilsinmi?`;
@@ -12052,7 +12217,8 @@
           if (!res.ok)
             throw new Error((await res.json().catch(() => ({}))).error || "Xato");
           const t = tasksList.find((x) => x.id === id);
-          const creatorGotBonus = awardNcoin && t.createdByUsername && t.createdByUsername !== t.assigneeUsername;
+          const creatorGotBonus =
+            awardNcoin && t.createdByUsername && !taskAssignees(t).some((a) => a.username === t.createdByUsername);
           showToast(
             awardNcoin
               ? creatorGotBonus
@@ -12188,6 +12354,7 @@
         const t = tasksList.find((x) => x.id === id);
         if (!t) return;
         etSelectedTagIds = new Set((t.tags || []).map((tg) => tg.id));
+        asgInit("et", taskAssignees(t).map((a) => a.username));
         const { body } = makeSheet("Vazifani tahrirlash");
         body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
         let users = [];
@@ -12221,7 +12388,7 @@
           </div>
           <div class="f-group">
             <label class="f-label">Kim bajaradi</label>
-            <select class="f-input" id="et-assignee">${userOptions}</select>
+            ${asgPickerHtml("et", users)}
           </div>
           <div class="f-group">
             <label class="f-label">Ish vaqti (qaysi kundan qaysi kungacha)</label>
@@ -12261,7 +12428,6 @@
         if (!title) return showToast("⚠ Nomi kerak");
         const description = document.getElementById("et-desc")?.value.trim();
         const projectSlug = document.getElementById("et-project")?.value || "";
-        const assignee = document.getElementById("et-assignee")?.value || "";
         const dueDate = document.getElementById("et-due")?.value || "";
         const startDate = document.getElementById("et-due-start")?.value || "";
         const priority = document.getElementById("et-priority")?.value || "no_priority";
@@ -12273,7 +12439,7 @@
           dueDate,
           priority,
           tagIds: [...etSelectedTagIds],
-          assigneeUsername: assignee.startsWith("u:") ? assignee.slice(2) : "",
+          assigneeUsernames: asgValues("et"),
         };
         setBtnLoading(btn, true, "Saqlanmoqda…");
         try {
@@ -12369,12 +12535,14 @@
       function updateNtWorkloadHint() {
         const el = document.getElementById("nt-workload-hint");
         if (!el) return;
-        const assignee = document.getElementById("nt-assignee")?.value || "";
-        if (!assignee.startsWith("u:")) {
+        const tanlangan = asgValues("nt");
+        if (tanlangan.length !== 1) {
+          // Bir nechta odam tanlanganda bu maslahat chalg'itadi — u
+          // bitta xodimning bandligini ko'rsatish uchun.
           el.innerHTML = "";
           return;
         }
-        const username = assignee.slice(2);
+        const username = tanlangan[0];
         const workload = computeWorkload(tasksList);
         const mine = workload.find((w) => w.username === username);
         const lighter = workload
@@ -12401,6 +12569,7 @@
       async function openNewTaskSheetDesktop() {
         ntStatus = "todo";
         ntSelectedTagIds = new Set();
+        asgInit("nt", []);
         const { body } = makeSheet("Yangi vazifa");
         body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
         let users = [];
@@ -12437,7 +12606,7 @@
           </div>
           <div class="f-group">
             <label class="f-label">Kim bajaradi</label>
-            <select class="f-input" id="nt-assignee" onchange="updateNtWorkloadHint()">${userOptions}</select>
+            ${asgPickerHtml("nt", users)}
             <div id="nt-workload-hint" style="margin-top:6px"></div>
           </div>
           <div class="f-group">
@@ -12506,11 +12675,11 @@
       function renderNtv3Props() {
         const el = document.getElementById("ntv3-props");
         if (!el || !ntv3) return;
-        const user = ntv3Users.find((u) => u.username === ntv3.assigneeUsername);
+        const masullar = ntv3Users.filter((u) => ntv3.assigneeUsernames.includes(u.username));
         const proj = projects.find((p) => (p.slug || p.id) === ntv3.projectSlug);
         const tagNames = tagsList.filter((t) => ntv3.tagIds.has(t.id)).map((t) => t.name);
         el.innerHTML =
-          ntv3Row("kimga", "Kimga", user ? userDisplayLabel(user) : "", "Tanlang") +
+          ntv3Row("kimga", "Kimga", masullar.map((u) => userDisplayLabel(u)).join(", "), "Tanlang") +
           ntv3Row("muddat", "Ish vaqti", fmtDateRangeField(ntv3.startDate, ntv3.dueDate), "Oraliq") +
           ntv3Row("ustuvorlik", "Ustuvorlik", TASK_PRIORITY_LABEL[ntv3.priority] || "", "Oddiy") +
           ntv3Row("loyiha", "Loyiha", proj ? proj.label : "", "Umumiy") +
@@ -12528,19 +12697,33 @@
             <button type="button" class="btn btn-blue" style="margin-top:12px" onclick="applyNtv3Due()">Tanlash</button>`;
         } else {
           let opts = [];
-          if (key === "kimga") opts = [{ v: "", label: "Tanlanmagan" }, ...ntv3Users.map((u) => ({ v: u.username, label: userDisplayLabel(u) }))];
+          if (key === "kimga") opts = ntv3Users.map((u) => ({ v: u.username, label: userDisplayLabel(u) }));
           else if (key === "ustuvorlik") opts = Object.entries(TASK_PRIORITY_LABEL).map(([v, label]) => ({ v, label }));
           else if (key === "loyiha") opts = [{ v: "", label: "Umumiy" }, ...projects.map((p) => ({ v: p.slug || p.id, label: p.label }))];
           else opts = tagsList.map((t) => ({ v: t.id, label: t.name }));
 
-          const cur = { kimga: ntv3.assigneeUsername, ustuvorlik: ntv3.priority, loyiha: ntv3.projectSlug }[key];
+          // "kimga" ko'p tanlovli — u yuqorida alohida hal qilinadi.
+          const cur = { ustuvorlik: ntv3.priority, loyiha: ntv3.projectSlug }[key];
           inner = opts
             .map((o) => {
-              const on = key === "teglar" ? ntv3.tagIds.has(o.v) : cur === o.v;
-              return `<div class="ntv3-opt${on ? " on" : ""}" onclick="pickNtv3('${key}','${escArg(o.v)}')">${escHtml(o.label)}</div>`;
+              const on =
+                key === "teglar"
+                  ? ntv3.tagIds.has(o.v)
+                  : key === "kimga"
+                    ? ntv3.assigneeUsernames.includes(o.v)
+                    : cur === o.v;
+              // Ko'p tanlovli maydonlarda (kimga, teglar) galochka —
+              // faqat rang bilan belgilash yetarli emas, chunki bir
+              // nechtasini tanlash mumkinligi ko'rinmaydi.
+              const kopTanlov = key === "teglar" || key === "kimga";
+              const belgi = kopTanlov
+                ? `<span class="ntv3-tick${on ? " on" : ""}">${on ? ICON.check : ""}</span>`
+                : "";
+              return `<div class="ntv3-opt${on ? " on" : ""}" onclick="pickNtv3('${key}','${escArg(o.v)}')">${belgi}<span style="flex:1;min-width:0">${escHtml(o.label)}</span></div>`;
             })
             .join("") || `<div style="font-size:13px;color:var(--t3);padding:6px 2px">Ro'yxat bo'sh</div>`;
-          if (key === "teglar") inner += `<button type="button" class="btn btn-soft" style="margin-top:6px" onclick="closeNtv3Pick()">Tayyor</button>`;
+          if (key === "teglar" || key === "kimga")
+            inner += `<button type="button" class="btn btn-soft" style="margin-top:6px" onclick="closeNtv3Pick()">Tayyor</button>`;
         }
         const ov = document.createElement("div");
         ov.className = "ntv3-pick-ov";
@@ -12562,21 +12745,28 @@
         renderNtv3Props();
       }
       function pickNtv3(key, value) {
-        if (key === "teglar") {
-          if (ntv3.tagIds.has(value)) ntv3.tagIds.delete(value);
-          else ntv3.tagIds.add(value);
+        // Ko'p tanlovli maydonlar — oyna ochiq qoladi, foydalanuvchi
+        // "Tayyor" bosmaguncha bir nechtasini belgilay oladi.
+        if (key === "teglar" || key === "kimga") {
+          if (key === "teglar") {
+            if (ntv3.tagIds.has(value)) ntv3.tagIds.delete(value);
+            else ntv3.tagIds.add(value);
+          } else {
+            const i = ntv3.assigneeUsernames.indexOf(value);
+            if (i === -1) ntv3.assigneeUsernames.push(value);
+            else ntv3.assigneeUsernames.splice(i, 1);
+          }
           renderNtv3Props();
-          openNtv3Pick("teglar");
+          openNtv3Pick(key);
           return;
         }
-        if (key === "kimga") ntv3.assigneeUsername = value;
         if (key === "ustuvorlik") ntv3.priority = value;
         if (key === "loyiha") ntv3.projectSlug = value;
         closeNtv3Pick();
         renderNtv3Props();
       }
       async function openNewTaskSheetMobile() {
-        ntv3 = { assigneeUsername: "", startDate: "", dueDate: "", priority: "no_priority", projectSlug: "", tagIds: new Set() };
+        ntv3 = { assigneeUsernames: [], startDate: "", dueDate: "", priority: "no_priority", projectSlug: "", tagIds: new Set() };
         const ov = document.createElement("div");
         ov.className = "ntv3-ov";
         ov.onclick = (e) => {
@@ -12626,7 +12816,7 @@
           tagIds: [...ntv3.tagIds],
           notifyTelegram: true,
         };
-        if (ntv3.assigneeUsername) body.assigneeUsername = ntv3.assigneeUsername;
+        body.assigneeUsernames = ntv3.assigneeUsernames;
         setBtnLoading(btn, true, "…");
         try {
           const res = await apiFetch("/api/tasks", { method: "POST", body: JSON.stringify(body) });
@@ -12664,7 +12854,6 @@
         if (ntStatus !== "backlog" && !dueDate) return showToast("⚠ Ish vaqtini tanlang");
         const description = document.getElementById("nt-desc")?.value.trim();
         const projectSlug = document.getElementById("nt-project")?.value || undefined;
-        const assignee = document.getElementById("nt-assignee")?.value || "";
         const priority = document.getElementById("nt-priority")?.value || "no_priority";
         const notifyTelegram = document.getElementById("nt-notify")?.checked !== false;
         const body = {
@@ -12680,7 +12869,7 @@
           body.dueDate = dueDate;
           body.startDate = startDate;
         }
-        if (assignee.startsWith("u:")) body.assigneeUsername = assignee.slice(2);
+        body.assigneeUsernames = asgValues("nt");
         setBtnLoading(btn, true, "Yaratilmoqda…");
         try {
           const res = await apiFetch("/api/tasks", { method: "POST", body: JSON.stringify(body) });

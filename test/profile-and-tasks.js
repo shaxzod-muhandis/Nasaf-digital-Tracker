@@ -308,6 +308,97 @@ async function main() {
     assert.strictEqual(r.status, 200);
   });
 
+  console.log("── BIR NECHTA MAS'UL ─────────────────────────────");
+  let multiTaskId;
+  await check("vazifa ikki mas'ul bilan yaratiladi", async () => {
+    const r = await call("POST", "/api/tasks", {
+      user: "shaxzodshokirov",
+      body: {
+        title: "Test vazifa umumiy",
+        assigneeUsernames: ["test_profileuser", "test_profileuser2"],
+        dueDate: "2099-07-01",
+        notifyTelegram: false,
+      },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    const names = r.json.task.assignees.map((a) => a.username).sort();
+    assert.deepStrictEqual(names, ["test_profileuser", "test_profileuser2"]);
+    // Eski maydon birinchi mas'ulni ko'rsatadi (eski kod uchun)
+    assert.strictEqual(r.json.task.assigneeUsername, "test_profileuser");
+    multiTaskId = r.json.task.id;
+  });
+  await check("ro'yxatdagi HAR BIR mas'ul statusni o'zgartira oladi", async () => {
+    const r = await call("PATCH", `/api/tasks/${multiTaskId}`, {
+      user: "test_profileuser2",
+      body: { status: "in_progress", notifyTelegram: false },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.strictEqual(r.json.task.status, "in_progress");
+  });
+  await check("mas'ul bo'lmagan xodim statusni o'zgartira olmaydi (403)", async () => {
+    const r = await call("PATCH", `/api/tasks/${multiTaskId}`, {
+      user: "test_escalate_emp",
+      body: { status: "review", notifyTelegram: false },
+    });
+    assert.ok(r.status === 403 || r.status === 404, `kutilgan 403/404, keldi ${r.status}`);
+  });
+  await check("mas'ullar ro'yxatini o'zgartirish mumkin", async () => {
+    const r = await call("PATCH", `/api/tasks/${multiTaskId}`, {
+      user: "shaxzodshokirov",
+      body: { assigneeUsernames: ["test_profileuser2"], notifyTelegram: false },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    assert.deepStrictEqual(
+      r.json.task.assignees.map((a) => a.username),
+      ["test_profileuser2"],
+    );
+    assert.strictEqual(r.json.task.assigneeUsername, "test_profileuser2");
+  });
+  await check("umumiy vazifaga Ncoin berilmaydi", async () => {
+    // Ikkita mas'ul qaytariladi, keyin review → done + awardNcoin
+    await call("PATCH", `/api/tasks/${multiTaskId}`, {
+      user: "shaxzodshokirov",
+      body: { assigneeUsernames: ["test_profileuser", "test_profileuser2"], notifyTelegram: false },
+    });
+    await call("PATCH", `/api/tasks/${multiTaskId}`, {
+      user: "shaxzodshokirov",
+      body: { status: "review", notifyTelegram: false },
+    });
+    const before = await db.query(
+      `select coalesce(sum(amount),0)::float b from ncoin_transactions where reference_type='task' and reference_id=$1`,
+      [multiTaskId],
+    );
+    const r = await call("PATCH", `/api/tasks/${multiTaskId}`, {
+      user: "shaxzodshokirov",
+      body: { status: "done", awardNcoin: true, notifyTelegram: false },
+    });
+    assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+    const after = await db.query(
+      `select coalesce(sum(amount),0)::float b from ncoin_transactions where reference_type='task' and reference_id=$1`,
+      [multiTaskId],
+    );
+    assert.strictEqual(after.rows[0].b, before.rows[0].b, "umumiy vazifaga coin berilib ketdi");
+  });
+  await check("bitta mas'ulli vazifaga Ncoin avvalgidek beriladi", async () => {
+    const c = await call("POST", "/api/tasks", {
+      user: "shaxzodshokirov",
+      body: { title: "Test vazifa yakka", assigneeUsernames: ["test_profileuser"], dueDate: "2099-07-02", notifyTelegram: false },
+    });
+    const id = c.json.task.id;
+    await call("PATCH", `/api/tasks/${id}`, { user: "shaxzodshokirov", body: { status: "review", notifyTelegram: false } });
+    await call("PATCH", `/api/tasks/${id}`, { user: "shaxzodshokirov", body: { status: "done", awardNcoin: true, notifyTelegram: false } });
+    const r = await db.query(
+      `select coalesce(sum(amount),0)::float b from ncoin_transactions where reference_type='task' and reference_id=$1`,
+      [id],
+    );
+    assert.ok(r.rows[0].b > 0, "yakka mas'ulli vazifaga coin berilmadi");
+    await call("DELETE", `/api/tasks/${id}`, { user: "shaxzodshokirov" });
+  });
+  await check("tozalash: umumiy test vazifasi o'chiriladi", async () => {
+    const r = await call("DELETE", `/api/tasks/${multiTaskId}`, { user: "shaxzodshokirov" });
+    assert.strictEqual(r.status, 200);
+  });
+
   console.log("── ISH VAQTI (oraliq: startDate → dueDate) ───────");
   let rangeTaskId;
   await check("vazifa ish oynasi bilan yaratiladi", async () => {

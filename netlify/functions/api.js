@@ -2404,13 +2404,63 @@ const TASK_ROW_SQL = `
     au.job_title as assignee_job_title,
     au.avatar_url as assignee_avatar_url,
     ast.full_name as assignee_staff_name,
-    cu.username as created_by_username
+    cu.username as created_by_username,
+    -- Barcha mas'ullar bitta so'rovda (N+1 so'rovsiz). Tartib muhim:
+    -- position = 0 — asosiy mas'ul, kartochkada birinchi turadi.
+    coalesce((
+      select json_agg(json_build_object(
+               'username', u2.username,
+               'name', coalesce(nullif(trim(concat(u2.first_name,' ',u2.last_name)), ''), u2.full_name, u2.username),
+               'jobTitle', u2.job_title,
+               'avatarUrl', u2.avatar_url
+             ) order by ta.position, u2.username)
+        from task_assignees ta
+        join users u2 on u2.id = ta.user_id
+       where ta.task_id = t.id
+    ), '[]'::json) as assignees
   from tasks t
   left join projects p on p.id = t.project_id
   left join users au on au.id = t.assignee_user_id
   left join staff ast on ast.id = t.assignee_staff_id
   left join users cu on cu.id = t.created_by
 `;
+// Mas'ullarni yozishning YAGONA joyi. `tasks.assignee_user_id` —
+// birinchi mas'ulning nusxasi; u shu yerdan boshqa hech qayerda
+// yozilmaydi, shuning uchun jadval bilan ikkisi uzilib qolmaydi.
+// `userIds` tartibi saqlanadi: birinchisi — asosiy mas'ul.
+async function setTaskAssignees(client, taskId, userIds) {
+  const uniq = [...new Set((userIds || []).filter(Boolean).map(String))];
+  await client.query(`delete from task_assignees where task_id = $1`, [taskId]);
+  for (let i = 0; i < uniq.length; i++) {
+    await client.query(
+      `insert into task_assignees (task_id, user_id, position) values ($1, $2, $3)
+       on conflict (task_id, user_id) do update set position = excluded.position`,
+      [taskId, uniq[i], i],
+    );
+  }
+  await client.query(`update tasks set assignee_user_id = $2 where id = $1`, [taskId, uniq[0] || null]);
+  return uniq;
+}
+
+// So'rov tanasidan mas'ullar ro'yxati. Yangi maydon —
+// `assigneeUsernames: []`, eski `assigneeUsername` ham qabul qilinadi
+// (mobil ilovaning eski versiyalari hali shuni yuboradi).
+async function resolveAssigneeIds(body) {
+  const names = Array.isArray(body.assigneeUsernames)
+    ? body.assigneeUsernames
+    : body.assigneeUsername
+      ? [body.assigneeUsername]
+      : [];
+  const clean = [...new Set(names.map((u) => String(u || "").toLowerCase().replace("@", "").trim()).filter(Boolean))];
+  if (!clean.length) return { ids: [], missing: [] };
+  const r = await db.query(`select id, username from users where username = any($1::text[])`, [clean]);
+  const byName = new Map(r.rows.map((x) => [x.username, String(x.id)]));
+  return {
+    ids: clean.map((u) => byName.get(u)).filter(Boolean),
+    missing: clean.filter((u) => !byName.has(u)),
+  };
+}
+
 function shapeTaskRow(row) {
   return {
     id: row.id,
@@ -2425,6 +2475,11 @@ function shapeTaskRow(row) {
     priority: row.priority,
     projectSlug: row.project_slug,
     projectLabel: row.project_label,
+    // Mas'ullar ro'yxati — asosiysi birinchi. Bitta mas'ulli vazifada
+    // ham shu ro'yxat ishlatiladi (ichida bitta element bo'ladi).
+    assignees: Array.isArray(row.assignees) ? row.assignees : [],
+    // Quyidagi uchta maydon — birinchi mas'ul. Eski kod (hisobotlar,
+    // bildirishnomalar) shular orqali ishlayveradi.
     assigneeUsername: row.assignee_username || null,
     assigneeName: row.assignee_user_name || row.assignee_staff_name || null,
     assigneeJobTitle: row.assignee_job_title || null,
@@ -2562,24 +2617,20 @@ app.post("/api/tasks", auth, async (req, res) => {
       projectId = pr.rows[0].id;
     }
 
-    let assigneeUserId = null;
-    let assigneeStaffId = null;
-    if (req.body.assigneeUsername) {
-      const ur = await db.query(`select id from users where username = $1`, [
-        String(req.body.assigneeUsername).toLowerCase().replace("@", ""),
-      ]);
-      if (!ur.rows[0]) return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
-      assigneeUserId = ur.rows[0].id;
-    } else if (req.body.assigneeStaffId) {
-      assigneeStaffId = req.body.assigneeStaffId;
+    const { ids: assigneeIds, missing } = await resolveAssigneeIds(req.body);
+    if (missing.length) {
+      return res.status(404).json({ error: `Foydalanuvchi topilmadi: ${missing.join(", ")}` });
     }
+    const assigneeStaffId = assigneeIds.length ? null : req.body.assigneeStaffId || null;
 
     const ins = await db.query(
       `insert into tasks (project_id, title, description, assignee_user_id, assignee_staff_id, start_date, due_date, created_by, status, priority)
        values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) returning id`,
-      [projectId, title, description, assigneeUserId, assigneeStaffId, startDate, dueDate, req.user.id, status, priority],
+      [projectId, title, description, null, assigneeStaffId, startDate, dueDate, req.user.id, status, priority],
     );
     const taskId = ins.rows[0].id;
+    const assigneeUserId = assigneeIds[0] || null;
+    if (assigneeIds.length) await setTaskAssignees(db, taskId, assigneeIds);
 
     await setTaskTags(taskId, req.body.tagIds);
     await logTaskActivity(taskId, req.user.id, "created");
@@ -2591,12 +2642,25 @@ app.post("/api/tasks", auth, async (req, res) => {
     // checkbox orqali o'chirilishi mumkin (standart holatda yuboriladi).
     // Natija javobga qo'shiladi — frontend xabar bormaganini (masalan
     // xodim botni hali ochmagani uchun) admin'ga darhol ko'rsatadi.
+    // Shaxsiy xabar HAR BIR mas'ulga — umumiy vazifada ham hamma
+    // o'ziga ish tushganini bilishi kerak. Javobdagi `notify` birinchi
+    // mas'ulniki (frontend "xabar bormadi" ogohlantirishini shundan
+    // ko'rsatadi), qolganlari fonda yuboriladi.
     let notify = { attempted: false, ok: false, reason: "not_applicable" };
-    if (assigneeUserId && req.body.notifyTelegram !== false) {
-      notify = await notifyTaskAssigned(db, { assigneeUserId, task, actorUsername: req.user.username }).catch((e) => {
+    if (assigneeIds.length && req.body.notifyTelegram !== false) {
+      notify = await notifyTaskAssigned(db, {
+        assigneeUserId: assigneeIds[0],
+        task,
+        actorUsername: req.user.username,
+      }).catch((e) => {
         console.error("Task bildirishnomasi xatosi:", e.message);
         return { attempted: true, ok: false, reason: e.message };
       });
+      assigneeIds.slice(1).forEach((uid) =>
+        notifyTaskAssigned(db, { assigneeUserId: uid, task, actorUsername: req.user.username }).catch((e) =>
+          console.error("Task bildirishnomasi xatosi:", e.message),
+        ),
+      );
     }
 
     // Nazorat xabari — faqat adminlarga, yangi vazifa yaratilgani haqida
@@ -2606,7 +2670,9 @@ app.post("/api/tasks", auth, async (req, res) => {
     if (req.body.notifyTelegram !== false) {
       const overviewText =
         `📋 <b>@${req.user.username}</b> yangi vazifa yaratdi` +
-        (task.assigneeName ? ` — <b>${task.assigneeName}</b>ga` : "") +
+        (task.assignees.length
+          ? ` — <b>${task.assignees.map((a) => a.name).join(", ")}</b>ga`
+          : "") +
         `\n${task.title}` +
         (task.dueDate ? `\n📅 Muddat: ${task.dueDate}` : "");
       notifyTaskEvent(db, {
@@ -2615,7 +2681,7 @@ app.post("/api/tasks", auth, async (req, res) => {
         // O'zi ham yaratganini bilib tursin — agar o'ziga biriktirmagan
         // bo'lsa (o'ziga biriktirgan bo'lsa, yuqorida notifyTaskAssigned
         // orqali allaqachon shaxsiy xabar oldi, qayta yubormaymiz).
-        selfText: assigneeUserId !== req.user.id ? overviewText : null,
+        selfText: assigneeIds.includes(String(req.user.id)) ? null : overviewText,
         taskId: task.id,
       }).catch((e) => console.error("Nazorat bildirishnomasi xatosi:", e.message));
     }
@@ -2638,6 +2704,9 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
     // reassigned-bildirishnoma uchun — assigneeUsername berilganda shu
     // yerga yoziladi (RAW ID kerak, TASK_ROW_SQL'da assignee_user_id yo'q).
     let newAssigneeUserId = null;
+    // So'rovda mas'ullar berilgan bo'lsa — yangi ro'yxat; berilmasa
+    // `null` (ya'ni tegilmaydi).
+    let nextAssigneeIds = null;
 
     const isAdm = isAdminRole(req.user.role);
     // Vazifani OCHGAN kishi ham uni to'liq tahrirlay oladi — admin
@@ -2645,8 +2714,15 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
     // o'zgartira oladi.
     const isCreator = !!existing.created_by && String(existing.created_by) === String(req.user.id);
     const canEditFields = isAdm || isCreator;
+    // Vazifa bir nechta odamga biriktirilgan bo'lishi mumkin —
+    // ro'yxatdagi har biri statusni o'zgartira oladi.
+    const myAssignR = await db.query(
+      `select 1 from task_assignees where task_id = $1 and user_id = $2`,
+      [req.params.id, req.user.id],
+    );
+    const isAssignee = !!myAssignR.rows[0];
     if (!canEditFields) {
-      if (existing.assignee_user_id !== req.user.id) {
+      if (!isAssignee) {
         return res.status(403).json({ error: "Bu vazifa sizga biriktirilmagan" });
       }
       if (typeof req.body.status !== "string") {
@@ -2699,20 +2775,21 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
         values.push(projectId);
         sets.push(`project_id = $${values.length}`);
       }
-      if (typeof req.body.assigneeUsername !== "undefined" || typeof req.body.assigneeStaffId !== "undefined") {
-        let assigneeStaffId = null;
-        if (req.body.assigneeUsername) {
-          const ur = await db.query(`select id from users where username = $1`, [
-            String(req.body.assigneeUsername).toLowerCase().replace("@", ""),
-          ]);
-          if (!ur.rows[0]) return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
-          newAssigneeUserId = ur.rows[0].id;
-        } else if (req.body.assigneeStaffId) {
-          assigneeStaffId = req.body.assigneeStaffId;
+      // Mas'ullar — `assignee_user_id` bu yerda yozilmaydi, uni
+      // `setTaskAssignees()` o'zi update'dan keyin yangilaydi (yagona
+      // manba qoidasi). Bu yerda faqat eski staff maydoni tozalanadi.
+      if (
+        typeof req.body.assigneeUsernames !== "undefined" ||
+        typeof req.body.assigneeUsername !== "undefined" ||
+        typeof req.body.assigneeStaffId !== "undefined"
+      ) {
+        const { ids, missing } = await resolveAssigneeIds(req.body);
+        if (missing.length) {
+          return res.status(404).json({ error: `Foydalanuvchi topilmadi: ${missing.join(", ")}` });
         }
-        values.push(newAssigneeUserId);
-        sets.push(`assignee_user_id = $${values.length}`);
-        values.push(assigneeStaffId);
+        nextAssigneeIds = ids;
+        newAssigneeUserId = ids[0] || null;
+        values.push(ids.length ? null : req.body.assigneeStaffId || null);
         sets.push(`assignee_staff_id = $${values.length}`);
       }
       if (typeof req.body.tagIds !== "undefined") {
@@ -2760,6 +2837,7 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
 
     values.push(req.params.id);
     await db.query(`update tasks set ${sets.join(", ")} where id = $${values.length}`, values);
+    if (nextAssigneeIds) await setTaskAssignees(db, req.params.id, nextAssigneeIds);
 
     const r = await db.query(`${TASK_ROW_SQL} where t.id = $1`, [req.params.id]);
     const [task] = await attachTags([shapeTaskRow(r.rows[0])]);
@@ -2783,7 +2861,7 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
         const personalText = `🔄 <b>Vazifangiz holati o'zgardi</b>\n${task.title}\n${statusLine}`;
         const overviewText =
           `🔄 <b>@${req.user.username}</b>: <b>${task.title}</b>\n${statusLine}` +
-          (task.assigneeName ? `\n👤 ${task.assigneeName}` : "");
+          (task.assignees.length ? `\n👤 ${task.assignees.map((a) => a.name).join(", ")}` : "");
         notifyTaskEvent(db, {
           actorUserId: req.user.id,
           assigneeUserId: existing.assignee_user_id,
@@ -2808,7 +2886,12 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
       // o'tkazilsa, coin berilmaydi. Holat "bajarildi"dan chiqarilsa
       // (masalan xato bilan belgilangan bo'lsa) — avval berilgan bo'lsa,
       // mukofot qaytarib olinadi.
-      if (existing.assignee_user_id) {
+      // UMUMIY VAZIFAGA COIN BERILMAYDI. Bir nechta odam birga
+      // qiladigan ishda kim qancha hissa qo'shganini tizim bila olmaydi,
+      // shuning uchun avtomatik taqsimot har doim noto'g'ri chiqardi.
+      // Kerak bo'lsa admin Profil → "Ncoin berish" orqali o'zi beradi.
+      const yakkaMasul = task.assignees.length <= 1;
+      if (existing.assignee_user_id && yakkaMasul) {
         if (before.status === "review" && task.status === "done" && req.body.awardNcoin === true) {
           try {
             const jtR = await db.query(`select job_title from users where id = $1`, [existing.assignee_user_id]);
@@ -3601,9 +3684,13 @@ app.delete("/api/project-templates/:id", auth, async (req, res) => {
 // aks holda aloqasi yo'q xodimlar bir-birining vazifalariga izoh
 // yozib chiqishi mumkin bo'lib qolardi).
 async function canCommentOnTask(req, taskId) {
-  const r = await db.query(`select assignee_user_id from tasks where id = $1`, [taskId]);
+  const r = await db.query(
+    `select exists (select 1 from task_assignees ta where ta.task_id = t.id and ta.user_id = $2) as mine
+       from tasks t where t.id = $1`,
+    [taskId, req.user.id],
+  );
   if (!r.rows[0]) return { ok: false, status: 404, error: "Vazifa topilmadi" };
-  if (isAdminRole(req.user.role) || r.rows[0].assignee_user_id === req.user.id) return { ok: true };
+  if (isAdminRole(req.user.role) || r.rows[0].mine) return { ok: true };
   return { ok: false, status: 403, error: "Bu vazifaga izoh qoldira olmaysiz" };
 }
 
@@ -3823,8 +3910,12 @@ app.post("/api/reminder/run", async (req, res) => {
     // kerak emas (har kuni chaqirilsa — kuniga bir marta boradi).
     const REMINDER_LEAD_DAYS = 2;
     const overdueR = await db.query(
+      // Mas'ullar jadvali orqali — umumiy vazifada eslatma HAR BIR
+      // biriktirilgan xodimga boradi, faqat birinchisiga emas.
       `select t.title, t.status, t.due_date, u.username, u.first_name, u.telegram_chat_id
-       from tasks t join users u on u.id = t.assignee_user_id
+       from tasks t
+       join task_assignees ta on ta.task_id = t.id
+       join users u on u.id = ta.user_id
        where t.status not in ('review','done','failed','cancelled') and t.due_date is not null
          and t.due_date <= $1 and u.telegram_chat_id is not null and u.is_active`,
       [addDays(today, REMINDER_LEAD_DAYS)],
