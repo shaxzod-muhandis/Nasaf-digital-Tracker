@@ -3840,36 +3840,208 @@
         outline-offset: 3px;
       }
 
-      /* Mas'ul tanlagich — chiplar ichida kichik avatar.
-         `.chip-group` bitta qatorda yonma-yon turadi (teglar uchun
-         shunday qilingan), lekin bu yerda kimlar tanlanganini bir
-         qarashda ko'rish kerak — shuning uchun o'raladi. */
-      .asg-group {
-        flex-wrap: wrap;
-        max-height: 184px;
-        overflow-y: auto;
-        align-items: flex-start;
+      /* ── MAS'UL TANLAGICH ────────────────────────────────────────
+         Yopiq holatda boshqa maydonlar bilan bir xil ko'rinadi
+         (balandlik, chegara, radius), shuning uchun forma bir tekis
+         bo'lib turadi. Ro'yxat faqat bosilganda ochiladi. */
+      .asg {
+        position: relative;
       }
-      .asg-group .chip-btn {
-        white-space: nowrap;
+      .asg-field {
+        min-height: 44px;
+        border: 1px solid var(--bd4);
+        border-radius: 11px;
+        background: var(--surf);
+        padding: 6px 38px 6px 8px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        position: relative;
+      }
+      .asg-field.open {
+        border-color: var(--brand);
+      }
+      .asg-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        min-width: 0;
+        flex: 1;
+      }
+      .asg-ph {
+        font-size: 14px;
+        color: var(--v3-t4);
+        padding-left: 5px;
       }
       .asg-chip {
         display: inline-flex;
         align-items: center;
-        gap: 7px;
+        gap: 6px;
+        height: 28px;
+        padding: 0 5px 0 5px;
+        border-radius: 8px;
+        background: var(--chip2);
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--ink);
+        white-space: nowrap;
+      }
+      .asg-x {
+        width: 18px;
+        height: 18px;
+        border: none;
+        border-radius: 5px;
+        background: transparent;
+        color: var(--v3-t3);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex: none;
+        padding: 0;
+      }
+      .asg-x:hover {
+        background: var(--bd2);
+        color: var(--ink);
+      }
+      .asg-x svg {
+        width: 12px;
+        height: 12px;
+        stroke-width: 2.4;
+      }
+      .asg-caret {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--chev);
+        display: flex;
+        pointer-events: none;
+      }
+      .asg-caret svg {
+        width: 16px;
+        height: 16px;
       }
       .asg-av {
-        width: 20px;
-        height: 20px;
-        border-radius: 7px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         color: #fff;
-        font-size: 9.5px;
         font-weight: 700;
+        flex: none;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* Ochiluvchi ro'yxat */
+      .asg-pop {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 6px);
+        z-index: 60;
+        background: var(--surf);
+        border: 1px solid var(--bd3);
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(14, 23, 38, 0.14);
+        overflow: hidden;
+      }
+      .asg-search {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--bd1);
+      }
+      .asg-search-ico {
+        display: flex;
+        color: var(--v3-t4);
+      }
+      .asg-search-ico svg {
+        width: 15px;
+        height: 15px;
+      }
+      .asg-search input {
+        flex: 1;
+        min-width: 0;
+        border: none;
+        outline: none;
+        background: transparent;
+        font-family: inherit;
+        font-size: 13.5px;
+        color: var(--ink);
+      }
+      .asg-list {
+        max-height: 232px;
+        overflow-y: auto;
+        padding: 5px;
+      }
+      .asg-row {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 8px;
+        border: none;
+        border-radius: 9px;
+        background: transparent;
+        font-family: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+      .asg-row:hover {
+        background: var(--chip);
+      }
+      .asg-row.on {
+        background: var(--nav-act-bg);
+      }
+      .asg-tick {
+        width: 18px;
+        height: 18px;
+        border-radius: 5px;
+        border: 1.5px solid var(--bd4);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         flex: none;
+        color: #fff;
       }
+      .asg-row.on .asg-tick {
+        background: var(--brand);
+        border-color: var(--brand);
+      }
+      .asg-tick svg {
+        width: 12px;
+        height: 12px;
+        stroke-width: 3.2;
+      }
+      .asg-row-txt {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .asg-row-n {
+        font-size: 13.5px;
+        font-weight: 500;
+        color: var(--ink);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .asg-row-j {
+        font-size: 11.5px;
+        color: var(--v3-t3);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .asg-empty {
+        padding: 14px;
+        text-align: center;
+        font-size: 13px;
+        color: var(--v3-t3);
+      }
+
       /* Kartochkadagi ustma-ust avatarlar */
       .task-avs {
         display: inline-flex;
@@ -11034,45 +11206,138 @@
       // Ustuvorlik ko'rsatkichi — 3 ta ustun (3px kenglik, 5/8/12px
       // balandlik): daraja qancha yuqori bo'lsa, shuncha ko'pi to'lgan.
       // Shoshilinch — barchasi qizil.
-      // Mas'ul tanlagich — bir nechta odam tanlash uchun. Oddiy
-      // <select> bitta qiymat beradi, `multiple` esa telefonda juda
-      // noqulay; shuning uchun teglardagi kabi bosiladigan chiplar.
+      // ── MAS'UL TANLAGICH ─────────────────────────────────────────
+      // Bir nechta odam tanlanadi, lekin forma ixcham qolishi kerak.
+      // Avval hamma xodim ro'yxat bo'lib yoyilib turardi — o'nta qator
+      // butun oynani egallab, ostidagi maydonlar ko'rinmay qolardi.
+      //
+      // Endi boshqa maydonlar bilan bir xil balandlikdagi maydon:
+      // ichida tanlanganlar kichik chip bo'lib turadi, bosilganda
+      // qidiruvli ro'yxat ochiladi.
       const asgSel = {}; // formId -> Set(username)
-      function asgInit(formId, usernames) {
+      const asgUsers = {}; // formId -> [user]
+      let asgOpenId = null;
+
+      function asgInit(formId, usernames, users) {
         asgSel[formId] = new Set(usernames || []);
+        if (users) asgUsers[formId] = users;
       }
+      function asgUserOf(formId, username) {
+        return (asgUsers[formId] || []).find((u) => u.username === username) || { username, first_name: username };
+      }
+      function asgLabel(u) {
+        return u.first_name ? `${u.first_name} ${(u.last_name || "").slice(0, 1)}`.trim() : `@${u.username}`;
+      }
+      function asgAvatar(u, size) {
+        const s = size || 20;
+        return `<span class="asg-av" style="width:${s}px;height:${s}px;border-radius:${Math.round(s / 3)}px;font-size:${Math.round(s * 0.46)}px;background:${personColor(u.username)}">${escHtml((u.first_name || u.username || "?").slice(0, 1).toUpperCase())}${avatarImg(u.avatar_url)}</span>`;
+      }
+
       function asgPickerHtml(formId, users) {
-        const chosen = asgSel[formId] || new Set();
-        const chips = users
-          .map((u) => {
-            const on = chosen.has(u.username);
-            return `<button type="button" class="chip-btn asg-chip${on ? " active" : ""}" onclick="asgToggle('${escArg(formId)}','${escArg(u.username)}')">
-              <span class="asg-av" style="background:${personColor(u.username)}">${escHtml((u.first_name || u.username || "?").slice(0, 1).toUpperCase())}</span>${escHtml(userDisplayLabel(u))}
-            </button>`;
-          })
-          .join("");
-        return `<div class="chip-group asg-group" id="${formId}-asg">${chips || `<div class="f-hint" style="margin:0">Xodim yo'q</div>`}</div>
-          <div class="f-hint" id="${formId}-asg-hint" style="margin:6px 0 0">${asgHintText(formId)}</div>`;
+        asgUsers[formId] = users;
+        if (!asgSel[formId]) asgSel[formId] = new Set();
+        return `<div class="asg" id="${formId}-asg">
+          <div class="asg-field" id="${formId}-asg-field" onclick="asgOpen('${escArg(formId)}')">
+            <div class="asg-chips" id="${formId}-asg-chips">${asgChipsHtml(formId)}</div>
+            <span class="asg-caret">${ICON.chevronDown}</span>
+          </div>
+          <div class="asg-pop" id="${formId}-asg-pop" hidden>
+            <div class="asg-search">
+              <span class="asg-search-ico">${ICON.search}</span>
+              <input type="text" id="${formId}-asg-q" placeholder="Xodim qidirish" oninput="asgFilter('${escArg(formId)}')" onclick="event.stopPropagation()"/>
+            </div>
+            <div class="asg-list" id="${formId}-asg-list">${asgListHtml(formId)}</div>
+          </div>
+        </div>
+        <div class="f-hint" id="${formId}-asg-hint" style="margin:6px 0 0">${asgHintText(formId)}</div>`;
       }
+
+      // Ikki kishidan ko'p tanlansa — bu "umumiy" vazifa va unga Ncoin
+      // avtomatik berilmaydi. Buni tanlash paytida aytish kerak, aks
+      // holda admin keyin coin kelmaganiga hayron bo'lardi.
       function asgHintText(formId) {
         const n = (asgSel[formId] || new Set()).size;
         if (!n) return "Hech kim tanlanmagan — vazifa biriktirilmay qoladi.";
-        if (n === 1) return "1 kishi tanlandi.";
-        return `${n} kishi tanlandi — umumiy vazifa. Bunday vazifaga Ncoin avtomatik berilmaydi.`;
+        if (n === 1) return "";
+        return `${n} kishi — umumiy vazifa. Bunga Ncoin avtomatik berilmaydi.`;
+      }
+
+      function asgChipsHtml(formId) {
+        const chosen = [...(asgSel[formId] || new Set())];
+        if (!chosen.length) return `<span class="asg-ph">Xodim tanlang</span>`;
+        return chosen
+          .map((un) => {
+            const u = asgUserOf(formId, un);
+            return `<span class="asg-chip">${asgAvatar(u, 18)}${escHtml(asgLabel(u))}<button type="button" class="asg-x" aria-label="Olib tashlash" onclick="event.stopPropagation();asgToggle('${escArg(formId)}','${escArg(un)}')">${ICON.close}</button></span>`;
+          })
+          .join("");
+      }
+
+      function asgListHtml(formId, q) {
+        const chosen = asgSel[formId] || new Set();
+        const needle = (q || "").toLowerCase().trim();
+        const rows = (asgUsers[formId] || [])
+          .filter((u) => !needle || `${u.first_name || ""} ${u.last_name || ""} ${u.username} ${u.job_title || ""}`.toLowerCase().includes(needle))
+          .map((u) => {
+            const on = chosen.has(u.username);
+            return `<button type="button" class="asg-row${on ? " on" : ""}" onclick="event.stopPropagation();asgToggle('${escArg(formId)}','${escArg(u.username)}')">
+              <span class="asg-tick">${on ? ICON.check : ""}</span>
+              ${asgAvatar(u, 26)}
+              <span class="asg-row-txt">
+                <span class="asg-row-n">${escHtml(u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : "@" + u.username)}</span>
+                ${u.job_title ? `<span class="asg-row-j">${escHtml(u.job_title)}</span>` : ""}
+              </span>
+            </button>`;
+          })
+          .join("");
+        return rows || `<div class="asg-empty">Topilmadi</div>`;
+      }
+
+      function asgOpen(formId) {
+        if (asgOpenId === formId) return asgClose();
+        asgClose();
+        asgOpenId = formId;
+        const pop = document.getElementById(`${formId}-asg-pop`);
+        if (!pop) return;
+        pop.hidden = false;
+        document.getElementById(`${formId}-asg-field`)?.classList.add("open");
+        const q = document.getElementById(`${formId}-asg-q`);
+        if (q) {
+          q.value = "";
+          asgFilter(formId);
+          // Telefonda avtomatik fokus klaviaturani ochib, ro'yxatni
+          // yopib qo'yadi — shuning uchun faqat katta ekranda.
+          if (window.matchMedia("(min-width: 860px)").matches) q.focus();
+        }
+        setTimeout(() => document.addEventListener("mousedown", asgOutside), 0);
+      }
+      function asgClose() {
+        if (!asgOpenId) return;
+        document.getElementById(`${asgOpenId}-asg-pop`)?.setAttribute("hidden", "");
+        document.getElementById(`${asgOpenId}-asg-field`)?.classList.remove("open");
+        asgOpenId = null;
+        document.removeEventListener("mousedown", asgOutside);
+      }
+      function asgOutside(e) {
+        if (!asgOpenId) return;
+        if (!document.getElementById(`${asgOpenId}-asg`)?.contains(e.target)) asgClose();
+      }
+      function asgFilter(formId) {
+        const q = document.getElementById(`${formId}-asg-q`)?.value || "";
+        const list = document.getElementById(`${formId}-asg-list`);
+        if (list) list.innerHTML = asgListHtml(formId, q);
+        applyStaticIcons?.();
       }
       function asgToggle(formId, username) {
         const set = (asgSel[formId] ||= new Set());
         if (set.has(username)) set.delete(username);
         else set.add(username);
-        const host = document.getElementById(`${formId}-asg`);
-        if (host) {
-          [...host.querySelectorAll(".asg-chip")].forEach((b) => {
-            const u = b.getAttribute("onclick").match(/','([^']*)'\)/)?.[1];
-            b.classList.toggle("active", set.has(u));
-          });
-        }
+        const chips = document.getElementById(`${formId}-asg-chips`);
+        if (chips) chips.innerHTML = asgChipsHtml(formId);
         const hint = document.getElementById(`${formId}-asg-hint`);
         if (hint) hint.textContent = asgHintText(formId);
+        asgFilter(formId);
+        applyStaticIcons?.();
         if (formId === "nt") updateNtWorkloadHint();
       }
       function asgValues(formId) {
