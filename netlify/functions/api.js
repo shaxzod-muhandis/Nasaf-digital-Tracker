@@ -3027,26 +3027,6 @@ function normalizeProduct(row) {
   return row && { ...row, price: Number(row.price) };
 }
 
-// Loyihada ishlab chiqarish roliga (montajchi/mobilograf/smm — boshqa
-// rollar, masalan dizayner/kopirayter/boshqa, kirmaydi) ega bo'lgan,
-// lekin o'sha loyiha muddatidan o'tib "qarz"ga tushib qolgan xodim —
-// qarz yopilmaguncha NShopdan xarid qila olmaydi (loyihalarni o'z
-// vaqtida yopishga rag'batlantirish uchun). Bir nechta qarzli loyiha
-// bo'lsa — birinchisi qaytariladi (xabar uchun yetarli).
-async function findDebtBlockingProject(db, userId) {
-  const rolesR = await db.query(
-    `select p.* from permissions perm
-     join projects p on p.id = perm.project_id
-     where perm.user_id = $1 and perm.role in ('montajchi','mobilograf','smm') and p.is_active = true`,
-    [userId],
-  );
-  for (const project of rolesR.rows) {
-    const summary = await getProjectCycleSummary(db, project);
-    if (summary.outstandingDebt) return project.label;
-  }
-  return null;
-}
-
 // Faqat balans — menyudagi Ncoin raqamini yangilash uchun. `/api/ncoin/me`
 // butun tranzaksiya tarixini qaytaradi va har bir amaldan keyin uni
 // tortib olish isrof bo'lardi; bu yerda bitta yengil so'rov.
@@ -3100,7 +3080,6 @@ app.get("/api/ncoin/me", auth, async (req, res) => {
        ) as has_unseen`,
       [req.user.id],
     );
-    const debtProjectLabel = await findDebtBlockingProject(db, req.user.id);
     res.json({
       ok: true,
       balance,
@@ -3108,8 +3087,6 @@ app.get("/api/ncoin/me", auth, async (req, res) => {
       spent: Number(statsR.rows[0].spent),
       purchaseCount: Number(statsR.rows[0].purchase_count),
       hasUnseen: unseenR.rows[0].has_unseen,
-      debtBlocked: !!debtProjectLabel,
-      debtProjectLabel,
       transactions: txR.rows.map((row) => {
         let detail = null;
         if (row.reference_type === "product") detail = row.product_name;
@@ -3163,14 +3140,6 @@ app.post("/api/ncoin/purchase", auth, async (req, res) => {
   try {
     const { productId } = req.body;
     if (!productId) return res.status(400).json({ error: "productId kerak" });
-
-    const debtProjectLabel = await findDebtBlockingProject(db, req.user.id);
-    if (debtProjectLabel) {
-      return res.status(403).json({
-        error: `"${debtProjectLabel}" loyihasi qarzda — qarz yopilmaguncha NShopdan foydalana olmaysiz`,
-        code: "PROJECT_DEBT",
-      });
-    }
 
     const result = await db.withTransaction(async (client) => {
       const prR = await client.query(
