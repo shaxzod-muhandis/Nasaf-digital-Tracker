@@ -308,6 +308,35 @@ async function main() {
     assert.strictEqual(r.status, 200);
   });
 
+  console.log("── MAS'UL MAJBURIY ───────────────────────────────");
+  await check("mas'ulsiz vazifa yaratib bo'lmaydi (400)", async () => {
+    const r = await call("POST", "/api/tasks", {
+      user: "shaxzodshokirov",
+      body: { title: "Test vazifa masulsiz", dueDate: "2099-08-01", notifyTelegram: false },
+    });
+    assert.strictEqual(r.status, 400, JSON.stringify(r.json));
+  });
+  await check("bo'sh ro'yxat ham rad etiladi (400)", async () => {
+    const r = await call("POST", "/api/tasks", {
+      user: "shaxzodshokirov",
+      body: { title: "Test vazifa bosh royxat", assigneeUsernames: [], dueDate: "2099-08-01", notifyTelegram: false },
+    });
+    assert.strictEqual(r.status, 400, JSON.stringify(r.json));
+  });
+  await check("tahrirlashda oxirgi mas'ulni olib tashlab bo'lmaydi (400)", async () => {
+    const c = await call("POST", "/api/tasks", {
+      user: "shaxzodshokirov",
+      body: { title: "Test vazifa masul talab", assigneeUsernames: ["test_profileuser"], dueDate: "2099-08-02", notifyTelegram: false },
+    });
+    assert.strictEqual(c.status, 200, JSON.stringify(c.json));
+    const r = await call("PATCH", `/api/tasks/${c.json.task.id}`, {
+      user: "shaxzodshokirov",
+      body: { assigneeUsernames: [], notifyTelegram: false },
+    });
+    assert.strictEqual(r.status, 400, JSON.stringify(r.json));
+    await call("DELETE", `/api/tasks/${c.json.task.id}`, { user: "shaxzodshokirov" });
+  });
+
   console.log("── BIR NECHTA MAS'UL ─────────────────────────────");
   let multiTaskId;
   await check("vazifa ikki mas'ul bilan yaratiladi", async () => {
@@ -422,6 +451,7 @@ async function main() {
       user: "shaxzodshokirov",
       body: {
         title: "Test vazifa teskari",
+        assigneeUsernames: ["test_profileuser"],
         startDate: "2099-05-20",
         dueDate: "2099-05-10",
         notifyTelegram: false,
@@ -464,7 +494,7 @@ async function main() {
   await check("oraliqsiz (faqat muddatli) eski uslub ham ishlaydi", async () => {
     const r = await call("POST", "/api/tasks", {
       user: "shaxzodshokirov",
-      body: { title: "Test vazifa muddatli", dueDate: "2099-06-01", notifyTelegram: false },
+      body: { title: "Test vazifa muddatli", assigneeUsernames: ["test_profileuser"], dueDate: "2099-06-01", notifyTelegram: false },
     });
     assert.strictEqual(r.status, 200, JSON.stringify(r.json));
     assert.strictEqual(r.json.task.startDate, null);

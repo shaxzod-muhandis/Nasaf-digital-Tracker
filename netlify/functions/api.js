@@ -2621,6 +2621,12 @@ app.post("/api/tasks", auth, async (req, res) => {
     if (missing.length) {
       return res.status(404).json({ error: `Foydalanuvchi topilmadi: ${missing.join(", ")}` });
     }
+    // Mas'ulsiz vazifa — egasiz ish: u hech kimning ro'yxatida
+    // ko'rinmaydi, eslatma ham bormaydi va amalda unutilib ketadi.
+    // Shuning uchun biriktirish majburiy.
+    if (!assigneeIds.length && !req.body.assigneeStaffId) {
+      return res.status(400).json({ error: "Vazifani kamida bitta xodimga biriktiring" });
+    }
     const assigneeStaffId = assigneeIds.length ? null : req.body.assigneeStaffId || null;
 
     const ins = await db.query(
@@ -2786,6 +2792,11 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
         const { ids, missing } = await resolveAssigneeIds(req.body);
         if (missing.length) {
           return res.status(404).json({ error: `Foydalanuvchi topilmadi: ${missing.join(", ")}` });
+        }
+        // Yaratishda mas'ul majburiy; tahrirlashda oxirgisini olib
+        // tashlash ham xuddi shu natijaga olib kelardi — egasiz vazifa.
+        if (!ids.length && !req.body.assigneeStaffId) {
+          return res.status(400).json({ error: "Vazifada kamida bitta mas'ul qolishi kerak" });
         }
         nextAssigneeIds = ids;
         newAssigneeUserId = ids[0] || null;

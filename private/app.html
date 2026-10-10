@@ -3840,6 +3840,81 @@
         outline-offset: 3px;
       }
 
+      /* ── FORMA: bo'lim sarlavhasi, majburiy belgi, xato ──────────
+         Avval qaysi maydon majburiyligi ko'rinmasdi (faqat bitta
+         yulduzcha bor edi) va xato pastdagi "toast" bo'lib chiqib
+         yo'qolardi — xodim qaysi maydonni to'ldirmaganini bilmasdi. */
+      .f-sec {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--v3-t3);
+        margin: 4px 0 12px;
+        padding-bottom: 7px;
+        border-bottom: 1px solid var(--bd1);
+      }
+      .f-group + .f-sec,
+      .f-check + .f-sec {
+        margin-top: 22px;
+      }
+      .f-req {
+        color: var(--st-debt);
+        font-style: normal;
+        font-weight: 700;
+      }
+      .f-err {
+        display: none;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--st-debt);
+        margin-top: 6px;
+        line-height: 1.45;
+      }
+      .f-err.on {
+        display: block;
+      }
+      .f-input.invalid,
+      .date-field.invalid,
+      .asg-field.invalid {
+        border-color: var(--st-debt);
+      }
+      /* Belgilash katagi — nima uchun kerakligi yonida yozilgan */
+      .f-check {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 11px 12px;
+        margin-bottom: 16px;
+        border: 1px solid var(--bd2);
+        border-radius: 11px;
+        cursor: pointer;
+      }
+      .f-check input {
+        width: 18px;
+        height: 18px;
+        margin: 1px 0 0;
+        flex: none;
+        accent-color: var(--brand);
+      }
+      .f-check span {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+      .f-check b {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .f-check i {
+        font-style: normal;
+        font-size: 12px;
+        color: var(--v3-t2);
+        line-height: 1.45;
+      }
+
       /* ── MAS'UL TANLAGICH ────────────────────────────────────────
          Yopiq holatda boshqa maydonlar bilan bir xil ko'rinadi
          (balandlik, chegara, radius), shuning uchun forma bir tekis
@@ -9131,6 +9206,7 @@
       function commitDpRange() {
         if (!dpState || !dpState.range) return;
         const { id } = dpState;
+        if (typeof ntClearErr === "function") ntClearErr(id);
         const start = dpState.start || "";
         const end = dpState.end || start;
         const startEl = document.getElementById(id + "-start");
@@ -11336,6 +11412,7 @@
         if (chips) chips.innerHTML = asgChipsHtml(formId);
         const hint = document.getElementById(`${formId}-asg-hint`);
         if (hint) hint.textContent = asgHintText(formId);
+        if (set.size) document.getElementById(`${formId}-asg-err`) && ntClearErr(`${formId}-asg`);
         asgFilter(formId);
         applyStaticIcons?.();
         if (formId === "nt") updateNtWorkloadHint();
@@ -12652,7 +12729,7 @@
             <select class="f-input" id="et-project">${projectOptions}</select>
           </div>
           <div class="f-group">
-            <label class="f-label">Kim bajaradi</label>
+            <label class="f-label">Kim bajaradi <i class="f-req">*</i></label>
             ${asgPickerHtml("et", users)}
           </div>
           <div class="f-group">
@@ -12690,7 +12767,8 @@
       async function submitEditTask(id) {
         const btn = document.getElementById("et-save-btn");
         const title = document.getElementById("et-title")?.value.trim();
-        if (!title) return showToast("⚠ Nomi kerak");
+        if (!title) return showToast("⚠ Vazifa nomini yozing");
+        if (!asgValues("et").length) return showToast("⚠ Kamida bitta mas'ul qolishi kerak");
         const description = document.getElementById("et-desc")?.value.trim();
         const projectSlug = document.getElementById("et-project")?.value || "";
         const dueDate = document.getElementById("et-due")?.value || "";
@@ -12759,6 +12837,13 @@
         const dueInput = document.getElementById("nt-due");
         if (dueGroup) dueGroup.style.display = s === "backlog" ? "none" : "";
         if (dueInput) dueInput.required = s !== "backlog";
+        const hint = document.getElementById("nt-status-hint");
+        if (hint) {
+          hint.textContent =
+            s === "backlog"
+              ? "Hozircha ro'yxatda turadi, muddat keyinroq qo'yiladi."
+              : "Vazifa darhol xodimning ro'yxatiga tushadi.";
+        }
       }
       function renderNtTagsHtml() {
         return tagsList
@@ -12853,38 +12938,35 @@
         // kabi, faqat check tafsilotlarida ishlatiladigan) xodimlar bu
         // yerda ko'rsatilmaydi, chunki ular ilovani ochmaydi va vazifani
         // ko'ra olmaydi.
-        const userOptions =
-          `<option value="">— Tanlanmagan —</option>` +
-          users.map((u) => `<option value="u:${escArg(u.username)}">${escHtml(userDisplayLabel(u))}</option>`).join("");
         body.innerHTML = `
+          <div class="f-sec">Majburiy</div>
           <div class="f-group">
-            <label class="f-label">Nomi</label>
-            <input class="f-input" id="nt-title" placeholder="Vazifa nomi"/>
+            <label class="f-label">Nomi <i class="f-req">*</i></label>
+            <input class="f-input" id="nt-title" placeholder="Masalan: Granix uchun oktabr reels" oninput="ntClearErr('nt-title')"/>
+            <div class="f-err" id="nt-title-err"></div>
           </div>
           <div class="f-group">
-            <label class="f-label">Tavsif (ixtiyoriy)</label>
-            <textarea class="f-input" id="nt-desc" rows="3"></textarea>
+            <label class="f-label">Kim bajaradi <i class="f-req">*</i></label>
+            ${asgPickerHtml("nt", users)}
+            <div class="f-err" id="nt-asg-err"></div>
+            <div id="nt-workload-hint" style="margin-top:6px"></div>
+          </div>
+          <div class="f-group" id="nt-due-group">
+            <label class="f-label">Ish vaqti <i class="f-req">*</i></label>
+            ${renderDateRangeFieldHtml("nt-due", "", "", "Qaysi kundan qaysi kungacha")}
+            <div class="f-err" id="nt-due-err"></div>
+            <div class="f-hint">Kalendarda ikki marta bosing: birinchisi — boshlanish, ikkinchisi — tugash kuni.</div>
+          </div>
+
+          <div class="f-sec">Qo'shimcha</div>
+          <div class="f-group">
+            <label class="f-label">Tavsif</label>
+            <textarea class="f-input" id="nt-desc" rows="3" placeholder="Nima qilish kerakligini batafsil yozing"></textarea>
           </div>
           <div class="f-group">
             <label class="f-label">Loyiha</label>
             <select class="f-input" id="nt-project">${projectOptions}</select>
-          </div>
-          <div class="f-group">
-            <label class="f-label">Kim bajaradi</label>
-            ${asgPickerHtml("nt", users)}
-            <div id="nt-workload-hint" style="margin-top:6px"></div>
-          </div>
-          <div class="f-group">
-            <label class="f-label">Boshlang'ich holat</label>
-            <div class="seg" id="nt-status-seg">
-              <button type="button" class="seg-btn active" data-val="todo" onclick="setNtStatus('todo')">To Do</button>
-              <button type="button" class="seg-btn" data-val="backlog" onclick="setNtStatus('backlog')">Backlog</button>
-            </div>
-            <div class="f-hint">Backlog — hali navbatga qo'yilmagan, muddat keyinroq kiritiladi.</div>
-          </div>
-          <div class="f-group" id="nt-due-group">
-            <label class="f-label">Ish vaqti (qaysi kundan qaysi kungacha) *</label>
-            ${renderDateRangeFieldHtml("nt-due", "", "", "Vaqt oralig'ini tanlang")}
+            <div class="f-hint">Loyihaga tegishli bo'lmasa — «Umumiy» qoldiring.</div>
           </div>
           <div class="f-group">
             <label class="f-label">Ustuvorlik</label>
@@ -12895,18 +12977,30 @@
             </select>
           </div>
           <div class="f-group">
-            <label class="f-label">Taglar</label>
+            <label class="f-label">Teglar</label>
             <div class="chips" id="nt-tags" style="margin-top:0">${renderNtTagsHtml()}</div>
             <div class="f-row" style="margin-top:8px">
-              <input class="f-input" id="nt-new-tag" placeholder="Yangi tag nomi"/>
+              <input class="f-input" id="nt-new-tag" placeholder="Yangi teg nomi"/>
               <button type="button" class="btn btn-soft" style="width:auto;padding:0 16px" onclick="createNtTag()">+ Yangi</button>
             </div>
+            <div class="f-hint">Teg — ish turi (Montaj, Dizayn…). Keyin shu bo'yicha filtrlaysiz.</div>
           </div>
-          <div class="f-group" style="display:flex;align-items:center;gap:8px">
-            <input type="checkbox" id="nt-notify" checked style="width:auto"/>
-            <label class="f-label" style="margin:0" for="nt-notify">Telegramga xabar yuborilsin</label>
+          <div class="f-group">
+            <label class="f-label">Navbat</label>
+            <div class="seg" id="nt-status-seg">
+              <button type="button" class="seg-btn active" data-val="todo" onclick="setNtStatus('todo')">Hozir boshlanadi</button>
+              <button type="button" class="seg-btn" data-val="backlog" onclick="setNtStatus('backlog')">Keyinroq</button>
+            </div>
+            <div class="f-hint" id="nt-status-hint">Vazifa darhol xodimning ro'yxatiga tushadi.</div>
           </div>
-          <button class="btn btn-blue" id="nt-save-btn" onclick="createTask()">Yaratish</button>`;
+          <label class="f-check">
+            <input type="checkbox" id="nt-notify" checked/>
+            <span>
+              <b>Telegramga xabar yuborilsin</b>
+              <i>Mas'ul(lar)ga yangi vazifa haqida darhol xabar boradi.</i>
+            </span>
+          </label>
+          <button class="btn btn-blue" id="nt-save-btn" onclick="createTask()">Vazifani yaratish</button>`;
       }
       // ── YANGI VAZIFA — mobil oyna (v3) ────────────────────────────
       // Barcha tanlovlar shu obyektda saqlanadi (mobilda <select> yo'q —
@@ -12944,8 +13038,11 @@
         const proj = projects.find((p) => (p.slug || p.id) === ntv3.projectSlug);
         const tagNames = tagsList.filter((t) => ntv3.tagIds.has(t.id)).map((t) => t.name);
         el.innerHTML =
-          ntv3Row("kimga", "Kimga", masullar.map((u) => userDisplayLabel(u)).join(", "), "Tanlang") +
-          ntv3Row("muddat", "Ish vaqti", fmtDateRangeField(ntv3.startDate, ntv3.dueDate), "Oraliq") +
+          // Majburiy qatorlar yulduzcha bilan — telefonda forma bitta
+          // ro'yxat bo'lgani uchun nimasiz yaratib bo'lmasligi
+          // ko'rinib turishi kerak.
+          ntv3Row("kimga", "Kimga *", masullar.map((u) => userDisplayLabel(u)).join(", "), "Tanlang") +
+          ntv3Row("muddat", "Ish vaqti *", fmtDateRangeField(ntv3.startDate, ntv3.dueDate), "Qaysi kundan qaysi kungacha") +
           ntv3Row("ustuvorlik", "Ustuvorlik", TASK_PRIORITY_LABEL[ntv3.priority] || "", "Oddiy") +
           ntv3Row("loyiha", "Loyiha", proj ? proj.label : "", "Umumiy") +
           ntv3Row("teglar", "Teglar", tagNames.join(", "), "Yo'q");
@@ -13067,8 +13164,10 @@
       async function createTaskMobile(btn) {
         if (!ntv3) return;
         const title = document.getElementById("ntv3-title")?.value.trim();
-        if (!title) return showToast("⚠ Nomi kerak");
-        if (!ntv3.dueDate) return showToast("⚠ Ish vaqtini tanlang");
+        if (!title) return showToast("⚠ Vazifa nomini yozing");
+        // Mas'ulsiz vazifa hech kimning ro'yxatida ko'rinmaydi.
+        if (!ntv3.assigneeUsernames.length) return showToast("⚠ «Kimga» — kamida bitta xodimni tanlang");
+        if (!ntv3.dueDate) return showToast("⚠ «Ish vaqti» — qaysi kundan qaysi kungacha");
         const description = document.getElementById("ntv3-desc")?.value.trim();
         const body = {
           title,
@@ -13110,13 +13209,49 @@
         if (n.reason === "no_assignee" || n.reason === "not_applicable" || n.reason === "no_bot_token") return "";
         return " · ⚠ Telegram xabari yuborilmadi";
       }
+      // Xatoni maydonning OSTIDA ko'rsatadi. Avval faqat pastdagi
+      // "toast" chiqardi: u tez yo'qolardi va qaysi maydon haqida
+      // ekani ko'rinmasdi, shuning uchun xodimlar bir xil xatoni
+      // qayta-qayta takrorlardi.
+      function ntShowErr(fieldId, matn) {
+        const el = document.getElementById(`${fieldId}-err`);
+        if (el) {
+          el.textContent = matn;
+          el.classList.add("on");
+        }
+        // Avval ko'rinadigan maydon (`-field`), keyin inputning o'zi:
+        // sana va mas'ul tanlagichda haqiqiy input yashirin turadi.
+        const inp = document.getElementById(`${fieldId}-field`) || document.getElementById(fieldId);
+        inp?.classList.add("invalid");
+        (el || inp)?.scrollIntoView({ block: "center", behavior: "smooth" });
+      }
+      function ntClearErr(fieldId) {
+        const el = document.getElementById(`${fieldId}-err`);
+        if (el) {
+          el.textContent = "";
+          el.classList.remove("on");
+        }
+        (document.getElementById(`${fieldId}-field`) || document.getElementById(fieldId))?.classList.remove("invalid");
+      }
+      function ntClearAllErrs() {
+        ["nt-title", "nt-asg", "nt-due"].forEach(ntClearErr);
+      }
+
       async function createTask() {
         const btn = document.getElementById("nt-save-btn");
+        ntClearAllErrs();
         const title = document.getElementById("nt-title")?.value.trim();
-        if (!title) return showToast("⚠ Nomi kerak");
+        if (!title) return ntShowErr("nt-title", "Vazifa nomini yozing.");
+        // Mas'ulsiz vazifa hech kimning ro'yxatida ko'rinmaydi va
+        // unutilib ketadi — shuning uchun biriktirish majburiy.
+        if (!asgValues("nt").length) {
+          return ntShowErr("nt-asg", "Kamida bitta xodimni tanlang — aks holda vazifa hech kimga ko'rinmaydi.");
+        }
         const dueDate = document.getElementById("nt-due")?.value || "";
         const startDate = document.getElementById("nt-due-start")?.value || "";
-        if (ntStatus !== "backlog" && !dueDate) return showToast("⚠ Ish vaqtini tanlang");
+        if (ntStatus !== "backlog" && !dueDate) {
+          return ntShowErr("nt-due", "Ish vaqtini tanlang — qaysi kundan qaysi kungacha.");
+        }
         const description = document.getElementById("nt-desc")?.value.trim();
         const projectSlug = document.getElementById("nt-project")?.value || undefined;
         const priority = document.getElementById("nt-priority")?.value || "no_priority";
