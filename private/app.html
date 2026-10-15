@@ -5132,11 +5132,12 @@
       /* Almashuvlar ro'yxati */
 
       /* ═══ VAZIFA YARATISH SAHIFASI (TZ: ekranlar 16a–16d) ═══════════
-         Modal emas, alohida sahifa. Chapda nom va tavsif, o'ngda
-         parametrlar; kim/muddat/ustuvorlik ichki ekranga kirmasdan,
-         shu yerning o'zida tanlanadi. Ranglar ilovaning umumiy
-         tokenlaridan olinadi (TZ 05-bo'limdagi qiymatlar aynan shular)
-         — shunda tungi rejim ham o'z-o'zidan ishlaydi. */
+         Modal emas, alohida sahifa. Katta ekranda chapda nom va tavsif,
+         o'ngda parametrlar; telefonda bitta ustun. Kim/muddat/ustuvorlik
+         ichki ekranga kirmasdan shu yerning o'zida tanlanadi.
+         O'lchamlar va ranglar dizayn bilan 1:1 — ranglar ilovaning
+         umumiy tokenlaridan olinadi (TZ 05 qiymatlari aynan shular),
+         shunda tungi rejim ham o'z-o'zidan ishlaydi. */
       .ntf-ov {
         position: fixed;
         inset: 0;
@@ -5146,6 +5147,8 @@
         flex-direction: column;
         font-family: "Onest", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
+
+      /* ── Sarlavha ────────────────────────────────────────────────── */
       .ntf-hdr {
         flex: none;
         height: 64px;
@@ -5163,7 +5166,7 @@
         border-radius: 12px;
         background: var(--surf);
         border: 1px solid var(--bd4);
-        color: var(--ink, var(--t5));
+        color: var(--t5);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -5172,19 +5175,25 @@
       .ntf-back svg { width: 19px; height: 19px; }
       .ntf-hdr-txt { flex: 1; min-width: 0; }
       .ntf-crumb {
+        display: flex;
+        align-items: center;
+        gap: 7px;
         font-size: 12.5px;
-        font-weight: 500;
-        color: var(--v3-t3);
         white-space: nowrap;
         overflow: hidden;
-        text-overflow: ellipsis;
       }
+      .ntf-crumb span { font-weight: 500; color: var(--v3-t2); }
+      .ntf-crumb i { font-style: normal; font-weight: 400; color: var(--v3-t3); }
       .ntf-crumb b { font-weight: 600; color: var(--marker); }
       .ntf-h1 {
         font-size: 18px;
         font-weight: 600;
         letter-spacing: -0.015em;
         color: var(--marker);
+        margin-top: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .ntf-draft {
         flex: none;
@@ -5192,6 +5201,8 @@
         color: var(--v3-t3);
         white-space: nowrap;
       }
+
+      /* ── Tartib ──────────────────────────────────────────────────── */
       .ntf-scroll {
         flex: 1;
         min-height: 0;
@@ -5205,7 +5216,7 @@
         display: grid;
         grid-template-columns: minmax(0, 1fr) 380px;
         gap: 18px;
-        align-items: start;
+        align-items: stretch;
       }
       .ntf-side { display: flex; flex-direction: column; gap: 12px; }
       .ntf-card {
@@ -5214,8 +5225,22 @@
         border-radius: 14px;
       }
       .ntf-card.pad { padding: 16px; }
-      /* Nom va tavsif — bitta katta karta, ramkasiz yozuv maydonlari */
-      .ntf-main { padding: 22px 24px; }
+
+      /* ── Nom va tavsif kartasi ───────────────────────────────────── */
+      .ntf-main {
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
+      }
+      .ntf-main-top { padding: 22px 24px 0; flex: none; }
+      .ntf-main-desc { padding: 16px 24px; flex: 1; display: flex; flex-direction: column; }
+      /* Maydon ustidagi kichik izoh — "Vazifa nomi", "Tavsif" */
+      .ntf-cap {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--v3-t2);
+        white-space: nowrap;
+      }
       .ntf-title-in,
       .ntf-desc-in {
         width: 100%;
@@ -5225,6 +5250,7 @@
         font-family: inherit;
         resize: none;
         display: block;
+        padding: 0;
       }
       .ntf-title-in {
         font-size: 24px;
@@ -5233,26 +5259,28 @@
         letter-spacing: -0.02em;
         color: var(--marker);
         max-width: 26ch;
+        margin-top: 8px;
       }
-      .ntf-sep { height: 1px; background: var(--bd2); margin: 20px 24px 0; }
+      .ntf-sep { height: 1px; background: var(--bd2); margin: 20px 24px 0; flex: none; }
       .ntf-desc-in {
         font-size: 15px;
         line-height: 1.75;
         color: var(--body-text, #2b3340);
         max-width: 60ch;
-        margin-top: 16px;
+        margin-top: 10px;
+        flex: 1;
         min-height: 96px;
       }
-      .ntf-title-in::placeholder,
+      .ntf-title-in::placeholder { color: var(--v3-t3); font-weight: 500; }
       .ntf-desc-in::placeholder { color: var(--v3-t3); }
       /* Tavsif asboblari — faqat katta ekranda; mobilda markdown qo'lda */
       .ntf-tools {
         display: flex;
         align-items: center;
         gap: 6px;
-        margin-top: 16px;
-        padding-top: 14px;
+        padding: 10px 16px;
         border-top: 1px solid var(--bd2);
+        flex: none;
       }
       .ntf-tool {
         width: 30px;
@@ -5263,69 +5291,93 @@
         color: var(--v3-t2);
         font-family: inherit;
         font-size: 13px;
-        font-weight: 600;
+        font-weight: 500;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
       }
-      .ntf-tool:hover { background: var(--chip2); color: var(--marker); }
-      .ntf-tool svg { width: 15px; height: 15px; }
-      .ntf-tool-div { width: 1px; height: 18px; background: var(--bd2); margin: 0 4px; }
+      .ntf-tool.b { font-weight: 700; }
+      .ntf-tool:hover,
+      .ntf-toolbtn:hover { background: var(--chip2); color: var(--marker); }
+      .ntf-tool svg,
+      .ntf-toolbtn svg { width: 14px; height: 14px; }
+      .ntf-tool-div { width: 1px; height: 18px; background: var(--bd2); }
+      .ntf-toolbtn {
+        height: 30px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--v3-t2);
+        font-family: inherit;
+        font-size: 12.5px;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+      }
       .ntf-tools-hint { margin-left: auto; font-size: 11.5px; color: var(--v3-t3); }
 
-      /* Maydon nomi + majburiylik belgisi */
+      /* ── Maydon nomi qatori ──────────────────────────────────────── */
       .ntf-lbl {
         display: flex;
-        align-items: center;
-        gap: 4px;
+        align-items: baseline;
+        gap: 5px;
         font-size: 13px;
         font-weight: 600;
         color: var(--t5);
         margin-bottom: 8px;
       }
-      .ntf-lbl i {
-        font-style: normal;
-        font-weight: 700;
-        color: var(--red);
-      }
+      .ntf-lbl i { font-style: normal; font-weight: 700; color: var(--red); }
+      /* O'ng chekkada: to'ldirilgan bo'lsa qiymat yoki maslahat, bo'sh
+         majburiy maydonda esa qizil "Tanlanmagan" (TZ 07). */
       .ntf-lbl .ntf-lbl-r {
         margin-left: auto;
         font-size: 11.5px;
-        font-weight: 600;
+        font-weight: 400;
+        color: var(--v3-t3);
+        white-space: nowrap;
       }
-      .ntf-lbl .ntf-lbl-r.miss { color: var(--red); }
-      .ntf-lbl .ntf-lbl-r.val { color: var(--nav-act-ink, var(--brand)); }
+      .ntf-lbl .ntf-lbl-r.miss { color: var(--red); font-weight: 600; }
+      .ntf-lbl .ntf-lbl-r.val { color: var(--nav-act-ink, var(--brand)); font-weight: 600; }
+      .ntf-next { margin-top: 16px; }
+
+      /* ── Avatar (hamma joyda bir xil) ────────────────────────────── */
+      .ntf-av {
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 600;
+        position: relative;
+        overflow: hidden;
+      }
 
       /* ── Kim bajaradi — katta ekran: chiplar ─────────────────────── */
       .ntf-asg-list { display: flex; flex-wrap: wrap; gap: 6px; }
       .ntf-asg {
-        min-height: 36px;
+        height: 36px;
         border-radius: 10px;
         background: var(--surf);
         border: 1px solid var(--bd4);
         display: flex;
         align-items: center;
         gap: 8px;
-        padding: 3px 6px 3px 4px;
+        padding: 0 6px 0 4px;
+        box-sizing: border-box;
+        flex: none;
         max-width: 100%;
       }
-      .ntf-av {
-        flex: none;
-        border-radius: 34%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-weight: 700;
-        position: relative;
-        overflow: hidden;
-      }
-      .ntf-asg .ntf-av { width: 28px; height: 28px; font-size: 11px; }
+      .ntf-asg .ntf-av { width: 28px; height: 28px; border-radius: 10px; font-size: 11px; }
       .ntf-asg-txt { min-width: 0; }
       .ntf-asg-n {
         font-size: 13px;
         font-weight: 600;
+        line-height: 1.15;
         color: var(--marker);
         white-space: nowrap;
         overflow: hidden;
@@ -5333,13 +5385,14 @@
       }
       .ntf-asg-s {
         font-size: 11px;
+        line-height: 1.2;
         color: var(--v3-t2);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      .ntf-asg-s b { font-weight: 600; }
-      .ntf-asg-s b.busy { color: var(--st-behind, #a45f08); }
+      /* Band xodim (5 tadan ko'p faol vazifa) ajralib tursin */
+      .ntf-busy { color: var(--st-behind, #a45f08); font-weight: 600; }
       .ntf-x {
         flex: none;
         width: 22px;
@@ -5362,18 +5415,18 @@
         background: transparent;
         color: var(--v3-t2);
         font-family: inherit;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 500;
-        padding: 0 11px;
+        padding: 0 9px;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        align-self: center;
+        white-space: nowrap;
+        flex: none;
       }
       .ntf-add:hover { border-color: var(--brand); color: var(--brand); }
       .ntf-add svg { width: 13px; height: 13px; }
-
       /* Xodim qidirish oynachasi (katta ekran) */
       .ntf-pop {
         position: fixed;
@@ -5389,49 +5442,38 @@
         overflow: hidden;
       }
 
-      /* ── Kim bajaradi — mobil: avatar qatori ─────────────────────── */
-      /* Qator gorizontal suriladi; oxirgi element chetdan qisman
+      /* ── Kim bajaradi — telefon: avatar qatori ───────────────────── */
+      /* Qator o'ngga suriladi; oxirgi element ekran chetidan qisman
          ko'rinib turadi — surish mumkinligini shu bildiradi. */
       .ntf-avrow {
         display: flex;
         gap: 12px;
         overflow-x: auto;
         scrollbar-width: none;
-        padding: 2px 0 2px;
-        margin: 0 -16px;
-        padding-left: 16px;
-        padding-right: 16px;
+        margin-right: -16px;
+        /* Tanlangan avatar atrofidagi halqa 4px chiqadi — gorizontal
+           surish uni yuqoridan qirqib qo'ymasligi uchun joy qoldiramiz */
+        padding: 5px 0 1px;
+        margin-top: -5px;
       }
       .ntf-avrow::-webkit-scrollbar { display: none; }
       .ntf-avitem {
-        flex: none;
         width: 56px;
+        flex: none;
         border: 0;
         background: transparent;
         padding: 0;
         font-family: inherit;
         cursor: pointer;
-        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
       }
-      .ntf-avwrap {
-        width: 46px;
-        height: 46px;
-        margin: 0 auto 6px;
-        position: relative;
-      }
-      .ntf-avitem .ntf-av {
-        width: 46px;
-        height: 46px;
-        border-radius: 16px;
-        font-size: 16px;
-      }
-      .ntf-avitem.on .ntf-avwrap::after {
-        content: "";
-        position: absolute;
-        inset: -6px;
-        border-radius: 22px;
-        border: 4px solid var(--brand);
-        box-shadow: inset 0 0 0 2px var(--surf);
+      .ntf-avwrap { position: relative; border-radius: 16px; }
+      .ntf-avitem .ntf-av { width: 46px; height: 46px; border-radius: 16px; font-size: 18px; }
+      .ntf-avitem.on .ntf-avwrap {
+        box-shadow: 0 0 0 2px var(--surf), 0 0 0 4px var(--brand);
       }
       .ntf-avtick {
         position: absolute;
@@ -5439,50 +5481,47 @@
         bottom: -4px;
         width: 18px;
         height: 18px;
-        border-radius: 50%;
+        border-radius: 99px;
         background: var(--brand);
+        border: 2px solid var(--surf);
         color: #fff;
         display: none;
         align-items: center;
         justify-content: center;
-        z-index: 1;
+        font-size: 9px;
+        font-weight: 700;
       }
       .ntf-avitem.on .ntf-avtick { display: flex; }
-      .ntf-avtick svg { width: 11px; height: 11px; stroke-width: 3.2; }
       .ntf-avn {
         font-size: 11.5px;
         font-weight: 500;
-        color: var(--marker);
+        color: var(--t5);
         white-space: nowrap;
+        max-width: 56px;
         overflow: hidden;
         text-overflow: ellipsis;
       }
+      .ntf-avitem.on .ntf-avn { font-weight: 700; color: var(--marker); }
       .ntf-avj {
         font-size: 10px;
         color: var(--v3-t3);
         white-space: nowrap;
+        margin-top: -4px;
+        max-width: 56px;
         overflow: hidden;
         text-overflow: ellipsis;
       }
       .ntf-avitem.all .ntf-av {
         background: transparent !important;
-        border: 1px dashed var(--bd4);
+        border: 1.5px dashed var(--bd4);
         color: var(--v3-t2);
+        box-sizing: border-box;
       }
       .ntf-avitem.all .ntf-av svg { width: 18px; height: 18px; }
 
       /* ── Muddat ──────────────────────────────────────────────────── */
-      .ntf-quick {
-        display: flex;
-        gap: 6px;
-        overflow-x: auto;
-        scrollbar-width: none;
-        margin: 0 -16px;
-        padding: 0 16px;
-      }
-      .ntf-quick::-webkit-scrollbar { display: none; }
+      .ntf-quick { display: flex; flex-wrap: wrap; gap: 6px; }
       .ntf-qbtn {
-        flex: none;
         height: 36px;
         border-radius: 10px;
         background: var(--surf);
@@ -5495,39 +5534,37 @@
         cursor: pointer;
         display: inline-flex;
         align-items: center;
-        gap: 5px;
+        gap: 6px;
+        box-sizing: border-box;
+        white-space: nowrap;
+        flex: none;
       }
-      .ntf-qbtn span { color: var(--v3-t3); }
+      .ntf-qbtn span { font-weight: 400; color: var(--v3-t3); }
       .ntf-qbtn.on {
         background: var(--nav-act-bg, #eaf2f9);
         border: 1.5px solid var(--brand);
         color: var(--nav-act-ink, var(--brand));
         font-weight: 600;
-        padding: 0 12.5px;
       }
       .ntf-qbtn.on span { color: var(--nav-act-ink, var(--brand)); }
-      .ntf-qbtn svg { width: 15px; height: 15px; }
-      .ntf-timerow {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-top: 10px;
-      }
+      .ntf-qbtn svg { width: 15px; height: 15px; flex: none; }
+      /* Soat chipi — muddat tugmalaridan boshqa narsa, u doim bir xil
+         ko'rinadi ("tanlangan" holati yo'q). */
+      .ntf-timerow { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+      .ntf-qbtn.time { gap: 7px; padding: 0 12px; color: var(--v3-t2); }
+      .ntf-qbtn.time b { font-size: 13px; font-weight: 600; color: var(--marker); }
+      .ntf-qbtn.late { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+      .ntf-qbtn.late b { color: var(--red); }
       .ntf-when {
         font-size: 12.5px;
-        color: var(--v3-t3);
+        color: var(--v3-t2);
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      .ntf-qbtn.late {
-        border-color: var(--red);
-        color: var(--red);
-        background: var(--red-bg);
-      }
 
-      /* ── Ustuvorlik va boshlanishi — segment ─────────────────────── */
+      /* ── Segmentlar ──────────────────────────────────────────────── */
       .ntf-seg {
         display: flex;
         gap: 2px;
@@ -5535,6 +5572,9 @@
         border-radius: 11px;
         padding: 3px;
       }
+      /* Ustuvorlik — to'rt teng bo'lak, matn uzunligi ularni
+         turlicha kengaytirmasligi kerak */
+      .ntf-seg.four { display: grid; grid-template-columns: repeat(4, 1fr); }
       .ntf-seg-b {
         flex: 1;
         min-width: 0;
@@ -5553,26 +5593,21 @@
         gap: 6px;
         white-space: nowrap;
       }
+      .ntf-seg.four .ntf-seg-b { font-size: 12.5px; }
       .ntf-seg-b.on {
         background: var(--surf);
         color: var(--marker);
         font-weight: 600;
         box-shadow: 0 1px 2px rgba(14, 23, 38, 0.1);
       }
-      .ntf-seg.tall .ntf-seg-b { height: 38px; }
       /* Ustuvorlik ustunchalari — daraja qancha yuqori, shuncha ko'pi to'lgan */
-      .ntf-bars { display: inline-flex; align-items: flex-end; gap: 2px; }
-      .ntf-bars i {
-        display: block;
-        width: 3px;
-        border-radius: 1px;
-        background: var(--track, #d7dce2);
-      }
+      .ntf-bars { display: flex; align-items: flex-end; gap: 2px; height: 12px; }
+      .ntf-bars i { display: block; width: 3px; border-radius: 1px; background: #d7dce2; }
       .ntf-bars i:nth-child(1) { height: 5px; }
       .ntf-bars i:nth-child(2) { height: 8px; }
       .ntf-bars i:nth-child(3) { height: 12px; }
 
-      /* ── Loyiha, teglar ──────────────────────────────────────────── */
+      /* ── Loyiha va teglar (katta ekran) ──────────────────────────── */
       .ntf-select {
         width: 100%;
         height: 44px;
@@ -5585,15 +5620,12 @@
         gap: 9px;
         font-family: inherit;
         font-size: 13.5px;
+        font-weight: 500;
         color: var(--marker);
         cursor: pointer;
+        box-sizing: border-box;
       }
-      .ntf-dot {
-        width: 9px;
-        height: 9px;
-        border-radius: 3px;
-        flex: none;
-      }
+      .ntf-dot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
       .ntf-select-v {
         flex: 1;
         min-width: 0;
@@ -5602,33 +5634,33 @@
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      .ntf-select svg { width: 15px; height: 15px; color: var(--v3-t3); flex: none; }
+      .ntf-select svg { width: 16px; height: 16px; color: var(--v3-t3); flex: none; }
       .ntf-tags { display: flex; flex-wrap: wrap; gap: 6px; }
       .ntf-tag {
         height: 28px;
         border-radius: 8px;
-        padding: 0 7px 0 10px;
+        padding: 0 9px;
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        font-size: 12.5px;
+        gap: 6px;
+        font-size: 12px;
         font-weight: 600;
+        white-space: nowrap;
+        flex: none;
       }
       .ntf-tag button {
         border: 0;
         background: transparent;
         color: inherit;
         opacity: 0.6;
+        font-weight: 500;
+        font-family: inherit;
+        font-size: 13px;
         cursor: pointer;
         padding: 0;
-        display: flex;
-        width: 16px;
-        height: 16px;
-        align-items: center;
-        justify-content: center;
+        line-height: 1;
       }
       .ntf-tag button:hover { opacity: 1; }
-      .ntf-tag button svg { width: 11px; height: 11px; }
 
       /* ── Telegram kaliti ─────────────────────────────────────────── */
       .ntf-tg {
@@ -5636,15 +5668,25 @@
         align-items: center;
         gap: 12px;
         cursor: pointer;
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid var(--bd2);
       }
       .ntf-tg-txt { flex: 1; min-width: 0; }
-      .ntf-tg-t { font-size: 13px; font-weight: 600; color: var(--t5); }
-      .ntf-tg-s { font-size: 11.5px; color: var(--v3-t3); margin-top: 3px; }
+      .ntf-tg-t { font-size: 13.5px; font-weight: 600; color: var(--marker); white-space: nowrap; }
+      .ntf-tg-s {
+        font-size: 12px;
+        color: var(--v3-t2);
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
       .ntf-sw {
         flex: none;
         width: 44px;
         height: 26px;
-        border-radius: 13px;
+        border-radius: 99px;
         background: #d3d8de;
         position: relative;
         transition: background 0.15s ease;
@@ -5657,50 +5699,56 @@
         left: 3px;
         width: 20px;
         height: 20px;
-        border-radius: 50%;
+        border-radius: 99px;
         background: #fff;
-        box-shadow: 0 1px 2px rgba(14, 23, 38, 0.25);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         transition: transform 0.15s ease;
       }
       .ntf-sw.on::after { transform: translateX(18px); }
 
-      /* ── Mobil qatorlar (loyiha / teglar / boshlanishi) ──────────── */
-      .ntf-rows { display: flex; flex-direction: column; }
+      /* ── Telefondagi qatorlar (loyiha / teglar / boshlanishi) ────── */
+      .ntf-rows { padding: 2px 16px; }
       .ntf-row {
         display: flex;
         align-items: center;
-        gap: 11px;
-        min-height: 48px;
+        gap: 10px;
+        height: 48px;
         width: 100%;
         border: 0;
         background: transparent;
-        padding: 0 16px;
+        padding: 0;
         font-family: inherit;
         cursor: pointer;
         text-align: left;
       }
       .ntf-row + .ntf-row { border-top: 1px solid var(--bd2); }
-      .ntf-row.tg { min-height: 52px; cursor: default; }
-      .ntf-row-ico { width: 19px; height: 19px; color: var(--v3-t3); flex: none; display: flex; }
-      .ntf-row-l { font-size: 13.5px; font-weight: 500; color: var(--t5); flex: none; }
-      .ntf-row-v {
+      .ntf-row.tg { height: 52px; cursor: pointer; }
+      .ntf-row-ico { width: 19px; height: 19px; color: var(--v3-t2); flex: none; display: flex; }
+      .ntf-row-l {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--t5);
         flex: 1;
         min-width: 0;
-        text-align: right;
-        font-size: 13px;
-        color: var(--v3-t2);
-        overflow: hidden;
-        text-overflow: ellipsis;
         white-space: nowrap;
       }
-      .ntf-row-c { width: 15px; height: 15px; color: var(--v3-t4); flex: none; display: flex; }
+      .ntf-row-v {
+        font-size: 13.5px;
+        font-weight: 400;
+        color: var(--v3-t3);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 55%;
+      }
+      .ntf-row-v.on { font-weight: 600; color: var(--marker); }
+      .ntf-row-c { width: 15px; height: 15px; color: var(--v3-t3); flex: none; display: flex; }
+      .ntf-row .ntf-tg-t,
+      .ntf-row .ntf-tg-s { font-size: 14px; font-weight: 500; color: var(--t5); }
+      .ntf-row .ntf-tg-s { font-size: 11.5px; font-weight: 400; color: var(--v3-t3); margin-top: 1px; }
 
       /* ── Pastki panel ────────────────────────────────────────────── */
-      .ntf-foot {
-        flex: none;
-        background: var(--surf);
-        border-top: 1px solid var(--bd2);
-      }
+      .ntf-foot { flex: none; background: var(--surf); border-top: 1px solid var(--bd2); }
       .ntf-foot-in {
         max-width: 1100px;
         margin: 0 auto;
@@ -5708,7 +5756,7 @@
         padding: 12px 24px;
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 12px;
       }
       .ntf-sum {
         flex: 1;
@@ -5720,13 +5768,8 @@
         color: var(--v3-t2);
         overflow: hidden;
       }
-      .ntf-sum .ntf-av { width: 24px; height: 24px; font-size: 10px; }
-      .ntf-sum-t {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
+      .ntf-sum .ntf-av { width: 24px; height: 24px; border-radius: 8px; font-size: 10px; }
+      .ntf-sum-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .ntf-sum-t b { font-weight: 600; color: var(--marker); }
       .ntf-acts { flex: none; display: flex; align-items: center; gap: 10px; }
       .ntf-btn {
@@ -5736,31 +5779,27 @@
         font-size: 14.5px;
         font-weight: 600;
         cursor: pointer;
-        padding: 0 22px;
         border: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
+        box-sizing: border-box;
+        flex: none;
       }
       .ntf-btn.ghost {
         background: var(--surf);
         border: 1px solid var(--bd4);
-        color: var(--t5);
+        color: var(--marker);
+        padding: 0 16px;
       }
-      .ntf-btn.primary { background: var(--brand); color: #fff; }
+      .ntf-btn.primary { background: var(--brand); color: #fff; padding: 0 22px; }
       /* Majburiy maydon qolganda tugma xiralashadi, LEKIN bosiladi —
          bosilganda birinchi bo'sh maydonga olib boradi. O'chirib
          qo'yilgan tugma nega bosilmasligini aytmaydi. */
       .ntf-btn.primary.dim { opacity: 0.45; }
-      .ntf-missing {
-        font-size: 12.5px;
-        font-weight: 600;
-        color: var(--red);
-        text-align: right;
-      }
+      .ntf-missing { font-size: 12.5px; font-weight: 600; color: var(--red); text-align: right; }
       .ntf-foot-m { display: none; }
-
       /* Xatoda maydon 2 soniya ajralib turadi */
       .ntf-card.shake { border-color: var(--red); box-shadow: 0 0 0 1.5px var(--red); }
       .ntf-spin {
@@ -5772,9 +5811,9 @@
         animation: ntfSpin 0.7s linear infinite;
       }
       @keyframes ntfSpin { to { transform: rotate(360deg); } }
-
       /* Fokus halqasi — TZ 08 */
-      .ntf-ov :focus-visible {
+      .ntf-ov :focus-visible,
+      .ntf-sheet :focus-visible {
         outline: none;
         border-color: var(--brand);
         box-shadow: 0 0 0 3px rgba(47, 122, 185, 0.25);
@@ -5793,7 +5832,10 @@
         width: 100%;
         background: var(--bg);
         border-radius: 22px 22px 0 0;
+        /* Tepada 70px bo'sh joy qoladi — ostida nima turganini
+           ko'rsatadi va yopish uchun bosiladigan joy bo'ladi. */
         max-height: calc(100% - 70px);
+        padding: 10px 16px 0;
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -5804,41 +5846,33 @@
         height: 5px;
         border-radius: 99px;
         background: var(--track);
-        margin: 8px auto 0;
+        margin: 0 auto 12px;
         flex: none;
       }
-      .ntf-sheet-hdr {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 14px 16px 10px;
-        flex: none;
-      }
-      .ntf-sheet-t { flex: 1; font-size: 18px; font-weight: 700; color: var(--marker); }
-      .ntf-sheet-n { font-size: 13px; font-weight: 600; color: var(--nav-act-ink, var(--brand)); }
-      .ntf-sheet-body {
+      .ntf-sheet-hdr { display: flex; align-items: center; gap: 10px; flex: none; }
+      .ntf-sheet-t {
         flex: 1;
-        min-height: 0;
-        overflow-y: auto;
-        overscroll-behavior: contain;
-        padding: 0 16px 8px;
+        min-width: 0;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.015em;
+        color: var(--marker);
       }
-      .ntf-sheet-foot {
-        flex: none;
-        padding: 10px 16px calc(14px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
-      }
+      .ntf-sheet-n { font-size: 12.5px; font-weight: 600; color: var(--nav-act-ink, var(--brand)); }
       .ntf-search {
         display: flex;
         align-items: center;
-        gap: 9px;
+        gap: 8px;
         height: 44px;
         border-radius: 12px;
         background: var(--surf);
         border: 1px solid var(--bd4);
         padding: 0 12px;
-        margin-bottom: 10px;
+        margin-top: 12px;
+        flex: none;
+        box-sizing: border-box;
       }
-      .ntf-search svg { width: 16px; height: 16px; color: var(--v3-t3); flex: none; }
+      .ntf-search svg { width: 17px; height: 17px; color: var(--v3-t3); flex: none; }
       .ntf-search input {
         flex: 1;
         min-width: 0;
@@ -5846,16 +5880,19 @@
         outline: none;
         background: transparent;
         font-family: inherit;
+        /* 16px dan kichik bo'lsa iOS bosilganda sahifani kattalashtiradi */
         font-size: 16px;
         color: var(--marker);
       }
+      .ntf-search input::placeholder { font-size: 14px; color: var(--v3-t3); }
       .ntf-filters {
         display: flex;
         gap: 6px;
+        margin-top: 10px;
+        margin-right: -16px;
         overflow-x: auto;
         scrollbar-width: none;
-        margin: 0 -16px 10px;
-        padding: 0 16px;
+        flex: none;
       }
       .ntf-filters::-webkit-scrollbar { display: none; }
       .ntf-pill {
@@ -5868,48 +5905,81 @@
         font-family: inherit;
         font-size: 13px;
         font-weight: 500;
-        padding: 0 14px;
+        padding: 0 12px;
         cursor: pointer;
+        box-sizing: border-box;
       }
-      .ntf-pill.on {
-        background: var(--marker);
-        border-color: var(--marker);
-        color: var(--bg);
-        font-weight: 600;
+      .ntf-pill.on { background: var(--marker); border-color: var(--marker); color: var(--bg); }
+      /* Ro'yxatning o'zi — oq karta, qatorlar ichkarida ajraladi */
+      .ntf-sheet-body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        margin-top: 12px;
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 14px;
+        padding: 0 14px;
       }
+      .ntf-sheet-body.plain {
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        padding: 0;
+      }
+      .ntf-sheet-foot { flex: none; padding: 10px 0 calc(26px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))); }
+      .ntf-sheet-foot .ntf-btn { width: 100%; height: 52px; padding: 0 16px; }
       .ntf-prow {
         display: flex;
         align-items: center;
         gap: 11px;
-        min-height: 58px;
+        height: 58px;
         width: 100%;
         border: 0;
         background: transparent;
-        padding: 6px 2px;
+        padding: 0;
         font-family: inherit;
         cursor: pointer;
         text-align: left;
       }
       .ntf-prow + .ntf-prow { border-top: 1px solid var(--bd2); }
-      .ntf-prow .ntf-av { width: 38px; height: 38px; font-size: 14px; }
+      .ntf-prow .ntf-av { width: 38px; height: 38px; border-radius: 13px; font-size: 15px; }
       .ntf-prow-txt { flex: 1; min-width: 0; }
-      .ntf-prow-n { font-size: 14.5px; font-weight: 600; color: var(--marker); }
-      .ntf-prow-s { font-size: 12px; color: var(--v3-t2); margin-top: 2px; }
-      .ntf-prow-s b { font-weight: 600; }
-      .ntf-prow-s b.busy { color: var(--st-behind, #a45f08); }
+      .ntf-prow-n {
+        font-size: 14.5px;
+        font-weight: 600;
+        color: var(--marker);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .ntf-prow-s {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 2px;
+        font-size: 12px;
+        color: var(--v3-t2);
+        white-space: nowrap;
+      }
+      .ntf-prow-s i { font-style: normal; color: var(--v3-t3); }
+      .ntf-prow-s b { font-weight: 500; }
       .ntf-cb {
         flex: none;
         width: 24px;
         height: 24px;
         border-radius: 8px;
-        border: 1.5px solid var(--bd4);
+        border: 1.8px solid #c2c8d0;
         display: flex;
         align-items: center;
         justify-content: center;
         color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        box-sizing: border-box;
       }
       .ntf-cb.on { background: var(--brand); border-color: var(--brand); }
-      .ntf-cb svg { width: 14px; height: 14px; stroke-width: 3; }
       .ntf-empty { padding: 28px 10px; text-align: center; font-size: 13.5px; color: var(--v3-t3); }
 
       /* ── Adaptivlik (TZ 04) ──────────────────────────────────────── */
@@ -5917,39 +5987,60 @@
         .ntf-wrap { grid-template-columns: minmax(0, 1fr) 340px; }
       }
       @media (max-width: 899px) {
-        .ntf-wrap {
-          grid-template-columns: minmax(0, 1fr);
-          max-width: 720px;
-        }
-        .ntf-side { gap: 12px; }
+        .ntf-wrap { grid-template-columns: minmax(0, 1fr); max-width: 720px; }
+        .ntf-main { min-height: 0; }
       }
       @media (max-width: 767px) {
-        .ntf-hdr {
-          height: auto;
-          padding: calc(8px + var(--tg-safe-top)) 16px 8px;
-        }
+        .ntf-hdr { height: auto; padding: calc(8px + var(--tg-safe-top)) 16px 8px; }
         .ntf-h1 { font-size: 17px; font-weight: 700; }
-        .ntf-crumb { font-size: 12px; font-weight: 400; }
+        .ntf-crumb { font-size: 12px; }
+        .ntf-crumb span, .ntf-crumb b, .ntf-crumb i { font-weight: 400; color: var(--v3-t3); }
         .ntf-draft { display: none; }
-        .ntf-wrap { padding: 14px 16px; gap: 12px; }
-        .ntf-main { padding: 16px; }
-        .ntf-title-in { font-size: 18px; line-height: 1.4; max-width: none; }
-        .ntf-sep { margin: 14px 16px 0; }
-        .ntf-desc-in { font-size: 14px; line-height: 1.7; max-width: none; min-height: 72px; }
+        .ntf-wrap { padding: 14px 16px 0; gap: 12px; }
+        /* Nom va tavsif — bitta ixcham karta, ichki izohlarsiz */
+        .ntf-main { min-height: 0; }
+        .ntf-main-top { padding: 14px 16px 0; }
+        .ntf-main-desc { padding: 0 16px 14px; }
+        .ntf-cap { display: none; }
+        .ntf-title-in {
+          font-size: 18px;
+          line-height: 1.4;
+          letter-spacing: -0.015em;
+          max-width: none;
+          margin-top: 0;
+        }
+        .ntf-title-in::placeholder { color: var(--v3-t3); }
+        .ntf-sep { margin: 12px 16px; }
+        .ntf-desc-in {
+          font-size: 14px;
+          line-height: 1.7;
+          max-width: none;
+          margin-top: 0;
+          min-height: 48px;
+        }
         .ntf-tools { display: none; }
+        .ntf-card.pad { padding: 14px 16px 16px; }
+        /* Tugmalar qatori telefonda o'ngga suriladi */
+        .ntf-quick {
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          scrollbar-width: none;
+          margin-right: -16px;
+        }
+        .ntf-quick::-webkit-scrollbar { display: none; }
         .ntf-foot-in { display: none; }
         .ntf-foot-m {
           display: block;
           padding: 10px 16px calc(26px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
         }
         .ntf-foot-m .ntf-sum { margin-bottom: 8px; font-size: 12.5px; }
-        .ntf-foot-m .ntf-sum .ntf-av { width: 20px; height: 20px; font-size: 9px; }
+        .ntf-foot-m .ntf-sum .ntf-av { width: 20px; height: 20px; border-radius: 7px; font-size: 9px; }
         .ntf-foot-m .ntf-btn { width: 100%; height: 52px; }
         .ntf-foot-m .ntf-missing { margin-bottom: 8px; text-align: left; }
       }
       /* Mobil/katta ekranga xos bloklar. Faqat yashirish qoidasi
          beriladi — `display: block` bilan yoqish flex/grid elementning
-         o'z turini buzib, avatar qatorini ustunga aylantirib qo'yardi. */
+         o'z turini buzib yuborardi. */
       @media (min-width: 768px) {
         .ntf-only-m { display: none !important; }
       }
@@ -13745,19 +13836,19 @@
         { v: "high", label: "Yuqori", bars: 3, color: "var(--red)" },
       ];
       const NTF_ICON = {
-        back: `<path d="M19 12H5M12 19l-7-7 7-7"/>`,
-        cal: `<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>`,
-        clock: `<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>`,
+        back: `<path d="M15 5 8 12l7 7"/>`,
+        cal: `<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>`,
+        clock: `<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>`,
         plus: `<path d="M12 5v14M5 12h14"/>`,
-        x: `<path d="M18 6 6 18M6 6l12 12"/>`,
+        x: `<path d="M6 6l12 12M18 6 6 18"/>`,
         chev: `<path d="m6 9 6 6 6-6"/>`,
-        chevR: `<path d="m9 18 6-6-6-6"/>`,
-        search: `<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>`,
+        chevR: `<path d="m9 5 7 7-7 7"/>`,
+        search: `<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4-4"/>`,
         check: `<path d="M20 6 9 17l-5-5"/>`,
-        folder: `<path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.5L10 3.5H4a2 2 0 0 0-2 2V18a2 2 0 0 0 2 2Z"/>`,
-        tag: `<path d="M20.6 13.4 12 4.8H4.8V12l8.6 8.6a2 2 0 0 0 2.8 0l4.4-4.4a2 2 0 0 0 0-2.8Z"/><circle cx="8.5" cy="8.5" r="1.2"/>`,
+        folder: `<path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4l2 2h9A1.5 1.5 0 0 1 21 8.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/>`,
+        tag: `<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="m8 12 3 3 5-6"/>`,
         queue: `<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>`,
-        send: `<path d="m22 2-7 20-4-9-9-4Z"/>`,
+        link: `<path d="M4 12 20 4l-5 16-3-7z"/>`,
       };
       function ntfSvg(key, cls) {
         return `<svg class="${cls || ""}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${NTF_ICON[key]}</svg>`;
@@ -13901,14 +13992,22 @@
             <div class="ntf-wrap">
               <div>
                 <div class="ntf-card ntf-main" id="ntf-maincard">
-                  <textarea class="ntf-title-in" id="ntf-title" rows="1" maxlength="200" placeholder="Vazifa nomi"></textarea>
+                  <div class="ntf-main-top">
+                    <div class="ntf-cap">Vazifa nomi</div>
+                    <textarea class="ntf-title-in" id="ntf-title" rows="1" maxlength="200" placeholder="Vazifa nomi"></textarea>
+                  </div>
                   <div class="ntf-sep"></div>
-                  <textarea class="ntf-desc-in" id="ntf-desc" placeholder="Nima qilish kerak? (ixtiyoriy)"></textarea>
+                  <div class="ntf-main-desc">
+                    <div class="ntf-cap">Tavsif</div>
+                    <textarea class="ntf-desc-in" id="ntf-desc" placeholder="Nima qilish kerak? (ixtiyoriy)"></textarea>
+                  </div>
                   <div class="ntf-tools">
-                    <button type="button" class="ntf-tool" title="Qalin" onclick="ntfMd('bold')">B</button>
+                    <button type="button" class="ntf-tool b" title="Qalin" onclick="ntfMd('bold')">B</button>
                     <button type="button" class="ntf-tool" title="Ro'yxat" onclick="ntfMd('ul')">•</button>
                     <button type="button" class="ntf-tool" title="Raqamli ro'yxat" onclick="ntfMd('ol')">1.</button>
+                    <button type="button" class="ntf-tool" title="Havola" onclick="ntfMd('link')">${ntfSvg("link")}</button>
                     <span class="ntf-tool-div"></span>
+                    <button type="button" class="ntf-toolbtn" onclick="ntfAttach()">${ntfSvg("plus")}Fayl biriktirish</button>
                     <span class="ntf-tools-hint">Ctrl + Enter — ${t ? "saqlash" : "yaratish"}</span>
                   </div>
                 </div>
@@ -14098,22 +14197,24 @@
       }
 
       // ── Parametrlar ustuni ────────────────────────────────────────
-      function ntfAv(u, cls) {
+      function ntfAv(u, extra) {
         const nom = ntfName(u);
-        return `<span class="ntf-av ${cls || ""}" style="background:${personColor(u.username)}">${escHtml(nom.slice(0, 1).toUpperCase())}${avatarImg(u.avatar_url)}</span>`;
+        return `<span class="ntf-av" style="background:${personColor(u.username)}">${escHtml(nom.slice(0, 1).toUpperCase())}${avatarImg(u.avatar_url)}</span>${extra || ""}`;
       }
-      function ntfBusyHtml(username) {
+      // 5 tadan ko'p faol vazifa — xodim band, bu ko'rinib tursin.
+      function ntfBusy(username) {
         const n = ntfActiveCount(username);
-        // 5 tadan ko'p faol vazifa — xodim band, bu ko'rinib tursin.
-        return `<b class="${n >= 5 ? "busy" : ""}">${n} ta faol</b>`;
+        return `<b class="${n >= 5 ? "ntf-busy" : ""}">${n} ta faol</b>`;
       }
-      function ntfLblHtml(text, required, filled) {
-        const right = required
-          ? filled
-            ? ""
-            : `<span class="ntf-lbl-r miss">Tanlanmagan</span>`
-          : "";
-        return `<div class="ntf-lbl">${escHtml(text)}${required ? "<i>*</i>" : ""}${right}</div>`;
+      // O'ng chekkadagi izoh: bo'sh majburiy maydonda qizil
+      // "Tanlanmagan", aks holda qiymat yoki maslahat.
+      function ntfLbl(text, opt) {
+        const o = opt || {};
+        let right = "";
+        if (o.required && !o.filled) right = `<span class="ntf-lbl-r miss">Tanlanmagan</span>`;
+        else if (o.value) right = `<span class="ntf-lbl-r val ${o.cls || ""}">${escHtml(o.value)}</span>`;
+        else if (o.hint) right = `<span class="ntf-lbl-r ${o.cls || ""}">${escHtml(o.hint)}</span>`;
+        return `<div class="ntf-lbl">${escHtml(text)}${o.required ? "<i>*</i>" : ""}${right}</div>`;
       }
       function ntfRender() {
         if (!ntf) return;
@@ -14125,14 +14226,19 @@
         if (draft && ntf.draftAt) draft.textContent = `Qoralama saqlandi · ${ntf.draftAt}`;
       }
       function ntfSideHtml() {
-        return [ntfAsgCard(), ntfDueCard(), ntfPriorityCard(), ntfRestCardD(), ntfRestCardM()].join("");
+        return ntfMainParamsCard() + ntfExtraCard();
       }
 
-      // 6.3 — Kim bajaradi
-      function ntfAsgCard() {
-        const tanlangan = ntf.assignees
-          .map((un) => ntfUsers.find((u) => u.username === un))
-          .filter(Boolean);
+      // ── Karta 1: kim bajaradi · muddat · ustuvorlik ───────────────
+      function ntfMainParamsCard() {
+        return `<div class="ntf-card pad" id="ntf-card-asg">
+          ${ntfAsgBlock()}
+          <div class="ntf-next" id="ntf-card-due">${ntfDueBlock()}</div>
+          <div class="ntf-next">${ntfPriorityBlock()}</div>
+        </div>`;
+      }
+      function ntfAsgBlock() {
+        const tanlangan = ntf.assignees.map((un) => ntfUsers.find((u) => u.username === un)).filter(Boolean);
         const chips =
           tanlangan
             .map(
@@ -14140,7 +14246,7 @@
                 ${ntfAv(u)}
                 <span class="ntf-asg-txt">
                   <span class="ntf-asg-n">${escHtml(ntfShort(u))}</span>
-                  <span class="ntf-asg-s">${escHtml(ntfJob(u))} · ${ntfBusyHtml(u.username)}</span>
+                  <span class="ntf-asg-s">${escHtml(ntfJob(u))} · ${ntfBusy(u.username)}</span>
                 </span>
                 <button type="button" class="ntf-x" aria-label="Olib tashlash" onclick="ntfToggleAsg('${escArg(u.username)}')">${ntfSvg("x")}</button>
               </div>`,
@@ -14148,13 +14254,12 @@
             .join("") +
           `<button type="button" class="ntf-add" id="ntf-add-asg" onclick="ntfOpenAsgPop(this)">${ntfSvg("plus")}Qo'shish</button>`;
 
-        const top = ntfTopUsers(5);
         const avrow =
-          top
+          ntfTopUsers(5)
             .map((u) => {
               const on = ntf.assignees.includes(u.username);
               return `<button type="button" class="ntf-avitem${on ? " on" : ""}" onclick="ntfToggleAsg('${escArg(u.username)}')">
-                <span class="ntf-avwrap">${ntfAv(u)}<span class="ntf-avtick">${ntfSvg("check")}</span></span>
+                <span class="ntf-avwrap">${ntfAv(u, `<span class="ntf-avtick">✓</span>`)}</span>
                 <span class="ntf-avn">${escHtml(ntfShort(u).split(" ")[0])}</span>
                 <span class="ntf-avj">${escHtml(ntfJob(u))}</span>
               </button>`;
@@ -14163,138 +14268,137 @@
           `<button type="button" class="ntf-avitem all" onclick="ntfOpenSheet('kim')">
              <span class="ntf-avwrap"><span class="ntf-av">${ntfSvg("search")}</span></span>
              <span class="ntf-avn">Hammasi</span>
-             <span class="ntf-avj">&nbsp;</span>
            </button>`;
 
-        return `<div class="ntf-card pad" id="ntf-card-asg">
-          ${ntfLblHtml("Kim bajaradi", true, ntf.assignees.length > 0)}
+        const lbl = ntf.assignees.length
+          ? `<div class="ntf-lbl">Kim bajaradi<i>*</i><span class="ntf-lbl-r ntf-only-d">Bir nechta tanlash mumkin</span></div>`
+          : ntfLbl("Kim bajaradi", { required: true, filled: false });
+        return `${lbl}
           <div class="ntf-asg-list ntf-only-d">${chips}</div>
-          <div class="ntf-avrow ntf-only-m">${avrow}</div>
-        </div>`;
+          <div class="ntf-avrow ntf-only-m">${avrow}</div>`;
       }
-
-      // 6.4 — Muddat
-      function ntfDueCard() {
+      function ntfDueBlock() {
         const bugun = isoOf(todayDate());
         const ertaga = ntfShift(bugun, 1);
         const uchinchi = ntfThirdQuick();
         const bir = (iso) => ntf.dueDate === iso && ntf.startDate === iso;
+        // Sana qismi faqat katta ekranda — telefonda tugma qatori tor.
         const btn = (iso, label, sana) =>
-          `<button type="button" class="ntf-qbtn${bir(iso) ? " on" : ""}" onclick="ntfPickQuickDay('${iso}')">${label}${sana ? `<span>${ntfDayShort(iso)}</span>` : ""}</button>`;
+          `<button type="button" class="ntf-qbtn${bir(iso) ? " on" : ""}" onclick="ntfPickQuickDay('${iso}')">${label}${sana ? `<span class="ntf-only-d">${ntfDayShort(iso)}</span>` : ""}</button>`;
         const oraliq = !!(ntf.dueDate && (!ntf.startDate || ntf.startDate !== ntf.dueDate));
-        const vaqt = ntfTimePassed();
-        return `<div class="ntf-card pad" id="ntf-card-due">
-          ${ntfLblHtml("Muddat", true, !!ntf.dueDate)}
+        const kech = ntfTimePassed();
+        // Telefonda soat chipi yo'q — tanlangan muddat maydon nomining
+        // o'ng tomonida ko'rinadi (TZ 6.4).
+        const qisqa = ntf.dueDate
+          ? `${ntfDayShort(ntf.dueDate)}${ntf.dueTime ? ", " + ntf.dueTime : ""}`
+          : "";
+        const lbl = ntf.dueDate
+          ? `<div class="ntf-lbl">Muddat<i>*</i><span class="ntf-lbl-r val ntf-only-m">${escHtml(qisqa)}</span></div>`
+          : ntfLbl("Muddat", { required: true, filled: false });
+        return `${lbl}
           <div class="ntf-quick">
             ${btn(bugun, "Bugun", false)}
             ${btn(ertaga, "Ertaga", true)}
             ${uchinchi.iso === ertaga ? "" : btn(uchinchi.iso, uchinchi.label, true)}
-            <button type="button" class="ntf-qbtn${oraliq ? " on" : ""}" onclick="ntfOpenSheet('sana')">${ntfSvg("cal")}Oraliq</button>
+            <button type="button" class="ntf-qbtn${oraliq ? " on" : ""}" onclick="ntfOpenSheet('sana')">${ntfSvg("cal")}Sana</button>
           </div>
-          <div class="ntf-timerow">
-            <button type="button" class="ntf-qbtn${ntf.dueTime ? " on" : ""}${vaqt ? " late" : ""}" onclick="ntfOpenSheet('soat')">
-              ${ntfSvg("clock")}${ntf.dueTime ? escHtml(ntf.dueTime) + " gacha" : "Soat"}
+          <div class="ntf-timerow ntf-only-d">
+            <button type="button" class="ntf-qbtn time${kech ? " late" : ""}" onclick="ntfOpenSheet('soat')">
+              ${ntfSvg("clock")}<b>${ntf.dueTime ? escHtml(ntf.dueTime) + " gacha" : "Soat"}</b>
             </button>
-            <span class="ntf-when">${vaqt ? "Vaqt o'tib ketgan" : escHtml(ntfFullWhen())}</span>
-          </div>
-        </div>`;
+            <span class="ntf-when">${kech ? "Vaqt o'tib ketgan" : escHtml(ntfFullWhen())}</span>
+          </div>`;
       }
-
-      // 6.5 — Ustuvorlik
-      function ntfPriorityCard() {
+      function ntfPriorityBlock() {
         const bars = (p) =>
           p.bars
-            ? `<span class="ntf-bars">${[0, 1, 2]
-                .map((i) => `<i${i < p.bars ? ` style="background:${p.color}"` : ""}></i>`)
-                .join("")}</span>`
+            ? `<span class="ntf-bars">${[0, 1, 2].map((i) => `<i${i < p.bars ? ` style="background:${p.color}"` : ""}></i>`).join("")}</span>`
             : "";
-        return `<div class="ntf-card pad">
-          ${ntfLblHtml("Ustuvorlik", false, true)}
-          <div class="ntf-seg" role="group">
+        return `${ntfLbl("Ustuvorlik", {})}
+          <div class="ntf-seg four" role="group">
             ${NTF_PRIORITIES.map(
               (p) =>
                 `<button type="button" class="ntf-seg-b${ntf.priority === p.v ? " on" : ""}" aria-pressed="${ntf.priority === p.v}" onclick="ntfSet('priority','${p.v}')">${bars(p)}${p.label}</button>`,
             ).join("")}
-          </div>
-        </div>`;
+          </div>`;
       }
 
+      // ── Karta 2: loyiha · teglar · boshlanishi · Telegram ─────────
       function ntfProjectLabel() {
         const p = projects.find((x) => (x.slug || x.id) === ntf.projectSlug);
         return p ? p.label : "Umumiy";
       }
       function ntfProjectColor() {
-        const p = projects.find((x) => (x.slug || x.id) === ntf.projectSlug);
-        return p ? personColor(p.slug || p.id) : "var(--v3-t4)";
+        return ntf.projectSlug ? personColor(ntf.projectSlug) : "var(--v3-t4)";
       }
-      function ntfTagChips() {
-        const list = tagsList.filter((t) => ntf.tagIds.has(t.id));
-        return (
-          list
-            .map((t) => {
-              const c = tagColor(t.name);
-              return `<span class="ntf-tag" style="background:${c.bg};color:${c.ink}">${escHtml(t.name)}<button type="button" aria-label="Olib tashlash" onclick="ntfToggleTag('${escArg(t.id)}')">${ntfSvg("x")}</button></span>`;
-            })
-            .join("") + `<button type="button" class="ntf-add" onclick="ntfOpenSheet('teglar')">${ntfSvg("plus")}Teg</button>`
-        );
+      function ntfTagList() {
+        return tagsList.filter((t) => ntf.tagIds.has(t.id));
+      }
+      function ntfTagChip(t, xBtn) {
+        const c = tagColor(t.name);
+        return `<span class="ntf-tag" style="background:${c.bg};color:${c.ink}">${escHtml(t.name)}${xBtn ? `<button type="button" aria-label="Olib tashlash" onclick="event.stopPropagation();ntfToggleTag('${escArg(t.id)}')">×</button>` : ""}</span>`;
       }
       function ntfNotifyText() {
         const nomlar = ntf.assignees
           .map((un) => ntfUsers.find((u) => u.username === un))
           .filter(Boolean)
           .map((u) => ntfShort(u));
-        if (!nomlar.length) return "Mas'ul tanlanganda unga xabar boradi.";
+        if (!nomlar.length) return "Bajaruvchiga darhol boradi";
         const kim = nomlar.length > 2 ? `${nomlar.length} xodimga` : nomlar.join(", ") + " ga";
-        return `${kim} darhol xabar boradi.`;
+        return `${kim} darhol xabar boradi`;
       }
-
-      // 6.6 — Loyiha, teglar, boshlanishi, Telegram (katta ekran)
-      function ntfRestCardD() {
-        return `<div class="ntf-card pad ntf-only-d" style="display:flex;flex-direction:column;gap:16px">
-          <div>
-            ${ntfLblHtml("Loyiha", false, true)}
-            <button type="button" class="ntf-select" onclick="ntfOpenSheet('loyiha')">
-              <span class="ntf-dot" style="background:${ntfProjectColor()}"></span>
-              <span class="ntf-select-v">${escHtml(ntfProjectLabel())}</span>
-              ${ntfSvg("chev")}
-            </button>
+      function ntfExtraCard() {
+        const teglar = ntfTagList();
+        // Katta ekran: har biri o'z boshqaruvi bilan.
+        const desktop = `<div class="ntf-card pad ntf-only-d">
+          ${ntfLbl("Loyiha", {})}
+          <button type="button" class="ntf-select" onclick="ntfOpenSheet('loyiha')">
+            <span class="ntf-dot" style="background:${ntfProjectColor()}"></span>
+            <span class="ntf-select-v">${escHtml(ntfProjectLabel())}</span>
+            ${ntfSvg("chev")}
+          </button>
+          <div class="ntf-next">
+            ${ntfLbl("Teglar", {})}
+            <div class="ntf-tags">
+              ${teglar.map((t) => ntfTagChip(t, true)).join("")}
+              <button type="button" class="ntf-add" onclick="ntfOpenSheet('teglar')">${ntfSvg("plus")}Teg</button>
+            </div>
           </div>
-          <div>
-            ${ntfLblHtml("Teglar", false, true)}
-            <div class="ntf-tags">${ntfTagChips()}</div>
-          </div>
-          <div>
-            ${ntfLblHtml("Boshlanishi", false, true)}
-            <div class="ntf-seg tall">
+          <div class="ntf-next">
+            ${ntfLbl("Boshlanishi", {})}
+            <div class="ntf-seg">
               <button type="button" class="ntf-seg-b${ntf.startMode === "now" ? " on" : ""}" aria-pressed="${ntf.startMode === "now"}" onclick="ntfSet('startMode','now')">Hozir boshlanadi</button>
               <button type="button" class="ntf-seg-b${ntf.startMode === "queue" ? " on" : ""}" aria-pressed="${ntf.startMode === "queue"}" onclick="ntfSet('startMode','queue')">Navbatga qo'yish</button>
             </div>
           </div>
-          <label class="ntf-tg">
+          <div class="ntf-tg" onclick="ntfSet('notify',${!ntf.notify})">
             <span class="ntf-tg-txt">
               <span class="ntf-tg-t">Telegramga xabar</span>
               <span class="ntf-tg-s">${escHtml(ntfNotifyText())}</span>
             </span>
-            <span class="ntf-sw${ntf.notify ? " on" : ""}" role="switch" aria-checked="${ntf.notify}" onclick="ntfSet('notify',${!ntf.notify})"></span>
-          </label>
+            <span class="ntf-sw${ntf.notify ? " on" : ""}" role="switch" aria-checked="${ntf.notify}"></span>
+          </div>
         </div>`;
-      }
-      // Mobilda xuddi shular 48px qatorlar ko'rinishida
-      function ntfRestCardM() {
-        const row = (icon, label, value, onclick) =>
+
+        // Telefon: bir xil balandlikdagi qatorlar, har biri o'z oynasini ochadi.
+        const row = (icon, label, valueHtml, onclick) =>
           `<button type="button" class="ntf-row" onclick="${onclick}">
             <span class="ntf-row-ico">${ntfSvg(icon)}</span>
             <span class="ntf-row-l">${label}</span>
-            <span class="ntf-row-v">${escHtml(value)}</span>
+            ${valueHtml}
             <span class="ntf-row-c">${ntfSvg("chevR")}</span>
           </button>`;
-        const teglar = tagsList.filter((t) => ntf.tagIds.has(t.id)).map((t) => t.name);
-        return `<div class="ntf-card ntf-rows ntf-only-m">
-          ${row("folder", "Loyiha", ntfProjectLabel(), "ntfOpenSheet('loyiha')")}
-          ${row("tag", "Teglar", teglar.length > 2 ? `${teglar.length} teg` : teglar.join(", ") || "Yo'q", "ntfOpenSheet('teglar')")}
-          ${row("queue", "Boshlanishi", ntf.startMode === "queue" ? "Navbatga" : "Hozir", "ntfOpenSheet('boshlanishi')")}
+        const val = (text, on) => `<span class="ntf-row-v${on ? " on" : ""}">${escHtml(text)}</span>`;
+        const tegVal = teglar.length
+          ? teglar.length === 1
+            ? ntfTagChip(teglar[0], false)
+            : val(`${teglar.length} teg`, true)
+          : val("Yo'q", false);
+        const mobile = `<div class="ntf-card ntf-rows ntf-only-m">
+          ${row("folder", "Loyiha", val(ntfProjectLabel(), !!ntf.projectSlug), "ntfOpenSheet('loyiha')")}
+          ${row("tag", "Teglar", tegVal, "ntfOpenSheet('teglar')")}
+          ${row("queue", "Boshlanishi", val(ntf.startMode === "queue" ? "Navbatga" : "Hozir", ntf.startMode === "queue"), "ntfOpenSheet('boshlanishi')")}
           <div class="ntf-row tg" onclick="ntfSet('notify',${!ntf.notify})">
-            <span class="ntf-row-ico">${ntfSvg("send")}</span>
             <span class="ntf-tg-txt" style="flex:1;min-width:0">
               <span class="ntf-tg-t">Telegramga xabar</span>
               <span class="ntf-tg-s">${escHtml(ntfNotifyText())}</span>
@@ -14302,6 +14406,7 @@
             <span class="ntf-sw${ntf.notify ? " on" : ""}" role="switch" aria-checked="${ntf.notify}"></span>
           </div>
         </div>`;
+        return desktop + mobile;
       }
 
       // ── Pastki panel (6.7) ────────────────────────────────────────
@@ -14411,12 +14516,25 @@
         const e = el.selectionEnd;
         const tanlangan = el.value.slice(s, e);
         const yangi =
-          kind === "bold" ? `**${tanlangan || "qalin"}**` : kind === "ul" ? `\n- ${tanlangan}` : `\n1. ${tanlangan}`;
+          kind === "bold"
+            ? `**${tanlangan || "qalin"}**`
+            : kind === "link"
+              ? `[${tanlangan || "matn"}](https://)`
+              : kind === "ul"
+                ? `\n- ${tanlangan}`
+                : `\n1. ${tanlangan}`;
         el.setRangeText(yangi, s, e, "end");
         ntf.desc = el.value;
         ntfAutoGrow(el);
         el.focus();
         ntfQueueDraft();
+      }
+
+      // Fayl biriktirish dizaynda bor, lekin backend'da vazifaga fayl
+      // biriktirish hali yo'q — tugmani jim qoldirgandan ko'ra nega
+      // ishlamayotganini aytgan ma'qul.
+      function ntfAttach() {
+        showToast("Fayl biriktirish hali tayyor emas — tavsifga havola qo'ying", 3000);
       }
 
       // ── Xodim tanlash: katta ekranda oynacha, mobilda sheet ───────
@@ -14427,8 +14545,8 @@
         pop.className = "ntf-pop";
         pop.id = "ntf-pop";
         ntfSheetState = { key: "kim", q: "", role: "" };
-        pop.innerHTML = `<div style="padding:12px 12px 0">${ntfSearchHtml()}${ntfFiltersHtml()}</div>
-          <div class="ntf-sheet-body" id="ntf-sheet-body" style="padding:0 12px 12px">${ntfPeopleHtml()}</div>`;
+        pop.innerHTML = `<div style="padding:0 12px">${ntfSearchHtml()}${ntfFiltersHtml()}</div>
+          <div class="ntf-sheet-body" id="ntf-sheet-body" style="margin:10px 12px 12px;border:0;padding:0;background:transparent">${ntfPeopleHtml()}</div>`;
         document.body.appendChild(pop);
         const r = btn.getBoundingClientRect();
         const w = 340;
@@ -14471,15 +14589,18 @@
         ov.onclick = (e) => {
           if (e.target === ov) ntfCloseSheet();
         };
+        // Sana va soat oynalarida ro'yxat yo'q — ular oq kartaga
+        // solinmaydi (`plain`).
+        const tekis = key === "sana" || key === "soat";
         ov.innerHTML = `<div class="ntf-sheet">
           <div class="ntf-grab"></div>
           <div class="ntf-sheet-hdr">
             <div class="ntf-sheet-t">${NTF_SHEET_TITLES[key]}</div>
             <div class="ntf-sheet-n" id="ntf-sheet-n">${ntfSheetCount()}</div>
           </div>
-          ${key === "kim" ? `<div style="padding:0 16px">${ntfSearchHtml()}${ntfFiltersHtml()}</div>` : ""}
-          <div class="ntf-sheet-body" id="ntf-sheet-body">${ntfSheetBodyHtml()}</div>
-          <div class="ntf-sheet-foot"><button type="button" class="ntf-btn primary" style="width:100%;height:52px" onclick="ntfCloseSheet()">${ntfSheetDone()}</button></div>
+          ${key === "kim" ? ntfSearchHtml() + ntfFiltersHtml() : ""}
+          <div class="ntf-sheet-body${tekis ? " plain" : ""}" id="ntf-sheet-body">${ntfSheetBodyHtml()}</div>
+          <div class="ntf-sheet-foot"><button type="button" class="ntf-btn primary" onclick="ntfCloseSheet()">${ntfSheetDone()}</button></div>
         </div>`;
         document.body.appendChild(ov);
         pageBackStack.push(ntfCloseSheet);
@@ -14571,13 +14692,16 @@
         return list
           .map((u) => {
             const on = ntf.assignees.includes(u.username);
+            const n = ntfActiveCount(u.username);
             return `<button type="button" class="ntf-prow" onclick="ntfToggleAsg('${escArg(u.username)}')">
               ${ntfAv(u)}
               <span class="ntf-prow-txt">
-                <span class="ntf-prow-n">${escHtml(ntfName(u))}</span>
-                <span class="ntf-prow-s">${escHtml(ntfJob(u))} · ${ntfBusyHtml(u.username)} vazifa</span>
+                <span class="ntf-prow-n">${escHtml(ntfShort(u))}</span>
+                <span class="ntf-prow-s">
+                  ${escHtml(ntfJob(u))}<i>·</i><b class="${n >= 5 ? "ntf-busy" : ""}">${n} ta faol vazifa</b>
+                </span>
               </span>
-              <span class="ntf-cb${on ? " on" : ""}">${on ? ntfSvg("check") : ""}</span>
+              <span class="ntf-cb${on ? " on" : ""}">${on ? "✓" : ""}</span>
             </button>`;
           })
           .join("");
@@ -14589,7 +14713,7 @@
             <span class="ntf-prow-n">${escHtml(title)}</span>
             ${sub ? `<span class="ntf-prow-s">${escHtml(sub)}</span>` : ""}
           </span>
-          <span class="ntf-cb${on ? " on" : ""}">${on ? ntfSvg("check") : ""}</span>
+          <span class="ntf-cb${on ? " on" : ""}">${on ? "✓" : ""}</span>
         </button>`;
       }
       function ntfSheetBodyHtml() {
@@ -14611,9 +14735,9 @@
             .map((t) => ntfOptRow(ntf.tagIds.has(t.id), t.name, "", `ntfToggleTag('${escArg(t.id)}')`, tagColor(t.name).ink))
             .join("");
           return `${list || `<div class="ntf-empty">Teg yo'q</div>`}
-            <div style="display:flex;gap:8px;margin-top:14px">
-              <input id="ntf-newtag" class="ntf-search" style="flex:1;margin:0" placeholder="Yangi teg nomi" autocomplete="off"/>
-              <button type="button" class="ntf-btn ghost" style="height:44px;padding:0 16px" onclick="ntfCreateTag()">Qo'shish</button>
+            <div class="ntf-prow" style="gap:8px">
+              <input id="ntf-newtag" class="ntf-search" style="flex:1;margin:0;height:40px" placeholder="Yangi teg nomi" autocomplete="off"/>
+              <button type="button" class="ntf-btn ghost" style="height:40px;padding:0 14px" onclick="ntfCreateTag()">Qo'shish</button>
             </div>`;
         }
         if (key === "boshlanishi") {
