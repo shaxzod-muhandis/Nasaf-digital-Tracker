@@ -103,9 +103,6 @@
         /* Vazifalar doskasi ustuni foni (v3 dizayn: rgb(237,239,242)) */
         --tb-col-bg: #edeff2;
         /* Belgilash oynasi (TZ 10e) */
-        --cwd-bg: #f4f5f7;
-        --cwd-grab: #d3d8de;
-        --cwd-radio: #c5cbd3;
         --cwd-chipbd: rgba(14, 23, 38, 0.13);
         --tbl-hdr-bg: #fafbfc;
         --tbl-sub-bg: #fbfcff;
@@ -215,9 +212,6 @@
         --st-ahead-dot: #16a34a;
         --track: rgba(255, 255, 255, 0.12);
         --tb-col-bg: rgba(255, 255, 255, 0.04);
-        --cwd-bg: #12171f;
-        --cwd-grab: #3a4150;
-        --cwd-radio: #4a5260;
         --cwd-chipbd: rgba(255, 255, 255, 0.14);
         --tbl-hdr-bg: rgba(255, 255, 255, 0.03);
         --tbl-sub-bg: rgba(47, 122, 185, 0.07);
@@ -4248,7 +4242,6 @@
       .chip-btn,
       .sec-hdr-a,
       .tbx-chipbtn,
-      .cwd-reason,
       .stat-link {
         position: relative;
       }
@@ -4256,7 +4249,6 @@
       .chip-btn::after,
       .sec-hdr-a::after,
       .tbx-chipbtn::after,
-      .cwd-reason::after,
       .stat-link::after {
         content: "";
         position: absolute;
@@ -5212,186 +5204,36 @@
       /* Kataklar */
       /* Almashuvlar ro'yxati */
 
-      /* ── BELGILASH · KIM BAJARDI (TZ 10e) ───────────────────────────── */
-      .cwd-ov {
-        position: fixed;
-        inset: 0;
-        z-index: 800;
-        background: rgba(14, 23, 38, 0.35);
-      }
-      .cwd {
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        top: calc(30px + var(--tg-safe-top));
-        background: var(--cwd-bg);
-        border-radius: 22px 22px 0 0;
-        padding: 10px 16px calc(28px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
+      /* ── BELGILASH SAHIFASI ─────────────────────────────────────────
+         Sahifaning o'zi vazifa formasi bilan bir xil ko'rinishdan
+         (.ntv3-*) foydalanadi — bu yerda faqat unga xos uchta narsa. */
+      .cwd-head {
         display: flex;
-        flex-direction: column;
-        overflow: hidden;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        padding: 2px 4px 4px;
       }
-      .cwd-grab {
-        width: 38px;
-        height: 5px;
-        border-radius: 99px;
-        background: var(--cwd-grab);
-        margin: 0 auto 12px;
-        flex: none;
-      }
-      .cwd-scroll {
-        flex: 1;
-        min-height: 0;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        padding-bottom: var(--tg-safe-bottom, 0px);
-      }
-      .cwd-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
       .cwd-chip {
-        height: 22px;
-        padding: 0 8px;
-        border-radius: 7px;
-        background: var(--st-onplan-bg);
-        color: var(--st-onplan);
-        font-size: 11.5px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        flex: none;
-        white-space: nowrap;
-      }
-      .cwd-sub { font-size: 12.5px; color: var(--v3-t2); }
-      .cwd-title {
-        font-size: 20px;
-        font-weight: 700;
-        color: var(--ink, var(--t5));
-        letter-spacing: -0.02em;
-        margin-top: 10px;
-      }
-      .cwd-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
-      .cwd-grouplbl {
-        font-size: 11.5px;
-        font-weight: 600;
-        color: var(--v3-t2);
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        margin: 6px 2px 0;
-      }
-      .cwd-person {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        height: 54px;
-        padding: 0 12px;
-        border-radius: 12px;
-        background: var(--surf);
-        border: 1px solid var(--bd1);
-        box-sizing: border-box;
-        cursor: pointer;
-      }
-      .cwd-person.on {
-        background: var(--st-onplan-bg);
-        border-color: rgba(47, 122, 185, 0.45);
-      }
-      .cwd-av {
-        width: 30px;
-        height: 30px;
-        border-radius: 10px;
+        background: var(--brand);
         color: #fff;
-        font-size: 12px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex: none;
-        position: relative;
-        overflow: hidden;
+        border-radius: 8px;
+        padding: 4px 10px;
+        font-size: 12.5px;
+        font-weight: 700;
       }
-      .cwd-name { font-size: 14px; font-weight: 600; color: var(--ink, var(--t5)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .cwd-role { font-size: 11.5px; color: var(--v3-t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .cwd-badge {
-        height: 20px;
-        padding: 0 8px;
-        border-radius: 7px;
-        background: var(--chip);
-        color: var(--v3-t2);
-        font-size: 10.5px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        flex: none;
-        white-space: nowrap;
-      }
-      .cwd-radio {
-        width: 20px;
-        height: 20px;
-        border-radius: 99px;
-        border: 1.8px solid var(--cwd-radio);
-        box-sizing: border-box;
-        background: var(--surf);
-        flex: none;
-      }
-      .cwd-person.on .cwd-radio { border: 6px solid var(--brand); }
-      .cwd-seclbl { font-size: 12.5px; font-weight: 600; color: var(--t5); margin: 14px 2px 7px; }
-      .cwd-reasons { display: flex; gap: 6px; flex-wrap: wrap; }
-      .cwd-reason {
-        height: 32px;
-        padding: 0 12px;
-        border-radius: 99px;
-        background: var(--surf);
-        border: 1px solid var(--cwd-chipbd);
-        color: var(--t5);
-        font-size: 13px;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        box-sizing: border-box;
-        cursor: pointer;
-        font-family: inherit;
-      }
-      .cwd-reason.on { background: var(--marker); border-color: var(--marker); color: var(--surf); }
+      .cwd-sub { font-size: 13px; color: var(--v3-t2); }
+      /* Natija izohi — ish kimning nomiga yozilishini oldindan aytadi */
       .cwd-note {
         display: flex;
-        gap: 8px;
-        padding: 10px 12px;
-        border-radius: 12px;
+        gap: 9px;
         background: var(--surf);
-        border: 1px solid var(--bd1);
+        border-radius: 12px;
+        padding: 12px 14px;
         margin-top: 12px;
       }
       .cwd-note-ico { color: var(--brand); padding-top: 1px; flex: none; display: flex; }
       .cwd-note-txt { font-size: 12.5px; color: var(--t5); line-height: 1.5; }
-      .cwd-submit {
-        height: 52px;
-        width: 100%;
-        border-radius: 12px;
-        background: var(--brand);
-        color: #fff;
-        border: none;
-        font-size: 14.5px;
-        font-weight: 600;
-        font-family: inherit;
-        margin-top: 12px;
-        flex: none;
-        cursor: pointer;
-      }
-      .cwd-submit[disabled] { opacity: 0.5; cursor: default; }
-      .cwd-remove {
-        height: 44px;
-        width: 100%;
-        border-radius: 12px;
-        background: transparent;
-        color: var(--red);
-        border: none;
-        font-size: 13.5px;
-        font-weight: 500;
-        font-family: inherit;
-        margin-top: 6px;
-        flex: none;
-        cursor: pointer;
-      }
 
       /* ── VAZIFA DETALI — mobil (v3) ─────────────────────────────────── */
       .tdm-hdr {
@@ -7050,29 +6892,6 @@
         .sheet.wide {
           max-width: 920px;
         }
-        /* Belgilash oynasi (TZ 10e) mobil uchun pastdan chiqadigan
-           varaq shaklida chizilgan. Katta ekranda u butun oynani
-           egallab ketmasligi kerak — ilovaning boshqa modallari kabi
-           markazlashgan kartaga aylanadi. */
-        .cwd-ov {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 24px;
-        }
-        .cwd {
-          position: relative;
-          top: auto;
-          left: auto;
-          right: auto;
-          bottom: auto;
-          width: 100%;
-          max-width: 520px;
-          max-height: 82vh;
-          border-radius: 20px;
-          padding: 18px 20px 20px;
-        }
-        .cwd-grab { display: none; }
         .sheet-handle {
           /* Pastdan tortib yopish ishorasi — faqat mobil bottom-sheet
              uchun ma'noli. Desktopda sheet markazlashgan modal bo'lgani
@@ -10406,10 +10225,11 @@
         document.getElementById("bottom-nav").style.display = "none";
         if (tg()?.BackButton) {
           tg().BackButton.show();
-          // Yangi vazifa sahifasi ustida ochiq bo'lsa, orqaga tugmasi
-          // avval o'sha sahifani yopadi — ostidagi ekran joyida qoladi.
+          // Ustida to'liq sahifa (vazifa formasi, belgilash sahifasi)
+          // ochiq bo'lsa, orqaga tugmasi avval o'shani yopadi —
+          // ostidagi ekran joyida qoladi.
           tg().BackButton.onClick(() => {
-            if (document.getElementById("ntv3-page")) return;
+            if (pageBackStack.length) return;
             onBack();
           });
         }
@@ -13085,18 +12905,23 @@
       // asosiy obyektga yoziladi.
       let ntv3Cal = null;
       let ntv3PeopleQ = "";
-      // Sahifalar ustma-ust ochiladi, shuning uchun orqaga qaytish —
-      // stek: eng ustidagi sahifa yopiladi.
-      let ntv3Back = [];
-      let ntv3BackBound = false;
+      // To'liq sahifalar ustma-ust ochiladi (vazifa formasi, belgilash
+      // sahifasi va ularning ichki tanlov sahifalari), shuning uchun
+      // orqaga qaytish — stek: eng ustidagi sahifa yopiladi.
+      let pageBackStack = [];
+      let pageBackBound = false;
 
-      const NTV3_ICONS = {
+      const FIELD_ICONS = {
         kimga: `<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>`,
         muddat: `<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>`,
         ustuvorlik: `<path d="M4 20V10M10 20V4M16 20v-7M22 20v-3"/>`,
         loyiha: `<path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.5L10 3.5H4a2 2 0 0 0-2 2V18a2 2 0 0 0 2 2Z"/>`,
         teglar: `<path d="M20.6 13.4 12 4.8H4.8V12l8.6 8.6a2 2 0 0 0 2.8 0l4.4-4.4a2 2 0 0 0 0-2.8Z"/><circle cx="8.5" cy="8.5" r="1.2"/>`,
         navbat: `<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>`,
+        sabab: `<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/>`,
+        turi: `<rect x="3" y="3" width="18" height="18" rx="3"/><path d="m10 9 5 3-5 3Z"/>`,
+        montaj: `<rect x="2" y="6" width="14" height="12" rx="2"/><path d="m22 8-6 4 6 4Z"/>`,
+        video: `<path d="M3 8a2 2 0 0 1 2-2h3l1.5-2h5L16 6h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3.5"/>`,
       };
       const NTV3_TITLES = {
         kimga: "Kim bajaradi",
@@ -13110,23 +12935,23 @@
       // Telegram'ning orqaga tugmasi stekning eng ustidagi sahifani
       // yopadi. Sahifa yopilgandan keyin tugma ostidagi ekranga
       // qaytariladi — tracker/profil ochiq bo'lsa, u o'z holida qoladi.
-      function ntv3OnBack() {
-        const fn = ntv3Back[ntv3Back.length - 1];
+      function pageOnBack() {
+        const fn = pageBackStack[pageBackStack.length - 1];
         if (fn) fn();
       }
-      function ntv3SyncBack() {
+      function pageSyncBack() {
         const b = tg()?.BackButton;
         if (!b) return;
-        if (ntv3Back.length) {
-          if (!ntv3BackBound) {
-            b.onClick(ntv3OnBack);
-            ntv3BackBound = true;
+        if (pageBackStack.length) {
+          if (!pageBackBound) {
+            b.onClick(pageOnBack);
+            pageBackBound = true;
           }
           b.show();
         } else {
-          if (ntv3BackBound) {
-            b.offClick(ntv3OnBack);
-            ntv3BackBound = false;
+          if (pageBackBound) {
+            b.offClick(pageOnBack);
+            pageBackBound = false;
           }
           if (!document.querySelector("#screen-tracker.active, #screen-taskdetail.active, #screen-profile.active")) b.hide();
         }
@@ -13137,8 +12962,8 @@
         tg()?.HapticFeedback?.selectionChanged?.();
       }
       // Kompyuterda Esc — xuddi orqaga tugmasi kabi.
-      function ntv3OnKey(e) {
-        if (e.key === "Escape") ntv3OnBack();
+      function pageOnKey(e) {
+        if (e.key === "Escape") pageOnBack();
       }
 
       function closeNtv3Pick() {
@@ -13148,16 +12973,16 @@
         // odam ishini qilgan, uni qaytadan tanlashga majburlash xato.
         if (ov.dataset.key === "muddat") ntv3CommitCal();
         ov.remove();
-        ntv3Back.pop();
-        ntv3SyncBack();
+        pageBackStack.pop();
+        pageSyncBack();
         renderNtv3Fields();
       }
       function closeNtv3() {
         document.getElementById("ntv3-pick")?.remove();
         document.getElementById("ntv3-page")?.remove();
-        document.removeEventListener("keydown", ntv3OnKey);
-        ntv3Back = [];
-        ntv3SyncBack();
+        document.removeEventListener("keydown", pageOnKey);
+        pageBackStack = [];
+        pageSyncBack();
         ntv3 = null;
         ntv3Cal = null;
       }
@@ -13216,9 +13041,9 @@
           </div>
         </div>`;
         document.body.appendChild(ov);
-        ntv3Back = [closeNtv3];
-        ntv3SyncBack();
-        document.addEventListener("keydown", ntv3OnKey);
+        pageBackStack = [closeNtv3];
+        pageSyncBack();
+        document.addEventListener("keydown", pageOnKey);
         renderNtv3Fields();
         try {
           // /api/users — admin'ga xos (shaxsiy maydonlar bor); vazifa
@@ -13251,14 +13076,28 @@
         return `<span class="ntv3-avs">${tanlangan.map((u) => ntv3AvHtml(u)).join("")}</span>`;
       }
 
-      function ntv3Row(key, label, value, placeholder, majburiy, prefix) {
-        const empty = !value;
-        return `<button type="button" class="ntv3-row" onclick="openNtv3Pick('${key}')">
-          <span class="ntv3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${NTV3_ICONS[key]}</svg></span>
-          <span class="ntv3-lbl">${label}${majburiy ? "<i>*</i>" : ""}</span>
-          <span class="ntv3-val${empty ? " ph" : ""}">${prefix || ""}<i class="ntv3-valt">${escHtml(empty ? placeholder : value)}</i></span>
+      // Bosilganda o'z sahifasini ochadigan maydon qatori. Vazifa
+      // formasi ham, belgilash sahifasi ham shundan foydalanadi —
+      // ikkalasi bir xil ko'rinishda bo'lishi kerak.
+      function fieldRowHtml(o) {
+        const empty = !o.value;
+        return `<button type="button" class="ntv3-row" onclick="${o.onclick}">
+          <span class="ntv3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${FIELD_ICONS[o.icon] || ""}</svg></span>
+          <span class="ntv3-lbl">${o.label}${o.required ? "<i>*</i>" : ""}</span>
+          <span class="ntv3-val${empty ? " ph" : ""}">${o.prefix || ""}<i class="ntv3-valt">${escHtml(empty ? o.placeholder : o.value)}</i></span>
           <span class="ntv3-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>
         </button>`;
+      }
+      function ntv3Row(key, label, value, placeholder, majburiy, prefix) {
+        return fieldRowHtml({
+          icon: key,
+          label,
+          value,
+          placeholder,
+          required: majburiy,
+          prefix,
+          onclick: `openNtv3Pick('${key}')`,
+        });
       }
       function renderNtv3Fields() {
         const el = document.getElementById("ntv3-fields");
@@ -13358,8 +13197,8 @@
           <div class="ntv3-pick-body" id="ntv3-pick-body">${ntv3PickBodyHtml(key)}</div>
         </div>`;
         document.body.appendChild(ov);
-        ntv3Back.push(closeNtv3Pick);
-        ntv3SyncBack();
+        pageBackStack.push(closeNtv3Pick);
+        pageSyncBack();
       }
       function ntv3PickBodyHtml(key) {
         if (key === "muddat") return ntv3CalPageHtml();
@@ -14248,55 +14087,35 @@
           .join("");
       }
 
-      // ── BELGILASH MODALI (kim montaj qildi / kim video oldi) ──────
-      // Post uchun ikkala select ham so'raladi; stories uchun faqat sana.
-      // Tanlov ikki guruhga bo'linadi: "Loyihaga biriktirilgan" (berilgan
-      // rolga ega — masalan "montajchi") va "Boshqa xodimlar" (loyihaga
-      // biriktirilmagan bo'lsa ham, ishni bajargan bo'lishi mumkin —
-      // masalan asosiy montajchi ishga chiqolmay qolsa, uni o'rniga
-      // ishlagan boshqa xodim tanlanadi; bu Ncoin va oylik/Tabel
-      // hisobotida AYNAN shu odamga tegishli bo'lib qoladi). SMM
-      // menejer bunga kirmaydi — u har doim loyihaning o'z rolidan
-      // avtomatik aniqlanadi, qo'lda tanlanmaydi.
-      function checkPersonOptionsHtml(selectedUserId, role, assignees, directory) {
-        const assigned = (assignees || []).filter((a) => a.role === role);
-        const assignedIds = new Set(assigned.map((a) => a.userId));
-        const assignedOpt = (a) => {
-          const name = a.fullName || [a.firstName, a.lastName].filter(Boolean).join(" ") || `@${a.username}`;
-          return `<option value="${escHtml(a.userId)}"${a.userId === selectedUserId ? " selected" : ""}>${escHtml(name)}</option>`;
-        };
-        const otherOpt = (u) => {
-          const name = u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : `@${u.username}`;
-          const hint = u.job_title ? ` (${u.job_title})` : "";
-          return `<option value="${escHtml(u.id)}"${u.id === selectedUserId ? " selected" : ""}>${escHtml(name)}${escHtml(hint)}</option>`;
-        };
-        const others = (directory || [])
-          .filter((u) => !assignedIds.has(u.id))
-          .sort((a, b) => (a.first_name || a.username).localeCompare(b.first_name || b.username));
-        let html = `<option value=""${!selectedUserId ? " selected" : ""}>— tanlanmagan —</option>`;
-        if (assigned.length) html += `<optgroup label="Loyihaga biriktirilgan">${assigned.map(assignedOpt).join("")}</optgroup>`;
-        if (others.length) html += `<optgroup label="Boshqa xodimlar">${others.map(otherOpt).join("")}</optgroup>`;
-        return html;
-      }
-
-      // ── BELGILASH · KIM BAJARDI (TZ 10e) ──────────────────────────
-      // Post/stories "bajarildi" deb belgilanadigan oyna. Asosiy savol —
-      // ishni KIM bajardi: rejadagi mas'ul (oldindan tanlangan, odatda
-      // bitta bosish yetadi) yoki boshqa xodim (o'shanda sabab so'raladi).
-      // Montaj/video tanlovi va sana avvalgidek pastda qoladi — ular
-      // Ncoin taqsimoti uchun kerak va TZ ularga tegmaydi.
+      // ── BELGILASH SAHIFASI · KIM BAJARDI ──────────────────────────
+      // Post/stories "bajarildi" deb belgilanadigan joy. Avval pastdan
+      // chiqadigan varaq edi: uzun xodimlar ro'yxati, ikkita ochiladigan
+      // ro'yxat va kalendar popover bitta oynaga tiqilgandi — telefonda
+      // har bir formatni belgilab chiqish charchatardi. Endi vazifa
+      // formasi bilan bir xil: to'liq sahifa, har bir tanlov — o'z
+      // sahifasi. Asosiy savol o'zgarmagan: ishni KIM bajardi (rejadagi
+      // mas'ul oldindan tanlangan, odatda bitta bosish yetadi; boshqa
+      // xodim tanlansa — sabab so'raladi).
       const CWD_REASONS = [
         { key: "sick", label: "Kasallik" },
         { key: "vacation", label: "Ta'til" },
         { key: "urgent", label: "Shoshilinch" },
         { key: "other", label: "Boshqa" },
       ];
+      const CWD_TITLES = {
+        kim: "Kim bajardi?",
+        sabab: "Nega boshqa xodim?",
+        sana: "Qaysi kuni chiqdi?",
+        turi: "Stories turi",
+        montaj: "Video montajini kim qildi?",
+        video: "Videoni kim oldi?",
+      };
       let cwd = null;
+      let cwdCal = null;
 
       function cwdShortName(first, last, username) {
         return shortPersonName(first, last, "@" + username);
       }
-      // Xodimning loyiha(lar)i — "Mobilograf · Porolog" satri uchun
       function cwdPersonSub(u) {
         const projIds = perms[u.username] || [];
         const projLabel = projIds.length
@@ -14304,21 +14123,18 @@
           : "loyihasiz";
         return [u.jobTitle || u.job_title || "", projLabel].filter(Boolean).join(" · ");
       }
-      function cwdPersonRowHtml(u, isAssignee) {
-        const name = cwdShortName(u.firstName || u.first_name, u.lastName || u.last_name, u.username);
-        const on = cwd.performerId === u.username;
-        return `<div class="cwd-person${on ? " on" : ""}" onclick="cwdPick('${escArg(u.username)}')">
-          <span class="cwd-av" style="background:${personColor(u.username)}">${escHtml((name || "?").slice(0, 1).toUpperCase())}${avatarImg(u.avatarUrl || u.avatar_url)}</span>
-          <span style="flex:1;min-width:0">
-            <span class="cwd-name" style="display:block">${escHtml(name)}</span>
-            <span class="cwd-role" style="display:block">${escHtml(isAssignee ? "Rejada mas'ul" : cwdPersonSub(u))}</span>
-          </span>
-          ${isAssignee ? `<span class="cwd-badge">mas'ul</span>` : ""}
-          <span class="cwd-radio"></span>
-        </div>`;
+      function cwdIsSub() {
+        return !!cwd.assigneeUsername && cwd.performerId !== cwd.assigneeUsername;
+      }
+      // Montaj/video tanlovi faqat postda va "atmosferali" storiesda
+      // so'raladi — gapirib beriladigan storiesda montaj ham, suratga
+      // olish ham bo'lmaydi.
+      function cwdShowPickers() {
+        return cwd.type === "k" || cwd.storyKind === "atmospheric";
       }
 
       async function openCheckModal(slug, type, num) {
+        if (document.getElementById("cwd-page")) return;
         const p = projects.find((x) => x.id === slug);
         if (!p) return;
         const key = `${type}-${num}`;
@@ -14326,13 +14142,8 @@
         const already = !!(p.checks || {})[key];
         const label = type === "k" ? "Post" : "Stories";
         const workDate = info.workDate ? String(info.workDate).slice(0, 10) : isoOf(todayDate());
-
         // Rejadagi mas'ul — loyihaning SMM roli berilgan xodimi.
         const assignee = (p.assignees || []).find((a) => a.role === "smm") || null;
-        // Loyihaga biriktirilgan xodimlar (montajchi, mobilograf,
-        // dizayner...) — ishni amalda ular ham bajaradi, shuning uchun
-        // "Kim bajardi?" ro'yxatida o'zlarini tanlay olishlari kerak.
-        const projectUsernames = (p.assignees || []).map((a) => a.username);
         cwd = {
           slug,
           type,
@@ -14346,173 +14157,408 @@
           performerId: info.performerUsername || (assignee ? assignee.username : currentUser),
           reason: info.substitutionReason || null,
           note: info.substitutionNote || "",
-          projectUsernames,
+          // Loyihaga biriktirilgan xodimlar (montajchi, mobilograf,
+          // dizayner...) — ishni amalda ular ham bajaradi, shuning uchun
+          // "Kim bajardi?" ro'yxatida o'zlarini tanlay olishlari kerak.
+          projectUsernames: (p.assignees || []).map((a) => a.username),
           assignee,
+          editorUserId: info.editorUserId || null,
+          videographerUserId: info.videographerUserId || null,
           directory: [],
           info,
         };
 
         const ov = document.createElement("div");
-        ov.className = "cwd-ov";
-        ov.onclick = (e) => {
-          if (e.target === ov) cwdClose();
-        };
-        ov.innerHTML = `<div class="cwd">
-          <div class="cwd-grab"></div>
-          <div class="cwd-scroll" id="cwd-scroll"><div class="empty"><div class="empty-s">Yuklanmoqda…</div></div></div>
+        ov.className = "ntv3-ov";
+        ov.id = "cwd-page";
+        ov.innerHTML = `<div class="ntv3">
+          <div class="ntv3-hdr">
+            <button type="button" class="ntv3-hbtn cancel" onclick="cwdClose()">Yopish</button>
+            <div class="ntv3-title">${escHtml(label)} ${num}</div>
+            <div class="ntv3-hbtn" aria-hidden="true"></div>
+          </div>
+          <div class="ntv3-body" id="cwd-body">
+            <div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>
+          </div>
+          <div class="ntv3-foot" id="cwd-foot"></div>
         </div>`;
         document.body.appendChild(ov);
+        pageBackStack = [cwdClose];
+        pageSyncBack();
+        document.addEventListener("keydown", pageOnKey);
 
         try {
           const res = await apiFetch("/api/users/directory");
           if (res.ok) cwd.directory = (await res.json()).users || [];
         } catch (e) {}
-        if (!document.querySelector(".cwd-ov")) return;
+        if (!document.getElementById("cwd-page")) return;
         cwdRender();
       }
 
       function cwdClose() {
-        document.querySelector(".cwd-ov")?.remove();
+        document.getElementById("cwd-pick")?.remove();
+        document.getElementById("cwd-page")?.remove();
+        document.removeEventListener("keydown", pageOnKey);
+        pageBackStack = [];
+        pageSyncBack();
         cwd = null;
-      }
-      function cwdPick(username) {
-        if (!cwd) return;
-        cwd.performerId = username;
-        if (username === cwd.assigneeUsername) {
-          cwd.reason = null;
-          cwd.note = "";
-        }
-        cwdRender();
-      }
-      function cwdPickReason(key) {
-        if (!cwd) return;
-        cwd.reason = cwd.reason === key ? null : key;
-        cwdRender();
-      }
-      function cwdSetStoryKind(kind) {
-        if (!cwd) return;
-        cwd.storyKind = kind;
-        cwdRender();
+        cwdCal = null;
       }
 
-      function cwdRender() {
-        const host = document.getElementById("cwd-scroll");
-        if (!host || !cwd) return;
-        const isSub = !!cwd.assigneeUsername && cwd.performerId !== cwd.assigneeUsername;
-        const showPickers = cwd.type === "k" || cwd.storyKind === "atmospheric";
-
-        // Mas'ul birinchi, keyin ro'yxat ikki guruhga bo'linadi:
-        //   • loyiha jamoasi — shu loyihaga biriktirilgan xodimlar
-        //     (montajchi, mobilograf, dizayner): ishni amalda ular ham
-        //     bajaradi, shuning uchun o'zlarini tanlay oladilar;
-        //   • boshqa xodim — loyihada bo'lmasa ham post/stories ishini
-        //     bajara oladiganlar: SMM va rahbariyat (CEO/COO).
-        // Loyihaga aloqasi yo'q montajchi yoki dizayner ro'yxatga
-        // tushmaydi — bu ularning ishi emas.
+      // ── Qaysi xodimlar tanlanishi mumkin ──────────────────────────
+      // Ro'yxat ikki guruhga bo'linadi: loyiha jamoasi (shu loyihaga
+      // biriktirilganlar) va boshqa xodim — loyihada bo'lmasa ham
+      // post/stories ishini bajara oladiganlar (SMM va rahbariyat).
+      // Loyihadan tashqaridagilarni faqat admin tanlay oladi (backend
+      // ham shunday tekshiradi) — oddiy xodimga ularni ko'rsatish
+      // ma'nosiz: tanlagan zahoti xato olardi.
+      function cwdPerformerGroups() {
         const teamSet = new Set(cwd.projectUsernames || []);
         const pool = cwd.directory.filter((u) => u.username !== cwd.assigneeUsername);
-        const team = pool.filter((u) => teamSet.has(u.username));
-        // Loyihadan tashqaridagilarni faqat admin tanlay oladi (backend
-        // ham shunday tekshiradi). Oddiy xodimga ularni ko'rsatish
-        // ma'nosiz bo'lardi: tanlagan zahoti xato olardi.
-        const others = isAdmin
-          ? pool.filter((u) => !teamSet.has(u.username) && (u.can_smm || u.canSmm))
-          : pool.filter((u) => !teamSet.has(u.username) && u.username === currentUser);
-        const assigneeHtml = cwd.assignee
-          ? cwdPersonRowHtml(cwd.assignee, true)
-          : `<div class="cwd-role" style="padding:2px 2px 6px">Bu loyihada rejadagi mas'ul belgilanmagan — Ruxsatlar bo'limidan «SMM» roli beriladi.</div>`;
+        return {
+          team: pool.filter((u) => teamSet.has(u.username)),
+          others: isAdmin
+            ? pool.filter((u) => !teamSet.has(u.username) && (u.can_smm || u.canSmm))
+            : pool.filter((u) => !teamSet.has(u.username) && u.username === currentUser),
+        };
+      }
+      function cwdPersonName(u) {
+        return cwdShortName(u.firstName || u.first_name, u.lastName || u.last_name, u.username);
+      }
+      function cwdPerformerName() {
+        if (cwd.performerId === cwd.assigneeUsername && cwd.assignee) return cwdPersonName(cwd.assignee);
+        const u = cwd.directory.find((x) => x.username === cwd.performerId);
+        return u ? cwdPersonName(u) : "@" + cwd.performerId;
+      }
+      // Montajchi/mobilograf ro'yxati: avval loyihaga shu rol bilan
+      // biriktirilganlar, keyin qolgan xodimlar.
+      function cwdRoleOptions(role) {
+        const p = projects.find((x) => x.id === cwd.slug) || {};
+        const assigned = (p.assignees || []).filter((a) => a.role === role);
+        const assignedIds = new Set(assigned.map((a) => a.userId));
+        const list = assigned.map((a) => ({
+          id: a.userId,
+          name: a.fullName || [a.firstName, a.lastName].filter(Boolean).join(" ") || `@${a.username}`,
+          sub: "Loyihaga biriktirilgan",
+          username: a.username,
+          avatarUrl: a.avatarUrl,
+        }));
+        (cwd.directory || [])
+          .filter((u) => !assignedIds.has(u.id))
+          .sort((a, b) => (a.first_name || a.username).localeCompare(b.first_name || b.username))
+          .forEach((u) =>
+            list.push({
+              id: u.id,
+              name: u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : `@${u.username}`,
+              sub: u.job_title || "",
+              username: u.username,
+              avatarUrl: u.avatar_url,
+            }),
+          );
+        return list;
+      }
+      function cwdRoleName(role, id) {
+        if (!id) return "";
+        return cwdRoleOptions(role).find((o) => o.id === id)?.name || "";
+      }
 
-        const reasonsHtml = isSub
-          ? `<div class="cwd-seclbl">Sabab</div>
-             <div class="cwd-reasons">
-               ${CWD_REASONS.map((r) => `<button type="button" class="cwd-reason${cwd.reason === r.key ? " on" : ""}" onclick="cwdPickReason('${r.key}')">${r.label}</button>`).join("")}
-             </div>
-             ${cwd.reason === "other" ? `<input class="f-input" id="cwd-note" style="margin-top:8px" maxlength="200" placeholder="Qisqacha izoh" value="${escHtml(cwd.note || "")}" oninput="cwd.note=this.value"/>` : ""}`
-          : "";
-
-        // Mavjud tafsilotlar (Ncoin uchun) — TZ bularga tegmaydi
-        const editorHtml = checkPersonOptionsHtml(cwd.info.editorUserId, "montajchi", (projects.find((x) => x.id === cwd.slug) || {}).assignees, cwd.directory);
-        const videoHtml = checkPersonOptionsHtml(cwd.info.videographerUserId, "mobilograf", (projects.find((x) => x.id === cwd.slug) || {}).assignees, cwd.directory);
-        const pickerPart = `
-          <div class="f-group"><label class="f-label">Video montajini kim qildi?</label>
-            <select class="f-input" id="cm-editor">${editorHtml}</select></div>
-          <div class="f-group"><label class="f-label">Videoni kim oldi?</label>
-            <select class="f-input" id="cm-videographer">${videoHtml}</select></div>`;
-        const storyTypePart =
-          cwd.type === "s"
-            ? `<div class="f-group"><label class="f-label">Stories turi</label>
-                 <div class="seg" style="margin-top:0">
-                   <button type="button" class="seg-btn${cwd.storyKind === "info" ? " active" : ""}" onclick="cwdSetStoryKind('info')">Gapirib beriladigan</button>
-                   <button type="button" class="seg-btn${cwd.storyKind === "atmospheric" ? " active" : ""}" onclick="cwdSetStoryKind('atmospheric')">Atmosferali video</button>
-                 </div></div>`
-            : "";
-
-        const performerName = (() => {
-          if (cwd.performerId === cwd.assigneeUsername && cwd.assignee) {
-            return cwdShortName(cwd.assignee.firstName, cwd.assignee.lastName, cwd.assignee.username);
-          }
-          const u = cwd.directory.find((x) => x.username === cwd.performerId);
-          return u ? cwdShortName(u.first_name, u.last_name, u.username) : "@" + cwd.performerId;
+      // ── Asosiy sahifa ─────────────────────────────────────────────
+      function cwdRender() {
+        const host = document.getElementById("cwd-body");
+        if (!host || !cwd) return;
+        const isSub = cwdIsSub();
+        const pickers = cwdShowPickers();
+        const reason = CWD_REASONS.find((r) => r.key === cwd.reason);
+        const performer = cwdPerformerName();
+        const assigneeName = cwd.assignee ? cwdPersonName(cwd.assignee) : null;
+        const natija = isSub
+          ? `Ish ${escHtml(performer.split(" ")[0])} nomiga yoziladi.${assigneeName ? ` ${escHtml(assigneeName.split(" ")[0])} rejasida «o'rniga bajarildi» deb turadi.` : ""}`
+          : `Ish ${escHtml(performer.split(" ")[0])} rejasiga hisoblanadi.`;
+        const avatar = (() => {
+          const u =
+            cwd.performerId === cwd.assigneeUsername && cwd.assignee
+              ? cwd.assignee
+              : cwd.directory.find((x) => x.username === cwd.performerId);
+          if (!u) return "";
+          return `<span class="ntv3-avs"><span class="ntv3-av" style="background:${personColor(cwd.performerId)}">${escHtml((performer || "?").slice(0, 1).toUpperCase())}${avatarImg(u.avatarUrl || u.avatar_url)}</span></span>`;
         })();
-        const assigneeName = cwd.assignee
-          ? cwdShortName(cwd.assignee.firstName, cwd.assignee.lastName, cwd.assignee.username)
-          : null;
-        const resultText = isSub
-          ? `Ish ${escHtml(performerName.split(" ")[0])} nomiga yoziladi.${assigneeName ? ` ${escHtml(assigneeName.split(" ")[0])} rejasida «o'rniga bajarildi» deb turadi.` : ""}`
-          : `Ish ${escHtml(performerName.split(" ")[0])} rejasiga hisoblanadi.`;
 
-        const canSave = !isSub || (!!cwd.reason && (cwd.reason !== "other" || (cwd.note || "").trim().length > 0));
+        // Hammasi bitta kartada va mantiqiy tartibda: kim → nega →
+        // stories turi (montaj so'ralishini shu hal qiladi) → montaj →
+        // video → qaysi kuni. Bo'lim sarlavhalari qo'yilmadi: forma
+        // qisqa, "majburiy/qo'shimcha" deb ikkiga bo'lish faqat
+        // chalg'itardi — bu yerda deyarli hammasi majburiy.
+        const qoshimcha = [
+          cwd.type === "s"
+            ? fieldRowHtml({
+                icon: "turi",
+                label: "Stories turi",
+                value: cwd.storyKind === "atmospheric" ? "Atmosferali video" : "Gapirib beriladigan",
+                onclick: "openCwdPick('turi')",
+              })
+            : "",
+          pickers
+            ? fieldRowHtml({
+                icon: "montaj",
+                label: "Montaj",
+                value: cwdRoleName("montajchi", cwd.editorUserId),
+                placeholder: "Tanlang",
+                required: true,
+                onclick: "openCwdPick('montaj')",
+              })
+            : "",
+          pickers
+            ? fieldRowHtml({
+                icon: "video",
+                label: "Video olgan",
+                value: cwdRoleName("mobilograf", cwd.videographerUserId),
+                placeholder: "Tanlang",
+                required: true,
+                onclick: "openCwdPick('video')",
+              })
+            : "",
+        ].filter(Boolean);
 
         host.innerHTML = `
-          <div class="cwd-top">
-            <span class="cwd-chip">${cwd.label} ${cwd.num}</span>
-            <span class="cwd-sub">${escHtml(cwd.projectLabel)} · ${escHtml(fmtDay(parseISO(cwd.workDate)))}</span>
+          <div class="cwd-head">
+            <span class="cwd-chip">${escHtml(cwd.label)} ${cwd.num}</span>
+            <span class="cwd-sub">${escHtml(cwd.projectLabel)}</span>
           </div>
-          <div class="cwd-title">Kim bajardi?</div>
-          <div class="cwd-list">
-            ${assigneeHtml}
-            ${team.length ? `<div class="cwd-grouplbl">Loyiha jamoasi</div>` : ""}
-            ${team.map((u) => cwdPersonRowHtml(u, false)).join("")}
-            ${others.length ? `<div class="cwd-grouplbl">${isAdmin ? "Boshqa xodim" : "Men"}</div>` : ""}
-            ${others.map((u) => cwdPersonRowHtml(u, false)).join("")}
-            ${team.length || others.length ? "" : `<div class="cwd-role" style="padding:8px 2px 0">Boshqa xodim yo'q — loyihaga hali hech kim biriktirilmagan.</div>`}
+          <div class="ntv3-props" id="cwd-req">
+            ${fieldRowHtml({ icon: "kimga", label: "Kim bajardi", value: performer, placeholder: "Tanlang", required: true, prefix: avatar, onclick: "openCwdPick('kim')" })}
+            ${
+              isSub
+                ? fieldRowHtml({
+                    icon: "sabab",
+                    label: "Sabab",
+                    value: reason ? (reason.key === "other" && cwd.note ? cwd.note : reason.label) : "",
+                    placeholder: "Tanlang",
+                    required: true,
+                    onclick: "openCwdPick('sabab')",
+                  })
+                : ""
+            }
+            ${qoshimcha.join("")}
+            ${fieldRowHtml({ icon: "muddat", label: "Qaysi kuni", value: fmtDay(parseISO(cwd.workDate)), required: true, onclick: "openCwdPick('sana')" })}
           </div>
-          ${reasonsHtml}
-          <div style="margin-top:16px">
-            ${storyTypePart}
-            ${showPickers ? pickerPart : ""}
-            <div class="f-group"><label class="f-label">Qaysi kuni chiqdi?</label>
-              ${renderDateFieldHtml("cm-date", cwd.workDate, "Sana tanlang")}</div>
-          </div>
-          <div style="flex:1;min-height:12px"></div>
+          <div class="ntv3-err" id="cwd-req-err"></div>
+          ${
+            cwd.assignee
+              ? ""
+              : `<div class="ntv3-hint">Bu loyihada rejadagi mas'ul belgilanmagan — Ruxsatlar bo'limidan «SMM» roli beriladi.</div>`
+          }
           <div class="cwd-note">
             <span class="cwd-note-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 20c1-3.5 3.5-5.5 6.5-5.5s5.5 2 6.5 5.5"/><path d="M15.5 5.2a3.5 3.5 0 0 1 0 6.6M18 14.8c1.8.8 3 2.6 3.5 5.2"/></svg></span>
-            <span class="cwd-note-txt">${resultText}</span>
-          </div>
-          <button type="button" class="cwd-submit" id="cwd-save"${canSave ? "" : " disabled"} onclick="cwdSave()">${cwd.already ? "Yangilash" : "Bajarildi deb belgilash"}</button>
-          ${cwd.already ? `<button type="button" class="cwd-remove" onclick="cwdRemove()">Belgini olib tashlash</button>` : ""}`;
+            <span class="cwd-note-txt">${natija}</span>
+          </div>`;
+
+        const foot = document.getElementById("cwd-foot");
+        if (foot) {
+          foot.innerHTML = `<button type="button" class="ntv3-submit" id="cwd-save" onclick="cwdSave(this)">${cwd.already ? "Yangilash" : "Bajarildi deb belgilash"}</button>
+            ${cwd.already ? `<button type="button" class="ntv3-submit ghost" style="margin-top:8px" onclick="cwdRemove()">Belgini olib tashlash</button>` : ""}`;
+        }
         applyStaticIcons?.();
       }
 
-      async function cwdSave() {
-        if (!cwd) return;
-        const btn = document.getElementById("cwd-save");
-        const isSub = !!cwd.assigneeUsername && cwd.performerId !== cwd.assigneeUsername;
-        const showPickers = cwd.type === "k" || cwd.storyKind === "atmospheric";
-        const editorUserId = showPickers ? document.getElementById("cm-editor")?.value || null : null;
-        const videographerUserId = showPickers ? document.getElementById("cm-videographer")?.value || null : null;
-        const workDate = document.getElementById("cm-date")?.value || cwd.workDate;
-        if (showPickers) {
-          if (!editorUserId) return showToast("⚠ Montaj qilgan xodimni tanlang");
-          if (!videographerUserId) return showToast("⚠ Video olgan xodimni tanlang");
+      // ── Ichki tanlov sahifasi ─────────────────────────────────────
+      function openCwdPick(key) {
+        if (!cwd || document.getElementById("cwd-pick")) return;
+        if (key === "sana") {
+          const d = parseISO(cwd.workDate);
+          cwdCal = { y: d.getFullYear(), m: d.getMonth(), sel: cwd.workDate };
         }
-        if (!workDate) return showToast("⚠ Sanani tanlang");
+        const ov = document.createElement("div");
+        ov.className = "ntv3-pick-ov";
+        ov.id = "cwd-pick";
+        ov.innerHTML = `<div class="ntv3-pick">
+          <div class="ntv3-hdr">
+            <button type="button" class="ntv3-hbtn cancel" onclick="closeCwdPick()">${ICON.chevronLeft}Orqaga</button>
+            <div class="ntv3-title">${CWD_TITLES[key]}</div>
+            ${key === "sana" || key === "sabab" ? `<button type="button" class="ntv3-hbtn save" onclick="closeCwdPick()">Tayyor</button>` : `<div class="ntv3-hbtn" aria-hidden="true"></div>`}
+          </div>
+          <div class="ntv3-pick-body" id="cwd-pick-body">${cwdPickBodyHtml(key)}</div>
+        </div>`;
+        ov.dataset.key = key;
+        document.body.appendChild(ov);
+        pageBackStack.push(closeCwdPick);
+        pageSyncBack();
+        applyStaticIcons?.();
+      }
+      function closeCwdPick() {
+        const ov = document.getElementById("cwd-pick");
+        if (!ov) return;
+        if (ov.dataset.key === "sana" && cwdCal) cwd.workDate = cwdCal.sel || cwd.workDate;
+        ov.remove();
+        pageBackStack.pop();
+        pageSyncBack();
+        cwdRender();
+      }
+      function cwdOptHtml(on, avatarHtml, name, sub, onclick) {
+        return `<div class="ntv3-opt${on ? " on" : ""}" onclick="${onclick}">
+          ${avatarHtml || ""}
+          <span class="ntv3-opt-txt"><b>${escHtml(name)}</b>${sub ? `<i>${escHtml(sub)}</i>` : ""}</span>
+          <span class="ntv3-tick${on ? " on" : ""}">${on ? ICON.check : ""}</span>
+        </div>`;
+      }
+      function cwdAvHtml(username, name, url) {
+        return `<span class="ntv3-av" style="background:${personColor(username)}">${escHtml((name || "?").slice(0, 1).toUpperCase())}${avatarImg(url)}</span>`;
+      }
+      function cwdPickBodyHtml(key) {
+        if (key === "sana") {
+          return `<div id="cwd-cal">${cwdCalHtml()}</div>
+            <div class="ntv3-quick">
+              <button type="button" class="ntv3-qchip" onclick="cwdPickDay('${isoOf(todayDate())}')">Bugun</button>
+              <button type="button" class="ntv3-qchip" onclick="cwdPickDay('${isoOf(new Date(todayDate().getFullYear(), todayDate().getMonth(), todayDate().getDate() - 1))}')">Kecha</button>
+            </div>`;
+        }
+        if (key === "turi") {
+          return [
+            cwdOptHtml(cwd.storyKind === "info", "", "Gapirib beriladigan", "Montaj va suratga olish so'ralmaydi", `cwdPickValue('turi','info')`),
+            cwdOptHtml(cwd.storyKind === "atmospheric", "", "Atmosferali video", "Montaj va video olgan xodim ham so'raladi", `cwdPickValue('turi','atmospheric')`),
+          ].join("");
+        }
+        if (key === "sabab") {
+          const list = CWD_REASONS.map((r) =>
+            cwdOptHtml(cwd.reason === r.key, "", r.label, "", `cwdPickValue('sabab','${r.key}')`),
+          ).join("");
+          const note =
+            cwd.reason === "other"
+              ? `<div class="ntv3-newtag" style="margin-top:12px"><input id="cwd-note-inp" maxlength="200" placeholder="Qisqacha izoh" value="${escHtml(cwd.note || "")}" oninput="cwd.note=this.value"/></div>`
+              : "";
+          return `<div class="ntv3-count">Rejadagi mas'ul o'rniga boshqa xodim ishlagan — sababi hisobotda ko'rinadi</div>${list}${note}`;
+        }
+        if (key === "montaj" || key === "video") {
+          const role = key === "montaj" ? "montajchi" : "mobilograf";
+          const cur = key === "montaj" ? cwd.editorUserId : cwd.videographerUserId;
+          const opts = cwdRoleOptions(role);
+          if (!opts.length) return `<div class="ntv3-empty">Xodim yo'q</div>`;
+          return opts
+            .map((o) =>
+              cwdOptHtml(cur === o.id, cwdAvHtml(o.username, o.name, o.avatarUrl), o.name, o.sub, `cwdPickValue('${key}','${escArg(o.id)}')`),
+            )
+            .join("");
+        }
+        // kim bajardi
+        const { team, others } = cwdPerformerGroups();
+        const row = (u, isAssignee) =>
+          cwdOptHtml(
+            cwd.performerId === u.username,
+            cwdAvHtml(u.username, cwdPersonName(u), u.avatarUrl || u.avatar_url),
+            cwdPersonName(u),
+            isAssignee ? "Rejada mas'ul" : cwdPersonSub(u),
+            `cwdPickValue('kim','${escArg(u.username)}')`,
+          );
+        const parts = [cwd.assignee ? row(cwd.assignee, true) : ""];
+        if (team.length) parts.push(`<div class="ntv3-sec">Loyiha jamoasi</div>`, ...team.map((u) => row(u, false)));
+        if (others.length) parts.push(`<div class="ntv3-sec">${isAdmin ? "Boshqa xodim" : "Men"}</div>`, ...others.map((u) => row(u, false)));
+        if (!cwd.assignee && !team.length && !others.length) {
+          parts.push(`<div class="ntv3-empty">Loyihaga hali hech kim biriktirilmagan.</div>`);
+        }
+        return parts.join("");
+      }
+      function cwdPickValue(key, value) {
+        if (!cwd) return;
+        if (key === "kim") {
+          cwd.performerId = value;
+          // Rejadagi mas'ulning o'ziga qaytarilsa, sabab keraksiz.
+          if (value === cwd.assigneeUsername) {
+            cwd.reason = null;
+            cwd.note = "";
+          }
+          ntv3Haptic();
+          closeCwdPick();
+          return;
+        }
+        if (key === "turi") cwd.storyKind = value;
+        else if (key === "montaj") cwd.editorUserId = value;
+        else if (key === "video") cwd.videographerUserId = value;
+        else if (key === "sabab") {
+          cwd.reason = cwd.reason === value ? null : value;
+          if (cwd.reason !== "other") cwd.note = "";
+          // "Boshqa" — izoh maydoni shu sahifaning o'zida ochiladi,
+          // shuning uchun sahifa yopilmaydi.
+          const body = document.getElementById("cwd-pick-body");
+          if (body) body.innerHTML = cwdPickBodyHtml("sabab");
+          ntv3Haptic();
+          return;
+        }
+        ntv3Haptic();
+        closeCwdPick();
+      }
+      function cwdCalHtml() {
+        const { y, m, sel } = cwdCal;
+        const todayIso = isoOf(todayDate());
+        const days = buildCalGridCells(y, m)
+          .map((c) => {
+            if (!c.iso) return `<button type="button" class="ntv3-day" disabled>${c.dNum}</button>`;
+            const cls = ["ntv3-day"];
+            if (c.iso === todayIso) cls.push("d-today");
+            if (c.iso === sel) cls.push("d-sel", "d-s", "d-e");
+            return `<button type="button" class="${cls.join(" ")}" onclick="cwdPickDay('${c.iso}')">${c.dNum}</button>`;
+          })
+          .join("");
+        return `<div class="ntv3-cal-hdr">
+            <button type="button" class="ntv3-cal-nav" onclick="cwdCalNav(-1)">${ICON.chevronLeft}</button>
+            <div class="ntv3-cal-m">${MONTHS[m]} ${y}</div>
+            <button type="button" class="ntv3-cal-nav" onclick="cwdCalNav(1)">${ICON.chevronRight}</button>
+          </div>
+          <div class="ntv3-wd">${WD.map((w) => `<div>${w}</div>`).join("")}</div>
+          <div class="ntv3-days">${days}</div>`;
+      }
+      function cwdCalNav(delta) {
+        if (!cwdCal) return;
+        cwdCal.m += delta;
+        if (cwdCal.m < 0) {
+          cwdCal.m = 11;
+          cwdCal.y--;
+        } else if (cwdCal.m > 11) {
+          cwdCal.m = 0;
+          cwdCal.y++;
+        }
+        const el = document.getElementById("cwd-cal");
+        if (el) el.innerHTML = cwdCalHtml();
+      }
+      function cwdPickDay(iso) {
+        if (!cwdCal) return;
+        const d = parseISO(iso);
+        cwdCal = { y: d.getFullYear(), m: d.getMonth(), sel: iso };
+        const el = document.getElementById("cwd-cal");
+        if (el) el.innerHTML = cwdCalHtml();
+        ntv3Haptic();
+      }
+
+      // ── Saqlash ───────────────────────────────────────────────────
+      function cwdShowErr(matn) {
+        const el = document.getElementById("cwd-req-err");
+        if (el) {
+          el.textContent = matn;
+          el.classList.add("on");
+          el.scrollIntoView({ block: "center", behavior: "smooth" });
+        }
+        document.getElementById("cwd-req")?.classList.add("bad");
+        tg()?.HapticFeedback?.notificationOccurred?.("error");
+      }
+      async function cwdSave(btn) {
+        if (!cwd) return;
+        document.getElementById("cwd-req-err")?.classList.remove("on");
+        document.getElementById("cwd-req")?.classList.remove("bad");
+        const isSub = cwdIsSub();
+        const pickers = cwdShowPickers();
+        // Rejadagi mas'ul o'rniga boshqa xodim ishlagan bo'lsa, sabab
+        // yozilmasa hisobot "kim nega ishlamadi"ni ko'rsata olmaydi.
+        if (isSub && !cwd.reason) return cwdShowErr("«Sabab» — rejadagi mas'ul o'rniga kim nega ishlaganini tanlang.");
+        if (isSub && cwd.reason === "other" && !(cwd.note || "").trim()) {
+          return cwdShowErr("«Sabab» — «Boshqa» tanlandi, qisqacha izoh yozing.");
+        }
+        if (pickers && !cwd.editorUserId) return cwdShowErr("«Montaj» — montaj qilgan xodimni tanlang.");
+        if (pickers && !cwd.videographerUserId) return cwdShowErr("«Video olgan» — videoni olgan xodimni tanlang.");
+        if (!cwd.workDate) return cwdShowErr("«Qaysi kuni» — sanani tanlang.");
         setBtnLoading(btn, true, "Saqlanmoqda…");
         try {
           await onCheck(cwd.slug, cwd.type, cwd.num, true, null, {
-            editorUserId,
-            videographerUserId,
-            workDate,
+            editorUserId: pickers ? cwd.editorUserId : null,
+            videographerUserId: pickers ? cwd.videographerUserId : null,
+            workDate: cwd.workDate,
             storyKind: cwd.type === "s" ? cwd.storyKind : undefined,
             performerUsername: cwd.performerId,
             substitutionReason: isSub ? cwd.reason : null,
@@ -14524,7 +14570,6 @@
           setBtnLoading(btn, false);
         }
       }
-
       async function cwdRemove() {
         if (!cwd) return;
         try {
