@@ -5138,14 +5138,26 @@
          O'lchamlar va ranglar dizayn bilan 1:1 — ranglar ilovaning
          umumiy tokenlaridan olinadi (TZ 05 qiymatlari aynan shular),
          shunda tungi rejim ham o'z-o'zidan ishlaydi. */
+      /* Sahifa yon menyuning O'NG tomonidagi joyni egallaydi — menyu
+         ko'rinib turadi va boshqa bo'limga o'tish uchun sahifani
+         yopish kerak emas. Shu sababli sahifaning o'z "orqaga"
+         tugmasi ham yo'q: telefonda Telegram'ning tugmasi, katta
+         ekranda esa yon menyu shu ishni bajaradi. */
       .ntf-ov {
         position: fixed;
         inset: 0;
-        z-index: 800;
+        /* Telefonda pastki tab barni (200) qoplaydi; katta ekranda esa
+           yon menyudan (100) past turadi va uning o'ng tomonidan
+           boshlanadi. */
+        z-index: 300;
         background: var(--bg);
         display: flex;
         flex-direction: column;
         font-family: "Onest", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      @media (min-width: 860px) {
+        .ntf-ov { left: 224px; z-index: 80; }
+        body.sidebar-collapsed .ntf-ov { left: 72px; }
       }
 
       /* ── Sarlavha ────────────────────────────────────────────────── */
@@ -5159,20 +5171,6 @@
         background: var(--surf);
         border-bottom: 1px solid var(--bd2);
       }
-      .ntf-back {
-        width: 40px;
-        height: 40px;
-        flex: none;
-        border-radius: 12px;
-        background: var(--surf);
-        border: 1px solid var(--bd4);
-        color: var(--t5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-      }
-      .ntf-back svg { width: 19px; height: 19px; }
       .ntf-hdr-txt { flex: 1; min-width: 0; }
       .ntf-crumb {
         display: flex;
@@ -11066,6 +11064,9 @@
       // ── TAB NAVIGATSIYASI ─────────────────────────────────────────
       const ROOT_TABS = ["today", "projects", "tasks", "nshop", "history", "admin"];
       function showTab(tab) {
+        // Vazifa sahifasi ochiq bo'lsa, menyudan boshqa bo'limga
+        // o'tish avval uni yopadi. Yozilgani qoralamada qoladi.
+        if (document.getElementById("ntf-page") && !ntfLeaveFor(() => showTab(tab))) return;
         activeTab = tab;
         ROOT_TABS.forEach((t) => {
           document
@@ -13870,7 +13871,6 @@
         { v: "high", label: "Yuqori", bars: 3, color: "var(--red)" },
       ];
       const NTF_ICON = {
-        back: `<path d="M15 5 8 12l7 7"/>`,
         cal: `<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>`,
         clock: `<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>`,
         plus: `<path d="M12 5v14M5 12h14"/>`,
@@ -14015,7 +14015,6 @@
         ov.id = "ntf-page";
         ov.innerHTML = `
           <header class="ntf-hdr">
-            <button type="button" class="ntf-back" onclick="ntfExit()" aria-label="Orqaga">${ntfSvg("back")}</button>
             <div class="ntf-hdr-txt">
               <div class="ntf-crumb">Vazifalar / <b>${t ? "Tahrirlash" : "Yangi vazifa"}</b></div>
               <div class="ntf-h1">${t ? "Vazifani tahrirlash" : "Yangi vazifa"}</div>
@@ -14117,7 +14116,17 @@
       function ntfDirty() {
         return !!(ntf.title.trim() || ntf.desc.trim() || ntf.assignees.length || ntf.dueDate || ntf.tagIds.size || ntf.projectSlug);
       }
-      function ntfConfirmExit() {
+      // Sahifadan chiqib boshqa joyga o'tish: yozilgani bo'lsa avval
+      // so'raladi, "Chiqish" bosilganda `keyin` bajariladi.
+      function ntfLeaveFor(keyin) {
+        if (ntf && ntf.mode === "new" && ntfDirty()) {
+          ntfConfirmExit(keyin);
+          return false;
+        }
+        ntfClose();
+        return true;
+      }
+      function ntfConfirmExit(keyin) {
         const { body, ov } = makeSheet("Chiqasizmi?");
         body.innerHTML = `<div class="f-hint" style="margin-bottom:16px;font-size:13.5px;line-height:1.6">O'zgarishlar qoralamada qoladi — keyin qaytib davom ettirishingiz mumkin.</div>
           <div style="display:flex;flex-direction:column;gap:9px">
@@ -14129,6 +14138,7 @@
           ov.remove();
           ntfSaveDraft();
           ntfClose();
+          if (typeof keyin === "function") keyin();
         };
       }
       function ntfCloseLayer() {
@@ -14334,10 +14344,10 @@
             ${btn(bugun, "Bugun", false)}
             ${btn(ertaga, "Ertaga", true)}
             ${uchinchi.iso === ertaga ? "" : btn(uchinchi.iso, uchinchi.label, true)}
-            <button type="button" class="ntf-qbtn${oraliq ? " on" : ""}" onclick="ntfOpenSheet('sana')">${ntfSvg("cal")}Sana</button>
+            <button type="button" class="ntf-qbtn${oraliq ? " on" : ""}" onclick="ntfOpenPicker('sana', this)">${ntfSvg("cal")}Sana</button>
           </div>
           <div class="ntf-timerow ntf-only-d">
-            <button type="button" class="ntf-qbtn time${kech ? " late" : ""}" onclick="ntfOpenSheet('soat')">
+            <button type="button" class="ntf-qbtn time${kech ? " late" : ""}" onclick="ntfOpenPicker('soat', this)">
               ${ntfSvg("clock")}<b>${ntf.dueTime ? escHtml(ntf.dueTime) + " gacha" : "Soat"}</b>
             </button>
             <span class="ntf-when">${kech ? "Vaqt o'tib ketgan" : escHtml(ntfFullWhen())}</span>
@@ -14579,7 +14589,7 @@
       function ntfOpenPicker(key, btn) {
         if (ntfIsMobile() || !btn) return ntfOpenSheet(key);
         document.getElementById("ntf-pop")?.remove();
-        ntfSheetState = { key, q: "", role: "" };
+        ntfInitPickState(key);
         const pop = document.createElement("div");
         pop.className = "ntf-pop";
         pop.id = "ntf-pop";
@@ -14608,6 +14618,7 @@
       function ntfClosePicker() {
         const pop = document.getElementById("ntf-pop");
         if (pop) {
+          ntfCommitPick();
           pop.remove();
           document.removeEventListener("mousedown", ntfPopOutside);
           ntfSheetState = null;
@@ -14627,14 +14638,28 @@
         sana: "Ish oralig'i",
         soat: "Muddat soati",
       };
-      function ntfOpenSheet(key) {
-        document.querySelector(".ntf-sheet-ov")?.remove();
+      function ntfInitPickState(key) {
         ntfSheetState = { key, q: "", role: "" };
         if (key === "sana") {
           const b = ntf.startDate || ntf.dueDate || isoOf(todayDate());
           const d = parseISO(b);
           ntfSheetState.cal = { y: d.getFullYear(), m: d.getMonth(), start: ntf.startDate || "", end: ntf.dueDate || "" };
         }
+      }
+      // Kalendarda tanlangan oraliqni asosiy obyektga yozadi —
+      // "Tayyor" bosilmasa ham tanlangani yo'qolmasligi kerak.
+      function ntfCommitPick() {
+        if (ntfSheetState?.key === "sana" && ntfSheetState.cal) {
+          const c = ntfSheetState.cal;
+          if (c.start) {
+            ntf.startDate = c.start;
+            ntf.dueDate = c.end || c.start;
+          }
+        }
+      }
+      function ntfOpenSheet(key) {
+        document.querySelector(".ntf-sheet-ov")?.remove();
+        ntfInitPickState(key);
         const ov = document.createElement("div");
         ov.className = "ntf-sheet-ov";
         ov.onclick = (e) => {
@@ -14660,13 +14685,7 @@
       function ntfCloseSheet() {
         const ov = document.querySelector(".ntf-sheet-ov");
         if (!ov) return;
-        if (ntfSheetState?.key === "sana" && ntfSheetState.cal) {
-          const c = ntfSheetState.cal;
-          if (c.start) {
-            ntf.startDate = c.start;
-            ntf.dueDate = c.end || c.start;
-          }
-        }
+        ntfCommitPick();
         ov.remove();
         if (pageBackStack[pageBackStack.length - 1] === ntfCloseSheet) pageBackStack.pop();
         pageSyncBack();
@@ -14891,13 +14910,13 @@
         ntf.startMode = v;
         ntf.touched = true;
         ntfHaptic();
-        ntfCloseSheet();
+        ntfClosePicker();
       }
       function ntfPickTime(v) {
         ntf.dueTime = v;
         ntf.touched = true;
         ntfHaptic();
-        ntfCloseSheet();
+        ntfClosePicker();
       }
       async function ntfCreateTag() {
         const input = document.getElementById("ntf-newtag");
