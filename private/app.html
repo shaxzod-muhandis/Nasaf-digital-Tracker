@@ -3931,20 +3931,33 @@
         margin-left: auto;
         margin-right: auto;
       }
-      /* Katta ekranda ham TO'LIQ SAHIFA. Avval o'rtada 468px'lik oyna
-         edi — u baribir modal bo'lib qolardi: tor ustunda har bir
-         tanlov uchun ichidagi sahifa almashardi va ishlash noqulay
-         edi. Endi butun ekran, mazmun esa o'qishga qulay enda
-         markazda turadi. */
+      /* Belgilash formasi qisqa — uch-to'rtta qator. Telefonda u
+         to'liq sahifa bo'lgani ma'qul (barmoq bilan ishlash qulay),
+         katta ekranda esa butun oynani egallab, ostida katta bo'sh
+         joy qoldirardi. Shuning uchun katta ekranda — o'rtadagi
+         karta, balandligi mazmunga qarab. */
       @media (min-width: 860px) {
-        .ntv3,
-        .ntv3-pick { padding-top: 0; }
-        .ntv3-body,
-        .ntv3-pick-body,
-        .ntv3-foot {
-          padding-left: max(16px, calc((100% - 680px) / 2));
-          padding-right: max(16px, calc((100% - 680px) / 2));
+        .ntv3-ov,
+        .ntv3-pick-ov {
+          background: rgba(14, 23, 38, 0.45);
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
         }
+        .ntv3,
+        .ntv3-pick {
+          flex: none;
+          width: 100%;
+          max-width: 520px;
+          height: auto;
+          max-height: calc(100vh - 48px);
+          border-radius: 20px;
+          padding-top: 0;
+          box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+        }
+        .ntv3-body { flex: 0 1 auto; }
+        .ntv3-hdr { border-radius: 20px 20px 0 0; }
+        .ntv3-foot { border-radius: 0 0 20px 20px; }
       }
 
       /* ── VAZIFANI SURIB KO'CHIRISH (drag & drop) ───────────────────
@@ -15707,6 +15720,12 @@
         const ov = document.createElement("div");
         ov.className = "ntv3-ov";
         ov.id = "cwd-page";
+        // Katta ekranda bu karta bo'lib ko'rinadi — fonga bosish uni
+        // yopadi. Telefonda karta butun ekranni egallaydi, shuning
+        // uchun bu hodisa u yerda umuman ishlamaydi.
+        ov.onclick = (e) => {
+          if (e.target === ov) cwdClose();
+        };
         ov.innerHTML = `<div class="ntv3">
           <div class="ntv3-hdr">
             <button type="button" class="ntv3-hbtn cancel" onclick="cwdClose()">Yopish</button>
@@ -15906,6 +15925,9 @@
         const ov = document.createElement("div");
         ov.className = "ntv3-pick-ov";
         ov.id = "cwd-pick";
+        ov.onclick = (e) => {
+          if (e.target === ov) closeCwdPick();
+        };
         ov.innerHTML = `<div class="ntv3-pick">
           <div class="ntv3-hdr">
             <button type="button" class="ntv3-hbtn cancel" onclick="closeCwdPick()">${ICON.chevronLeft}Orqaga</button>
