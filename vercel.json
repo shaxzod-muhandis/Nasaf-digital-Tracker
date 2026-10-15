@@ -1,10 +1,28 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/api/index" },
-    { "source": "/api/(.*)", "destination": "/api/index" }
+    {
+      "source": "/",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/vazifalar/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index"
+    }
   ],
   "functions": {
-    "api/index.js": { "includeFiles": "private/**", "maxDuration": 60 }
+    "api/index.js": {
+      "includeFiles": "private/**",
+      "maxDuration": 60
+    }
   },
-  "crons": [{ "path": "/api/cron-daily", "schedule": "0 3 * * *" }]
+  "crons": [
+    {
+      "path": "/api/cron-daily",
+      "schedule": "0 3 * * *"
+    }
+  ]
 }

@@ -193,6 +193,11 @@ async function resolveCronOrAdminCaller(req, { requireSuper = false } = {}) {
 
 // ── /api/get-app — Mini App HTML'ni yuboradi ────────────────────────
 app.get("/", (req, res) => sendAppHtml(res));
+// Vazifa yaratish/tahrirlash sahifasi o'z manzilida turadi
+// (/vazifalar/yangi, /vazifalar/:id/tahrir) — brauzerning orqaga
+// tugmasi ishlashi uchun. Ilova bitta sahifa bo'lgani sabab shu
+// manzillarda ham o'sha HTML uzatiladi, qolganini front hal qiladi.
+app.get(/^\/vazifalar(\/|$)/, (req, res) => sendAppHtml(res));
 app.post("/api/get-app", auth, (req, res) => sendAppHtml(res));
 
 // ── /api/auth ─────────────────────────────────────────────────────────
@@ -2386,6 +2391,14 @@ app.patch("/api/checks", auth, async (req, res) => {
 // Ish oynasi teskari bo'lmasligi kerak. Bazadagi CHECK ham shuni
 // qo'riqlaydi, lekin u xatoni Postgres tilida qaytaradi — bu yerda
 // foydalanuvchi o'qiydigan xabar beriladi.
+// Muddat soati — "HH:MM" (yoki "HH:MM:SS", Postgres shu shaklda
+// qaytaradi). Bo'sh qiymat — soat belgilanmagan degani.
+function normalizeDueTime(v) {
+  if (v === null || typeof v === "undefined" || v === "") return { value: null };
+  const m = String(v).match(/^([01]\d|2[0-3]):([0-5]\d)(?::[0-5]\d)?$/);
+  if (!m) return { error: "Noto'g'ri soat (HH:MM kutilgan)" };
+  return { value: `${m[1]}:${m[2]}` };
+}
 function validateTaskRange(startDate, dueDate) {
   if (!startDate || !dueDate) return null;
   if (String(startDate) > String(dueDate)) {
@@ -2396,7 +2409,7 @@ function validateTaskRange(startDate, dueDate) {
 
 const TASK_ROW_SQL = `
   select
-    t.id, t.title, t.description, t.start_date, t.due_date, t.status, t.reason, t.priority,
+    t.id, t.title, t.description, t.start_date, t.due_date, t.due_time, t.status, t.reason, t.priority,
     t.created_at, t.updated_at, t.completed_at,
     p.slug as project_slug, p.label as project_label,
     au.username as assignee_username,
@@ -2470,6 +2483,9 @@ function shapeTaskRow(row) {
     // (muddat). `startDate` ixtiyoriy: eski vazifalarda u yo'q.
     startDate: row.start_date || null,
     dueDate: row.due_date,
+    // Muddat soati ("18:00") — oraliqning oxirgi kuniga tegishli.
+    // Bo'sh bo'lsa muddat avvalgidek kun bo'yicha.
+    dueTime: row.due_time ? String(row.due_time).slice(0, 5) : null,
     status: row.status,
     reason: row.reason,
     priority: row.priority,
@@ -2600,6 +2616,8 @@ app.post("/api/tasks", auth, async (req, res) => {
     const status = req.body.status === "backlog" ? "backlog" : "todo";
     const dueDate = req.body.dueDate || null;
     const startDate = req.body.startDate || null;
+    const dueTimeR = normalizeDueTime(req.body.dueTime);
+    if (dueTimeR.error) return res.status(400).json({ error: dueTimeR.error });
     // Backlog — hali navbatga qo'yilmagan, muddat keyinroq ("To Do"ga
     // o'tkazilganda) kiritiladi. Boshqa har qanday holatda muddat shart.
     if (status !== "backlog" && !dueDate) return res.status(400).json({ error: "Muddat (dueDate) kerak" });
@@ -2630,9 +2648,9 @@ app.post("/api/tasks", auth, async (req, res) => {
     const assigneeStaffId = assigneeIds.length ? null : req.body.assigneeStaffId || null;
 
     const ins = await db.query(
-      `insert into tasks (project_id, title, description, assignee_user_id, assignee_staff_id, start_date, due_date, created_by, status, priority)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) returning id`,
-      [projectId, title, description, null, assigneeStaffId, startDate, dueDate, req.user.id, status, priority],
+      `insert into tasks (project_id, title, description, assignee_user_id, assignee_staff_id, start_date, due_date, due_time, created_by, status, priority)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) returning id`,
+      [projectId, title, description, null, assigneeStaffId, startDate, dueDate, dueTimeR.value, req.user.id, status, priority],
     );
     const taskId = ins.rows[0].id;
     const assigneeUserId = assigneeIds[0] || null;
@@ -2754,6 +2772,12 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
       if (typeof req.body.startDate !== "undefined") {
         values.push(req.body.startDate || null);
         sets.push(`start_date = $${values.length}`);
+      }
+      if (typeof req.body.dueTime !== "undefined") {
+        const r = normalizeDueTime(req.body.dueTime);
+        if (r.error) return res.status(400).json({ error: r.error });
+        values.push(r.value);
+        sets.push(`due_time = $${values.length}`);
       }
       // Oraliqni tekshirishda so'rovda berilmagan tomoni bazadagi
       // qiymatdan olinadi — faqat bitta tomonini o'zgartirgan so'rov ham

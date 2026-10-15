@@ -3567,34 +3567,6 @@
         height: 46px;
         font-weight: 500;
       }
-      .ntv3-card {
-        background: var(--surf);
-        border-radius: 14px;
-        padding: 2px 14px;
-      }
-      .ntv3-card input,
-      .ntv3-card textarea {
-        width: 100%;
-        border: 0;
-        background: transparent;
-        font-family: inherit;
-        color: var(--ink, var(--t5));
-        outline: none;
-        padding: 13px 0;
-        resize: none;
-      }
-      .ntv3-card input {
-        font-size: 16.5px;
-        font-weight: 600;
-      }
-      .ntv3-card textarea {
-        font-size: 14.5px;
-        line-height: 1.6;
-        border-top: 1px solid var(--bd1);
-        min-height: 72px;
-      }
-      .ntv3-card input::placeholder,
-      .ntv3-card textarea::placeholder { color: var(--v3-t4); font-weight: 400; }
       /* Bo'lim sarlavhasi — majburiy va qo'shimcha maydonlarni ajratadi.
          Xodimlar majburiy maydonlarni o'tkazib yuborgani uchun kerak. */
       .ntv3-sec {
@@ -3692,33 +3664,6 @@
         padding: 2px 4px 0;
         line-height: 1.5;
       }
-      /* Telegram xabari — yoqib/o'chiriladigan qator */
-      .ntv3-sw-txt { flex: 1; min-width: 0; }
-      .ntv3-sw-txt b { display: block; font-size: 14.5px; font-weight: 500; color: var(--t5); }
-      .ntv3-sw-txt i { display: block; font-size: 12px; font-style: normal; color: var(--v3-t3); margin-top: 2px; }
-      .ntv3-sw {
-        width: 46px;
-        height: 28px;
-        border-radius: 14px;
-        background: var(--track);
-        flex: none;
-        position: relative;
-        transition: background 0.15s ease;
-      }
-      .ntv3-sw.on { background: var(--brand); }
-      .ntv3-sw::after {
-        content: "";
-        position: absolute;
-        top: 3px;
-        left: 3px;
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: #fff;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-        transition: transform 0.15s ease;
-      }
-      .ntv3-sw.on::after { transform: translateX(18px); }
 
       /* ── ICHKI SAHIFA (Kimga / Ish vaqti / …) ─────────────────────── */
       .ntv3-pick-body {
@@ -3728,30 +3673,6 @@
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
         padding: 12px 16px calc(16px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
-      }
-      .ntv3-search {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background: var(--surf);
-        border: 1px solid var(--bd1);
-        border-radius: 12px;
-        padding: 0 12px;
-        height: 44px;
-        margin-bottom: 10px;
-      }
-      .ntv3-search svg { width: 17px; height: 17px; color: var(--v3-t4); flex: none; }
-      .ntv3-search input {
-        flex: 1;
-        min-width: 0;
-        border: 0;
-        background: transparent;
-        outline: none;
-        font-family: inherit;
-        /* 16px dan kichik bo'lsa, iOS bosilganda sahifani
-           kattalashtirib yuboradi va qolgan hamma narsa qiyshayadi. */
-        font-size: 16px;
-        color: var(--ink, var(--t5));
       }
       .ntv3-count {
         font-size: 12.5px;
@@ -4242,6 +4163,9 @@
       .chip-btn,
       .sec-hdr-a,
       .tbx-chipbtn,
+      .ntf-qbtn,
+      .ntf-seg-b,
+      .ntf-pill,
       .stat-link {
         position: relative;
       }
@@ -4249,6 +4173,9 @@
       .chip-btn::after,
       .sec-hdr-a::after,
       .tbx-chipbtn::after,
+      .ntf-qbtn::after,
+      .ntf-seg-b::after,
+      .ntf-pill::after,
       .stat-link::after {
         content: "";
         position: absolute;
@@ -5203,6 +5130,832 @@
       /* O'ng panel */
       /* Kataklar */
       /* Almashuvlar ro'yxati */
+
+      /* ═══ VAZIFA YARATISH SAHIFASI (TZ: ekranlar 16a–16d) ═══════════
+         Modal emas, alohida sahifa. Chapda nom va tavsif, o'ngda
+         parametrlar; kim/muddat/ustuvorlik ichki ekranga kirmasdan,
+         shu yerning o'zida tanlanadi. Ranglar ilovaning umumiy
+         tokenlaridan olinadi (TZ 05-bo'limdagi qiymatlar aynan shular)
+         — shunda tungi rejim ham o'z-o'zidan ishlaydi. */
+      .ntf-ov {
+        position: fixed;
+        inset: 0;
+        z-index: 800;
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        font-family: "Onest", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      .ntf-hdr {
+        flex: none;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 24px;
+        background: var(--surf);
+        border-bottom: 1px solid var(--bd2);
+      }
+      .ntf-back {
+        width: 40px;
+        height: 40px;
+        flex: none;
+        border-radius: 12px;
+        background: var(--surf);
+        border: 1px solid var(--bd4);
+        color: var(--ink, var(--t5));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+      .ntf-back svg { width: 19px; height: 19px; }
+      .ntf-hdr-txt { flex: 1; min-width: 0; }
+      .ntf-crumb {
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--v3-t3);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .ntf-crumb b { font-weight: 600; color: var(--marker); }
+      .ntf-h1 {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        color: var(--marker);
+      }
+      .ntf-draft {
+        flex: none;
+        font-size: 12px;
+        color: var(--v3-t3);
+        white-space: nowrap;
+      }
+      .ntf-scroll {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+      .ntf-wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 20px 24px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 380px;
+        gap: 18px;
+        align-items: start;
+      }
+      .ntf-side { display: flex; flex-direction: column; gap: 12px; }
+      .ntf-card {
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 14px;
+      }
+      .ntf-card.pad { padding: 16px; }
+      /* Nom va tavsif — bitta katta karta, ramkasiz yozuv maydonlari */
+      .ntf-main { padding: 22px 24px; }
+      .ntf-title-in,
+      .ntf-desc-in {
+        width: 100%;
+        border: 0;
+        outline: none;
+        background: transparent;
+        font-family: inherit;
+        resize: none;
+        display: block;
+      }
+      .ntf-title-in {
+        font-size: 24px;
+        font-weight: 600;
+        line-height: 1.35;
+        letter-spacing: -0.02em;
+        color: var(--marker);
+        max-width: 26ch;
+      }
+      .ntf-sep { height: 1px; background: var(--bd2); margin: 20px 24px 0; }
+      .ntf-desc-in {
+        font-size: 15px;
+        line-height: 1.75;
+        color: var(--body-text, #2b3340);
+        max-width: 60ch;
+        margin-top: 16px;
+        min-height: 96px;
+      }
+      .ntf-title-in::placeholder,
+      .ntf-desc-in::placeholder { color: var(--v3-t3); }
+      /* Tavsif asboblari — faqat katta ekranda; mobilda markdown qo'lda */
+      .ntf-tools {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid var(--bd2);
+      }
+      .ntf-tool {
+        width: 30px;
+        height: 30px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--v3-t2);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .ntf-tool:hover { background: var(--chip2); color: var(--marker); }
+      .ntf-tool svg { width: 15px; height: 15px; }
+      .ntf-tool-div { width: 1px; height: 18px; background: var(--bd2); margin: 0 4px; }
+      .ntf-tools-hint { margin-left: auto; font-size: 11.5px; color: var(--v3-t3); }
+
+      /* Maydon nomi + majburiylik belgisi */
+      .ntf-lbl {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--t5);
+        margin-bottom: 8px;
+      }
+      .ntf-lbl i {
+        font-style: normal;
+        font-weight: 700;
+        color: var(--red);
+      }
+      .ntf-lbl .ntf-lbl-r {
+        margin-left: auto;
+        font-size: 11.5px;
+        font-weight: 600;
+      }
+      .ntf-lbl .ntf-lbl-r.miss { color: var(--red); }
+      .ntf-lbl .ntf-lbl-r.val { color: var(--nav-act-ink, var(--brand)); }
+
+      /* ── Kim bajaradi — katta ekran: chiplar ─────────────────────── */
+      .ntf-asg-list { display: flex; flex-wrap: wrap; gap: 6px; }
+      .ntf-asg {
+        min-height: 36px;
+        border-radius: 10px;
+        background: var(--surf);
+        border: 1px solid var(--bd4);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 3px 6px 3px 4px;
+        max-width: 100%;
+      }
+      .ntf-av {
+        flex: none;
+        border-radius: 34%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        position: relative;
+        overflow: hidden;
+      }
+      .ntf-asg .ntf-av { width: 28px; height: 28px; font-size: 11px; }
+      .ntf-asg-txt { min-width: 0; }
+      .ntf-asg-n {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--marker);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .ntf-asg-s {
+        font-size: 11px;
+        color: var(--v3-t2);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .ntf-asg-s b { font-weight: 600; }
+      .ntf-asg-s b.busy { color: var(--st-behind, #a45f08); }
+      .ntf-x {
+        flex: none;
+        width: 22px;
+        height: 22px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--v3-t3);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .ntf-x:hover { background: var(--chip2); color: var(--marker); }
+      .ntf-x svg { width: 13px; height: 13px; }
+      .ntf-add {
+        height: 28px;
+        border-radius: 8px;
+        border: 1px dashed var(--bd4);
+        background: transparent;
+        color: var(--v3-t2);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 0 11px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        align-self: center;
+      }
+      .ntf-add:hover { border-color: var(--brand); color: var(--brand); }
+      .ntf-add svg { width: 13px; height: 13px; }
+
+      /* Xodim qidirish oynachasi (katta ekran) */
+      .ntf-pop {
+        position: fixed;
+        z-index: 860;
+        width: 340px;
+        max-height: 420px;
+        background: var(--surf);
+        border: 1px solid var(--bd4);
+        border-radius: 14px;
+        box-shadow: 0 16px 40px rgba(14, 23, 38, 0.16);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      /* ── Kim bajaradi — mobil: avatar qatori ─────────────────────── */
+      /* Qator gorizontal suriladi; oxirgi element chetdan qisman
+         ko'rinib turadi — surish mumkinligini shu bildiradi. */
+      .ntf-avrow {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        padding: 2px 0 2px;
+        margin: 0 -16px;
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+      .ntf-avrow::-webkit-scrollbar { display: none; }
+      .ntf-avitem {
+        flex: none;
+        width: 56px;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        font-family: inherit;
+        cursor: pointer;
+        text-align: center;
+      }
+      .ntf-avwrap {
+        width: 46px;
+        height: 46px;
+        margin: 0 auto 6px;
+        position: relative;
+      }
+      .ntf-avitem .ntf-av {
+        width: 46px;
+        height: 46px;
+        border-radius: 16px;
+        font-size: 16px;
+      }
+      .ntf-avitem.on .ntf-avwrap::after {
+        content: "";
+        position: absolute;
+        inset: -6px;
+        border-radius: 22px;
+        border: 4px solid var(--brand);
+        box-shadow: inset 0 0 0 2px var(--surf);
+      }
+      .ntf-avtick {
+        position: absolute;
+        right: -4px;
+        bottom: -4px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--brand);
+        color: #fff;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+      }
+      .ntf-avitem.on .ntf-avtick { display: flex; }
+      .ntf-avtick svg { width: 11px; height: 11px; stroke-width: 3.2; }
+      .ntf-avn {
+        font-size: 11.5px;
+        font-weight: 500;
+        color: var(--marker);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .ntf-avj {
+        font-size: 10px;
+        color: var(--v3-t3);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .ntf-avitem.all .ntf-av {
+        background: transparent !important;
+        border: 1px dashed var(--bd4);
+        color: var(--v3-t2);
+      }
+      .ntf-avitem.all .ntf-av svg { width: 18px; height: 18px; }
+
+      /* ── Muddat ──────────────────────────────────────────────────── */
+      .ntf-quick {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        margin: 0 -16px;
+        padding: 0 16px;
+      }
+      .ntf-quick::-webkit-scrollbar { display: none; }
+      .ntf-qbtn {
+        flex: none;
+        height: 36px;
+        border-radius: 10px;
+        background: var(--surf);
+        border: 1px solid var(--bd4);
+        color: var(--t5);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 0 13px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .ntf-qbtn span { color: var(--v3-t3); }
+      .ntf-qbtn.on {
+        background: var(--nav-act-bg, #eaf2f9);
+        border: 1.5px solid var(--brand);
+        color: var(--nav-act-ink, var(--brand));
+        font-weight: 600;
+        padding: 0 12.5px;
+      }
+      .ntf-qbtn.on span { color: var(--nav-act-ink, var(--brand)); }
+      .ntf-qbtn svg { width: 15px; height: 15px; }
+      .ntf-timerow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .ntf-when {
+        font-size: 12.5px;
+        color: var(--v3-t3);
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .ntf-qbtn.late {
+        border-color: var(--red);
+        color: var(--red);
+        background: var(--red-bg);
+      }
+
+      /* ── Ustuvorlik va boshlanishi — segment ─────────────────────── */
+      .ntf-seg {
+        display: flex;
+        gap: 2px;
+        background: var(--chip2);
+        border-radius: 11px;
+        padding: 3px;
+      }
+      .ntf-seg-b {
+        flex: 1;
+        min-width: 0;
+        height: 32px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--v3-t2);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        white-space: nowrap;
+      }
+      .ntf-seg-b.on {
+        background: var(--surf);
+        color: var(--marker);
+        font-weight: 600;
+        box-shadow: 0 1px 2px rgba(14, 23, 38, 0.1);
+      }
+      .ntf-seg.tall .ntf-seg-b { height: 38px; }
+      /* Ustuvorlik ustunchalari — daraja qancha yuqori, shuncha ko'pi to'lgan */
+      .ntf-bars { display: inline-flex; align-items: flex-end; gap: 2px; }
+      .ntf-bars i {
+        display: block;
+        width: 3px;
+        border-radius: 1px;
+        background: var(--track, #d7dce2);
+      }
+      .ntf-bars i:nth-child(1) { height: 5px; }
+      .ntf-bars i:nth-child(2) { height: 8px; }
+      .ntf-bars i:nth-child(3) { height: 12px; }
+
+      /* ── Loyiha, teglar ──────────────────────────────────────────── */
+      .ntf-select {
+        width: 100%;
+        height: 44px;
+        border-radius: 11px;
+        background: var(--surf);
+        border: 1px solid var(--bd4);
+        padding: 0 12px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-family: inherit;
+        font-size: 13.5px;
+        color: var(--marker);
+        cursor: pointer;
+      }
+      .ntf-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 3px;
+        flex: none;
+      }
+      .ntf-select-v {
+        flex: 1;
+        min-width: 0;
+        text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .ntf-select svg { width: 15px; height: 15px; color: var(--v3-t3); flex: none; }
+      .ntf-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+      .ntf-tag {
+        height: 28px;
+        border-radius: 8px;
+        padding: 0 7px 0 10px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12.5px;
+        font-weight: 600;
+      }
+      .ntf-tag button {
+        border: 0;
+        background: transparent;
+        color: inherit;
+        opacity: 0.6;
+        cursor: pointer;
+        padding: 0;
+        display: flex;
+        width: 16px;
+        height: 16px;
+        align-items: center;
+        justify-content: center;
+      }
+      .ntf-tag button:hover { opacity: 1; }
+      .ntf-tag button svg { width: 11px; height: 11px; }
+
+      /* ── Telegram kaliti ─────────────────────────────────────────── */
+      .ntf-tg {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+      }
+      .ntf-tg-txt { flex: 1; min-width: 0; }
+      .ntf-tg-t { font-size: 13px; font-weight: 600; color: var(--t5); }
+      .ntf-tg-s { font-size: 11.5px; color: var(--v3-t3); margin-top: 3px; }
+      .ntf-sw {
+        flex: none;
+        width: 44px;
+        height: 26px;
+        border-radius: 13px;
+        background: #d3d8de;
+        position: relative;
+        transition: background 0.15s ease;
+      }
+      .ntf-sw.on { background: var(--brand); }
+      .ntf-sw::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(14, 23, 38, 0.25);
+        transition: transform 0.15s ease;
+      }
+      .ntf-sw.on::after { transform: translateX(18px); }
+
+      /* ── Mobil qatorlar (loyiha / teglar / boshlanishi) ──────────── */
+      .ntf-rows { display: flex; flex-direction: column; }
+      .ntf-row {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        min-height: 48px;
+        width: 100%;
+        border: 0;
+        background: transparent;
+        padding: 0 16px;
+        font-family: inherit;
+        cursor: pointer;
+        text-align: left;
+      }
+      .ntf-row + .ntf-row { border-top: 1px solid var(--bd2); }
+      .ntf-row.tg { min-height: 52px; cursor: default; }
+      .ntf-row-ico { width: 19px; height: 19px; color: var(--v3-t3); flex: none; display: flex; }
+      .ntf-row-l { font-size: 13.5px; font-weight: 500; color: var(--t5); flex: none; }
+      .ntf-row-v {
+        flex: 1;
+        min-width: 0;
+        text-align: right;
+        font-size: 13px;
+        color: var(--v3-t2);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .ntf-row-c { width: 15px; height: 15px; color: var(--v3-t4); flex: none; display: flex; }
+
+      /* ── Pastki panel ────────────────────────────────────────────── */
+      .ntf-foot {
+        flex: none;
+        background: var(--surf);
+        border-top: 1px solid var(--bd2);
+      }
+      .ntf-foot-in {
+        max-width: 1100px;
+        margin: 0 auto;
+        min-height: 68px;
+        padding: 12px 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .ntf-sum {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--v3-t2);
+        overflow: hidden;
+      }
+      .ntf-sum .ntf-av { width: 24px; height: 24px; font-size: 10px; }
+      .ntf-sum-t {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .ntf-sum-t b { font-weight: 600; color: var(--marker); }
+      .ntf-acts { flex: none; display: flex; align-items: center; gap: 10px; }
+      .ntf-btn {
+        height: 44px;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 14.5px;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0 22px;
+        border: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .ntf-btn.ghost {
+        background: var(--surf);
+        border: 1px solid var(--bd4);
+        color: var(--t5);
+      }
+      .ntf-btn.primary { background: var(--brand); color: #fff; }
+      /* Majburiy maydon qolganda tugma xiralashadi, LEKIN bosiladi —
+         bosilganda birinchi bo'sh maydonga olib boradi. O'chirib
+         qo'yilgan tugma nega bosilmasligini aytmaydi. */
+      .ntf-btn.primary.dim { opacity: 0.45; }
+      .ntf-missing {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--red);
+        text-align: right;
+      }
+      .ntf-foot-m { display: none; }
+
+      /* Xatoda maydon 2 soniya ajralib turadi */
+      .ntf-card.shake { border-color: var(--red); box-shadow: 0 0 0 1.5px var(--red); }
+      .ntf-spin {
+        width: 15px;
+        height: 15px;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: ntfSpin 0.7s linear infinite;
+      }
+      @keyframes ntfSpin { to { transform: rotate(360deg); } }
+
+      /* Fokus halqasi — TZ 08 */
+      .ntf-ov :focus-visible {
+        outline: none;
+        border-color: var(--brand);
+        box-shadow: 0 0 0 3px rgba(47, 122, 185, 0.25);
+      }
+
+      /* ── Pastdan chiqadigan oyna (16d) ───────────────────────────── */
+      .ntf-sheet-ov {
+        position: fixed;
+        inset: 0;
+        z-index: 870;
+        background: rgba(14, 23, 38, 0.35);
+        display: flex;
+        align-items: flex-end;
+      }
+      .ntf-sheet {
+        width: 100%;
+        background: var(--bg);
+        border-radius: 22px 22px 0 0;
+        max-height: calc(100% - 70px);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        font-family: "Onest", -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+      .ntf-grab {
+        width: 38px;
+        height: 5px;
+        border-radius: 99px;
+        background: var(--track);
+        margin: 8px auto 0;
+        flex: none;
+      }
+      .ntf-sheet-hdr {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 16px 10px;
+        flex: none;
+      }
+      .ntf-sheet-t { flex: 1; font-size: 18px; font-weight: 700; color: var(--marker); }
+      .ntf-sheet-n { font-size: 13px; font-weight: 600; color: var(--nav-act-ink, var(--brand)); }
+      .ntf-sheet-body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 0 16px 8px;
+      }
+      .ntf-sheet-foot {
+        flex: none;
+        padding: 10px 16px calc(14px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
+      }
+      .ntf-search {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--surf);
+        border: 1px solid var(--bd4);
+        padding: 0 12px;
+        margin-bottom: 10px;
+      }
+      .ntf-search svg { width: 16px; height: 16px; color: var(--v3-t3); flex: none; }
+      .ntf-search input {
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        outline: none;
+        background: transparent;
+        font-family: inherit;
+        font-size: 16px;
+        color: var(--marker);
+      }
+      .ntf-filters {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        margin: 0 -16px 10px;
+        padding: 0 16px;
+      }
+      .ntf-filters::-webkit-scrollbar { display: none; }
+      .ntf-pill {
+        flex: none;
+        height: 32px;
+        border-radius: 99px;
+        border: 1px solid var(--bd4);
+        background: var(--surf);
+        color: var(--t5);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 0 14px;
+        cursor: pointer;
+      }
+      .ntf-pill.on {
+        background: var(--marker);
+        border-color: var(--marker);
+        color: var(--bg);
+        font-weight: 600;
+      }
+      .ntf-prow {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        min-height: 58px;
+        width: 100%;
+        border: 0;
+        background: transparent;
+        padding: 6px 2px;
+        font-family: inherit;
+        cursor: pointer;
+        text-align: left;
+      }
+      .ntf-prow + .ntf-prow { border-top: 1px solid var(--bd2); }
+      .ntf-prow .ntf-av { width: 38px; height: 38px; font-size: 14px; }
+      .ntf-prow-txt { flex: 1; min-width: 0; }
+      .ntf-prow-n { font-size: 14.5px; font-weight: 600; color: var(--marker); }
+      .ntf-prow-s { font-size: 12px; color: var(--v3-t2); margin-top: 2px; }
+      .ntf-prow-s b { font-weight: 600; }
+      .ntf-prow-s b.busy { color: var(--st-behind, #a45f08); }
+      .ntf-cb {
+        flex: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 8px;
+        border: 1.5px solid var(--bd4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+      }
+      .ntf-cb.on { background: var(--brand); border-color: var(--brand); }
+      .ntf-cb svg { width: 14px; height: 14px; stroke-width: 3; }
+      .ntf-empty { padding: 28px 10px; text-align: center; font-size: 13.5px; color: var(--v3-t3); }
+
+      /* ── Adaptivlik (TZ 04) ──────────────────────────────────────── */
+      @media (max-width: 1199px) {
+        .ntf-wrap { grid-template-columns: minmax(0, 1fr) 340px; }
+      }
+      @media (max-width: 899px) {
+        .ntf-wrap {
+          grid-template-columns: minmax(0, 1fr);
+          max-width: 720px;
+        }
+        .ntf-side { gap: 12px; }
+      }
+      @media (max-width: 767px) {
+        .ntf-hdr {
+          height: auto;
+          padding: calc(8px + var(--tg-safe-top)) 16px 8px;
+        }
+        .ntf-h1 { font-size: 17px; font-weight: 700; }
+        .ntf-crumb { font-size: 12px; font-weight: 400; }
+        .ntf-draft { display: none; }
+        .ntf-wrap { padding: 14px 16px; gap: 12px; }
+        .ntf-main { padding: 16px; }
+        .ntf-title-in { font-size: 18px; line-height: 1.4; max-width: none; }
+        .ntf-sep { margin: 14px 16px 0; }
+        .ntf-desc-in { font-size: 14px; line-height: 1.7; max-width: none; min-height: 72px; }
+        .ntf-tools { display: none; }
+        .ntf-foot-in { display: none; }
+        .ntf-foot-m {
+          display: block;
+          padding: 10px 16px calc(26px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
+        }
+        .ntf-foot-m .ntf-sum { margin-bottom: 8px; font-size: 12.5px; }
+        .ntf-foot-m .ntf-sum .ntf-av { width: 20px; height: 20px; font-size: 9px; }
+        .ntf-foot-m .ntf-btn { width: 100%; height: 52px; }
+        .ntf-foot-m .ntf-missing { margin-bottom: 8px; text-align: left; }
+      }
+      /* Mobil/katta ekranga xos bloklar. Faqat yashirish qoidasi
+         beriladi — `display: block` bilan yoqish flex/grid elementning
+         o'z turini buzib, avatar qatorini ustunga aylantirib qo'yardi. */
+      @media (min-width: 768px) {
+        .ntf-only-m { display: none !important; }
+      }
+      @media (max-width: 767px) {
+        .ntf-only-d { display: none !important; }
+      }
 
       /* ── BELGILASH SAHIFASI ─────────────────────────────────────────
          Sahifaning o'zi vazifa formasi bilan bir xil ko'rinishdan
@@ -11574,10 +12327,13 @@
             const shown = expanded ? items : items.slice(0, TB_COL_LIMIT);
             const rest = items.length - shown.length;
             const cards = shown.map(tbCardHtml).join("");
-            const addBtn =
-              ci === 0
-                ? `<button type="button" class="tb-col-add" title="Yangi vazifa" onclick="openNewTaskSheet()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>`
-                : "";
+            // Har bir ustunda "+" bor: shu yerdan ochilgan vazifa
+            // o'sha ustunning holati bilan yaratiladi. Arxiv bundan
+            // mustasno — unga vazifa qo'lda qo'yilmaydi.
+            const ustunStatus = TDND_COL_STATUS[col.key];
+            const addBtn = ustunStatus
+              ? `<button type="button" class="tb-col-add" title="Shu ustunga yangi vazifa" onclick="openNewTaskSheet('${ustunStatus}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>`
+              : "";
             return `<div class="tb-col" data-col="${col.key}">
               <div class="tb-col-hdr">
                 <span class="tb-col-dot" style="${col.dot}"></span>
@@ -12891,20 +13647,10 @@
           showToast("⚠ " + e.message);
         }
       }
-      // ── YANGI VAZIFA — TO'LIQ SAHIFA ──────────────────────────────
-      // Avval ikki xil forma bor edi: telefonda pastdan chiqadigan
-      // yarim oyna, kompyuterda uzun modal. Ikkisida ham tanlovlar
-      // (kalendar, xodim ro'yxati) oynaning ustidagi kichik qutichada
-      // ochilardi — telefonda sig'masdi va qaysi joyga qaytganini
-      // bilish qiyin edi. Endi bitta yo'l: yaratish — alohida to'liq
-      // sahifa, har bir tanlov — ustiga chiqadigan yana bir sahifa.
-      // Hamma tanlov shu obyektda turadi (sahifada <select> yo'q).
-      let ntv3 = null;
-      let ntv3Users = [];
-      // Kalendar sahifasining vaqtinchalik tanlovi — sahifa yopilganda
-      // asosiy obyektga yoziladi.
-      let ntv3Cal = null;
-      let ntv3PeopleQ = "";
+      // ── TO'LIQ SAHIFALAR UCHUN UMUMIY QISM ───────────────────────
+      // Vazifa formasi (ntf-*) va belgilash sahifasi (cwd-*) shu
+      // mexanizmdan foydalanadi: orqaga qaytish steki, maydon qatori
+      // va ularning ikonkalari.
       // To'liq sahifalar ustma-ust ochiladi (vazifa formasi, belgilash
       // sahifasi va ularning ichki tanlov sahifalari), shuning uchun
       // orqaga qaytish — stek: eng ustidagi sahifa yopiladi.
@@ -12966,116 +13712,6 @@
         if (e.key === "Escape") pageOnBack();
       }
 
-      function closeNtv3Pick() {
-        const ov = document.getElementById("ntv3-pick");
-        if (!ov) return;
-        // Kalendar: "Tayyor" bosilmasa ham tanlangan oraliq yo'qolmaydi —
-        // odam ishini qilgan, uni qaytadan tanlashga majburlash xato.
-        if (ov.dataset.key === "muddat") ntv3CommitCal();
-        ov.remove();
-        pageBackStack.pop();
-        pageSyncBack();
-        renderNtv3Fields();
-      }
-      function closeNtv3() {
-        document.getElementById("ntv3-pick")?.remove();
-        document.getElementById("ntv3-page")?.remove();
-        document.removeEventListener("keydown", pageOnKey);
-        pageBackStack = [];
-        pageSyncBack();
-        ntv3 = null;
-        ntv3Cal = null;
-      }
-
-      // ── Asosiy sahifa ─────────────────────────────────────────────
-      // Yaratish ham, tahrirlash ham SHU sahifa. Avval tahrirlash
-      // alohida modal edi (ochiladigan ro'yxatlar, chiplar, kalendar
-      // popover) — bir xil ishni ikki xil joyda ikki xil qilish kerak
-      // bo'lardi.
-      function openNewTaskSheet() {
-        return openTaskFormPage(null);
-      }
-      function openEditTaskSheet(id) {
-        return openTaskFormPage(id);
-      }
-      async function openTaskFormPage(editId) {
-        // Tugma ikki marta bosilsa ikkita sahifa ochilib qolmasin.
-        if (document.getElementById("ntv3-page")) return;
-        const t = editId ? tasksList.find((x) => x.id === editId) : null;
-        if (editId && !t) return;
-        ntv3 = {
-          mode: t ? "edit" : "new",
-          id: t ? t.id : null,
-          // Tahrirlashda muddat vazifaning joriy holatiga qarab majburiy:
-          // navbatga qo'yilmagan (backlog) vazifada u hali bo'lmasligi
-          // mumkin, qolgan hamma holatda esa backend ham talab qiladi.
-          editStatus: t ? t.status : null,
-          assigneeUsernames: t ? taskAssignees(t).map((a) => a.username) : [],
-          startDate: t?.startDate || "",
-          dueDate: t?.dueDate || "",
-          priority: t?.priority || "no_priority",
-          projectSlug: t?.projectSlug || "",
-          tagIds: new Set((t?.tags || []).map((g) => g.id)),
-          status: "todo",
-          notify: true,
-        };
-        const ov = document.createElement("div");
-        ov.className = "ntv3-ov";
-        ov.id = "ntv3-page";
-        ov.innerHTML = `<div class="ntv3">
-          <div class="ntv3-hdr">
-            <button type="button" class="ntv3-hbtn cancel" onclick="closeNtv3()">Bekor</button>
-            <div class="ntv3-title">${t ? "Vazifani tahrirlash" : "Yangi vazifa"}</div>
-            <div class="ntv3-hbtn" aria-hidden="true"></div>
-          </div>
-          <div class="ntv3-body">
-            <div class="ntv3-card">
-              <input id="ntv3-title" placeholder="Vazifa nomi" autocomplete="off" oninput="ntv3ClearErr()" value="${t ? escArg(t.title) : ""}"/>
-              <textarea id="ntv3-desc" placeholder="Tavsif — nima qilish kerakligini batafsil yozing (ixtiyoriy)">${t ? escHtml(t.description || "") : ""}</textarea>
-            </div>
-            <div class="ntv3-err" id="ntv3-title-err"></div>
-            <div id="ntv3-fields"></div>
-          </div>
-          <div class="ntv3-foot">
-            <button type="button" class="ntv3-submit" id="ntv3-save" onclick="submitNtv3(this)">${t ? "Saqlash" : "Vazifani yaratish"}</button>
-          </div>
-        </div>`;
-        document.body.appendChild(ov);
-        pageBackStack = [closeNtv3];
-        pageSyncBack();
-        document.addEventListener("keydown", pageOnKey);
-        renderNtv3Fields();
-        try {
-          // /api/users — admin'ga xos (shaxsiy maydonlar bor); vazifa
-          // yaratish har qanday xodim uchun ochiq bo'lgani sabab
-          // shaxsiy ma'lumotsiz qisqa ro'yxat ishlatiladi.
-          const res = await apiFetch("/api/users/directory");
-          if (res.ok) {
-            ntv3Users = ((await res.json()).users || [])
-              .slice()
-              .sort((a, b) => ntv3PersonName(a).localeCompare(ntv3PersonName(b), "uz"));
-          }
-        } catch (e) {}
-        renderNtv3Fields();
-      }
-
-      function ntv3PersonName(u) {
-        const name = u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : u.full_name;
-        return name || `@${u.username}`;
-      }
-      function ntv3AvHtml(u, cls) {
-        const nom = ntv3PersonName(u);
-        return `<span class="${cls || "ntv3-av"}" style="background:${personColor(u.username)}">${escHtml(nom.slice(0, 1).toUpperCase())}${avatarImg(u.avatar_url)}</span>`;
-      }
-      // Qatorda tanlangan xodimlarning rasmlari — ismni o'qimasdan
-      // kimni tanlaganini ko'rish uchun (ilovaning boshqa joylarida ham
-      // shunday ko'rinadi).
-      function ntv3AvsHtml() {
-        const tanlangan = ntv3Users.filter((u) => ntv3.assigneeUsernames.includes(u.username)).slice(0, 3);
-        if (!tanlangan.length) return "";
-        return `<span class="ntv3-avs">${tanlangan.map((u) => ntv3AvHtml(u)).join("")}</span>`;
-      }
-
       // Bosilganda o'z sahifasini ochadigan maydon qatori. Vazifa
       // formasi ham, belgilash sahifasi ham shundan foydalanadi —
       // ikkalasi bir xil ko'rinishda bo'lishi kerak.
@@ -13088,465 +13724,1102 @@
           <span class="ntv3-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>
         </button>`;
       }
-      function ntv3Row(key, label, value, placeholder, majburiy, prefix) {
-        return fieldRowHtml({
-          icon: key,
-          label,
-          value,
-          placeholder,
-          required: majburiy,
-          prefix,
-          onclick: `openNtv3Pick('${key}')`,
-        });
+      // ═══ VAZIFA YARATISH SAHIFASI (TZ: 16a–16d) ════════════════════
+      // Modal emas, alohida sahifa (/vazifalar/yangi). Tahrirlash ham
+      // shu sahifa (/vazifalar/:id/tahrir), maydonlari to'ldirilgan.
+      // Asosiy qoida: ko'p ishlatiladigan uchta maydon — kim, muddat,
+      // ustuvorlik — ichki ekranga kirmasdan, sahifaning o'zida
+      // tanlanadi.
+      let ntf = null;
+      let ntfUsers = [];
+      let ntfDraftTimer = 0;
+      let ntfSheetState = null;
+
+      // TZ 09: ustuvorlik to'rt daraja. Bazadagi eski "urgent"
+      // (Shoshilinch) saqlanadi — doskada avvalgidek ko'rinadi, lekin
+      // yangi vazifaga qo'yilmaydi va tahrirlashda "Yuqori"ga tushadi.
+      const NTF_PRIORITIES = [
+        { v: "no_priority", label: "Yo'q", bars: 0 },
+        { v: "low", label: "Past", bars: 1, color: "var(--brand)" },
+        { v: "medium", label: "O'rta", bars: 2, color: "var(--st-behind-dot, #d97706)" },
+        { v: "high", label: "Yuqori", bars: 3, color: "var(--red)" },
+      ];
+      const NTF_ICON = {
+        back: `<path d="M19 12H5M12 19l-7-7 7-7"/>`,
+        cal: `<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>`,
+        clock: `<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>`,
+        plus: `<path d="M12 5v14M5 12h14"/>`,
+        x: `<path d="M18 6 6 18M6 6l12 12"/>`,
+        chev: `<path d="m6 9 6 6 6-6"/>`,
+        chevR: `<path d="m9 18 6-6-6-6"/>`,
+        search: `<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>`,
+        check: `<path d="M20 6 9 17l-5-5"/>`,
+        folder: `<path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.5L10 3.5H4a2 2 0 0 0-2 2V18a2 2 0 0 0 2 2Z"/>`,
+        tag: `<path d="M20.6 13.4 12 4.8H4.8V12l8.6 8.6a2 2 0 0 0 2.8 0l4.4-4.4a2 2 0 0 0 0-2.8Z"/><circle cx="8.5" cy="8.5" r="1.2"/>`,
+        queue: `<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>`,
+        send: `<path d="m22 2-7 20-4-9-9-4Z"/>`,
+      };
+      function ntfSvg(key, cls) {
+        return `<svg class="${cls || ""}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${NTF_ICON[key]}</svg>`;
       }
-      function renderNtv3Fields() {
-        const el = document.getElementById("ntv3-fields");
-        if (!el || !ntv3) return;
-        const masullar = ntv3Users.filter((u) => ntv3.assigneeUsernames.includes(u.username));
-        const proj = projects.find((p) => (p.slug || p.id) === ntv3.projectSlug);
-        const tagNames = tagsList.filter((t) => ntv3.tagIds.has(t.id)).map((t) => t.name);
-        // Bitta mas'ulda ism, ko'pida son: ikkita ism ham qatorga
-        // sig'maydi va o'rtasidan kesilib qoladi — yonida rasmlari bor.
-        const kimgaMatn = masullar.length === 1 ? ntv3PersonName(masullar[0]) : masullar.length ? `${masullar.length} xodim` : "";
-        const tahrir = ntv3.mode === "edit";
-        const navbatKeyin = tahrir ? ntv3.editStatus === "backlog" : ntv3.status === "backlog";
-        // Majburiy maydonlar alohida bo'limda: xodimlar ularni
-        // o'tkazib yuborgani uchun ajratib ko'rsatilgan.
-        el.innerHTML =
-          `<div class="ntv3-sec">Majburiy</div>
-           <div class="ntv3-props" id="ntv3-req">
-             ${ntv3Row("kimga", "Kim bajaradi", kimgaMatn, "Tanlang", true, ntv3AvsHtml())}
-             ${ntv3Row("muddat", "Ish vaqti", fmtDateRangeField(ntv3.startDate, ntv3.dueDate), navbatKeyin ? "Keyin belgilanadi" : "Tanlang", !navbatKeyin)}
-           </div>
-           <div class="ntv3-err" id="ntv3-req-err"></div>
-           ${ntv3WorkloadHtml()}
-           <div class="ntv3-sec">Qo'shimcha</div>
-           <div class="ntv3-props">
-             ${ntv3Row("loyiha", "Loyiha", proj ? proj.label : "", "Umumiy")}
-             ${ntv3Row("ustuvorlik", "Ustuvorlik", TASK_PRIORITY_LABEL[ntv3.priority], "")}
-             ${ntv3Row("teglar", "Teglar", tagNames.length > 2 ? `${tagNames.length} teg` : tagNames.join(", "), "Yo'q")}
-             ${tahrir ? "" : ntv3Row("navbat", "Navbat", navbatKeyin ? "Keyinroq" : "Hozir boshlanadi", "")}
-           </div>
-           ${
-             tahrir
-               ? ""
-               : `<div class="ntv3-props" style="margin-top:8px">
-             <div class="ntv3-row" onclick="toggleNtv3Notify()">
-               <span class="ntv3-sw-txt">
-                 <b>Telegramga xabar yuborilsin</b>
-                 <i>Mas'ul(lar)ga yangi vazifa haqida darhol xabar boradi.</i>
-               </span>
-               <span class="ntv3-sw${ntv3.notify ? " on" : ""}"></span>
-             </div>
-           </div>`
-           }`;
-      }
-      function toggleNtv3Notify() {
-        if (!ntv3) return;
-        ntv3.notify = !ntv3.notify;
-        renderNtv3Fields();
-      }
-      // Tanlangan xodimning joriy yuklamasi (ochiq/kechikkan vazifalar
-      // soni) va yengilroq muqobillar — vazifa berishdan oldin ish
-      // taqsimoti ko'rinadi. Bir nechta odam tanlanganda bu maslahat
-      // chalg'itadi, shuning uchun faqat bitta mas'ulda chiqadi.
-      function ntv3WorkloadHtml() {
-        if (ntv3.assigneeUsernames.length !== 1) return "";
-        const username = ntv3.assigneeUsernames[0];
-        const workload = computeWorkload(tasksList);
-        const mine = workload.find((w) => w.username === username);
-        if (!mine) return "";
-        const lighter = workload
-          .filter((w) => w.username !== username && w.open < mine.open)
-          .sort((a, b) => a.open - b.open)
-          .slice(0, 2);
-        const lines = [
-          `${escHtml(mine.name)}da hozir ${mine.open} ochiq vazifa${mine.late ? `, ${mine.late} tasi kechikkan` : ""}`,
-        ];
-        if (lighter.length) {
-          lines.push(`Yengilroq: ${lighter.map((w) => `${escHtml(w.name)} (${w.open})`).join(" · ")}`);
-        }
-        return lines.map((l) => `<div class="ntv3-hint">${l}</div>`).join("");
+      function ntfIsMobile() {
+        return window.matchMedia("(max-width: 767px)").matches;
       }
 
-      // ── Ichki sahifa ──────────────────────────────────────────────
-      function openNtv3Pick(key) {
-        if (!ntv3) return;
-        if (document.getElementById("ntv3-pick")) return;
-        const kop = key === "kimga" || key === "teglar";
-        if (key === "muddat") {
-          const boshlanish = ntv3.startDate || ntv3.dueDate || isoOf(todayDate());
-          const d = parseISO(boshlanish);
-          ntv3Cal = { y: d.getFullYear(), m: d.getMonth(), start: ntv3.startDate || ntv3.dueDate || "", end: ntv3.dueDate || "" };
+      // ── Xodimlar: lavozim va hozirgi yuklama ──────────────────────
+      // TZ 6.3: har xodim yonida "Lavozim · N ta faol". N — tugallanmagan
+      // vazifalari soni; 5 tadan ko'p bo'lsa amber rangda ogohlantiradi.
+      // Alohida so'rov kerak emas: vazifalar ro'yxati allaqachon bor.
+      function ntfActiveCount(username) {
+        return tasksList.filter(
+          (t) => !["done", "failed", "cancelled"].includes(t.status) && taskAssignees(t).some((a) => a.username === username),
+        ).length;
+      }
+      function ntfName(u) {
+        const n = u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : u.full_name;
+        return n || `@${u.username}`;
+      }
+      function ntfShort(u) {
+        return shortPersonName(u.first_name, u.last_name, "@" + u.username);
+      }
+      function ntfJob(u) {
+        return u.job_title || "Xodim";
+      }
+      // "Ko'p ishlatiladigan" = joriy admin oxirgi 30 kunda eng ko'p
+      // vazifa bergan xodimlar. Yetarli tarix bo'lmasa — ro'yxat
+      // boshidan to'ldiriladi, qator hech qachon bo'sh qolmaydi.
+      function ntfTopUsers(n) {
+        const chegara = new Date();
+        chegara.setDate(chegara.getDate() - 30);
+        const soni = {};
+        tasksList.forEach((t) => {
+          if (t.createdByUsername !== currentUser) return;
+          if (t.createdAt && new Date(t.createdAt) < chegara) return;
+          taskAssignees(t).forEach((a) => {
+            soni[a.username] = (soni[a.username] || 0) + 1;
+          });
+        });
+        const tartib = ntfUsers.slice().sort((a, b) => (soni[b.username] || 0) - (soni[a.username] || 0));
+        return tartib.slice(0, n);
+      }
+
+      // ── Muddat yordamchilari ──────────────────────────────────────
+      function ntfShift(iso, n) {
+        const d = parseISO(iso);
+        d.setDate(d.getDate() + n);
+        return isoOf(d);
+      }
+      // TZ 6.4: uchinchi tezkor tugma — eng yaqin juma; bugun juma
+      // bo'lsa keyingi dushanba ("Dushanba" nomi bilan).
+      function ntfThirdQuick() {
+        const bugun = todayDate();
+        const kun = bugun.getDay(); // 0 = yakshanba
+        if (kun === 5) {
+          const d = new Date(bugun);
+          d.setDate(d.getDate() + 3);
+          return { iso: isoOf(d), label: "Dushanba" };
         }
-        if (key === "kimga") ntv3PeopleQ = "";
+        const qadam = (5 - kun + 7) % 7 || 7;
+        const d = new Date(bugun);
+        d.setDate(d.getDate() + qadam);
+        return { iso: isoOf(d), label: "Juma" };
+      }
+      function ntfDayShort(iso) {
+        const d = parseISO(iso);
+        return `${d.getDate()}-${MONTHS_SHORT[d.getMonth()]}`;
+      }
+      const NTF_WEEKDAYS = ["Yakshanba", "Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba"];
+      function ntfFullWhen() {
+        if (!ntf.dueDate) return "";
+        if (ntf.startDate && ntf.startDate !== ntf.dueDate) {
+          return `${fmtDateRangeField(ntf.startDate, ntf.dueDate)} · ${rangeDayCount(ntf.startDate, ntf.dueDate)} kun`;
+        }
+        const d = parseISO(ntf.dueDate);
+        return `${NTF_WEEKDAYS[d.getDay()]}, ${d.getDate()}-${MONTHS[d.getMonth()].toLowerCase()}`;
+      }
+      // Bugunga belgilangan muddatning soati o'tib ketgan bo'lsa,
+      // xodim buni yaratishdan OLDIN ko'rishi kerak.
+      function ntfTimePassed() {
+        if (!ntf.dueDate || !ntf.dueTime) return false;
+        if (ntf.dueDate !== isoOf(todayDate())) return false;
+        const [h, m] = ntf.dueTime.split(":").map(Number);
+        const now = new Date();
+        return h * 60 + m < now.getHours() * 60 + now.getMinutes();
+      }
+
+      // ── Sahifani ochish/yopish ────────────────────────────────────
+      function openNewTaskSheet(status) {
+        return openTaskFormPage(null, typeof status === "string" ? status : null);
+      }
+      function openEditTaskSheet(id) {
+        return openTaskFormPage(id, null);
+      }
+      async function openTaskFormPage(editId, kanbanStatus) {
+        if (document.getElementById("ntf-page")) return;
+        const t = editId ? tasksList.find((x) => x.id === editId) : null;
+        if (editId && !t) return;
+        ntf = {
+          mode: t ? "edit" : "new",
+          id: t ? t.id : null,
+          editStatus: t ? t.status : null,
+          title: t ? t.title || "" : "",
+          desc: t ? t.description || "" : "",
+          assignees: t ? taskAssignees(t).map((a) => a.username) : [],
+          startDate: t?.startDate || "",
+          dueDate: t?.dueDate || "",
+          // TZ 6.4: standart soat 18:00.
+          dueTime: t ? t.dueTime || "" : "18:00",
+          // Eski "Shoshilinch" to'rt darajali segmentda yo'q — tahrirda
+          // u "Yuqori" bo'lib ko'rinadi (09-bo'lim).
+          priority: t ? (t.priority === "urgent" ? "high" : t.priority || "no_priority") : "no_priority",
+          projectSlug: t?.projectSlug || "",
+          tagIds: new Set((t?.tags || []).map((g) => g.id)),
+          startMode: t ? (t.status === "backlog" ? "queue" : "now") : "now",
+          notify: true,
+          // Kanban ustunidan ochilsa, vazifa o'sha ustunga tushadi.
+          status: kanbanStatus || null,
+          saving: false,
+          draftAt: "",
+          touched: false,
+        };
+        const yangi = !t;
+        if (yangi) ntfLoadDraft();
+
         const ov = document.createElement("div");
-        ov.className = "ntv3-pick-ov";
-        ov.id = "ntv3-pick";
-        ov.dataset.key = key;
-        ov.innerHTML = `<div class="ntv3-pick">
-          <div class="ntv3-hdr">
-            <button type="button" class="ntv3-hbtn cancel" onclick="closeNtv3Pick()">${ICON.chevronLeft}Orqaga</button>
-            <div class="ntv3-title">${NTV3_TITLES[key]}</div>
-            ${
-              kop || key === "muddat"
-                ? `<button type="button" class="ntv3-hbtn save" onclick="closeNtv3Pick()">Tayyor</button>`
-                : `<div class="ntv3-hbtn" aria-hidden="true"></div>`
-            }
+        ov.className = "ntf-ov";
+        ov.id = "ntf-page";
+        ov.innerHTML = `
+          <header class="ntf-hdr">
+            <button type="button" class="ntf-back" onclick="ntfExit()" aria-label="Orqaga">${ntfSvg("back")}</button>
+            <div class="ntf-hdr-txt">
+              <div class="ntf-crumb">Vazifalar / <b>${t ? "Tahrirlash" : "Yangi vazifa"}</b></div>
+              <div class="ntf-h1">${t ? "Vazifani tahrirlash" : "Yangi vazifa"}</div>
+            </div>
+            <div class="ntf-draft" id="ntf-draft"></div>
+          </header>
+          <div class="ntf-scroll" id="ntf-scroll">
+            <div class="ntf-wrap">
+              <div>
+                <div class="ntf-card ntf-main" id="ntf-maincard">
+                  <textarea class="ntf-title-in" id="ntf-title" rows="1" maxlength="200" placeholder="Vazifa nomi"></textarea>
+                  <div class="ntf-sep"></div>
+                  <textarea class="ntf-desc-in" id="ntf-desc" placeholder="Nima qilish kerak? (ixtiyoriy)"></textarea>
+                  <div class="ntf-tools">
+                    <button type="button" class="ntf-tool" title="Qalin" onclick="ntfMd('bold')">B</button>
+                    <button type="button" class="ntf-tool" title="Ro'yxat" onclick="ntfMd('ul')">•</button>
+                    <button type="button" class="ntf-tool" title="Raqamli ro'yxat" onclick="ntfMd('ol')">1.</button>
+                    <span class="ntf-tool-div"></span>
+                    <span class="ntf-tools-hint">Ctrl + Enter — ${t ? "saqlash" : "yaratish"}</span>
+                  </div>
+                </div>
+              </div>
+              <aside class="ntf-side" id="ntf-side"></aside>
+            </div>
           </div>
-          <div class="ntv3-pick-body" id="ntv3-pick-body">${ntv3PickBodyHtml(key)}</div>
+          <footer class="ntf-foot" id="ntf-foot"></footer>`;
+        document.body.appendChild(ov);
+
+        const titleEl = document.getElementById("ntf-title");
+        const descEl = document.getElementById("ntf-desc");
+        titleEl.value = ntf.title;
+        descEl.value = ntf.desc;
+        [titleEl, descEl].forEach((el) => {
+          el.addEventListener("input", () => {
+            ntf[el === titleEl ? "title" : "desc"] = el.value;
+            ntfAutoGrow(el);
+            ntf.touched = true;
+            ntfRender();
+            ntfQueueDraft();
+          });
+          el.addEventListener("blur", ntfSaveDraft);
+        });
+        ntfAutoGrow(titleEl);
+        ntfAutoGrow(descEl);
+
+        pageBackStack = [ntfExit];
+        pageSyncBack();
+        document.addEventListener("keydown", ntfKey);
+        ntfPushRoute();
+        ntfRender();
+        // Sahifa ochilganda fokus nom maydonida (TZ 6.2)
+        if (!ntfIsMobile()) titleEl.focus();
+
+        try {
+          const res = await apiFetch("/api/users/directory");
+          if (res.ok) {
+            ntfUsers = ((await res.json()).users || []).sort((a, b) => ntfName(a).localeCompare(ntfName(b), "uz"));
+          }
+        } catch (e) {}
+        if (document.getElementById("ntf-page")) ntfRender();
+      }
+      // Yozuv maydoni matn bilan birga o'sadi — hech qayerda fiks
+      // balandlik yo'q (TZ 04).
+      function ntfAutoGrow(el) {
+        el.style.height = "auto";
+        el.style.height = el.scrollHeight + "px";
+      }
+      function ntfClose() {
+        document.querySelector(".ntf-sheet-ov")?.remove();
+        document.getElementById("ntf-pop")?.remove();
+        document.getElementById("ntf-page")?.remove();
+        document.removeEventListener("keydown", ntfKey);
+        clearTimeout(ntfDraftTimer);
+        pageBackStack = [];
+        pageSyncBack();
+        ntfPopRoute();
+        ntf = null;
+        ntfSheetState = null;
+      }
+      // Saqlanmagan o'zgarish bo'lsa, chiqishdan oldin so'raladi —
+      // yozilgan matn bitta tasodifiy bosishdan yo'qolmasligi kerak.
+      function ntfExit() {
+        if (!ntf) return;
+        if (document.querySelector(".ntf-sheet-ov") || document.getElementById("ntf-pop")) return ntfCloseLayer();
+        if (ntf.mode === "new" && ntfDirty()) {
+          ntfConfirmExit();
+          return;
+        }
+        ntfClose();
+      }
+      function ntfDirty() {
+        return !!(ntf.title.trim() || ntf.desc.trim() || ntf.assignees.length || ntf.dueDate || ntf.tagIds.size || ntf.projectSlug);
+      }
+      function ntfConfirmExit() {
+        const { body, ov } = makeSheet("Chiqasizmi?");
+        body.innerHTML = `<div class="f-hint" style="margin-bottom:16px;font-size:13.5px;line-height:1.6">O'zgarishlar qoralamada qoladi — keyin qaytib davom ettirishingiz mumkin.</div>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <button class="btn btn-soft" id="ntf-stay">Qolish</button>
+            <button class="btn btn-blue" id="ntf-leave">Chiqish</button>
+          </div>`;
+        document.getElementById("ntf-stay").onclick = () => ov.remove();
+        document.getElementById("ntf-leave").onclick = () => {
+          ov.remove();
+          ntfSaveDraft();
+          ntfClose();
+        };
+      }
+      function ntfCloseLayer() {
+        document.querySelector(".ntf-sheet-ov")?.remove();
+        document.getElementById("ntf-pop")?.remove();
+        ntfSheetState = null;
+        ntfRender();
+      }
+      function ntfKey(e) {
+        if (!ntf) return;
+        if (e.key === "Escape") {
+          e.preventDefault();
+          return ntfExit();
+        }
+        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+          e.preventDefault();
+          ntfSubmit();
+        }
+      }
+      // Brauzerning orqaga tugmasi ← bilan bir xil ishlaydi (TZ 03).
+      function ntfPushRoute() {
+        try {
+          const yol = ntf.mode === "edit" ? `/vazifalar/${ntf.id}/tahrir` : "/vazifalar/yangi";
+          history.pushState({ ntf: 1 }, "", yol);
+          window.addEventListener("popstate", ntfOnPop);
+        } catch (e) {}
+      }
+      function ntfPopRoute() {
+        window.removeEventListener("popstate", ntfOnPop);
+        try {
+          if (history.state && history.state.ntf) history.back();
+          else if (location.pathname.startsWith("/vazifalar/")) history.replaceState(null, "", "/");
+        } catch (e) {}
+      }
+      function ntfOnPop() {
+        if (ntf) ntfClose();
+      }
+
+      // ── Qoralama (TZ 03) ──────────────────────────────────────────
+      function ntfDraftKey() {
+        return `ntf-draft:${currentUser || "anon"}`;
+      }
+      function ntfQueueDraft() {
+        clearTimeout(ntfDraftTimer);
+        ntfDraftTimer = setTimeout(ntfSaveDraft, 2000);
+      }
+      function ntfSaveDraft() {
+        if (!ntf || ntf.mode !== "new") return;
+        if (!ntfDirty()) return;
+        try {
+          localStorage.setItem(
+            ntfDraftKey(),
+            JSON.stringify({
+              title: ntf.title,
+              desc: ntf.desc,
+              assignees: ntf.assignees,
+              startDate: ntf.startDate,
+              dueDate: ntf.dueDate,
+              dueTime: ntf.dueTime,
+              priority: ntf.priority,
+              projectSlug: ntf.projectSlug,
+              tagIds: [...ntf.tagIds],
+              startMode: ntf.startMode,
+              notify: ntf.notify,
+              at: new Date().toTimeString().slice(0, 5),
+            }),
+          );
+          ntf.draftAt = new Date().toTimeString().slice(0, 5);
+          const el = document.getElementById("ntf-draft");
+          if (el) el.textContent = `Qoralama saqlandi · ${ntf.draftAt}`;
+        } catch (e) {}
+      }
+      function ntfLoadDraft() {
+        try {
+          const raw = localStorage.getItem(ntfDraftKey());
+          if (!raw) return;
+          const d = JSON.parse(raw);
+          Object.assign(ntf, {
+            title: d.title || "",
+            desc: d.desc || "",
+            assignees: Array.isArray(d.assignees) ? d.assignees : [],
+            startDate: d.startDate || "",
+            dueDate: d.dueDate || "",
+            dueTime: d.dueTime || "18:00",
+            priority: d.priority || "no_priority",
+            projectSlug: d.projectSlug || "",
+            tagIds: new Set(d.tagIds || []),
+            startMode: d.startMode || "now",
+            notify: d.notify !== false,
+            // Qachon saqlangani sarlavhada ko'rinadi — qaytib
+            // kelganda qoralama borligini shu aytadi.
+            draftAt: d.at || "",
+          });
+        } catch (e) {}
+      }
+      function ntfClearDraft() {
+        try {
+          localStorage.removeItem(ntfDraftKey());
+        } catch (e) {}
+      }
+
+      // ── Parametrlar ustuni ────────────────────────────────────────
+      function ntfAv(u, cls) {
+        const nom = ntfName(u);
+        return `<span class="ntf-av ${cls || ""}" style="background:${personColor(u.username)}">${escHtml(nom.slice(0, 1).toUpperCase())}${avatarImg(u.avatar_url)}</span>`;
+      }
+      function ntfBusyHtml(username) {
+        const n = ntfActiveCount(username);
+        // 5 tadan ko'p faol vazifa — xodim band, bu ko'rinib tursin.
+        return `<b class="${n >= 5 ? "busy" : ""}">${n} ta faol</b>`;
+      }
+      function ntfLblHtml(text, required, filled) {
+        const right = required
+          ? filled
+            ? ""
+            : `<span class="ntf-lbl-r miss">Tanlanmagan</span>`
+          : "";
+        return `<div class="ntf-lbl">${escHtml(text)}${required ? "<i>*</i>" : ""}${right}</div>`;
+      }
+      function ntfRender() {
+        if (!ntf) return;
+        const side = document.getElementById("ntf-side");
+        if (side) side.innerHTML = ntfSideHtml();
+        const foot = document.getElementById("ntf-foot");
+        if (foot) foot.innerHTML = ntfFootHtml();
+        const draft = document.getElementById("ntf-draft");
+        if (draft && ntf.draftAt) draft.textContent = `Qoralama saqlandi · ${ntf.draftAt}`;
+      }
+      function ntfSideHtml() {
+        return [ntfAsgCard(), ntfDueCard(), ntfPriorityCard(), ntfRestCardD(), ntfRestCardM()].join("");
+      }
+
+      // 6.3 — Kim bajaradi
+      function ntfAsgCard() {
+        const tanlangan = ntf.assignees
+          .map((un) => ntfUsers.find((u) => u.username === un))
+          .filter(Boolean);
+        const chips =
+          tanlangan
+            .map(
+              (u) => `<div class="ntf-asg">
+                ${ntfAv(u)}
+                <span class="ntf-asg-txt">
+                  <span class="ntf-asg-n">${escHtml(ntfShort(u))}</span>
+                  <span class="ntf-asg-s">${escHtml(ntfJob(u))} · ${ntfBusyHtml(u.username)}</span>
+                </span>
+                <button type="button" class="ntf-x" aria-label="Olib tashlash" onclick="ntfToggleAsg('${escArg(u.username)}')">${ntfSvg("x")}</button>
+              </div>`,
+            )
+            .join("") +
+          `<button type="button" class="ntf-add" id="ntf-add-asg" onclick="ntfOpenAsgPop(this)">${ntfSvg("plus")}Qo'shish</button>`;
+
+        const top = ntfTopUsers(5);
+        const avrow =
+          top
+            .map((u) => {
+              const on = ntf.assignees.includes(u.username);
+              return `<button type="button" class="ntf-avitem${on ? " on" : ""}" onclick="ntfToggleAsg('${escArg(u.username)}')">
+                <span class="ntf-avwrap">${ntfAv(u)}<span class="ntf-avtick">${ntfSvg("check")}</span></span>
+                <span class="ntf-avn">${escHtml(ntfShort(u).split(" ")[0])}</span>
+                <span class="ntf-avj">${escHtml(ntfJob(u))}</span>
+              </button>`;
+            })
+            .join("") +
+          `<button type="button" class="ntf-avitem all" onclick="ntfOpenSheet('kim')">
+             <span class="ntf-avwrap"><span class="ntf-av">${ntfSvg("search")}</span></span>
+             <span class="ntf-avn">Hammasi</span>
+             <span class="ntf-avj">&nbsp;</span>
+           </button>`;
+
+        return `<div class="ntf-card pad" id="ntf-card-asg">
+          ${ntfLblHtml("Kim bajaradi", true, ntf.assignees.length > 0)}
+          <div class="ntf-asg-list ntf-only-d">${chips}</div>
+          <div class="ntf-avrow ntf-only-m">${avrow}</div>
+        </div>`;
+      }
+
+      // 6.4 — Muddat
+      function ntfDueCard() {
+        const bugun = isoOf(todayDate());
+        const ertaga = ntfShift(bugun, 1);
+        const uchinchi = ntfThirdQuick();
+        const bir = (iso) => ntf.dueDate === iso && ntf.startDate === iso;
+        const btn = (iso, label, sana) =>
+          `<button type="button" class="ntf-qbtn${bir(iso) ? " on" : ""}" onclick="ntfPickQuickDay('${iso}')">${label}${sana ? `<span>${ntfDayShort(iso)}</span>` : ""}</button>`;
+        const oraliq = !!(ntf.dueDate && (!ntf.startDate || ntf.startDate !== ntf.dueDate));
+        const vaqt = ntfTimePassed();
+        return `<div class="ntf-card pad" id="ntf-card-due">
+          ${ntfLblHtml("Muddat", true, !!ntf.dueDate)}
+          <div class="ntf-quick">
+            ${btn(bugun, "Bugun", false)}
+            ${btn(ertaga, "Ertaga", true)}
+            ${uchinchi.iso === ertaga ? "" : btn(uchinchi.iso, uchinchi.label, true)}
+            <button type="button" class="ntf-qbtn${oraliq ? " on" : ""}" onclick="ntfOpenSheet('sana')">${ntfSvg("cal")}Oraliq</button>
+          </div>
+          <div class="ntf-timerow">
+            <button type="button" class="ntf-qbtn${ntf.dueTime ? " on" : ""}${vaqt ? " late" : ""}" onclick="ntfOpenSheet('soat')">
+              ${ntfSvg("clock")}${ntf.dueTime ? escHtml(ntf.dueTime) + " gacha" : "Soat"}
+            </button>
+            <span class="ntf-when">${vaqt ? "Vaqt o'tib ketgan" : escHtml(ntfFullWhen())}</span>
+          </div>
+        </div>`;
+      }
+
+      // 6.5 — Ustuvorlik
+      function ntfPriorityCard() {
+        const bars = (p) =>
+          p.bars
+            ? `<span class="ntf-bars">${[0, 1, 2]
+                .map((i) => `<i${i < p.bars ? ` style="background:${p.color}"` : ""}></i>`)
+                .join("")}</span>`
+            : "";
+        return `<div class="ntf-card pad">
+          ${ntfLblHtml("Ustuvorlik", false, true)}
+          <div class="ntf-seg" role="group">
+            ${NTF_PRIORITIES.map(
+              (p) =>
+                `<button type="button" class="ntf-seg-b${ntf.priority === p.v ? " on" : ""}" aria-pressed="${ntf.priority === p.v}" onclick="ntfSet('priority','${p.v}')">${bars(p)}${p.label}</button>`,
+            ).join("")}
+          </div>
+        </div>`;
+      }
+
+      function ntfProjectLabel() {
+        const p = projects.find((x) => (x.slug || x.id) === ntf.projectSlug);
+        return p ? p.label : "Umumiy";
+      }
+      function ntfProjectColor() {
+        const p = projects.find((x) => (x.slug || x.id) === ntf.projectSlug);
+        return p ? personColor(p.slug || p.id) : "var(--v3-t4)";
+      }
+      function ntfTagChips() {
+        const list = tagsList.filter((t) => ntf.tagIds.has(t.id));
+        return (
+          list
+            .map((t) => {
+              const c = tagColor(t.name);
+              return `<span class="ntf-tag" style="background:${c.bg};color:${c.ink}">${escHtml(t.name)}<button type="button" aria-label="Olib tashlash" onclick="ntfToggleTag('${escArg(t.id)}')">${ntfSvg("x")}</button></span>`;
+            })
+            .join("") + `<button type="button" class="ntf-add" onclick="ntfOpenSheet('teglar')">${ntfSvg("plus")}Teg</button>`
+        );
+      }
+      function ntfNotifyText() {
+        const nomlar = ntf.assignees
+          .map((un) => ntfUsers.find((u) => u.username === un))
+          .filter(Boolean)
+          .map((u) => ntfShort(u));
+        if (!nomlar.length) return "Mas'ul tanlanganda unga xabar boradi.";
+        const kim = nomlar.length > 2 ? `${nomlar.length} xodimga` : nomlar.join(", ") + " ga";
+        return `${kim} darhol xabar boradi.`;
+      }
+
+      // 6.6 — Loyiha, teglar, boshlanishi, Telegram (katta ekran)
+      function ntfRestCardD() {
+        return `<div class="ntf-card pad ntf-only-d" style="display:flex;flex-direction:column;gap:16px">
+          <div>
+            ${ntfLblHtml("Loyiha", false, true)}
+            <button type="button" class="ntf-select" onclick="ntfOpenSheet('loyiha')">
+              <span class="ntf-dot" style="background:${ntfProjectColor()}"></span>
+              <span class="ntf-select-v">${escHtml(ntfProjectLabel())}</span>
+              ${ntfSvg("chev")}
+            </button>
+          </div>
+          <div>
+            ${ntfLblHtml("Teglar", false, true)}
+            <div class="ntf-tags">${ntfTagChips()}</div>
+          </div>
+          <div>
+            ${ntfLblHtml("Boshlanishi", false, true)}
+            <div class="ntf-seg tall">
+              <button type="button" class="ntf-seg-b${ntf.startMode === "now" ? " on" : ""}" aria-pressed="${ntf.startMode === "now"}" onclick="ntfSet('startMode','now')">Hozir boshlanadi</button>
+              <button type="button" class="ntf-seg-b${ntf.startMode === "queue" ? " on" : ""}" aria-pressed="${ntf.startMode === "queue"}" onclick="ntfSet('startMode','queue')">Navbatga qo'yish</button>
+            </div>
+          </div>
+          <label class="ntf-tg">
+            <span class="ntf-tg-txt">
+              <span class="ntf-tg-t">Telegramga xabar</span>
+              <span class="ntf-tg-s">${escHtml(ntfNotifyText())}</span>
+            </span>
+            <span class="ntf-sw${ntf.notify ? " on" : ""}" role="switch" aria-checked="${ntf.notify}" onclick="ntfSet('notify',${!ntf.notify})"></span>
+          </label>
+        </div>`;
+      }
+      // Mobilda xuddi shular 48px qatorlar ko'rinishida
+      function ntfRestCardM() {
+        const row = (icon, label, value, onclick) =>
+          `<button type="button" class="ntf-row" onclick="${onclick}">
+            <span class="ntf-row-ico">${ntfSvg(icon)}</span>
+            <span class="ntf-row-l">${label}</span>
+            <span class="ntf-row-v">${escHtml(value)}</span>
+            <span class="ntf-row-c">${ntfSvg("chevR")}</span>
+          </button>`;
+        const teglar = tagsList.filter((t) => ntf.tagIds.has(t.id)).map((t) => t.name);
+        return `<div class="ntf-card ntf-rows ntf-only-m">
+          ${row("folder", "Loyiha", ntfProjectLabel(), "ntfOpenSheet('loyiha')")}
+          ${row("tag", "Teglar", teglar.length > 2 ? `${teglar.length} teg` : teglar.join(", ") || "Yo'q", "ntfOpenSheet('teglar')")}
+          ${row("queue", "Boshlanishi", ntf.startMode === "queue" ? "Navbatga" : "Hozir", "ntfOpenSheet('boshlanishi')")}
+          <div class="ntf-row tg" onclick="ntfSet('notify',${!ntf.notify})">
+            <span class="ntf-row-ico">${ntfSvg("send")}</span>
+            <span class="ntf-tg-txt" style="flex:1;min-width:0">
+              <span class="ntf-tg-t">Telegramga xabar</span>
+              <span class="ntf-tg-s">${escHtml(ntfNotifyText())}</span>
+            </span>
+            <span class="ntf-sw${ntf.notify ? " on" : ""}" role="switch" aria-checked="${ntf.notify}"></span>
+          </div>
+        </div>`;
+      }
+
+      // ── Pastki panel (6.7) ────────────────────────────────────────
+      // Xulosa faqat tanlangan qiymatlardan tuziladi — bo'sh maydon
+      // xulosaga chiqmaydi.
+      function ntfSummaryHtml() {
+        const u = ntf.assignees.length ? ntfUsers.find((x) => x.username === ntf.assignees[0]) : null;
+        const bolaklar = [];
+        if (ntf.dueDate) {
+          const bugun = isoOf(todayDate());
+          const kun =
+            ntf.dueDate === bugun
+              ? "bugun"
+              : ntf.dueDate === ntfShift(bugun, 1)
+                ? "ertaga"
+                : ntfDayShort(ntf.dueDate);
+          bolaklar.push(ntf.dueTime ? `${kun} ${ntf.dueTime} gacha` : kun);
+        }
+        if (ntf.priority !== "no_priority") {
+          bolaklar.push(NTF_PRIORITIES.find((p) => p.v === ntf.priority).label);
+        }
+        if (ntf.projectSlug) bolaklar.push(ntfProjectLabel());
+        const ism = u ? `<b>${escHtml(ntfShort(u))}</b>` : "";
+        const qolgani = bolaklar.length ? `${ism ? " · " : ""}${escHtml(bolaklar.join(" · "))}` : "";
+        if (!ism && !qolgani) return "";
+        return `<div class="ntf-sum">${u ? ntfAv(u) : ""}<span class="ntf-sum-t">${ism}${qolgani}</span></div>`;
+      }
+      function ntfMissing() {
+        const yoq = [];
+        if (!ntf.title.trim()) yoq.push({ key: "title", label: "nom" });
+        if (!ntf.assignees.length) yoq.push({ key: "asg", label: "kim bajaradi" });
+        if (!ntf.dueDate) yoq.push({ key: "due", label: "muddat" });
+        return yoq;
+      }
+      function ntfFootHtml() {
+        const yoq = ntfMissing();
+        const tahrir = ntf.mode === "edit";
+        const label = tahrir ? "Saqlash" : "Vazifani yaratish";
+        const ichi = ntf.saving
+          ? `<span class="ntf-spin"></span>${tahrir ? "Saqlanmoqda…" : "Yaratilmoqda…"}`
+          : label;
+        const miss = yoq.length
+          ? `<div class="ntf-missing">${yoq.length} ta majburiy maydon: ${escHtml(yoq.map((x) => x.label).join(", "))}</div>`
+          : "";
+        const sum = ntfSummaryHtml();
+        const btn = `<button type="button" class="ntf-btn primary${yoq.length ? " dim" : ""}" id="ntf-save"${ntf.saving ? " disabled" : ""} onclick="ntfSubmit()">${ichi}</button>`;
+        return `<div class="ntf-foot-in">
+            ${sum || `<div class="ntf-sum"></div>`}
+            <div class="ntf-acts">
+              ${miss}
+              <button type="button" class="ntf-btn ghost" onclick="ntfExit()">Bekor qilish</button>
+              ${btn}
+            </div>
+          </div>
+          <div class="ntf-foot-m">
+            ${miss || sum}
+            ${btn}
+          </div>`;
+      }
+
+      // ── O'zgartirishlar ───────────────────────────────────────────
+      function ntfSet(key, value) {
+        if (!ntf) return;
+        ntf[key] = value;
+        ntf.touched = true;
+        ntfHaptic();
+        ntfRender();
+        ntfQueueDraft();
+      }
+      function ntfHaptic() {
+        tg()?.HapticFeedback?.selectionChanged?.();
+      }
+      function ntfToggleAsg(username) {
+        const i = ntf.assignees.indexOf(username);
+        if (i === -1) ntf.assignees.push(username);
+        else ntf.assignees.splice(i, 1);
+        ntf.touched = true;
+        ntfHaptic();
+        ntfRender();
+        ntfSyncSheet();
+        ntfQueueDraft();
+      }
+      function ntfToggleTag(id) {
+        if (ntf.tagIds.has(id)) ntf.tagIds.delete(id);
+        else ntf.tagIds.add(id);
+        ntf.touched = true;
+        ntfHaptic();
+        ntfRender();
+        ntfSyncSheet();
+        ntfQueueDraft();
+      }
+      // Tezkor tugma bir kunlik ish qo'yadi: boshlanishi ham, muddati
+      // ham o'sha kun. Haqiqiy oraliq "Oraliq" tugmasi orqali.
+      function ntfPickQuickDay(iso) {
+        ntf.startDate = iso;
+        ntf.dueDate = iso;
+        ntf.touched = true;
+        ntfHaptic();
+        ntfRender();
+        ntfQueueDraft();
+      }
+      // Tavsifga oddiy markdown qo'shish (faqat katta ekran asboblari)
+      function ntfMd(kind) {
+        const el = document.getElementById("ntf-desc");
+        if (!el) return;
+        const s = el.selectionStart;
+        const e = el.selectionEnd;
+        const tanlangan = el.value.slice(s, e);
+        const yangi =
+          kind === "bold" ? `**${tanlangan || "qalin"}**` : kind === "ul" ? `\n- ${tanlangan}` : `\n1. ${tanlangan}`;
+        el.setRangeText(yangi, s, e, "end");
+        ntf.desc = el.value;
+        ntfAutoGrow(el);
+        el.focus();
+        ntfQueueDraft();
+      }
+
+      // ── Xodim tanlash: katta ekranda oynacha, mobilda sheet ───────
+      function ntfOpenAsgPop(btn) {
+        if (ntfIsMobile()) return ntfOpenSheet("kim");
+        document.getElementById("ntf-pop")?.remove();
+        const pop = document.createElement("div");
+        pop.className = "ntf-pop";
+        pop.id = "ntf-pop";
+        ntfSheetState = { key: "kim", q: "", role: "" };
+        pop.innerHTML = `<div style="padding:12px 12px 0">${ntfSearchHtml()}${ntfFiltersHtml()}</div>
+          <div class="ntf-sheet-body" id="ntf-sheet-body" style="padding:0 12px 12px">${ntfPeopleHtml()}</div>`;
+        document.body.appendChild(pop);
+        const r = btn.getBoundingClientRect();
+        const w = 340;
+        let left = Math.min(r.left, window.innerWidth - w - 12);
+        let top = r.bottom + 6;
+        if (top + 420 > window.innerHeight - 12) top = Math.max(12, r.top - 420 - 6);
+        pop.style.left = Math.max(12, left) + "px";
+        pop.style.top = top + "px";
+        setTimeout(() => document.addEventListener("mousedown", ntfPopOutside), 0);
+        pop.querySelector("input")?.focus();
+      }
+      function ntfPopOutside(e) {
+        const pop = document.getElementById("ntf-pop");
+        if (pop && !pop.contains(e.target)) {
+          pop.remove();
+          document.removeEventListener("mousedown", ntfPopOutside);
+          ntfSheetState = null;
+        }
+      }
+
+      // ── Pastdan chiqadigan oyna (16d) ────────────────────────────
+      const NTF_SHEET_TITLES = {
+        kim: "Kim bajaradi",
+        loyiha: "Loyiha",
+        teglar: "Teglar",
+        boshlanishi: "Boshlanishi",
+        sana: "Ish oralig'i",
+        soat: "Muddat soati",
+      };
+      function ntfOpenSheet(key) {
+        document.querySelector(".ntf-sheet-ov")?.remove();
+        ntfSheetState = { key, q: "", role: "" };
+        if (key === "sana") {
+          const b = ntf.startDate || ntf.dueDate || isoOf(todayDate());
+          const d = parseISO(b);
+          ntfSheetState.cal = { y: d.getFullYear(), m: d.getMonth(), start: ntf.startDate || "", end: ntf.dueDate || "" };
+        }
+        const ov = document.createElement("div");
+        ov.className = "ntf-sheet-ov";
+        ov.onclick = (e) => {
+          if (e.target === ov) ntfCloseSheet();
+        };
+        ov.innerHTML = `<div class="ntf-sheet">
+          <div class="ntf-grab"></div>
+          <div class="ntf-sheet-hdr">
+            <div class="ntf-sheet-t">${NTF_SHEET_TITLES[key]}</div>
+            <div class="ntf-sheet-n" id="ntf-sheet-n">${ntfSheetCount()}</div>
+          </div>
+          ${key === "kim" ? `<div style="padding:0 16px">${ntfSearchHtml()}${ntfFiltersHtml()}</div>` : ""}
+          <div class="ntf-sheet-body" id="ntf-sheet-body">${ntfSheetBodyHtml()}</div>
+          <div class="ntf-sheet-foot"><button type="button" class="ntf-btn primary" style="width:100%;height:52px" onclick="ntfCloseSheet()">${ntfSheetDone()}</button></div>
         </div>`;
         document.body.appendChild(ov);
-        pageBackStack.push(closeNtv3Pick);
+        pageBackStack.push(ntfCloseSheet);
         pageSyncBack();
       }
-      function ntv3PickBodyHtml(key) {
-        if (key === "muddat") return ntv3CalPageHtml();
-        if (key === "kimga") {
-          return `<div class="ntv3-search">
-              ${ICON.search}
-              <input id="ntv3-q" placeholder="Ism yoki lavozim bo'yicha qidirish" autocomplete="off" oninput="ntv3FilterPeople(this.value)"/>
-            </div>
-            <div class="ntv3-count" id="ntv3-count">${ntv3CountText(key)}</div>
-            <div id="ntv3-people">${ntv3PeopleHtml()}</div>`;
+      function ntfCloseSheet() {
+        const ov = document.querySelector(".ntf-sheet-ov");
+        if (!ov) return;
+        if (ntfSheetState?.key === "sana" && ntfSheetState.cal) {
+          const c = ntfSheetState.cal;
+          if (c.start) {
+            ntf.startDate = c.start;
+            ntf.dueDate = c.end || c.start;
+          }
         }
-        let opts = [];
-        if (key === "ustuvorlik") {
-          opts = Object.entries(TASK_PRIORITY_LABEL).map(([v, label]) => ({ v, label }));
-        } else if (key === "loyiha") {
-          opts = [
-            { v: "", label: "Umumiy", sub: "Hech bir loyihaga tegishli emas" },
-            ...projects.map((p) => ({ v: p.slug || p.id, label: p.label })),
-          ];
-        } else if (key === "navbat") {
-          opts = [
-            { v: "todo", label: "Hozir boshlanadi", sub: "Vazifa darhol xodimning ro'yxatiga tushadi" },
-            { v: "backlog", label: "Keyinroq", sub: "Hozircha ro'yxatda turadi, muddat keyin qo'yiladi" },
-          ];
-        } else {
-          opts = tagsList.map((t) => ({ v: t.id, label: t.name }));
-        }
-        const cur = { ustuvorlik: ntv3.priority, loyiha: ntv3.projectSlug, navbat: ntv3.status }[key];
-        const list =
-          opts
-            .map((o) => {
-              const on = key === "teglar" ? ntv3.tagIds.has(o.v) : cur === o.v;
-              const belgi = key === "teglar" ? `<span class="ntv3-tick${on ? " on" : ""}">${on ? ICON.check : ""}</span>` : "";
-              const galochka = key !== "teglar" && on ? `<span class="ntv3-tick on">${ICON.check}</span>` : "";
-              return `<div class="ntv3-opt${on ? " on" : ""}" data-v="${escHtml(o.v)}" onclick="pickNtv3('${key}','${escArg(o.v)}')">
-                ${belgi}
-                <span class="ntv3-opt-txt"><b>${escHtml(o.label)}</b>${o.sub ? `<i>${escHtml(o.sub)}</i>` : ""}</span>
-                ${galochka}
-              </div>`;
-            })
-            .join("") || `<div class="ntv3-empty">Ro'yxat bo'sh</div>`;
-        if (key === "teglar") {
-          return `<div class="ntv3-count" id="ntv3-count">${ntv3CountText(key)}</div>
-            <div id="ntv3-optlist">${list}</div>
-            <div class="ntv3-newtag">
-              <input id="ntv3-newtag" placeholder="Yangi teg nomi" autocomplete="off"/>
-              <button type="button" onclick="ntv3CreateTag()">Qo'shish</button>
-            </div>
-            <div class="ntv3-hint">Teg — ish turi (Montaj, Dizayn…). Keyin shu bo'yicha filtrlaysiz.</div>`;
-        }
-        return list;
+        ov.remove();
+        if (pageBackStack[pageBackStack.length - 1] === ntfCloseSheet) pageBackStack.pop();
+        pageSyncBack();
+        ntfSheetState = null;
+        ntfRender();
+        ntfQueueDraft();
       }
-      function ntv3CountText(key) {
-        const n = key === "teglar" ? ntv3.tagIds.size : ntv3.assigneeUsernames.length;
-        return n ? `${n} tanlandi` : "Bir nechtasini tanlash mumkin";
+      function ntfSheetCount() {
+        if (!ntfSheetState) return "";
+        if (ntfSheetState.key === "kim") return ntf.assignees.length ? `${ntf.assignees.length} tanlandi` : "";
+        if (ntfSheetState.key === "teglar") return ntf.tagIds.size ? `${ntf.tagIds.size} tanlandi` : "";
+        return "";
       }
-      function ntv3PeopleHtml() {
-        const q = ntv3PeopleQ.trim().toLowerCase();
-        const list = ntv3Users.filter((u) => {
+      function ntfSheetDone() {
+        if (ntfSheetState?.key === "kim") return `Tayyor · ${ntf.assignees.length} xodim`;
+        if (ntfSheetState?.key === "teglar") return `Tayyor · ${ntf.tagIds.size} teg`;
+        return "Tayyor";
+      }
+      function ntfSyncSheet() {
+        const body = document.getElementById("ntf-sheet-body");
+        if (body && ntfSheetState) body.innerHTML = ntfSheetBodyHtml();
+        const n = document.getElementById("ntf-sheet-n");
+        if (n) n.textContent = ntfSheetCount();
+        const d = document.querySelector(".ntf-sheet-foot .ntf-btn");
+        if (d) d.textContent = ntfSheetDone();
+      }
+
+      function ntfSearchHtml() {
+        return `<div class="ntf-search">${ntfSvg("search")}<input id="ntf-q" placeholder="Ism yoki lavozim" autocomplete="off" oninput="ntfFilter(this.value)"/></div>`;
+      }
+      // Lavozim filtrlari bazadagi haqiqiy lavozimlardan tuziladi —
+      // qo'lda yozilgan ro'yxat eskirib qolardi.
+      function ntfRoles() {
+        const bor = [];
+        ntfUsers.forEach((u) => {
+          const j = (u.job_title || "").trim();
+          if (j && !bor.includes(j)) bor.push(j);
+        });
+        return bor.sort((a, b) => a.localeCompare(b, "uz"));
+      }
+      function ntfFiltersHtml() {
+        const roles = ntfRoles();
+        if (!roles.length) return "";
+        const cur = ntfSheetState?.role || "";
+        return `<div class="ntf-filters">
+          <button type="button" class="ntf-pill${cur ? "" : " on"}" onclick="ntfSetRole('')">Hammasi</button>
+          ${roles.map((r) => `<button type="button" class="ntf-pill${cur === r ? " on" : ""}" onclick="ntfSetRole('${escArg(r)}')">${escHtml(r)}</button>`).join("")}
+        </div>`;
+      }
+      function ntfSetRole(r) {
+        if (!ntfSheetState) return;
+        ntfSheetState.role = ntfSheetState.role === r ? "" : r;
+        const host = document.querySelector(".ntf-filters")?.parentElement;
+        if (host) {
+          const f = host.querySelector(".ntf-filters");
+          if (f) f.outerHTML = ntfFiltersHtml();
+        }
+        ntfSyncSheet();
+      }
+      function ntfFilter(q) {
+        if (!ntfSheetState) return;
+        ntfSheetState.q = q || "";
+        ntfSyncSheet();
+      }
+      function ntfPeopleHtml() {
+        const q = (ntfSheetState?.q || "").trim().toLowerCase();
+        const role = ntfSheetState?.role || "";
+        const list = ntfUsers.filter((u) => {
+          if (role && (u.job_title || "") !== role) return false;
           if (!q) return true;
           return `${u.first_name || ""} ${u.last_name || ""} ${u.username} ${u.job_title || ""}`.toLowerCase().includes(q);
         });
-        if (!list.length) {
-          return `<div class="ntv3-empty">${ntv3Users.length ? "Xodim topilmadi" : "Yuklanmoqda…"}</div>`;
-        }
+        if (!list.length) return `<div class="ntf-empty">${ntfUsers.length ? "Xodim topilmadi" : "Yuklanmoqda…"}</div>`;
         return list
           .map((u) => {
-            const on = ntv3.assigneeUsernames.includes(u.username);
-            return `<div class="ntv3-opt${on ? " on" : ""}" data-v="${escHtml(u.username)}" onclick="pickNtv3('kimga','${escArg(u.username)}')">
-              ${ntv3AvHtml(u)}
-              <span class="ntv3-opt-txt"><b>${escHtml(ntv3PersonName(u))}</b><i>${escHtml(u.job_title || "@" + u.username)}</i></span>
-              <span class="ntv3-tick${on ? " on" : ""}">${on ? ICON.check : ""}</span>
-            </div>`;
+            const on = ntf.assignees.includes(u.username);
+            return `<button type="button" class="ntf-prow" onclick="ntfToggleAsg('${escArg(u.username)}')">
+              ${ntfAv(u)}
+              <span class="ntf-prow-txt">
+                <span class="ntf-prow-n">${escHtml(ntfName(u))}</span>
+                <span class="ntf-prow-s">${escHtml(ntfJob(u))} · ${ntfBusyHtml(u.username)} vazifa</span>
+              </span>
+              <span class="ntf-cb${on ? " on" : ""}">${on ? ntfSvg("check") : ""}</span>
+            </button>`;
           })
           .join("");
       }
-      function ntv3FilterPeople(q) {
-        ntv3PeopleQ = q || "";
-        const el = document.getElementById("ntv3-people");
-        if (el) el.innerHTML = ntv3PeopleHtml();
+      function ntfOptRow(on, title, sub, onclick, dot) {
+        return `<button type="button" class="ntf-prow" onclick="${onclick}">
+          ${dot ? `<span class="ntf-dot" style="background:${dot};width:12px;height:12px;border-radius:4px"></span>` : ""}
+          <span class="ntf-prow-txt">
+            <span class="ntf-prow-n">${escHtml(title)}</span>
+            ${sub ? `<span class="ntf-prow-s">${escHtml(sub)}</span>` : ""}
+          </span>
+          <span class="ntf-cb${on ? " on" : ""}">${on ? ntfSvg("check") : ""}</span>
+        </button>`;
       }
-      function pickNtv3(key, value) {
-        if (!ntv3) return;
-        if (key === "kimga" || key === "teglar") {
-          if (key === "teglar") {
-            if (ntv3.tagIds.has(value)) ntv3.tagIds.delete(value);
-            else ntv3.tagIds.add(value);
-            ntv3SyncMulti(key, value, ntv3.tagIds.has(value));
-          } else {
-            const i = ntv3.assigneeUsernames.indexOf(value);
-            if (i === -1) ntv3.assigneeUsernames.push(value);
-            else ntv3.assigneeUsernames.splice(i, 1);
-            ntv3SyncMulti(key, value, ntv3.assigneeUsernames.includes(value));
-          }
-          return;
+      function ntfSheetBodyHtml() {
+        const key = ntfSheetState?.key;
+        if (key === "kim") return ntfPeopleHtml();
+        if (key === "loyiha") {
+          return (
+            ntfOptRow(!ntf.projectSlug, "Umumiy", "Hech bir loyihaga tegishli emas", "ntfPickProject('')", "var(--v3-t4)") +
+            projects
+              .map((p) => {
+                const v = p.slug || p.id;
+                return ntfOptRow(ntf.projectSlug === v, p.label, "", `ntfPickProject('${escArg(v)}')`, personColor(v));
+              })
+              .join("")
+          );
         }
-        if (key === "ustuvorlik") ntv3.priority = value;
-        else if (key === "loyiha") ntv3.projectSlug = value;
-        else if (key === "navbat") ntv3.status = value;
-        ntv3Haptic();
-        closeNtv3Pick();
-      }
-      // Ko'p tanlovli sahifa butunlay qayta chizilmaydi: qidiruv matni
-      // va ro'yxatning aylantirilgan joyi saqlanishi kerak, aks holda
-      // har bosishda ro'yxat tepaga qaytib ketadi.
-      function ntv3SyncMulti(key, value, on) {
-        const row = document.querySelector(`#ntv3-pick [data-v="${escArg(value)}"]`);
-        if (row) {
-          row.classList.toggle("on", on);
-          const tick = row.querySelector(".ntv3-tick");
-          if (tick) {
-            tick.classList.toggle("on", on);
-            tick.innerHTML = on ? ICON.check : "";
-          }
+        if (key === "teglar") {
+          const list = tagsList
+            .map((t) => ntfOptRow(ntf.tagIds.has(t.id), t.name, "", `ntfToggleTag('${escArg(t.id)}')`, tagColor(t.name).ink))
+            .join("");
+          return `${list || `<div class="ntf-empty">Teg yo'q</div>`}
+            <div style="display:flex;gap:8px;margin-top:14px">
+              <input id="ntf-newtag" class="ntf-search" style="flex:1;margin:0" placeholder="Yangi teg nomi" autocomplete="off"/>
+              <button type="button" class="ntf-btn ghost" style="height:44px;padding:0 16px" onclick="ntfCreateTag()">Qo'shish</button>
+            </div>`;
         }
-        const cnt = document.getElementById("ntv3-count");
-        if (cnt) cnt.textContent = ntv3CountText(key);
-        ntv3Haptic();
-        ntv3ClearErr();
-        renderNtv3Fields();
+        if (key === "boshlanishi") {
+          return (
+            ntfOptRow(ntf.startMode === "now", "Hozir boshlanadi", "Vazifa darhol xodimning ro'yxatiga tushadi", "ntfPickStart('now')") +
+            ntfOptRow(ntf.startMode === "queue", "Navbatga qo'yish", "Hozircha ro'yxatda turadi", "ntfPickStart('queue')")
+          );
+        }
+        if (key === "soat") {
+          const hozir = ntf.dueTime || "";
+          let html = ntfOptRow(!hozir, "Soatsiz", "Muddat faqat kun bo'yicha", "ntfPickTime('')");
+          html += `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px">`;
+          for (let h = 8; h <= 21; h++) {
+            for (const m of ["00", "15", "30", "45"]) {
+              const v = `${String(h).padStart(2, "0")}:${m}`;
+              html += `<button type="button" class="ntf-qbtn${hozir === v ? " on" : ""}" style="justify-content:center" onclick="ntfPickTime('${v}')">${v}</button>`;
+            }
+          }
+          return html + `</div>`;
+        }
+        if (key === "sana") return ntfCalHtml();
+        return "";
       }
-      async function ntv3CreateTag() {
-        const input = document.getElementById("ntv3-newtag");
+      function ntfPickProject(v) {
+        ntf.projectSlug = v;
+        ntf.touched = true;
+        ntfHaptic();
+        ntfCloseSheet();
+      }
+      function ntfPickStart(v) {
+        ntf.startMode = v;
+        ntf.touched = true;
+        ntfHaptic();
+        ntfCloseSheet();
+      }
+      function ntfPickTime(v) {
+        ntf.dueTime = v;
+        ntf.touched = true;
+        ntfHaptic();
+        ntfCloseSheet();
+      }
+      async function ntfCreateTag() {
+        const input = document.getElementById("ntf-newtag");
         const name = input?.value.trim();
         if (!name) return;
         try {
           const res = await apiFetch("/api/tags", { method: "POST", body: JSON.stringify({ name }) });
           const data = await res.json().catch(() => ({}));
           if (!res.ok && res.status !== 409) throw new Error(data.error || "Xato");
-          const tag = data.tag;
-          if (tag) {
-            if (!tagsList.some((tg2) => tg2.id === tag.id)) tagsList.push(tag);
-            ntv3.tagIds.add(tag.id);
+          if (data.tag) {
+            if (!tagsList.some((g) => g.id === data.tag.id)) tagsList.push(data.tag);
+            ntf.tagIds.add(data.tag.id);
             if (input) input.value = "";
-            const el = document.getElementById("ntv3-optlist");
-            if (el) {
-              // Ro'yxat qayta chiziladi — yangi teg darhol belgilangan
-              // holda ko'rinishi kerak.
-              const body = document.getElementById("ntv3-pick-body");
-              if (body) body.innerHTML = ntv3PickBodyHtml("teglar");
-            }
-            renderNtv3Fields();
+            ntfSyncSheet();
+            ntfRender();
           }
         } catch (e) {
           showToast("⚠ " + e.message);
         }
       }
 
-      // ── Kalendar sahifasi ─────────────────────────────────────────
-      function ntv3Shift(iso, n) {
-        const d = parseISO(iso);
-        d.setDate(d.getDate() + n);
-        return isoOf(d);
-      }
-      function ntv3CalPageHtml() {
-        return `<div id="ntv3-cal">${ntv3CalHtml()}</div>
-          <div class="ntv3-quick">
-            <button type="button" class="ntv3-qchip" onclick="ntv3QuickRange('bugun')">Bugun</button>
-            <button type="button" class="ntv3-qchip" onclick="ntv3QuickRange('ertaga')">Ertaga</button>
-            <button type="button" class="ntv3-qchip" onclick="ntv3QuickRange('3kun')">3 kun</button>
-            <button type="button" class="ntv3-qchip" onclick="ntv3QuickRange('hafta')">Bir hafta</button>
-          </div>
-          <div class="ntv3-sum" id="ntv3-sum">${ntv3CalSummary()}</div>
-          <button type="button" class="ntv3-submit ghost" style="margin-top:10px" onclick="ntv3CalReset()">Tozalash</button>`;
-      }
-      function ntv3CalHtml() {
-        const { y, m, start, end } = ntv3Cal;
-        const todayIso = isoOf(todayDate());
-        const oxiri = end || start;
-        const days = buildCalGridCells(y, m)
-          .map((c) => {
-            if (!c.iso) return `<button type="button" class="ntv3-day" disabled>${c.dNum}</button>`;
+      // Oraliq kalendari. Ko'rinish belgilangan sinflari belgilash
+      // sahifasi bilan umumiy (.ntv3-day…) — ikkala kalendar bir xil
+      // bo'lishi kerak, nusxa ko'paytirishdan ma'no yo'q.
+      function ntfCalHtml() {
+        const c = ntfSheetState.cal;
+        const bugun = isoOf(todayDate());
+        const oxiri = c.end || c.start;
+        const days = buildCalGridCells(c.y, c.m)
+          .map((cell) => {
+            // O'tgan kunlar tanlanmaydi (TZ 6.4)
+            if (!cell.iso || cell.iso < bugun) {
+              return `<button type="button" class="ntv3-day" disabled>${cell.dNum}</button>`;
+            }
             const cls = ["ntv3-day"];
-            if (c.iso === todayIso) cls.push("d-today");
-            if (c.iso === start || (oxiri && c.iso === oxiri)) cls.push("d-sel");
-            if (start && c.iso === start) cls.push("d-s");
-            if (oxiri && c.iso === oxiri) cls.push("d-e");
-            if (start && end && c.iso > start && c.iso < end) cls.push("d-in");
-            return `<button type="button" class="${cls.join(" ")}" onclick="ntv3PickDay('${c.iso}')">${c.dNum}</button>`;
+            if (cell.iso === bugun) cls.push("d-today");
+            if (cell.iso === c.start || (oxiri && cell.iso === oxiri)) cls.push("d-sel");
+            if (c.start && cell.iso === c.start) cls.push("d-s");
+            if (oxiri && cell.iso === oxiri) cls.push("d-e");
+            if (c.start && c.end && cell.iso > c.start && cell.iso < c.end) cls.push("d-in");
+            return `<button type="button" class="${cls.join(" ")}" onclick="ntfCalPick('${cell.iso}')">${cell.dNum}</button>`;
           })
           .join("");
+        const izoh = !c.start
+          ? "Boshlanish kunini tanlang"
+          : !c.end
+            ? `${fmtDay(parseISO(c.start))} dan — endi tugash kunini tanlang`
+            : `${fmtDateRangeField(c.start, c.end)} · ${rangeDayCount(c.start, c.end)} kun`;
         return `<div class="ntv3-cal-hdr">
-            <button type="button" class="ntv3-cal-nav" onclick="ntv3CalNav(-1)">${ICON.chevronLeft}</button>
-            <div class="ntv3-cal-m">${MONTHS[m]} ${y}</div>
-            <button type="button" class="ntv3-cal-nav" onclick="ntv3CalNav(1)">${ICON.chevronRight}</button>
+            <button type="button" class="ntv3-cal-nav" onclick="ntfCalNav(-1)">${ICON.chevronLeft}</button>
+            <div class="ntv3-cal-m">${MONTHS[c.m]} ${c.y}</div>
+            <button type="button" class="ntv3-cal-nav" onclick="ntfCalNav(1)">${ICON.chevronRight}</button>
           </div>
           <div class="ntv3-wd">${WD.map((w) => `<div>${w}</div>`).join("")}</div>
-          <div class="ntv3-days">${days}</div>`;
+          <div class="ntv3-days">${days}</div>
+          <div class="ntv3-sum">${escHtml(izoh)}</div>`;
       }
-      // Pastdagi izoh — tanlash qaysi bosqichda ekanini aytadi: bitta
-      // kalendarda "birinchi bosish — boshlanishi, ikkinchisi —
-      // tugashi" qoidasi o'z-o'zidan ko'rinmaydi.
-      function ntv3CalSummary() {
-        const { start, end } = ntv3Cal;
-        if (!start) return `<span>Boshlanish kunini tanlang</span>`;
-        if (!end) return `<b>${escHtml(fmtDay(parseISO(start)))}</b> <span>dan — endi tugash kunini tanlang</span>`;
-        return `<b>${escHtml(fmtDateRangeField(start, end))}</b> <span>· ${rangeDayCount(start, end)} kun</span>`;
-      }
-      function renderNtv3Cal() {
-        const el = document.getElementById("ntv3-cal");
-        if (el) el.innerHTML = ntv3CalHtml();
-        const s = document.getElementById("ntv3-sum");
-        if (s) s.innerHTML = ntv3CalSummary();
-      }
-      function ntv3CalNav(delta) {
-        if (!ntv3Cal) return;
-        ntv3Cal.m += delta;
-        if (ntv3Cal.m < 0) {
-          ntv3Cal.m = 11;
-          ntv3Cal.y--;
-        } else if (ntv3Cal.m > 11) {
-          ntv3Cal.m = 0;
-          ntv3Cal.y++;
+      function ntfCalNav(d) {
+        const c = ntfSheetState?.cal;
+        if (!c) return;
+        c.m += d;
+        if (c.m < 0) {
+          c.m = 11;
+          c.y--;
+        } else if (c.m > 11) {
+          c.m = 0;
+          c.y++;
         }
-        renderNtv3Cal();
+        ntfSyncSheet();
       }
-      // Birinchi bosish — boshlanishi, ikkinchisi — tugashi, uchinchisi
-      // yangidan boshlaydi. Ikkinchi bosish boshlanishdan oldinroq
-      // bo'lsa, oraliq teskari emas, shu kundan boshlangan deb olinadi —
-      // foydalanuvchi fikrini o'zgartirgani xato emas.
-      function ntv3PickDay(iso) {
-        if (!ntv3Cal) return;
-        if (!ntv3Cal.start || ntv3Cal.end) {
-          ntv3Cal.start = iso;
-          ntv3Cal.end = "";
-        } else if (iso < ntv3Cal.start) {
-          ntv3Cal.start = iso;
+      function ntfCalPick(iso) {
+        const c = ntfSheetState?.cal;
+        if (!c) return;
+        if (!c.start || c.end) {
+          c.start = iso;
+          c.end = "";
+        } else if (iso < c.start) {
+          c.start = iso;
         } else {
-          ntv3Cal.end = iso;
+          c.end = iso;
         }
-        ntv3Haptic();
-        renderNtv3Cal();
-      }
-      function ntv3QuickRange(kind) {
-        if (!ntv3Cal) return;
-        const bugun = isoOf(todayDate());
-        const ertaga = ntv3Shift(bugun, 1);
-        const oraliq = {
-          bugun: [bugun, bugun],
-          ertaga: [ertaga, ertaga],
-          "3kun": [bugun, ntv3Shift(bugun, 2)],
-          hafta: [bugun, ntv3Shift(bugun, 6)],
-        }[kind];
-        if (!oraliq) return;
-        const d = parseISO(oraliq[0]);
-        ntv3Cal = { y: d.getFullYear(), m: d.getMonth(), start: oraliq[0], end: oraliq[1] };
-        renderNtv3Cal();
-      }
-      function ntv3CalReset() {
-        if (!ntv3Cal) return;
-        ntv3Cal.start = "";
-        ntv3Cal.end = "";
-        renderNtv3Cal();
-      }
-      // Faqat bitta kun tanlangan bo'lsa — bir kunlik ish (boshlanishi
-      // ham, muddati ham o'sha kun).
-      function ntv3CommitCal() {
-        if (!ntv3 || !ntv3Cal) return;
-        ntv3.startDate = ntv3Cal.start || "";
-        ntv3.dueDate = ntv3Cal.end || ntv3Cal.start || "";
-        if (ntv3.dueDate) ntv3ClearErr();
+        ntfHaptic();
+        ntfSyncSheet();
       }
 
-      // ── Tekshirish va yuborish ────────────────────────────────────
-      // Xato maydonning OSTIDA ko'rsatiladi. Avval faqat pastdagi
-      // "toast" chiqardi: u tez yo'qolardi va qaysi maydon haqida ekani
-      // ko'rinmasdi, shuning uchun xodimlar bir xil xatoni takrorlardi.
-      function ntv3ShowErr(qayer, matn) {
-        const el = document.getElementById(`ntv3-${qayer}-err`);
-        if (el) {
-          el.textContent = matn;
-          el.classList.add("on");
-          el.scrollIntoView({ block: "center", behavior: "smooth" });
-        }
-        if (qayer === "req") document.getElementById("ntv3-req")?.classList.add("bad");
-        tg()?.HapticFeedback?.notificationOccurred?.("error");
-      }
-      function ntv3ClearErr() {
-        ["title", "req"].forEach((k) => {
-          const el = document.getElementById(`ntv3-${k}-err`);
-          if (el) {
-            el.textContent = "";
-            el.classList.remove("on");
+      // ── Tekshirish va yuborish (TZ 07) ───────────────────────────
+      function ntfSubmit() {
+        if (!ntf || ntf.saving) return;
+        const yoq = ntfMissing();
+        if (yoq.length) {
+          // Tugma o'chirilmagan — bosilganda birinchi bo'sh maydonga
+          // olib boradi va uni 2 soniya ajratib ko'rsatadi.
+          const birinchi = yoq[0];
+          if (birinchi.key === "title") {
+            const el = document.getElementById("ntf-title");
+            el?.scrollIntoView({ block: "center", behavior: "smooth" });
+            el?.focus();
+            ntfFlash("ntf-maincard");
+          } else {
+            const card = document.getElementById(birinchi.key === "asg" ? "ntf-card-asg" : "ntf-card-due");
+            card?.scrollIntoView({ block: "center", behavior: "smooth" });
+            ntfFlash(birinchi.key === "asg" ? "ntf-card-asg" : "ntf-card-due");
           }
-        });
-        document.getElementById("ntv3-req")?.classList.remove("bad");
-      }
-      async function submitNtv3(btn) {
-        if (!ntv3) return;
-        const tahrir = ntv3.mode === "edit";
-        ntv3ClearErr();
-        const title = document.getElementById("ntv3-title")?.value.trim();
-        if (!title) {
-          ntv3ShowErr("title", "Vazifa nomini yozing.");
-          document.getElementById("ntv3-title")?.focus();
+          tg()?.HapticFeedback?.notificationOccurred?.("error");
           return;
         }
-        // Mas'ulsiz vazifa hech kimning ro'yxatida ko'rinmaydi va
-        // unutilib ketadi — shuning uchun biriktirish majburiy.
-        if (!ntv3.assigneeUsernames.length) {
-          return ntv3ShowErr("req", "«Kim bajaradi» — kamida bitta xodimni tanlang, aks holda vazifa hech kimga ko'rinmaydi.");
-        }
-        const navbatKeyin = tahrir ? ntv3.editStatus === "backlog" : ntv3.status === "backlog";
-        if (!navbatKeyin && !ntv3.dueDate) {
-          return ntv3ShowErr("req", "«Ish vaqti» — qaysi kundan qaysi kungacha ishlanishini tanlang.");
-        }
-        const description = document.getElementById("ntv3-desc")?.value.trim();
+        ntfSave();
+      }
+      function ntfFlash(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.add("shake");
+        setTimeout(() => el.classList.remove("shake"), 2000);
+      }
+      async function ntfSave() {
+        const tahrir = ntf.mode === "edit";
+        ntf.saving = true;
+        ntfRender();
         const body = {
-          title,
-          projectSlug: ntv3.projectSlug || (tahrir ? "" : undefined),
-          priority: ntv3.priority,
-          tagIds: [...ntv3.tagIds],
-          assigneeUsernames: ntv3.assigneeUsernames,
+          title: ntf.title.trim(),
+          projectSlug: ntf.projectSlug || (tahrir ? "" : undefined),
+          priority: ntf.priority,
+          tagIds: [...ntf.tagIds],
+          assigneeUsernames: ntf.assignees,
+          startDate: ntf.startDate || "",
+          dueDate: ntf.dueDate,
+          dueTime: ntf.dueTime || "",
         };
-        // Tahrirlashda bo'shatilgan tavsif ham saqlanishi kerak,
-        // yaratishda esa bo'sh maydon umuman yuborilmaydi.
-        if (tahrir) body.description = description || "";
-        else if (description) body.description = description;
-        if (!navbatKeyin) {
-          body.startDate = ntv3.startDate || "";
-          body.dueDate = ntv3.dueDate;
-        }
+        if (tahrir) body.description = ntf.desc.trim();
+        else if (ntf.desc.trim()) body.description = ntf.desc.trim();
         if (!tahrir) {
-          body.status = ntv3.status;
-          body.notifyTelegram = ntv3.notify;
+          // Kanban ustunidan ochilgan bo'lsa — o'sha ustun holati.
+          body.status = ntf.startMode === "queue" ? "backlog" : ntf.status || "todo";
+          body.notifyTelegram = ntf.notify;
+          if (body.status === "backlog") {
+            delete body.startDate;
+            delete body.dueDate;
+          }
         }
-        setBtnLoading(btn, true, tahrir ? "Saqlanmoqda…" : "Yaratilmoqda…");
         try {
-          const res = await apiFetch(tahrir ? `/api/tasks/${ntv3.id}` : "/api/tasks", {
+          const res = await apiFetch(tahrir ? `/api/tasks/${ntf.id}` : "/api/tasks", {
             method: tahrir ? "PATCH" : "POST",
             body: JSON.stringify(body),
           });
           const data = await res.json().catch(() => ({}));
           if (!res.ok) throw new Error(data.error || "Xato");
-          const id = ntv3.id;
-          closeNtv3();
+          const yangiId = data.task?.id || ntf.id;
+          if (!tahrir) ntfClearDraft();
+          ntfClose();
           if (tahrir) {
             showToast("✅ Saqlandi");
           } else {
-            const notifyNote = describeNotifyResult(data.notify);
-            showToast("✅ Vazifa yaratildi" + notifyNote, notifyNote.includes("⚠") ? 4000 : 2200);
+            const nota = describeNotifyResult(data.notify);
+            showToast("✅ Vazifa yaratildi" + nota, nota.includes("⚠") ? 4000 : 2200);
           }
           await loadTasks();
           refreshAllViews();
-          if (tahrir) refreshTaskDetailIfOpen(id);
+          if (tahrir) refreshTaskDetailIfOpen(yangiId);
+          else if (yangiId) openTaskActions(yangiId);
         } catch (e) {
-          showToast("⚠ " + e.message);
-          setBtnLoading(btn, false);
+          // Sahifada qolinadi, ma'lumot yo'qolmaydi (TZ 07).
+          if (ntf) {
+            ntf.saving = false;
+            ntfRender();
+          }
+          showToast("⚠ Saqlanmadi: " + e.message, 4000);
         }
       }
 
