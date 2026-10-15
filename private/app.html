@@ -3648,12 +3648,21 @@
         font-style: normal;
         margin-left: 2px;
       }
+      /* Qiymat tomoni o'ngga tortilgan: rasm(lar) va matn yonma-yon
+         turadi. Avval rasmlar yorliqdan keyin, qatorning o'rtasida
+         osilib qolardi. */
       .ntv3-val {
         flex: 1;
         min-width: 0;
-        text-align: right;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
         font-size: 14px;
         color: var(--v3-t2);
+      }
+      .ntv3-valt {
+        font-style: normal;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -3997,27 +4006,30 @@
       .ntv3-sum b { font-weight: 700; }
       .ntv3-sum span { color: var(--v3-t3); }
 
-      /* Katta ekranda to'liq ekran keraksiz — xuddi shu sahifa
-         o'rtadagi ilova oynasi bo'lib ko'rinadi, ichidagi hamma narsa
-         va orqaga qaytish o'zgarishsiz qoladi. */
+      /* Kalendar hech qachon cho'zilmaydi: katta ekranda 7 ta ustun
+         butun enga yoyilsa, kunlar bir-biridan uzoqlashib oraliqni
+         ko'rish qiyinlashadi. */
+      .ntv3-cal-hdr,
+      .ntv3-wd,
+      .ntv3-days {
+        max-width: 420px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      /* Katta ekranda ham TO'LIQ SAHIFA. Avval o'rtada 468px'lik oyna
+         edi — u baribir modal bo'lib qolardi: tor ustunda har bir
+         tanlov uchun ichidagi sahifa almashardi va ishlash noqulay
+         edi. Endi butun ekran, mazmun esa o'qishga qulay enda
+         markazda turadi. */
       @media (min-width: 860px) {
-        .ntv3-ov,
-        .ntv3-pick-ov {
-          background: rgba(15, 23, 42, 0.45);
-          align-items: center;
-          justify-content: center;
-        }
         .ntv3,
-        .ntv3-pick {
-          flex: none;
-          width: 468px;
-          height: min(740px, 92vh);
-          border-radius: 20px;
-          padding-top: 0;
-          box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+        .ntv3-pick { padding-top: 0; }
+        .ntv3-body,
+        .ntv3-pick-body,
+        .ntv3-foot {
+          padding-left: max(16px, calc((100% - 680px) / 2));
+          padding-right: max(16px, calc((100% - 680px) / 2));
         }
-        .ntv3-hdr { border-radius: 20px 20px 0 0; }
-        .ntv3-foot { border-radius: 0 0 20px 20px; }
       }
 
       /* ── VAZIFANI SURIB KO'CHIRISH (drag & drop) ───────────────────
@@ -4303,11 +4315,6 @@
       .f-check + .f-sec {
         margin-top: 22px;
       }
-      .f-req {
-        color: var(--st-debt);
-        font-style: normal;
-        font-weight: 700;
-      }
       .f-err {
         display: none;
         font-size: 12px;
@@ -4320,8 +4327,7 @@
         display: block;
       }
       .f-input.invalid,
-      .date-field.invalid,
-      .asg-field.invalid {
+      .date-field.invalid {
         border-color: var(--st-debt);
       }
       /* Belgilash katagi — nima uchun kerakligi yonida yozilgan */
@@ -4360,207 +4366,6 @@
         line-height: 1.45;
       }
 
-      /* ── MAS'UL TANLAGICH ────────────────────────────────────────
-         Yopiq holatda boshqa maydonlar bilan bir xil ko'rinadi
-         (balandlik, chegara, radius), shuning uchun forma bir tekis
-         bo'lib turadi. Ro'yxat faqat bosilganda ochiladi. */
-      .asg {
-        position: relative;
-      }
-      .asg-field {
-        min-height: 44px;
-        border: 1px solid var(--bd4);
-        border-radius: 11px;
-        background: var(--surf);
-        padding: 6px 38px 6px 8px;
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        position: relative;
-      }
-      .asg-field.open {
-        border-color: var(--brand);
-      }
-      .asg-chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-        min-width: 0;
-        flex: 1;
-      }
-      .asg-ph {
-        font-size: 14px;
-        color: var(--v3-t4);
-        padding-left: 5px;
-      }
-      .asg-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        height: 28px;
-        padding: 0 5px 0 5px;
-        border-radius: 8px;
-        background: var(--chip2);
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--ink);
-        white-space: nowrap;
-      }
-      .asg-x {
-        width: 18px;
-        height: 18px;
-        border: none;
-        border-radius: 5px;
-        background: transparent;
-        color: var(--v3-t3);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        flex: none;
-        padding: 0;
-      }
-      .asg-x:hover {
-        background: var(--bd2);
-        color: var(--ink);
-      }
-      .asg-x svg {
-        width: 12px;
-        height: 12px;
-        stroke-width: 2.4;
-      }
-      .asg-caret {
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--chev);
-        display: flex;
-        pointer-events: none;
-      }
-      .asg-caret svg {
-        width: 16px;
-        height: 16px;
-      }
-      .asg-av {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-weight: 700;
-        flex: none;
-        overflow: hidden;
-        position: relative;
-      }
-
-      /* Ochiluvchi ro'yxat */
-      .asg-pop {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: calc(100% + 6px);
-        z-index: 60;
-        background: var(--surf);
-        border: 1px solid var(--bd3);
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(14, 23, 38, 0.14);
-        overflow: hidden;
-      }
-      .asg-search {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 9px 12px;
-        border-bottom: 1px solid var(--bd1);
-      }
-      .asg-search-ico {
-        display: flex;
-        color: var(--v3-t4);
-      }
-      .asg-search-ico svg {
-        width: 15px;
-        height: 15px;
-      }
-      .asg-search input {
-        flex: 1;
-        min-width: 0;
-        border: none;
-        outline: none;
-        background: transparent;
-        font-family: inherit;
-        font-size: 13.5px;
-        color: var(--ink);
-      }
-      .asg-list {
-        max-height: 232px;
-        overflow-y: auto;
-        padding: 5px;
-      }
-      .asg-row {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 7px 8px;
-        border: none;
-        border-radius: 9px;
-        background: transparent;
-        font-family: inherit;
-        text-align: left;
-        cursor: pointer;
-      }
-      .asg-row:hover {
-        background: var(--chip);
-      }
-      .asg-row.on {
-        background: var(--nav-act-bg);
-      }
-      .asg-tick {
-        width: 18px;
-        height: 18px;
-        border-radius: 5px;
-        border: 1.5px solid var(--bd4);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: none;
-        color: #fff;
-      }
-      .asg-row.on .asg-tick {
-        background: var(--brand);
-        border-color: var(--brand);
-      }
-      .asg-tick svg {
-        width: 12px;
-        height: 12px;
-        stroke-width: 3.2;
-      }
-      .asg-row-txt {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-      }
-      .asg-row-n {
-        font-size: 13.5px;
-        font-weight: 500;
-        color: var(--ink);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .asg-row-j {
-        font-size: 11.5px;
-        color: var(--v3-t3);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .asg-empty {
-        padding: 14px;
-        text-align: center;
-        font-size: 13px;
-        color: var(--v3-t3);
-      }
 
       /* Kartochkadagi ustma-ust avatarlar */
       .task-avs {
@@ -11737,144 +11542,6 @@
       // Ustuvorlik ko'rsatkichi — 3 ta ustun (3px kenglik, 5/8/12px
       // balandlik): daraja qancha yuqori bo'lsa, shuncha ko'pi to'lgan.
       // Shoshilinch — barchasi qizil.
-      // ── MAS'UL TANLAGICH ─────────────────────────────────────────
-      // Bir nechta odam tanlanadi, lekin forma ixcham qolishi kerak.
-      // Avval hamma xodim ro'yxat bo'lib yoyilib turardi — o'nta qator
-      // butun oynani egallab, ostidagi maydonlar ko'rinmay qolardi.
-      //
-      // Endi boshqa maydonlar bilan bir xil balandlikdagi maydon:
-      // ichida tanlanganlar kichik chip bo'lib turadi, bosilganda
-      // qidiruvli ro'yxat ochiladi.
-      const asgSel = {}; // formId -> Set(username)
-      const asgUsers = {}; // formId -> [user]
-      let asgOpenId = null;
-
-      function asgInit(formId, usernames, users) {
-        asgSel[formId] = new Set(usernames || []);
-        if (users) asgUsers[formId] = users;
-      }
-      function asgUserOf(formId, username) {
-        return (asgUsers[formId] || []).find((u) => u.username === username) || { username, first_name: username };
-      }
-      function asgLabel(u) {
-        return u.first_name ? `${u.first_name} ${(u.last_name || "").slice(0, 1)}`.trim() : `@${u.username}`;
-      }
-      function asgAvatar(u, size) {
-        const s = size || 20;
-        return `<span class="asg-av" style="width:${s}px;height:${s}px;border-radius:${Math.round(s / 3)}px;font-size:${Math.round(s * 0.46)}px;background:${personColor(u.username)}">${escHtml((u.first_name || u.username || "?").slice(0, 1).toUpperCase())}${avatarImg(u.avatar_url)}</span>`;
-      }
-
-      function asgPickerHtml(formId, users) {
-        asgUsers[formId] = users;
-        if (!asgSel[formId]) asgSel[formId] = new Set();
-        return `<div class="asg" id="${formId}-asg">
-          <div class="asg-field" id="${formId}-asg-field" onclick="asgOpen('${escArg(formId)}')">
-            <div class="asg-chips" id="${formId}-asg-chips">${asgChipsHtml(formId)}</div>
-            <span class="asg-caret">${ICON.chevronDown}</span>
-          </div>
-          <div class="asg-pop" id="${formId}-asg-pop" hidden>
-            <div class="asg-search">
-              <span class="asg-search-ico">${ICON.search}</span>
-              <input type="text" id="${formId}-asg-q" placeholder="Xodim qidirish" oninput="asgFilter('${escArg(formId)}')" onclick="event.stopPropagation()"/>
-            </div>
-            <div class="asg-list" id="${formId}-asg-list">${asgListHtml(formId)}</div>
-          </div>
-        </div>
-        <div class="f-hint" id="${formId}-asg-hint" style="margin:6px 0 0">${asgHintText(formId)}</div>`;
-      }
-
-      // Ikki kishidan ko'p tanlansa — bu "umumiy" vazifa va unga Ncoin
-      // avtomatik berilmaydi. Buni tanlash paytida aytish kerak, aks
-      // holda admin keyin coin kelmaganiga hayron bo'lardi.
-      function asgHintText(formId) {
-        const n = (asgSel[formId] || new Set()).size;
-        if (!n) return "Hech kim tanlanmagan — vazifa biriktirilmay qoladi.";
-        if (n === 1) return "";
-        return `${n} kishi — umumiy vazifa. Bunga Ncoin avtomatik berilmaydi.`;
-      }
-
-      function asgChipsHtml(formId) {
-        const chosen = [...(asgSel[formId] || new Set())];
-        if (!chosen.length) return `<span class="asg-ph">Xodim tanlang</span>`;
-        return chosen
-          .map((un) => {
-            const u = asgUserOf(formId, un);
-            return `<span class="asg-chip">${asgAvatar(u, 18)}${escHtml(asgLabel(u))}<button type="button" class="asg-x" aria-label="Olib tashlash" onclick="event.stopPropagation();asgToggle('${escArg(formId)}','${escArg(un)}')">${ICON.close}</button></span>`;
-          })
-          .join("");
-      }
-
-      function asgListHtml(formId, q) {
-        const chosen = asgSel[formId] || new Set();
-        const needle = (q || "").toLowerCase().trim();
-        const rows = (asgUsers[formId] || [])
-          .filter((u) => !needle || `${u.first_name || ""} ${u.last_name || ""} ${u.username} ${u.job_title || ""}`.toLowerCase().includes(needle))
-          .map((u) => {
-            const on = chosen.has(u.username);
-            return `<button type="button" class="asg-row${on ? " on" : ""}" onclick="event.stopPropagation();asgToggle('${escArg(formId)}','${escArg(u.username)}')">
-              <span class="asg-tick">${on ? ICON.check : ""}</span>
-              ${asgAvatar(u, 26)}
-              <span class="asg-row-txt">
-                <span class="asg-row-n">${escHtml(u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : "@" + u.username)}</span>
-                ${u.job_title ? `<span class="asg-row-j">${escHtml(u.job_title)}</span>` : ""}
-              </span>
-            </button>`;
-          })
-          .join("");
-        return rows || `<div class="asg-empty">Topilmadi</div>`;
-      }
-
-      function asgOpen(formId) {
-        if (asgOpenId === formId) return asgClose();
-        asgClose();
-        asgOpenId = formId;
-        const pop = document.getElementById(`${formId}-asg-pop`);
-        if (!pop) return;
-        pop.hidden = false;
-        document.getElementById(`${formId}-asg-field`)?.classList.add("open");
-        const q = document.getElementById(`${formId}-asg-q`);
-        if (q) {
-          q.value = "";
-          asgFilter(formId);
-          // Telefonda avtomatik fokus klaviaturani ochib, ro'yxatni
-          // yopib qo'yadi — shuning uchun faqat katta ekranda.
-          if (window.matchMedia("(min-width: 860px)").matches) q.focus();
-        }
-        setTimeout(() => document.addEventListener("mousedown", asgOutside), 0);
-      }
-      function asgClose() {
-        if (!asgOpenId) return;
-        document.getElementById(`${asgOpenId}-asg-pop`)?.setAttribute("hidden", "");
-        document.getElementById(`${asgOpenId}-asg-field`)?.classList.remove("open");
-        asgOpenId = null;
-        document.removeEventListener("mousedown", asgOutside);
-      }
-      function asgOutside(e) {
-        if (!asgOpenId) return;
-        if (!document.getElementById(`${asgOpenId}-asg`)?.contains(e.target)) asgClose();
-      }
-      function asgFilter(formId) {
-        const q = document.getElementById(`${formId}-asg-q`)?.value || "";
-        const list = document.getElementById(`${formId}-asg-list`);
-        if (list) list.innerHTML = asgListHtml(formId, q);
-        applyStaticIcons?.();
-      }
-      function asgToggle(formId, username) {
-        const set = (asgSel[formId] ||= new Set());
-        if (set.has(username)) set.delete(username);
-        else set.add(username);
-        const chips = document.getElementById(`${formId}-asg-chips`);
-        if (chips) chips.innerHTML = asgChipsHtml(formId);
-        const hint = document.getElementById(`${formId}-asg-hint`);
-        if (hint) hint.textContent = asgHintText(formId);
-        if (set.size) document.getElementById(`${formId}-asg-err`) && ntClearErr(`${formId}-asg`);
-        asgFilter(formId);
-        applyStaticIcons?.();
-      }
-      function asgValues(formId) {
-        return [...(asgSel[formId] || new Set())];
-      }
-
       // ── VAZIFA MAS'ULLARI ────────────────────────────────────────
       // Bitta vazifada bir nechta mas'ul bo'lishi mumkin. Backend
       // `assignees` massivini qaytaradi; eski maydonlar (assigneeUsername
@@ -13376,118 +13043,6 @@
         const suffix = u.job_title ? u.job_title : `@${u.username}`;
         return name ? `${name} (${suffix})` : `@${u.username}`;
       }
-      // "Tahrirlash" — mavjud vazifaning asosiy maydonlarini (nomi,
-      // tavsif, loyiha, mas'ul, ustuvorlik, muddat, taglar) o'zgartirish.
-      // Faqat admin (backend PATCH ham shu maydonlarni faqat admin'dan
-      // qabul qiladi) — createTask/openNewTaskSheet bilan bir xil forma,
-      // lekin PATCH qiladi va oldindan to'ldirilgan.
-      let etSelectedTagIds = new Set();
-      async function openEditTaskSheet(id) {
-        const t = tasksList.find((x) => x.id === id);
-        if (!t) return;
-        etSelectedTagIds = new Set((t.tags || []).map((tg) => tg.id));
-        asgInit("et", taskAssignees(t).map((a) => a.username));
-        const { body } = makeSheet("Vazifani tahrirlash");
-        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
-        let users = [];
-        try {
-          const res = await apiFetch("/api/users/directory");
-          if (res.ok) users = (await res.json()).users || [];
-        } catch (e) {}
-        const projectOptions =
-          `<option value="">— Umumiy —</option>` +
-          projects.map((p) => `<option value="${escArg(p.id)}"${p.id === t.projectSlug ? " selected" : ""}>${escHtml(p.label)}</option>`).join("");
-        const userOptions =
-          `<option value="">— Tanlanmagan —</option>` +
-          users
-            .map(
-              (u) =>
-                `<option value="u:${escArg(u.username)}"${u.username === t.assigneeUsername ? " selected" : ""}>${escHtml(userDisplayLabel(u))}</option>`,
-            )
-            .join("");
-        body.innerHTML = `
-          <div class="f-group">
-            <label class="f-label">Nomi</label>
-            <input class="f-input" id="et-title" placeholder="Vazifa nomi" value="${escArg(t.title)}"/>
-          </div>
-          <div class="f-group">
-            <label class="f-label">Tavsif (ixtiyoriy)</label>
-            <textarea class="f-input" id="et-desc" rows="3">${escHtml(t.description || "")}</textarea>
-          </div>
-          <div class="f-group">
-            <label class="f-label">Loyiha</label>
-            <select class="f-input" id="et-project">${projectOptions}</select>
-          </div>
-          <div class="f-group">
-            <label class="f-label">Kim bajaradi <i class="f-req">*</i></label>
-            ${asgPickerHtml("et", users)}
-          </div>
-          <div class="f-group">
-            <label class="f-label">Ish vaqti (qaysi kundan qaysi kungacha)</label>
-            ${renderDateRangeFieldHtml("et-due", t.startDate || "", t.dueDate || "", "Vaqt oralig'ini tanlang")}
-          </div>
-          <div class="f-group">
-            <label class="f-label">Ustuvorlik</label>
-            <select class="f-input" id="et-priority">
-              ${Object.entries(TASK_PRIORITY_LABEL)
-                .map(([k, lbl]) => `<option value="${k}"${k === t.priority ? " selected" : ""}>${lbl}</option>`)
-                .join("")}
-            </select>
-          </div>
-          <div class="f-group">
-            <label class="f-label">Taglar</label>
-            <div class="chips" id="et-tags" style="margin-top:0">${renderEtTagsHtml()}</div>
-          </div>
-          <button class="btn btn-blue" id="et-save-btn" onclick="submitEditTask('${escArg(id)}')">Saqlash</button>`;
-      }
-      function renderEtTagsHtml() {
-        return tagsList
-          .map(
-            (tg) =>
-              `<button type="button" class="chip-btn${etSelectedTagIds.has(tg.id) ? " active" : ""}" onclick="toggleEtTag('${escArg(tg.id)}')">${escHtml(tg.name)}</button>`,
-          )
-          .join("");
-      }
-      function toggleEtTag(tagId) {
-        if (etSelectedTagIds.has(tagId)) etSelectedTagIds.delete(tagId);
-        else etSelectedTagIds.add(tagId);
-        const el = document.getElementById("et-tags");
-        if (el) el.innerHTML = renderEtTagsHtml();
-      }
-      async function submitEditTask(id) {
-        const btn = document.getElementById("et-save-btn");
-        const title = document.getElementById("et-title")?.value.trim();
-        if (!title) return showToast("⚠ Vazifa nomini yozing");
-        if (!asgValues("et").length) return showToast("⚠ Kamida bitta mas'ul qolishi kerak");
-        const description = document.getElementById("et-desc")?.value.trim();
-        const projectSlug = document.getElementById("et-project")?.value || "";
-        const dueDate = document.getElementById("et-due")?.value || "";
-        const startDate = document.getElementById("et-due-start")?.value || "";
-        const priority = document.getElementById("et-priority")?.value || "no_priority";
-        const body = {
-          title,
-          description,
-          projectSlug,
-          startDate,
-          dueDate,
-          priority,
-          tagIds: [...etSelectedTagIds],
-          assigneeUsernames: asgValues("et"),
-        };
-        setBtnLoading(btn, true, "Saqlanmoqda…");
-        try {
-          const res = await apiFetch(`/api/tasks/${id}`, { method: "PATCH", body: JSON.stringify(body) });
-          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
-          document.querySelector(".overlay")?.remove();
-          showToast("✅ Saqlandi");
-          await loadTasks();
-          refreshAllViews();
-          refreshTaskDetailIfOpen(id);
-        } catch (e) {
-          showToast("⚠ " + e.message);
-          setBtnLoading(btn, false);
-        }
-      }
       // "Nusxalash" — xuddi shu maydonlar bilan yangi vazifa yaratadi
       // (holat/tarix ko'chirilmaydi), yangisini darhol ochadi.
       async function duplicateTask(id) {
@@ -13608,16 +13163,34 @@
       }
 
       // ── Asosiy sahifa ─────────────────────────────────────────────
-      async function openNewTaskSheet() {
+      // Yaratish ham, tahrirlash ham SHU sahifa. Avval tahrirlash
+      // alohida modal edi (ochiladigan ro'yxatlar, chiplar, kalendar
+      // popover) — bir xil ishni ikki xil joyda ikki xil qilish kerak
+      // bo'lardi.
+      function openNewTaskSheet() {
+        return openTaskFormPage(null);
+      }
+      function openEditTaskSheet(id) {
+        return openTaskFormPage(id);
+      }
+      async function openTaskFormPage(editId) {
         // Tugma ikki marta bosilsa ikkita sahifa ochilib qolmasin.
         if (document.getElementById("ntv3-page")) return;
+        const t = editId ? tasksList.find((x) => x.id === editId) : null;
+        if (editId && !t) return;
         ntv3 = {
-          assigneeUsernames: [],
-          startDate: "",
-          dueDate: "",
-          priority: "no_priority",
-          projectSlug: "",
-          tagIds: new Set(),
+          mode: t ? "edit" : "new",
+          id: t ? t.id : null,
+          // Tahrirlashda muddat vazifaning joriy holatiga qarab majburiy:
+          // navbatga qo'yilmagan (backlog) vazifada u hali bo'lmasligi
+          // mumkin, qolgan hamma holatda esa backend ham talab qiladi.
+          editStatus: t ? t.status : null,
+          assigneeUsernames: t ? taskAssignees(t).map((a) => a.username) : [],
+          startDate: t?.startDate || "",
+          dueDate: t?.dueDate || "",
+          priority: t?.priority || "no_priority",
+          projectSlug: t?.projectSlug || "",
+          tagIds: new Set((t?.tags || []).map((g) => g.id)),
           status: "todo",
           notify: true,
         };
@@ -13627,19 +13200,19 @@
         ov.innerHTML = `<div class="ntv3">
           <div class="ntv3-hdr">
             <button type="button" class="ntv3-hbtn cancel" onclick="closeNtv3()">Bekor</button>
-            <div class="ntv3-title">Yangi vazifa</div>
+            <div class="ntv3-title">${t ? "Vazifani tahrirlash" : "Yangi vazifa"}</div>
             <div class="ntv3-hbtn" aria-hidden="true"></div>
           </div>
           <div class="ntv3-body">
             <div class="ntv3-card">
-              <input id="ntv3-title" placeholder="Vazifa nomi" autocomplete="off" oninput="ntv3ClearErr()"/>
-              <textarea id="ntv3-desc" placeholder="Tavsif — nima qilish kerakligini batafsil yozing (ixtiyoriy)"></textarea>
+              <input id="ntv3-title" placeholder="Vazifa nomi" autocomplete="off" oninput="ntv3ClearErr()" value="${t ? escArg(t.title) : ""}"/>
+              <textarea id="ntv3-desc" placeholder="Tavsif — nima qilish kerakligini batafsil yozing (ixtiyoriy)">${t ? escHtml(t.description || "") : ""}</textarea>
             </div>
             <div class="ntv3-err" id="ntv3-title-err"></div>
             <div id="ntv3-fields"></div>
           </div>
           <div class="ntv3-foot">
-            <button type="button" class="ntv3-submit" id="ntv3-save" onclick="createTaskNtv3(this)">Vazifani yaratish</button>
+            <button type="button" class="ntv3-submit" id="ntv3-save" onclick="submitNtv3(this)">${t ? "Saqlash" : "Vazifani yaratish"}</button>
           </div>
         </div>`;
         document.body.appendChild(ov);
@@ -13683,8 +13256,7 @@
         return `<button type="button" class="ntv3-row" onclick="openNtv3Pick('${key}')">
           <span class="ntv3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${NTV3_ICONS[key]}</svg></span>
           <span class="ntv3-lbl">${label}${majburiy ? "<i>*</i>" : ""}</span>
-          ${prefix || ""}
-          <span class="ntv3-val${empty ? " ph" : ""}">${escHtml(empty ? placeholder : value)}</span>
+          <span class="ntv3-val${empty ? " ph" : ""}">${prefix || ""}<i class="ntv3-valt">${escHtml(empty ? placeholder : value)}</i></span>
           <span class="ntv3-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>
         </button>`;
       }
@@ -13697,7 +13269,8 @@
         // Bitta mas'ulda ism, ko'pida son: ikkita ism ham qatorga
         // sig'maydi va o'rtasidan kesilib qoladi — yonida rasmlari bor.
         const kimgaMatn = masullar.length === 1 ? ntv3PersonName(masullar[0]) : masullar.length ? `${masullar.length} xodim` : "";
-        const navbatKeyin = ntv3.status === "backlog";
+        const tahrir = ntv3.mode === "edit";
+        const navbatKeyin = tahrir ? ntv3.editStatus === "backlog" : ntv3.status === "backlog";
         // Majburiy maydonlar alohida bo'limda: xodimlar ularni
         // o'tkazib yuborgani uchun ajratib ko'rsatilgan.
         el.innerHTML =
@@ -13713,9 +13286,12 @@
              ${ntv3Row("loyiha", "Loyiha", proj ? proj.label : "", "Umumiy")}
              ${ntv3Row("ustuvorlik", "Ustuvorlik", TASK_PRIORITY_LABEL[ntv3.priority], "")}
              ${ntv3Row("teglar", "Teglar", tagNames.length > 2 ? `${tagNames.length} teg` : tagNames.join(", "), "Yo'q")}
-             ${ntv3Row("navbat", "Navbat", navbatKeyin ? "Keyinroq" : "Hozir boshlanadi", "")}
+             ${tahrir ? "" : ntv3Row("navbat", "Navbat", navbatKeyin ? "Keyinroq" : "Hozir boshlanadi", "")}
            </div>
-           <div class="ntv3-props" style="margin-top:8px">
+           ${
+             tahrir
+               ? ""
+               : `<div class="ntv3-props" style="margin-top:8px">
              <div class="ntv3-row" onclick="toggleNtv3Notify()">
                <span class="ntv3-sw-txt">
                  <b>Telegramga xabar yuborilsin</b>
@@ -13723,7 +13299,8 @@
                </span>
                <span class="ntv3-sw${ntv3.notify ? " on" : ""}"></span>
              </div>
-           </div>`;
+           </div>`
+           }`;
       }
       function toggleNtv3Notify() {
         if (!ntv3) return;
@@ -14070,8 +13647,9 @@
         });
         document.getElementById("ntv3-req")?.classList.remove("bad");
       }
-      async function createTaskNtv3(btn) {
+      async function submitNtv3(btn) {
         if (!ntv3) return;
+        const tahrir = ntv3.mode === "edit";
         ntv3ClearErr();
         const title = document.getElementById("ntv3-title")?.value.trim();
         if (!title) {
@@ -14084,34 +13662,49 @@
         if (!ntv3.assigneeUsernames.length) {
           return ntv3ShowErr("req", "«Kim bajaradi» — kamida bitta xodimni tanlang, aks holda vazifa hech kimga ko'rinmaydi.");
         }
-        if (ntv3.status !== "backlog" && !ntv3.dueDate) {
+        const navbatKeyin = tahrir ? ntv3.editStatus === "backlog" : ntv3.status === "backlog";
+        if (!navbatKeyin && !ntv3.dueDate) {
           return ntv3ShowErr("req", "«Ish vaqti» — qaysi kundan qaysi kungacha ishlanishini tanlang.");
         }
         const description = document.getElementById("ntv3-desc")?.value.trim();
         const body = {
           title,
-          description: description || undefined,
-          projectSlug: ntv3.projectSlug || undefined,
-          status: ntv3.status,
+          projectSlug: ntv3.projectSlug || (tahrir ? "" : undefined),
           priority: ntv3.priority,
           tagIds: [...ntv3.tagIds],
-          notifyTelegram: ntv3.notify,
           assigneeUsernames: ntv3.assigneeUsernames,
         };
-        if (ntv3.status !== "backlog") {
+        // Tahrirlashda bo'shatilgan tavsif ham saqlanishi kerak,
+        // yaratishda esa bo'sh maydon umuman yuborilmaydi.
+        if (tahrir) body.description = description || "";
+        else if (description) body.description = description;
+        if (!navbatKeyin) {
           body.startDate = ntv3.startDate || "";
           body.dueDate = ntv3.dueDate;
         }
-        setBtnLoading(btn, true, "Yaratilmoqda…");
+        if (!tahrir) {
+          body.status = ntv3.status;
+          body.notifyTelegram = ntv3.notify;
+        }
+        setBtnLoading(btn, true, tahrir ? "Saqlanmoqda…" : "Yaratilmoqda…");
         try {
-          const res = await apiFetch("/api/tasks", { method: "POST", body: JSON.stringify(body) });
+          const res = await apiFetch(tahrir ? `/api/tasks/${ntv3.id}` : "/api/tasks", {
+            method: tahrir ? "PATCH" : "POST",
+            body: JSON.stringify(body),
+          });
           const data = await res.json().catch(() => ({}));
           if (!res.ok) throw new Error(data.error || "Xato");
+          const id = ntv3.id;
           closeNtv3();
-          const notifyNote = describeNotifyResult(data.notify);
-          showToast("✅ Vazifa yaratildi" + notifyNote, notifyNote.includes("⚠") ? 4000 : 2200);
+          if (tahrir) {
+            showToast("✅ Saqlandi");
+          } else {
+            const notifyNote = describeNotifyResult(data.notify);
+            showToast("✅ Vazifa yaratildi" + notifyNote, notifyNote.includes("⚠") ? 4000 : 2200);
+          }
           await loadTasks();
           refreshAllViews();
+          if (tahrir) refreshTaskDetailIfOpen(id);
         } catch (e) {
           showToast("⚠ " + e.message);
           setBtnLoading(btn, false);
@@ -14130,22 +13723,8 @@
         if (n.reason === "no_assignee" || n.reason === "not_applicable" || n.reason === "no_bot_token") return "";
         return " · ⚠ Telegram xabari yuborilmadi";
       }
-      // Xatoni maydonning OSTIDA ko'rsatadi. Avval faqat pastdagi
-      // "toast" chiqardi: u tez yo'qolardi va qaysi maydon haqida
-      // ekani ko'rinmasdi, shuning uchun xodimlar bir xil xatoni
-      // qayta-qayta takrorlardi.
-      function ntShowErr(fieldId, matn) {
-        const el = document.getElementById(`${fieldId}-err`);
-        if (el) {
-          el.textContent = matn;
-          el.classList.add("on");
-        }
-        // Avval ko'rinadigan maydon (`-field`), keyin inputning o'zi:
-        // sana va mas'ul tanlagichda haqiqiy input yashirin turadi.
-        const inp = document.getElementById(`${fieldId}-field`) || document.getElementById(fieldId);
-        inp?.classList.add("invalid");
-        (el || inp)?.scrollIntoView({ block: "center", behavior: "smooth" });
-      }
+      // Sana maydonida oraliq tanlanganda xato yozuvini o'chiradi
+      // (kalendar `commitDpRange` ichidan chaqiradi).
       function ntClearErr(fieldId) {
         const el = document.getElementById(`${fieldId}-err`);
         if (el) {
