@@ -5944,7 +5944,41 @@
         text-align: left;
       }
       .ntf-prow + .ntf-prow { border-top: 1px solid var(--bd2); }
-      .ntf-prow .ntf-av { width: 38px; height: 38px; border-radius: 13px; font-size: 15px; }
+      .ntf-prow .ntf-av,
+      .ntf-tile {
+        width: 38px;
+        height: 38px;
+        border-radius: 13px;
+        font-size: 15px;
+        font-weight: 600;
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+      }
+      .ntf-tile svg { width: 18px; height: 18px; }
+      /* Yangi teg qatori — ro'yxatning oxirida */
+      .ntf-newrow {
+        display: flex;
+        gap: 8px;
+        padding: 10px 0 12px;
+        border-top: 1px solid var(--bd2);
+      }
+      .ntf-newrow input {
+        flex: 1;
+        min-width: 0;
+        height: 40px;
+        border: 1px solid var(--bd4);
+        border-radius: 11px;
+        background: var(--surf);
+        padding: 0 12px;
+        font-family: inherit;
+        font-size: 16px;
+        color: var(--marker);
+        outline: none;
+      }
+      .ntf-newrow .ntf-btn { height: 40px; padding: 0 14px; }
       .ntf-prow-txt { flex: 1; min-width: 0; }
       .ntf-prow-n {
         font-size: 14.5px;
@@ -14352,7 +14386,7 @@
         // Katta ekran: har biri o'z boshqaruvi bilan.
         const desktop = `<div class="ntf-card pad ntf-only-d">
           ${ntfLbl("Loyiha", {})}
-          <button type="button" class="ntf-select" onclick="ntfOpenSheet('loyiha')">
+          <button type="button" class="ntf-select" onclick="ntfOpenPicker('loyiha', this)">
             <span class="ntf-dot" style="background:${ntfProjectColor()}"></span>
             <span class="ntf-select-v">${escHtml(ntfProjectLabel())}</span>
             ${ntfSvg("chev")}
@@ -14361,7 +14395,7 @@
             ${ntfLbl("Teglar", {})}
             <div class="ntf-tags">
               ${teglar.map((t) => ntfTagChip(t, true)).join("")}
-              <button type="button" class="ntf-add" onclick="ntfOpenSheet('teglar')">${ntfSvg("plus")}Teg</button>
+              <button type="button" class="ntf-add" onclick="ntfOpenPicker('teglar', this)">${ntfSvg("plus")}Teg</button>
             </div>
           </div>
           <div class="ntf-next">
@@ -14395,8 +14429,8 @@
             : val(`${teglar.length} teg`, true)
           : val("Yo'q", false);
         const mobile = `<div class="ntf-card ntf-rows ntf-only-m">
-          ${row("folder", "Loyiha", val(ntfProjectLabel(), !!ntf.projectSlug), "ntfOpenSheet('loyiha')")}
-          ${row("tag", "Teglar", tegVal, "ntfOpenSheet('teglar')")}
+          ${row("folder", "Loyiha", val(ntfProjectLabel(), !!ntf.projectSlug), "ntfOpenPicker('loyiha', this)")}
+          ${row("tag", "Teglar", tegVal, "ntfOpenPicker('teglar', this)")}
           ${row("queue", "Boshlanishi", val(ntf.startMode === "queue" ? "Navbatga" : "Hozir", ntf.startMode === "queue"), "ntfOpenSheet('boshlanishi')")}
           <div class="ntf-row tg" onclick="ntfSet('notify',${!ntf.notify})">
             <span class="ntf-tg-txt" style="flex:1;min-width:0">
@@ -14538,33 +14572,50 @@
       }
 
       // ── Xodim tanlash: katta ekranda oynacha, mobilda sheet ───────
-      function ntfOpenAsgPop(btn) {
-        if (ntfIsMobile()) return ntfOpenSheet("kim");
+      // Xodim, loyiha va teg — uchalasi bitta tanlagichdan foydalanadi:
+      // katta ekranda bosilgan joyning ostida ochiladigan oynacha,
+      // telefonda esa pastdan chiqadigan oyna. Shunda bir xil ishni
+      // uch xil qilib o'rganish kerak bo'lmaydi.
+      function ntfOpenPicker(key, btn) {
+        if (ntfIsMobile() || !btn) return ntfOpenSheet(key);
         document.getElementById("ntf-pop")?.remove();
+        ntfSheetState = { key, q: "", role: "" };
         const pop = document.createElement("div");
         pop.className = "ntf-pop";
         pop.id = "ntf-pop";
-        ntfSheetState = { key: "kim", q: "", role: "" };
         pop.innerHTML = `<div style="padding:0 12px">${ntfSearchHtml()}${ntfFiltersHtml()}</div>
-          <div class="ntf-sheet-body" id="ntf-sheet-body" style="margin:10px 12px 12px;border:0;padding:0;background:transparent">${ntfPeopleHtml()}</div>`;
+          <div class="ntf-sheet-body" id="ntf-sheet-body" style="margin:10px 12px 12px;border:0;padding:0;background:transparent">${ntfSheetBodyHtml()}</div>`;
         document.body.appendChild(pop);
         const r = btn.getBoundingClientRect();
         const w = 340;
+        const h = Math.min(420, pop.offsetHeight || 420);
         let left = Math.min(r.left, window.innerWidth - w - 12);
         let top = r.bottom + 6;
-        if (top + 420 > window.innerHeight - 12) top = Math.max(12, r.top - 420 - 6);
+        if (top + h > window.innerHeight - 12) top = Math.max(12, r.top - h - 6);
         pop.style.left = Math.max(12, left) + "px";
         pop.style.top = top + "px";
         setTimeout(() => document.addEventListener("mousedown", ntfPopOutside), 0);
         pop.querySelector("input")?.focus();
       }
+      function ntfOpenAsgPop(btn) {
+        return ntfOpenPicker("kim", btn);
+      }
       function ntfPopOutside(e) {
         const pop = document.getElementById("ntf-pop");
-        if (pop && !pop.contains(e.target)) {
+        if (pop && !pop.contains(e.target)) ntfClosePicker();
+      }
+      // Qaysi biri ochiq bo'lsa — o'shani yopadi.
+      function ntfClosePicker() {
+        const pop = document.getElementById("ntf-pop");
+        if (pop) {
           pop.remove();
           document.removeEventListener("mousedown", ntfPopOutside);
           ntfSheetState = null;
+          ntfRender();
+          ntfQueueDraft();
+          return;
         }
+        ntfCloseSheet();
       }
 
       // ── Pastdan chiqadigan oyna (16d) ────────────────────────────
@@ -14598,7 +14649,7 @@
             <div class="ntf-sheet-t">${NTF_SHEET_TITLES[key]}</div>
             <div class="ntf-sheet-n" id="ntf-sheet-n">${ntfSheetCount()}</div>
           </div>
-          ${key === "kim" ? ntfSearchHtml() + ntfFiltersHtml() : ""}
+          ${ntfHasSearch(key) ? ntfSearchHtml() + ntfFiltersHtml() : ""}
           <div class="ntf-sheet-body${tekis ? " plain" : ""}" id="ntf-sheet-body">${ntfSheetBodyHtml()}</div>
           <div class="ntf-sheet-foot"><button type="button" class="ntf-btn primary" onclick="ntfCloseSheet()">${ntfSheetDone()}</button></div>
         </div>`;
@@ -14643,8 +14694,19 @@
         if (d) d.textContent = ntfSheetDone();
       }
 
+      const NTF_SEARCH_PH = {
+        kim: "Ism yoki lavozim",
+        loyiha: "Loyiha nomi",
+        teglar: "Teg nomi",
+      };
+      // Qidiruv uchta ro'yxatda ham bor: xodim, loyiha, teg —
+      // ularning tanlanishi bir xil ko'rinishda bo'lishi kerak.
+      function ntfHasSearch(key) {
+        return !!NTF_SEARCH_PH[key];
+      }
       function ntfSearchHtml() {
-        return `<div class="ntf-search">${ntfSvg("search")}<input id="ntf-q" placeholder="Ism yoki lavozim" autocomplete="off" oninput="ntfFilter(this.value)"/></div>`;
+        const ph = NTF_SEARCH_PH[ntfSheetState?.key] || "Qidirish";
+        return `<div class="ntf-search">${ntfSvg("search")}<input id="ntf-q" placeholder="${escHtml(ph)}" autocomplete="off" oninput="ntfFilter(this.value)"/></div>`;
       }
       // Lavozim filtrlari bazadagi haqiqiy lavozimlardan tuziladi —
       // qo'lda yozilgan ro'yxat eskirib qolardi.
@@ -14657,6 +14719,7 @@
         return bor.sort((a, b) => a.localeCompare(b, "uz"));
       }
       function ntfFiltersHtml() {
+        if (ntfSheetState?.key !== "kim") return "";
         const roles = ntfRoles();
         if (!roles.length) return "";
         const cur = ntfSheetState?.role || "";
@@ -14719,27 +14782,8 @@
       function ntfSheetBodyHtml() {
         const key = ntfSheetState?.key;
         if (key === "kim") return ntfPeopleHtml();
-        if (key === "loyiha") {
-          return (
-            ntfOptRow(!ntf.projectSlug, "Umumiy", "Hech bir loyihaga tegishli emas", "ntfPickProject('')", "var(--v3-t4)") +
-            projects
-              .map((p) => {
-                const v = p.slug || p.id;
-                return ntfOptRow(ntf.projectSlug === v, p.label, "", `ntfPickProject('${escArg(v)}')`, personColor(v));
-              })
-              .join("")
-          );
-        }
-        if (key === "teglar") {
-          const list = tagsList
-            .map((t) => ntfOptRow(ntf.tagIds.has(t.id), t.name, "", `ntfToggleTag('${escArg(t.id)}')`, tagColor(t.name).ink))
-            .join("");
-          return `${list || `<div class="ntf-empty">Teg yo'q</div>`}
-            <div class="ntf-prow" style="gap:8px">
-              <input id="ntf-newtag" class="ntf-search" style="flex:1;margin:0;height:40px" placeholder="Yangi teg nomi" autocomplete="off"/>
-              <button type="button" class="ntf-btn ghost" style="height:40px;padding:0 14px" onclick="ntfCreateTag()">Qo'shish</button>
-            </div>`;
-        }
+        if (key === "loyiha") return ntfProjectsHtml();
+        if (key === "teglar") return ntfTagsHtml();
         if (key === "boshlanishi") {
           return (
             ntfOptRow(ntf.startMode === "now", "Hozir boshlanadi", "Vazifa darhol xodimning ro'yxatiga tushadi", "ntfPickStart('now')") +
@@ -14761,11 +14805,87 @@
         if (key === "sana") return ntfCalHtml();
         return "";
       }
+      // Loyiha: rangli katak + nom + mas'ul va vazifalar soni.
+      // Xodim qatori bilan bir xil tuzilish (.ntf-prow).
+      function ntfProjectTaskCount(slug) {
+        return tasksList.filter(
+          (t) => t.projectSlug === slug && !["done", "failed", "cancelled"].includes(t.status),
+        ).length;
+      }
+      function ntfProjectsHtml() {
+        const q = (ntfSheetState?.q || "").trim().toLowerCase();
+        const mos = projects.filter((p) => !q || String(p.label || "").toLowerCase().includes(q));
+        const umumiy = q
+          ? ""
+          : ntfPickRow({
+              on: !ntf.projectSlug,
+              tile: `<span class="ntf-tile" style="background:var(--chip2);color:var(--v3-t2)">${ntfSvg("folder")}</span>`,
+              name: "Umumiy",
+              sub: "Hech bir loyihaga tegishli emas",
+              onclick: "ntfPickProject('')",
+            });
+        if (!mos.length && q) return `<div class="ntf-empty">Loyiha topilmadi</div>`;
+        return (
+          umumiy +
+          mos
+            .map((p) => {
+              const v = p.slug || p.id;
+              const n = ntfProjectTaskCount(v);
+              const mas = projOwnerLabel(p);
+              return ntfPickRow({
+                on: ntf.projectSlug === v,
+                tile: `<span class="ntf-tile" style="background:${personColor(v)}">${escHtml(String(p.label || "?").slice(0, 1).toUpperCase())}</span>`,
+                name: p.label,
+                // Mas'ul belgilanmagan loyihada "—" yozib o'tirishdan
+                // ko'ra uni butunlay tashlab ketgan ma'qul.
+                sub: `${mas === "—" ? "" : `${escHtml(mas)}<i>·</i>`}<b>${n} ta vazifa</b>`,
+                subRaw: true,
+                onclick: `ntfPickProject('${escArg(v)}')`,
+              });
+            })
+            .join("")
+        );
+      }
+      // Teg: o'z rangidagi katak + nom + nechta vazifada ishlatilgani
+      function ntfTagUseCount(id) {
+        return tasksList.filter((t) => (t.tags || []).some((g) => g.id === id)).length;
+      }
+      function ntfTagsHtml() {
+        const q = (ntfSheetState?.q || "").trim().toLowerCase();
+        const mos = tagsList.filter((t) => !q || String(t.name || "").toLowerCase().includes(q));
+        const list = mos
+          .map((t) => {
+            const c = tagColor(t.name);
+            return ntfPickRow({
+              on: ntf.tagIds.has(t.id),
+              tile: `<span class="ntf-tile" style="background:${c.bg};color:${c.ink}">${escHtml(String(t.name || "?").slice(0, 1).toUpperCase())}</span>`,
+              name: t.name,
+              sub: `${ntfTagUseCount(t.id)} ta vazifada`,
+              onclick: `ntfToggleTag('${escArg(t.id)}')`,
+            });
+          })
+          .join("");
+        return `${list || `<div class="ntf-empty">${tagsList.length ? "Teg topilmadi" : "Teg yo'q"}</div>`}
+          <div class="ntf-newrow">
+            <input id="ntf-newtag" placeholder="Yangi teg nomi" autocomplete="off"/>
+            <button type="button" class="ntf-btn ghost" onclick="ntfCreateTag()">Qo'shish</button>
+          </div>`;
+      }
+      function ntfPickRow(o) {
+        return `<button type="button" class="ntf-prow" onclick="${o.onclick}">
+          ${o.tile}
+          <span class="ntf-prow-txt">
+            <span class="ntf-prow-n">${escHtml(o.name)}</span>
+            ${o.sub ? `<span class="ntf-prow-s">${o.subRaw ? o.sub : escHtml(o.sub)}</span>` : ""}
+          </span>
+          <span class="ntf-cb${o.on ? " on" : ""}">${o.on ? "✓" : ""}</span>
+        </button>`;
+      }
       function ntfPickProject(v) {
         ntf.projectSlug = v;
         ntf.touched = true;
         ntfHaptic();
-        ntfCloseSheet();
+        ntfClosePicker();
       }
       function ntfPickStart(v) {
         ntf.startMode = v;
