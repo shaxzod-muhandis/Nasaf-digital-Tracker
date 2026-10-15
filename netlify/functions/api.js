@@ -1627,6 +1627,157 @@ async function mapWithLimit(items, limit, fn) {
   return out;
 }
 
+// ── FAOLLIK (jamoa va xodim) ──────────────────────────────────────────
+// Bitta so'rov bilan butun oyning xom ma'lumoti beriladi: har bir ish —
+// chiqqan post, chiqqan stories yoki "Bajarildi" bo'lgan vazifa.
+// Hafta/kun/xodim bo'yicha hisob-kitobni front o'zi qiladi — shunda
+// filtr almashtirilganda qayta so'rov kerak bo'lmaydi.
+//
+// Taqqoslash uchun O'TGAN OY ham shu ro'yxatga kiradi (oy boshidagi
+// haftaning oldingi haftasi ham o'sha yerda bo'ladi), front esa
+// sanaga qarab ajratadi.
+//
+// Muhim: ish uni HAQIQATDA bajargan xodimga yoziladi. Bundan tashqari
+// postga hissa qo'shganlar — montaj qilgan va videoni olgan xodim ham
+// o'sha ishning ishtirokchisi hisoblanadi (ularning faolligi ham
+// o'sib boradi). Shuning uchun `users` — ishtirokchilar ro'yxati,
+// `performer` esa ishni kimning rejasiga yozilishini bildiradi.
+function monthBounds(year, mon) {
+  const pad = (n) => String(n).padStart(2, "0");
+  const last = new Date(Date.UTC(year, mon, 0)).getUTCDate();
+  return { start: `${year}-${pad(mon)}-01`, end: `${year}-${pad(mon)}-${pad(last)}` };
+}
+app.get("/api/activity", auth, async (req, res) => {
+  try {
+    const today = todayTashkent();
+    const m = /^(\d{4})-(\d{1,2})$/.exec(String(req.query.month || ""));
+    const year = m ? Number(m[1]) : Number(today.slice(0, 4));
+    const mon = m ? Number(m[2]) : Number(today.slice(5, 7));
+    if (!(year >= 2020 && year <= 2100 && mon >= 1 && mon <= 12)) {
+      return res.status(400).json({ error: "Noto'g'ri oy" });
+    }
+    const cur = monthBounds(year, mon);
+    const prev = monthBounds(mon === 1 ? year - 1 : year, mon === 1 ? 12 : mon - 1);
+    // Oy boshidagi hafta o'tgan oyda boshlanishi mumkin, shuning uchun
+    // o'tgan oy to'liq olinadi — qo'shimcha so'rov kerak bo'lmaydi.
+    const from = prev.start;
+    // Oyning oxirgi haftasi keyingi oyga chiqib ketishi mumkin —
+    // kalendarning o'sha kataklari ham to'ldirilishi kerak.
+    const toD = new Date(`${cur.end}T00:00:00Z`);
+    toD.setUTCDate(toD.getUTCDate() + 7);
+    const to = toD.toISOString().slice(0, 10);
+    const KUN = `coalesce(c.work_date, (c.done_at at time zone 'utc' at time zone 'Asia/Tashkent')::date)`;
+
+    const [checksR, tasksR, plansR, usersR] = await Promise.all([
+      db.query(
+        `select to_char(${KUN}, 'YYYY-MM-DD') as day,
+                c.type,
+                c.done_at,
+                p.slug as project_slug,
+                p.label as project_label,
+                pu.username as performer,
+                eu.username as editor,
+                vu.username as videographer
+           from checks c
+           join project_cycles pc on pc.id = c.cycle_id
+           join projects p on p.id = pc.project_id
+           left join users pu on pu.id = coalesce(c.performer_id, c.done_by)
+           left join users eu on eu.id = c.editor_user_id
+           left join users vu on vu.id = c.videographer_user_id
+          where ${KUN} between $1::date and $2::date`,
+        [from, to],
+      ),
+      db.query(
+        `select to_char((t.completed_at at time zone 'utc' at time zone 'Asia/Tashkent')::date, 'YYYY-MM-DD') as day,
+                t.completed_at as done_at,
+                p.slug as project_slug,
+                p.label as project_label,
+                coalesce(array_agg(u.username order by ta.position)
+                         filter (where u.username is not null), '{}') as users
+           from tasks t
+           left join projects p on p.id = t.project_id
+           left join task_assignees ta on ta.task_id = t.id
+           left join users u on u.id = ta.user_id
+          where t.status = 'done' and t.completed_at is not null
+            and (t.completed_at at time zone 'utc' at time zone 'Asia/Tashkent')::date
+                between $1::date and $2::date
+          group by t.id, p.slug, p.label`,
+        [from, to],
+      ),
+      // Oylik reja — shu oyga tegishli davrlardagi post + stories
+      // maqsadi. Bir oyga bir nechta davr tushsa, ular qo'shiladi.
+      db.query(
+        `select p.slug, p.label,
+                sum(pc.posts_target + pc.stories_target)::int as plan,
+                (select u.username
+                   from permissions pm
+                   join users u on u.id = pm.user_id
+                  where pm.project_id = p.id and pm.role = 'smm'
+                  limit 1) as smm
+           from project_cycles pc
+           join projects p on p.id = pc.project_id
+          where pc.period_start <= $2::date and pc.period_end >= $1::date
+          group by p.id, p.slug, p.label`,
+        [cur.start, cur.end],
+      ),
+      db.query(
+        `select username, first_name, last_name, full_name, job_title, avatar_url
+           from users
+          where is_active and access_status is distinct from 'removed'
+          order by username`,
+      ),
+    ]);
+
+    const items = [];
+    for (const r of checksR.rows) {
+      // Ishtirokchilar: chiqargan xodim + montaj qilgan + video olgan.
+      // Takrorlanmasin — bitta odam ikki rolda bo'lishi mumkin.
+      const users = [...new Set([r.performer, r.editor, r.videographer].filter(Boolean))];
+      items.push({
+        day: r.day,
+        kind: r.type === "k" ? "post" : "story",
+        project: r.project_slug ? { slug: r.project_slug, label: r.project_label } : null,
+        performer: r.performer || null,
+        users,
+        at: r.done_at,
+      });
+    }
+    for (const r of tasksR.rows) {
+      const users = r.users || [];
+      items.push({
+        day: r.day,
+        kind: "task",
+        project: r.project_slug ? { slug: r.project_slug, label: r.project_label } : null,
+        performer: users[0] || null,
+        users,
+        at: r.done_at,
+      });
+    }
+    items.sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : 0));
+
+    res.json({
+      month: `${year}-${String(mon).padStart(2, "0")}`,
+      today,
+      range: { from, to },
+      items,
+      projects: plansR.rows.map((r) => ({
+        slug: r.slug,
+        label: r.label,
+        plan: r.plan || 0,
+        smm: r.smm || null,
+      })),
+      users: usersR.rows.map((u) => ({
+        username: u.username,
+        name: u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : u.full_name || u.username,
+        jobTitle: u.job_title || null,
+        avatarUrl: u.avatar_url || null,
+      })),
+    });
+  } catch (e) {
+    serverError(res, e, "GET /api/activity");
+  }
+});
+
 app.get("/api/team-activity", auth, async (req, res) => {
   try {
     const end = todayTashkent();
