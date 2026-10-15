@@ -4020,6 +4020,100 @@
         .ntv3-foot { border-radius: 0 0 20px 20px; }
       }
 
+      /* ── VAZIFANI SURIB KO'CHIRISH (drag & drop) ───────────────────
+         Kartani ushlab boshqa ustunga olib o'tish. Sudralayotgan
+         nusxa (`ghost`) barmoq/sichqoncha ostida suzadi, asl karta esa
+         joyida xiralashib turadi — qayerdan olinganini ko'rsatadi. */
+      .tdnd-ghost {
+        position: fixed;
+        z-index: 950;
+        pointer-events: none;
+        margin: 0;
+        background: var(--surf);
+        border-radius: 12px;
+        box-shadow: 0 14px 32px rgba(15, 23, 42, 0.26);
+        transform: rotate(1.4deg);
+        opacity: 0.96;
+      }
+      .tdnd-src { opacity: 0.32; }
+      /* Sudrash paytida matn ajralib ketmasin va uzoq bosilganda iOS
+         "nusxa olish" oynachasini chiqarmasin. */
+      body.tdnd-on {
+        user-select: none;
+        -webkit-user-select: none;
+        cursor: grabbing;
+      }
+      body.tdnd-on * { -webkit-touch-callout: none; }
+      /* Nishon ustun. Ikki sinf bo'lgani uchun ustunning o'z foni
+         (media so'rovi ichida) ustidan yozadi. */
+      .tb-col.tdnd-over,
+      .tm-dz.tdnd-over {
+        outline: 2px dashed var(--brand);
+        outline-offset: -2px;
+        background: var(--brand-bg, rgba(47, 122, 185, 0.1));
+      }
+      /* Telefonda butun guruhni xiralashtirmaymiz — ro'yxat o'qilmay
+         qoladi; u yerda nishonni pastdagi chiziq ko'rsatadi. */
+      .tb-col.tdnd-no { opacity: 0.45; }
+      .tm-dz { border-radius: 14px; }
+      /* Telefonda ustunlar yo'q — pastda status chizig'i chiqadi, shunda
+         nishonni qidirib ro'yxatni aylantirish kerak bo'lmaydi. */
+      .tdnd-bar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        /* Nusxadan (950) YUQORIDA: barmoq chiziq ustida turganda
+           sudralayotgan karta nishonni to'sib qo'ymasligi kerak. */
+        z-index: 960;
+        display: flex;
+        gap: 7px;
+        padding: 10px 10px calc(10px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
+        background: var(--surf);
+        border-top: 1px solid var(--bd1);
+        box-shadow: 0 -10px 28px rgba(15, 23, 42, 0.14);
+      }
+      .tdnd-bar-z {
+        flex: 1;
+        min-width: 0;
+        border-radius: 12px;
+        background: var(--chip);
+        padding: 11px 4px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1.2;
+        color: var(--t5);
+        text-align: center;
+      }
+      .tdnd-bar-z.tdnd-over {
+        background: var(--brand);
+        color: #fff;
+        transform: translateY(-3px);
+      }
+      .tdnd-bar-z.tdnd-no { opacity: 0.38; }
+      .tdnd-bar-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        flex: none;
+      }
+      .tdnd-bar-z.tdnd-over .tdnd-bar-dot { background: #fff !important; border-color: #fff !important; }
+      /* Telefonda sudrash ko'rinib turmaydi — birinchi muvaffaqiyatli
+         ko'chirishgacha qisqa izoh turadi, keyin o'zi yo'qoladi. */
+      .tdnd-hint {
+        font-size: 12px;
+        color: var(--v3-t3);
+        background: var(--chip);
+        border-radius: 10px;
+        padding: 9px 12px;
+        line-height: 1.5;
+      }
+      .tdnd-hint b { color: var(--t5); font-weight: 600; }
+
       /* ── TABRIK OVOZI — parcha tanlash ─────────────────────────────── */
       .pfs-file {
         display: flex;
@@ -8277,7 +8371,8 @@
           background: var(--surf);
           border-radius: 12px;
           padding: 11px 12px;
-          cursor: pointer;
+          /* Ushlab ko'chirsa bo'lishini kursorning o'zi aytib turadi */
+          cursor: grab;
           display: flex;
           flex-direction: column;
           gap: 8px;
@@ -11896,7 +11991,7 @@
             : "";
         const pill = tbTagPillHtml(t);
         const metaRow = pill || check ? `<div class="tb-card-meta">${pill}${check}</div>` : "";
-        return `<div class="tb-card${muted ? " muted" : ""}" onclick="openTaskActions('${escArg(t.id)}')">
+        return `<div class="tb-card${muted ? " muted" : ""}" data-task="${escArg(t.id)}" onclick="openTaskActions('${escArg(t.id)}')">
           <div class="tb-card-top">
             ${tbPriBarsHtml(t.priority)}
             <span class="tb-ref">${tbRef(t.id)}</span>
@@ -11996,7 +12091,7 @@
               ci === 0
                 ? `<button type="button" class="tb-col-add" title="Yangi vazifa" onclick="openNewTaskSheet()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>`
                 : "";
-            return `<div class="tb-col">
+            return `<div class="tb-col" data-col="${col.key}">
               <div class="tb-col-hdr">
                 <span class="tb-col-dot" style="${col.dot}"></span>
                 <span class="tb-col-title">${col.label}</span>
@@ -12048,7 +12143,7 @@
         const due = tbDueInfo(t);
         const pill = tbTagPillHtml(t);
         const av = taskPersonAvatarHtml(t, "tm-av");
-        return `<div class="tm-row${muted ? " muted" : ""}" onclick="openTaskActions('${escArg(t.id)}')">
+        return `<div class="tm-row${muted ? " muted" : ""}" data-task="${escArg(t.id)}" onclick="openTaskActions('${escArg(t.id)}')">
           ${tbPriBarsHtml(t.priority)}
           <div class="tm-row-main">
             <div class="tm-row-title">${escHtml(t.title)}</div>
@@ -12093,7 +12188,7 @@
             const col = TASK_BOARD_COLUMNS.find((c) => c.key === key);
             const items = sortTasksForBoard(scoped.filter((t) => taskBoardColumn(t) === key));
             if (!items.length) return "";
-            return `<div>
+            return `<div class="tm-dz" data-col="${key}">
               <div class="tm-sec-hdr">
                 <span class="tm-sec-dot" style="${col.dot}"></span>
                 <span class="tm-sec-title">${col.label}</span>
@@ -12113,8 +12208,244 @@
         return `<div class="mobile-only tm-wrap">
           ${segHtml}
           <div class="tm-stats">${statsHtml}</div>
+          ${tdndHintHtml()}
           ${secsHtml || `<div class="empty"><div class="empty-ico">✓</div><div class="empty-t">Vazifa yo'q</div><div class="empty-s">Filtrni o'zgartirib ko'ring.</div></div>`}
         </div>`;
+      }
+      // ── VAZIFANI SURIB KO'CHIRISH (drag & drop) ───────────────────
+      // Kartani ushlab boshqa ustunga olib o'tish — vazifa statusi
+      // o'zgaradi. Sichqoncha bilan sudrash darhol boshlanadi; barmoq
+      // bilan esa avval bosib turish kerak (long-press), aks holda
+      // ro'yxatni aylantirib bo'lmay qolardi.
+      const TDND_HOLD_MS = 280;
+      const TDND_SLOP = 8;
+      // Ustun → qaysi statusga o'tkazadi. "Arxiv" ataylab yo'q: unga
+      // vazifa bajarilmagani/bekor qilingani uchun yoki bajarilganiga
+      // 30 kun o'tgani uchun tushadi — surib qo'yish bilan bu
+      // holatlarning qaysi biri ekanini aytib bo'lmaydi.
+      const TDND_COL_STATUS = { assigned: "todo", in_progress: "in_progress", review: "review", done: "done" };
+      let tdnd = null;
+
+      function canMoveTask(t) {
+        // Backend bilan bir xil qoida: admin, vazifani ochgan kishi
+        // yoki mas'ullardan biri statusni o'zgartira oladi.
+        return isAdmin || taskIsMine(t) || canManageTask(t);
+      }
+      function tdndCanDrop(t, colKey) {
+        const status = TDND_COL_STATUS[colKey];
+        if (!status) return false;
+        if (colKey === taskBoardColumn(t)) return false;
+        // "Bajarildi" deb yakuniy tasdiqlash — faqat admin huquqi
+        // (backend ham 403 qaytaradi), shuning uchun nishon ham
+        // o'chirilgan ko'rinadi.
+        if (status === "done" && !isAdmin) return false;
+        return true;
+      }
+      function tdndHintSeen() {
+        try {
+          return localStorage.getItem("tdnd-hint") === "1";
+        } catch (e) {
+          // Shaxsiy rejimda localStorage xato beradi — izohni
+          // ko'rsatmaganimiz ma'qul, har safar chiqaveradigan
+          // yo'riqnoma bezor qiladi.
+          return true;
+        }
+      }
+      function tdndHintHtml() {
+        if (tdndHintSeen()) return "";
+        return `<div class="tdnd-hint">Kartani <b>bosib turing</b> va holatini o'zgartirish uchun pastdagi bo'limga suring</div>`;
+      }
+      function tdndInit() {
+        document.addEventListener("pointerdown", tdndDown);
+        // Sudrab turganda sahifa aylanmasin. Aynan `touchmove` —
+        // `pointermove`da aylanishni to'xtatib bo'lmaydi.
+        document.addEventListener("touchmove", (e) => { if (tdnd?.active) e.preventDefault(); }, { passive: false });
+        // Uzoq bosilganda chiqadigan tizim menyusi sudrashni buzadi.
+        document.addEventListener("contextmenu", (e) => { if (tdnd?.active) e.preventDefault(); });
+      }
+      function tdndDown(e) {
+        if (tdnd || (e.pointerType === "mouse" && e.button !== 0)) return;
+        const card = e.target?.closest?.("[data-task]");
+        if (!card) return;
+        const zone = card.closest("[data-col]");
+        if (!zone) return;
+        const t = tasksList.find((x) => x.id === card.dataset.task);
+        if (!t || !canMoveTask(t)) return;
+        tdnd = {
+          task: t,
+          card,
+          from: zone.dataset.col,
+          x: e.clientX,
+          y: e.clientY,
+          startX: e.clientX,
+          startY: e.clientY,
+          touch: e.pointerType !== "mouse",
+          active: false,
+          moved: false,
+          ghost: null,
+          over: null,
+          raf: 0,
+          timer: 0,
+        };
+        if (tdnd.touch) tdnd.timer = setTimeout(tdndStart, TDND_HOLD_MS);
+        document.addEventListener("pointermove", tdndMove);
+        document.addEventListener("pointerup", tdndUp);
+        document.addEventListener("pointercancel", tdndEnd);
+      }
+      function tdndMove(e) {
+        if (!tdnd) return;
+        tdnd.x = e.clientX;
+        tdnd.y = e.clientY;
+        const surildi =
+          Math.abs(e.clientX - tdnd.startX) > TDND_SLOP || Math.abs(e.clientY - tdnd.startY) > TDND_SLOP;
+        if (!tdnd.active) {
+          // Barmoq bosib turmasdan surilsa — bu ro'yxatni aylantirish,
+          // sudrash emas: boshlamay, butunlay voz kechamiz.
+          if (tdnd.touch) {
+            if (surildi) tdndEnd();
+            return;
+          }
+          if (!surildi) return;
+          tdndStart();
+        }
+        tdnd.moved = true;
+        tdndPaint();
+      }
+      function tdndStart() {
+        if (!tdnd || tdnd.active) return;
+        clearTimeout(tdnd.timer);
+        tdnd.active = true;
+        const r = tdnd.card.getBoundingClientRect();
+        tdnd.dx = tdnd.x - r.left;
+        tdnd.dy = tdnd.y - r.top;
+        const g = tdnd.card.cloneNode(true);
+        g.classList.add("tdnd-ghost");
+        g.classList.remove("tdnd-src");
+        g.style.width = r.width + "px";
+        document.body.appendChild(g);
+        tdnd.ghost = g;
+        tdnd.card.classList.add("tdnd-src");
+        document.body.classList.add("tdnd-on");
+        // Telefonda ustunlar yo'q — pastda status chizig'i chiqadi,
+        // shunda nishonni qidirib ro'yxatni aylantirish kerak emas.
+        if (!window.matchMedia("(min-width: 860px)").matches) tdndShowBar();
+        tdndZones().forEach((z) => z.classList.toggle("tdnd-no", !tdndCanDrop(tdnd.task, z.dataset.col)));
+        tdndPaint();
+        tg()?.HapticFeedback?.impactOccurred?.("light");
+        tdnd.raf = requestAnimationFrame(tdndTick);
+      }
+      function tdndZones() {
+        return [...document.querySelectorAll("[data-col]")];
+      }
+      function tdndShowBar() {
+        const bar = document.createElement("div");
+        bar.className = "tdnd-bar";
+        bar.innerHTML = TASK_BOARD_COLUMNS.filter((c) => TDND_COL_STATUS[c.key])
+          .map(
+            (c) =>
+              `<div class="tdnd-bar-z" data-col="${c.key}"><span class="tdnd-bar-dot" style="${c.dot}"></span>${escHtml(c.label)}</div>`,
+          )
+          .join("");
+        document.body.appendChild(bar);
+      }
+      function tdndPaint() {
+        if (!tdnd?.active) return;
+        if (tdnd.ghost) {
+          tdnd.ghost.style.left = tdnd.x - tdnd.dx + "px";
+          tdnd.ghost.style.top = tdnd.y - tdnd.dy + "px";
+        }
+        // Nusxa `pointer-events: none` — shuning uchun ostidagi
+        // nishon topiladi.
+        const el = document.elementFromPoint(tdnd.x, tdnd.y);
+        const zone = el?.closest("[data-col]");
+        const nishon = zone && tdndCanDrop(tdnd.task, zone.dataset.col) ? zone : null;
+        if (nishon !== tdnd.over) {
+          tdnd.over?.classList.remove("tdnd-over");
+          nishon?.classList.add("tdnd-over");
+          if (nishon) tg()?.HapticFeedback?.selectionChanged?.();
+          tdnd.over = nishon;
+        }
+      }
+      // Chekkaga olib borilganda ro'yxat/doska o'zi suriladi — aks
+      // holda ko'rinmayotgan ustunga vazifa olib o'tib bo'lmaydi.
+      function tdndTick() {
+        if (!tdnd?.active) return;
+        tdndScrollEdges();
+        tdnd.raf = requestAnimationFrame(tdndTick);
+      }
+      function tdndScroller(el) {
+        for (let p = el; p; p = p.parentElement) {
+          const oy = getComputedStyle(p).overflowY;
+          if ((oy === "auto" || oy === "scroll") && p.scrollHeight > p.clientHeight + 1) return p;
+        }
+        return document.scrollingElement;
+      }
+      function tdndScrollEdges() {
+        const EDGE = 64;
+        const STEP = 11;
+        const { x, y } = tdnd;
+        const sc = tdndScroller(tdnd.over || tdnd.card);
+        if (sc) {
+          const r = sc === document.scrollingElement
+            ? { top: 0, bottom: window.innerHeight }
+            : sc.getBoundingClientRect();
+          if (y < r.top + EDGE) sc.scrollTop -= STEP;
+          else if (y > r.bottom - EDGE) sc.scrollTop += STEP;
+        }
+        const board = document.querySelector(".tb-board");
+        if (board && board.scrollWidth > board.clientWidth + 1) {
+          const r = board.getBoundingClientRect();
+          if (x < r.left + EDGE) board.scrollLeft -= STEP;
+          else if (x > r.right - EDGE) board.scrollLeft += STEP;
+        }
+      }
+      function tdndUp() {
+        const zone = tdnd?.over;
+        const task = tdnd?.task;
+        const kochdi = !!(tdnd?.active && tdnd?.moved);
+        tdndEnd();
+        if (!kochdi || !zone || !task) return;
+        tdndApply(task, zone.dataset.col);
+      }
+      function tdndEnd() {
+        if (!tdnd) return;
+        clearTimeout(tdnd.timer);
+        cancelAnimationFrame(tdnd.raf);
+        const sudraldi = tdnd.active && tdnd.moved;
+        tdnd.ghost?.remove();
+        tdnd.card.classList.remove("tdnd-src");
+        document.querySelector(".tdnd-bar")?.remove();
+        tdndZones().forEach((z) => z.classList.remove("tdnd-over", "tdnd-no"));
+        document.body.classList.remove("tdnd-on");
+        document.removeEventListener("pointermove", tdndMove);
+        document.removeEventListener("pointerup", tdndUp);
+        document.removeEventListener("pointercancel", tdndEnd);
+        tdnd = null;
+        // Sudrashdan keyin keladigan "click" kartani ochib yubormasin.
+        if (sudraldi) {
+          document.addEventListener("click", tdndSwallowClick, true);
+          setTimeout(() => document.removeEventListener("click", tdndSwallowClick, true), 350);
+        }
+      }
+      function tdndSwallowClick(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        document.removeEventListener("click", tdndSwallowClick, true);
+      }
+      function tdndApply(t, colKey) {
+        const status = TDND_COL_STATUS[colKey];
+        if (!status) return;
+        try {
+          localStorage.setItem("tdnd-hint", "1");
+        } catch (e) {}
+        // Muddatsiz vazifa (hali navbatga qo'yilmagan) ishga tushmaydi —
+        // backend muddat talab qiladi. Xato ko'rsatgandan ko'ra darhol
+        // sana so'raymiz, chunki odam nima qilmoqchi ekani aniq.
+        if (!t.dueDate && ["todo", "in_progress", "review"].includes(status)) {
+          openSetDueDateForm(t.id, status);
+          return;
+        }
+        setTaskStatus(t.id, status);
       }
       // Vazifani tahrirlash va o'chirish — admin yoki uni OCHGAN kishi.
       // (Statusni o'zgartirish alohida qoida bo'yicha: admin yoki mas'ul.)
@@ -12800,7 +13131,7 @@
         }
       }
       // Backlog'dan chiqarish — muddat kiritilmasdan navbatga qo'yib bo'lmaydi
-      function openSetDueDateForm(id) {
+      function openSetDueDateForm(id, status) {
         const t = tasksList.find((x) => x.id === id);
         if (!t) return;
         const { body } = makeSheet("Navbatga qo'yish");
@@ -12810,9 +13141,9 @@
             ${renderDateRangeFieldHtml("task-queue-due", "", "", "Vaqt oralig'ini tanlang")}
           </div>
           <div id="task-queue-err" class="error-text" style="color:var(--red);font-size:12px;margin-bottom:10px"></div>
-          <button class="btn btn-blue" id="task-queue-btn" onclick="submitSetDueDate('${escArg(id)}')">Tasdiqlash</button>`;
+          <button class="btn btn-blue" id="task-queue-btn" onclick="submitSetDueDate('${escArg(id)}','${escArg(status || "todo")}')">Tasdiqlash</button>`;
       }
-      async function submitSetDueDate(id) {
+      async function submitSetDueDate(id, status) {
         const dueDate = document.getElementById("task-queue-due")?.value;
         const startDate = document.getElementById("task-queue-due-start")?.value || "";
         const errEl = document.getElementById("task-queue-err");
@@ -12828,7 +13159,7 @@
         try {
           const res = await apiFetch(`/api/tasks/${id}`, {
             method: "PATCH",
-            body: JSON.stringify({ status: "todo", startDate, dueDate }),
+            body: JSON.stringify({ status: status || "todo", startDate, dueDate }),
           });
           if (!res.ok)
             throw new Error((await res.json().catch(() => ({}))).error || "Xato");
@@ -19213,6 +19544,7 @@
         }
       }
 
+      tdndInit();
       initApp();
     </script>
   </body>
