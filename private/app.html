@@ -3960,6 +3960,405 @@
         .ntv3-foot { border-radius: 0 0 20px 20px; }
       }
 
+      /* "Bugun" sahifasidagi faollikka kirish kartasi (telefon) */
+      .tm-act {
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 14px;
+        padding: 13px 14px;
+        cursor: pointer;
+      }
+      .tm-act-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+      .tm-act-t { flex: 1; font-size: 13.5px; font-weight: 600; color: var(--marker); }
+      .tm-act-n { font-size: 12px; color: var(--v3-t3); }
+      .tm-act-chev { font-size: 16px; color: var(--v3-t4); line-height: 1; }
+
+      /* ═══ FAOLLIK — jamoa va xodim ══════════════════════════════════
+         Kalendarning har qatori — bitta hafta; kun rangi shu kungi
+         ishlar soniga qarab. Qator oxirida haftaning jami va o'tgan
+         haftaga farqi. */
+      .act-wrap { display: flex; gap: 16px; align-items: flex-start; }
+      @media (min-width: 860px) {
+        #screen-activity .scroll,
+        #screen-activity-user .scroll { max-width: 1240px; }
+      }
+      .act-cal { flex: 1; min-width: 0; }
+      .act-panel {
+        flex: none;
+        width: 340px;
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 14px;
+        padding: 16px;
+      }
+      .act-panel.plain { width: auto; border: 0; background: transparent; padding: 0; }
+      .act-monthbar { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+      .act-monthbar.tight { margin: 0; }
+      .act-month { font-size: 15px; font-weight: 700; color: var(--marker); min-width: 120px; }
+      .act-mbtn {
+        width: 32px;
+        height: 32px;
+        flex: none;
+        border: 1px solid var(--bd4);
+        border-radius: 9px;
+        background: var(--surf);
+        color: var(--t5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+      .act-mbtn svg { width: 15px; height: 15px; }
+      .act-mbtn[disabled] { opacity: 0.35; cursor: default; }
+      /* Xodim filtrlari — bir qatorda, sig'masa yonga suriladi */
+      .act-filters {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        margin-bottom: 12px;
+        padding-bottom: 2px;
+      }
+      .act-filters::-webkit-scrollbar { display: none; }
+      .act-fchip {
+        flex: none;
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 99px;
+        border: 1px solid var(--bd4);
+        background: var(--surf);
+        color: var(--t5);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+      }
+      .act-fchip.on { background: var(--marker); border-color: var(--marker); color: var(--bg); }
+      .act-fdot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+      /* Kalendar */
+      .act-calhdr { display: flex; gap: 10px; padding: 0 2px 6px; }
+      .act-days { flex: 1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; min-width: 0; }
+      .act-wd {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--v3-t3);
+        text-transform: uppercase;
+        text-align: center;
+      }
+      .act-wsum-hdr { width: 124px; flex: none; text-align: left; }
+      .act-wrow {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        min-height: 62px;
+        padding: 4px;
+        border-radius: 12px;
+        cursor: pointer;
+        border: 1.5px solid transparent;
+      }
+      .act-wrow .act-days { align-self: center; }
+      .act-wrow:hover { background: var(--chip2); }
+      .act-wrow.sel { border-color: var(--brand); background: var(--nav-act-bg, #eaf2f9); }
+      .act-day {
+        position: relative;
+        height: 52px;
+        border: 0;
+        border-radius: 9px;
+        background: var(--chip2);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1px;
+        font-family: inherit;
+      }
+      /* Shkala — kam ishdan ko'p ishga */
+      .act-day.l0 { background: var(--chip2); }
+      .act-day.l1 { background: rgba(47, 122, 185, 0.16); }
+      .act-day.l2 { background: rgba(47, 122, 185, 0.34); }
+      .act-day.l3 { background: rgba(47, 122, 185, 0.6); }
+      .act-day.l4 { background: var(--brand); }
+      .act-day.l3 .act-dn, .act-day.l4 .act-dn,
+      .act-day.l3 .act-dnum, .act-day.l4 .act-dnum { color: #fff; }
+      .act-day.out { opacity: 0.45; }
+      .act-day.today { outline: 2px solid var(--marker); outline-offset: -2px; }
+      .act-day.sel { outline: 2px solid var(--brand); outline-offset: -2px; }
+      .act-dnum { font-size: 11px; color: var(--v3-t3); }
+      .act-dn { font-size: 14px; font-weight: 700; color: var(--marker); }
+      .act-today-lbl { position: absolute; bottom: 2px; font-size: 8.5px; color: #fff; opacity: 0.9; }
+      .act-day.l0 .act-today-lbl, .act-day.l1 .act-today-lbl, .act-day.l2 .act-today-lbl { color: var(--v3-t3); }
+      .act-wsum {
+        width: 124px;
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 1px;
+        padding-left: 4px;
+      }
+      /* Sinf nomi ataylab `nil` — umumiy `.empty` sinfida 40px
+         padding bor va hafta qatorini cho'zib yuborardi. */
+      .act-wsum.nil { color: var(--v3-t4); }
+      .act-wn { font-size: 18px; font-weight: 700; color: var(--marker); line-height: 1.1; }
+      .act-wl { font-size: 11px; color: var(--v3-t3); }
+      .act-wgoing { font-size: 10.5px; color: var(--v3-t3); }
+      .act-best {
+        display: inline-block;
+        font-size: 9.5px;
+        font-weight: 700;
+        color: var(--st-ahead, #15803d);
+        background: var(--st-ahead-bg, #e8f6ec);
+        border-radius: 6px;
+        padding: 2px 6px;
+        white-space: nowrap;
+      }
+      .act-diff { font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+      .act-diff.up { color: var(--st-ahead, #15803d); }
+      .act-diff.down { color: var(--red); }
+      .act-diff.flat { color: var(--v3-t3); }
+      .act-legend { display: flex; align-items: center; gap: 12px; padding: 10px 4px 0; }
+      .act-hint { flex: 1; font-size: 11.5px; color: var(--v3-t3); }
+      .act-scale { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--v3-t3); }
+      .act-scale i { width: 12px; height: 12px; border-radius: 3px; display: block; }
+      .act-scale i.l1 { background: rgba(47, 122, 185, 0.16); }
+      .act-scale i.l2 { background: rgba(47, 122, 185, 0.34); }
+      .act-scale i.l3 { background: rgba(47, 122, 185, 0.6); }
+      .act-scale i.l4 { background: var(--brand); }
+      /* O'ng panel */
+      .act-ptop { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .act-prange { font-size: 14.5px; font-weight: 700; color: var(--marker); }
+      .act-pbig { display: flex; align-items: baseline; gap: 6px; margin-top: 10px; }
+      .act-pn { font-size: 34px; font-weight: 700; line-height: 1; color: var(--marker); }
+      .act-pl { font-size: 13px; color: var(--v3-t3); }
+      .act-pdiff { font-size: 12px; color: var(--v3-t3); margin-top: 4px; }
+      .act-split { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+      .act-sp { background: var(--chip2); border-radius: 10px; padding: 9px 10px; }
+      .act-spn { font-size: 17px; font-weight: 700; color: var(--marker); }
+      .act-spl { font-size: 11px; color: var(--v3-t3); margin-top: 1px; }
+      .act-seclbl {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--v3-t3);
+        margin: 16px 0 8px;
+      }
+      .act-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; align-items: end; }
+      .act-bar {
+        border: 0;
+        background: transparent;
+        padding: 0;
+        font-family: inherit;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        cursor: pointer;
+      }
+      .act-barn { font-size: 11px; font-weight: 600; color: var(--marker); height: 13px; }
+      .act-barv { width: 100%; background: var(--brand); border-radius: 4px; min-height: 2px; }
+      .act-bar.sel .act-barv { background: var(--marker); }
+      .act-barl { font-size: 10px; color: var(--v3-t3); }
+      .act-people { display: flex; flex-direction: column; }
+      .act-person {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        width: 100%;
+        border: 0;
+        background: transparent;
+        padding: 8px 0;
+        font-family: inherit;
+        cursor: pointer;
+        text-align: left;
+      }
+      .act-person + .act-person { border-top: 1px solid var(--bd2); }
+      .act-av {
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        flex: none;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .act-av.big { width: 44px; height: 44px; border-radius: 15px; font-size: 17px; }
+      .act-pname {
+        flex: 1;
+        min-width: 0;
+        font-size: 13.5px;
+        font-weight: 500;
+        color: var(--t5);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .act-pcount { font-size: 14px; font-weight: 700; color: var(--marker); }
+      .act-empty { font-size: 13px; color: var(--v3-t3); text-align: center; padding: 20px 8px; }
+      .act-empty.big { padding: 40px 8px; }
+
+      /* ── Telefon ─────────────────────────────────────────────────── */
+      .act-mwrap { display: flex; flex-direction: column; }
+      .act-mcal { background: var(--surf); border: 1px solid var(--bd2); border-radius: 14px; padding: 6px; }
+      .act-mrow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        border: 1.5px solid transparent;
+        border-radius: 10px;
+        background: transparent;
+        padding: 3px;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      .act-mrow.hdr { cursor: default; padding-bottom: 2px; }
+      .act-mrow.sel { border-color: var(--brand); background: var(--nav-act-bg, #eaf2f9); }
+      .act-mdays { flex: 1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; min-width: 0; }
+      .act-mwd { font-size: 10px; font-weight: 600; color: var(--v3-t3); text-align: center; }
+      .act-mwsum-hdr { width: 62px; flex: none; }
+      .act-mday {
+        height: 32px;
+        border-radius: 7px;
+        background: var(--chip2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11.5px;
+        color: var(--t5);
+      }
+      .act-mday.l1 { background: rgba(47, 122, 185, 0.16); }
+      .act-mday.l2 { background: rgba(47, 122, 185, 0.34); }
+      .act-mday.l3 { background: rgba(47, 122, 185, 0.6); color: #fff; }
+      .act-mday.l4 { background: var(--brand); color: #fff; }
+      .act-mday.out { opacity: 0.4; }
+      .act-mday.today { outline: 1.5px solid var(--marker); outline-offset: -1.5px; }
+      .act-mwsum {
+        width: 62px;
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1.15;
+      }
+      .act-mwsum b { font-size: 14px; font-weight: 700; color: var(--marker); }
+      .act-mwsum i { font-style: normal; font-size: 11px; color: var(--v3-t3); }
+      .act-mwsum.nil { color: var(--v3-t4); font-size: 13px; }
+      .act-mcard {
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 14px;
+        padding: 14px 16px 16px;
+        margin-top: 12px;
+      }
+      .act-mbtn-full {
+        width: 100%;
+        height: 44px;
+        margin-top: 12px;
+        border: 0;
+        border-radius: 12px;
+        background: var(--brand);
+        color: #fff;
+        font-family: inherit;
+        font-size: 14.5px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .act-wnav { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+      .act-wnav-txt { flex: 1; min-width: 0; text-align: center; }
+      .act-wnav-t { font-size: 16px; font-weight: 700; color: var(--marker); }
+      .act-wnav-s { font-size: 12px; color: var(--v3-t3); margin-top: 1px; }
+
+      /* ── Xodim sahifasi ──────────────────────────────────────────── */
+      .actu-hdr { display: flex; align-items: center; gap: 12px; }
+      .actu-hdr-txt { flex: 1; min-width: 0; }
+      .actu-name { font-size: 17px; font-weight: 700; color: var(--marker); }
+      .actu-sub { font-size: 12.5px; color: var(--v3-t3); margin-top: 2px; }
+      .actu-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+      .actu-kpi { background: var(--surf); border: 1px solid var(--bd2); border-radius: 12px; padding: 11px 13px; }
+      .actu-kpi b { display: block; font-size: 17px; font-weight: 700; color: var(--marker); }
+      .actu-kpi span { font-size: 11.5px; color: var(--v3-t3); }
+      .actu-big { margin-top: 16px; }
+      .actu-bign { font-size: 40px; font-weight: 700; line-height: 1; color: var(--marker); }
+      .actu-bigl { font-size: 13px; color: var(--v3-t3); margin-top: 3px; }
+      .actu-cmp { font-size: 13.5px; font-weight: 600; margin-top: 8px; }
+      .actu-cmp.up { color: var(--st-ahead, #15803d); }
+      .actu-cmp.down { color: var(--red); }
+      .actu-cmp-sub { font-size: 11.5px; color: var(--v3-t3); margin-top: 2px; }
+      .actu-chart {
+        position: relative;
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 14px;
+        padding: 14px 14px 10px 34px;
+        margin-top: 16px;
+      }
+      .actu-svg { width: 100%; height: 110px; display: block; overflow: visible; }
+      .actu-axis { stroke: var(--bd4); stroke-width: 1; }
+      .actu-grid { stroke: var(--bd2); stroke-width: 1; stroke-dasharray: 3 4; }
+      .actu-cur { fill: none; stroke: var(--brand); stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+      .actu-prev { fill: none; stroke: var(--v3-t4); stroke-width: 1.8; vector-effect: non-scaling-stroke; }
+      .actu-fc { fill: none; stroke: var(--brand); stroke-width: 1.6; stroke-dasharray: 4 4; opacity: 0.65; vector-effect: non-scaling-stroke; }
+      .actu-now { stroke: var(--marker); stroke-width: 1; stroke-dasharray: 2 3; opacity: 0.5; }
+      .actu-ylab {
+        position: absolute;
+        left: 8px;
+        top: 14px;
+        height: 110px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        font-size: 9.5px;
+        color: var(--v3-t4);
+      }
+      .actu-bars { display: flex; gap: 1px; align-items: flex-end; height: 26px; margin-top: 6px; }
+      .actu-bar { flex: 1; background: var(--chip2); border-radius: 1px; min-height: 1px; }
+      .actu-xlab { display: flex; justify-content: space-between; font-size: 10px; color: var(--v3-t4); margin-top: 4px; }
+      .actu-legend { display: flex; gap: 14px; margin-top: 8px; font-size: 11px; color: var(--v3-t3); }
+      .actu-legend span { display: inline-flex; align-items: center; gap: 5px; }
+      .actu-legend i { width: 12px; height: 2.5px; border-radius: 2px; display: block; }
+      .actu-legend i.cur { background: var(--brand); }
+      .actu-legend i.prev { background: var(--v3-t4); }
+      .actu-legend i.fc { background: repeating-linear-gradient(90deg, var(--brand) 0 4px, transparent 4px 8px); }
+      .actu-projs { display: flex; flex-direction: column; gap: 8px; }
+      .actu-proj {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 12px;
+        padding: 11px 13px;
+      }
+      .actu-proj.stale { border-color: var(--st-behind-dot, #d97706); }
+      .actu-pdot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+      .actu-ptxt { flex: 1; min-width: 0; }
+      .actu-pname { font-size: 14px; font-weight: 600; color: var(--marker); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .actu-pmeta { display: flex; align-items: center; gap: 6px; margin-top: 3px; font-size: 11.5px; color: var(--v3-t3); min-width: 0; }
+      .actu-pst { font-weight: 600; white-space: nowrap; }
+      .actu-pst.ahead { color: var(--st-ahead, #15803d); }
+      .actu-pst.onplan { color: var(--st-onplan, #255f91); }
+      .actu-pst.behind { color: var(--st-behind, #a45f08); }
+      .actu-pst.sub { color: var(--v3-t3); font-weight: 400; }
+      .actu-plast { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .actu-pn { font-size: 15px; font-weight: 700; color: var(--marker); flex: none; }
+      .actu-pn i { font-style: normal; font-size: 12px; font-weight: 500; color: var(--v3-t3); }
+      @media (max-width: 767px) {
+        .act-wrap { display: block; }
+        .actu-kpis { grid-template-columns: 1fr 1fr; }
+      }
+
       /* ── VAZIFANI SURIB KO'CHIRISH (drag & drop) ───────────────────
          Kartani ushlab boshqa ustunga olib o'tish. Sudralayotgan
          nusxa (`ghost`) barmoq/sichqoncha ostida suzadi, asl karta esa
@@ -9756,6 +10155,27 @@
       </div>
     </div>
 
+    <!-- ── FAOLLIK (jamoa va xodim) ──────────────────────────────────── -->
+    <div class="screen" id="screen-activity">
+      <div class="hdr" style="display: flex; align-items: center; gap: 12px">
+        <button class="trk-back mobile-only" onclick="actBack()">‹</button>
+        <div style="flex: 1; min-width: 0">
+          <div class="hdr-title" id="activity-title">Jamoa faolligi</div>
+        </div>
+      </div>
+      <div class="scroll" id="activity-body" style="padding-bottom: 28px"></div>
+    </div>
+
+    <div class="screen" id="screen-activity-user">
+      <div class="hdr" style="display: flex; align-items: center; gap: 12px">
+        <button class="trk-back mobile-only" onclick="openActivity()">‹</button>
+        <div style="flex: 1; min-width: 0">
+          <div class="hdr-title">Xodim faolligi</div>
+        </div>
+      </div>
+      <div class="scroll" id="activity-user-body" style="padding-bottom: 28px"></div>
+    </div>
+
     <!-- ── VAZIFA DETALI (sahifa, modal emas) ────────────────────────── -->
     <div class="screen" id="screen-taskdetail">
       <div class="td-hdr desktop-flex">
@@ -11107,7 +11527,13 @@
       }
 
       // Ichki (drill-in) ekranni ochish — root ekranlar yashiriladi
-      const SUB_SCREENS = ["screen-tracker", "screen-taskdetail", "screen-profile"];
+      const SUB_SCREENS = [
+        "screen-tracker",
+        "screen-taskdetail",
+        "screen-profile",
+        "screen-activity",
+        "screen-activity-user",
+      ];
       function openSubScreen(id, onBack) {
         ROOT_TABS.forEach((t) =>
           document.getElementById("screen-" + t).classList.remove("active"),
@@ -11471,9 +11897,28 @@
           <div class="v3-card">${projRows}</div>
         </div>`;
 
+        const days = (teamActivity && teamActivity.days) || [];
+        const maxDay = Math.max(0, ...days.map((d) => d.count || 0));
+        const heatRow = days
+          .map((d) => {
+            if (!maxDay || !d.count) return `<span></span>`;
+            const r = d.count / maxDay;
+            return `<span class="${r > 0.66 ? "l3" : r > 0.33 ? "l2" : "l1"}"></span>`;
+          })
+          .join("");
+        const faollik = `<div class="tm-act" onclick="openActivity()">
+          <div class="tm-act-top">
+            <div class="tm-act-t">Jamoa faolligi</div>
+            <div class="tm-act-n">${teamActivity ? teamActivity.todayCount : 0} ta bugun</div>
+            <span class="tm-act-chev">›</span>
+          </div>
+          <div class="d2-heat">${heatRow}</div>
+        </div>`;
+
         return `<div style="display:flex;flex-direction:column;gap:14px">
           ${periodCard}
           ${debtHtml}
+          ${faollik}
           ${dueSection}
           ${projSection}
         </div>`;
@@ -11599,10 +12044,10 @@
             return `<span class="${r > 0.66 ? "l3" : r > 0.33 ? "l2" : "l1"}"></span>`;
           })
           .join("");
-        const heatCard = `<div class="d2-card">
+        const heatCard = `<div class="d2-card act-open" onclick="openActivity()" title="Faollik sahifasini ochish">
           <div class="d2-card-hdr">
             <div class="d2-card-t">Jamoa faolligi</div>
-            <div class="d2-card-side">4 hafta</div>
+            <div class="d2-card-side">Batafsil ›</div>
           </div>
           <div class="d2-heat">${cells}</div>
           <div class="d2-heat-foot">
@@ -15121,6 +15566,730 @@
         }
         (document.getElementById(`${fieldId}-field`) || document.getElementById(fieldId))?.classList.remove("invalid");
       }
+      // ═══ FAOLLIK — jamoa va xodim ═══════════════════════════════════
+      // Ma'lumot manbasi: chiqqan post va stories hamda "Bajarildi"
+      // holatiga o'tgan vazifalar. Har ish uni HAQIQATDA bajargan
+      // xodimga yoziladi, bundan tashqari postga hissa qo'shganlar —
+      // montaj qilgan va videoni olgan xodim ham ishtirokchi sanaladi.
+      //
+      // Shuning uchun ikki xil son bor va ular ataylab bir-biriga teng
+      // emas: "N ta ish" — haqiqiy ishlar soni, xodim yonidagi son esa
+      // u ishtirok etgan ishlar soni (bitta postda uch kishi ishlagan
+      // bo'lsa, uchalasiga ham sanaladi).
+      let act = null;
+      const ACT_KIND_LABEL = { post: "Post", story: "Stories", task: "Vazifa" };
+
+      function actPad(n) {
+        return String(n).padStart(2, "0");
+      }
+      function actMonthKey(d) {
+        return `${d.getFullYear()}-${actPad(d.getMonth() + 1)}`;
+      }
+      function actShiftMonth(key, delta) {
+        const [y, m] = key.split("-").map(Number);
+        const d = new Date(y, m - 1 + delta, 1);
+        return actMonthKey(d);
+      }
+      function actMonthLabel(key) {
+        const [y, m] = key.split("-").map(Number);
+        return `${MONTHS[m - 1]} ${y}`;
+      }
+      function actDaysInMonth(key) {
+        const [y, m] = key.split("-").map(Number);
+        return new Date(y, m, 0).getDate();
+      }
+      // Oy kalendarining qatorlari — har biri bitta hafta (dushanbadan).
+      // Oyga tegishli bo'lmagan kunlar ham qoladi: dizaynda ular xira
+      // ko'rinadi, lekin haftaning jamiga kiradi.
+      function actWeeks(key) {
+        const [y, m] = key.split("-").map(Number);
+        const oxirgi = actDaysInMonth(key);
+        const off = (new Date(y, m - 1, 1).getDay() + 6) % 7;
+        const weeks = [];
+        const cursor = new Date(y, m - 1, 1 - off);
+        for (let i = 0; i < 6; i++) {
+          const days = [];
+          for (let d = 0; d < 7; d++) {
+            days.push(isoOf(new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + i * 7 + d)));
+          }
+          weeks.push({ index: i, days, start: days[0], end: days[6] });
+          if (days[6] >= `${y}-${actPad(m)}-${actPad(oxirgi)}`) break;
+        }
+        return weeks;
+      }
+      function actInMonth(iso, key) {
+        return iso.slice(0, 7) === key;
+      }
+
+      // ── Sanash ───────────────────────────────────────────────────
+      // Xodim filtri qo'yilgan bo'lsa, faqat o'sha xodim ishtirok
+      // etgan ishlar qoladi.
+      function actScoped(username) {
+        const u = typeof username === "undefined" ? act.filter : username;
+        if (!u) return act.items;
+        return act.items.filter((it) => it.users.includes(u));
+      }
+      function actInRange(items, from, to) {
+        return items.filter((it) => it.day >= from && it.day <= to);
+      }
+      function actDayCounts(items) {
+        const map = {};
+        items.forEach((it) => (map[it.day] = (map[it.day] || 0) + 1));
+        return map;
+      }
+      function actKindCounts(items) {
+        const c = { post: 0, story: 0, task: 0 };
+        items.forEach((it) => (c[it.kind] = (c[it.kind] || 0) + 1));
+        return c;
+      }
+      // Xodimlar bo'yicha: bitta ish bir nechta ishtirokchiga sanaladi.
+      function actUserCounts(items) {
+        const map = {};
+        items.forEach((it) => it.users.forEach((u) => (map[u] = (map[u] || 0) + 1)));
+        return map;
+      }
+      function actUser(username) {
+        return act.users.find((u) => u.username === username) || { username, name: "@" + username };
+      }
+      function actShortName(u) {
+        const parts = String(u.name || "").trim().split(/\s+/);
+        if (parts.length < 2) return u.name || "@" + u.username;
+        return `${parts[0]} ${parts[1].slice(0, 1).toUpperCase()}.`;
+      }
+      function actAv(u, cls) {
+        const nom = u.name || u.username;
+        return `<span class="act-av ${cls || ""}" style="background:${personColor(u.username)}">${escHtml(nom.slice(0, 1).toUpperCase())}${avatarImg(u.avatarUrl)}</span>`;
+      }
+      // Oyda ishi bo'lgan xodimlar — ko'pidan kamiga. Filtr tugmalari
+      // va ro'yxatlar shu tartibda chiziladi.
+      function actActiveUsers(items) {
+        const counts = actUserCounts(items);
+        return Object.keys(counts)
+          .sort((a, b) => counts[b] - counts[a])
+          .map((username) => ({ ...actUser(username), count: counts[username] }));
+      }
+      function actDiffHtml(diff, suffix) {
+        if (diff === null || typeof diff === "undefined") return "";
+        if (diff === 0) return `<span class="act-diff flat">0${suffix || ""}</span>`;
+        const up = diff > 0;
+        return `<span class="act-diff ${up ? "up" : "down"}">${up ? "↑ +" : "↓ −"}${Math.abs(diff)}${suffix || ""}</span>`;
+      }
+
+      // ── Ochilishi va yuklanishi ──────────────────────────────────
+      async function openActivity(month) {
+        const key = month || (act ? act.month : actMonthKey(todayDate()));
+        openSubScreen("screen-activity", closeActivity);
+        const body = document.getElementById("activity-body");
+        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        try {
+          const res = await apiFetch(`/api/activity?month=${encodeURIComponent(key)}`);
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
+          const d = await res.json();
+          act = {
+            month: d.month,
+            today: d.today,
+            items: d.items || [],
+            users: d.users || [],
+            projects: d.projects || [],
+            filter: act && act.month === d.month ? act.filter : "",
+            weekIdx: null,
+            dayIso: null,
+            view: "weeks",
+          };
+          // Ochilganda joriy hafta tanlangan bo'ladi.
+          const weeks = actWeeks(act.month);
+          const cur = weeks.findIndex((w) => act.today >= w.start && act.today <= w.end);
+          act.weekIdx = cur === -1 ? 0 : cur;
+        } catch (e) {
+          body.innerHTML = `<div style="color:var(--red);font-size:13px;padding:16px">⚠ ${escHtml(e.message)}</div>`;
+          return;
+        }
+        renderActivity();
+      }
+      function closeActivity() {
+        // Hafta tafsiloti ochiq bo'lsa, orqaga avval haftalar
+        // ro'yxatiga qaytaradi — Telegram tugmasi ham shu yo'l bilan.
+        if (act && act.view === "week") {
+          actBackToWeeks();
+          return;
+        }
+        showTab("today");
+      }
+      function actBack() {
+        closeActivity();
+      }
+      function actSetMonth(delta) {
+        openActivity(actShiftMonth(act.month, delta));
+      }
+      function actSetFilter(username) {
+        act.filter = act.filter === username ? "" : username;
+        renderActivity();
+      }
+      function actSelectWeek(i) {
+        act.weekIdx = i;
+        act.dayIso = null;
+        renderActivity();
+      }
+      function actSelectDay(iso) {
+        // Kun qayta bosilsa — butun haftaga qaytadi.
+        act.dayIso = act.dayIso === iso ? null : iso;
+        renderActivity();
+      }
+      function actOpenWeek(i) {
+        act.weekIdx = i;
+        act.dayIso = null;
+        act.view = "week";
+        renderActivity();
+      }
+      function actBackToWeeks() {
+        act.view = "weeks";
+        renderActivity();
+      }
+
+      function renderActivity() {
+        const body = document.getElementById("activity-body");
+        if (!body || !act) return;
+        const hdr = document.getElementById("activity-title");
+        if (hdr) hdr.textContent = act.view === "week" ? actWeekLabel(act.weekIdx) : "Jamoa faolligi";
+        body.innerHTML =
+          act.view === "week"
+            ? `<div class="mobile-only">${actWeekPageHtml()}</div>`
+            : `<div class="mobile-only">${actMobileHtml()}</div><div class="desktop-only">${actDesktopHtml()}</div>`;
+        applyStaticIcons?.();
+      }
+      function actWeekLabel(i) {
+        const w = actWeeks(act.month)[i];
+        if (!w) return "";
+        return fmtRangeShort(w.start, w.end);
+      }
+
+      // ── Hafta hisoblari ──────────────────────────────────────────
+      function actWeekStats(i) {
+        const weeks = actWeeks(act.month);
+        const w = weeks[i];
+        if (!w) return null;
+        const scoped = actScoped();
+        const items = actInRange(scoped, w.start, w.end);
+        const oldingi = i > 0 ? actInRange(scoped, weeks[i - 1].start, weeks[i - 1].end).length : null;
+        // Hafta tugamagan bo'lsa farq ko'rsatilmaydi — yarim hafta
+        // bilan to'liq haftani solishtirish chalg'itadi.
+        const tugagan = w.end < act.today;
+        const kelgusi = w.start > act.today;
+        return {
+          week: w,
+          items,
+          total: items.length,
+          diff: tugagan && oldingi !== null ? items.length - oldingi : null,
+          done: tugagan,
+          future: kelgusi,
+          kinds: actKindCounts(items),
+        };
+      }
+      function actAllWeekStats() {
+        return actWeeks(act.month).map((_, i) => actWeekStats(i));
+      }
+      // "Eng yaxshi hafta" — oydagi eng ko'p ishli hafta (tugaganlari
+      // orasidan; davom etayotgan hafta hali to'liq emas).
+      function actBestWeekIdx(stats) {
+        let best = -1;
+        stats.forEach((s, i) => {
+          if (!s || s.future) return;
+          if (best === -1 || s.total > stats[best].total) best = i;
+        });
+        return stats[best] && stats[best].total > 0 ? best : -1;
+      }
+      // Kun katagining rangi — oyning eng band kuniga nisbatan.
+      function actHeatLevel(n, max) {
+        if (!n) return 0;
+        if (!max) return 1;
+        const r = n / max;
+        return r > 0.75 ? 4 : r > 0.5 ? 3 : r > 0.25 ? 2 : 1;
+      }
+
+      function actFilterBarHtml() {
+        const users = actActiveUsers(act.items);
+        return `<div class="act-filters">
+          <button type="button" class="act-fchip${act.filter ? "" : " on"}" onclick="actSetFilter('')">Hammasi</button>
+          ${users
+            .map(
+              (u) =>
+                `<button type="button" class="act-fchip${act.filter === u.username ? " on" : ""}" onclick="actSetFilter('${escArg(u.username)}')">
+                   <span class="act-fdot" style="background:${personColor(u.username)}"></span>${escHtml(actShortName(u))}
+                 </button>`,
+            )
+            .join("")}
+        </div>`;
+      }
+      function actMonthBarHtml() {
+        const keyingi = actShiftMonth(act.month, 1) <= actMonthKey(todayDate());
+        return `<div class="act-monthbar">
+          <button type="button" class="act-mbtn" onclick="actSetMonth(-1)" aria-label="Oldingi oy">${ICON.chevronLeft}</button>
+          <div class="act-month">${actMonthLabel(act.month)}</div>
+          <button type="button" class="act-mbtn"${keyingi ? "" : " disabled"} onclick="actSetMonth(1)" aria-label="Keyingi oy">${ICON.chevronRight}</button>
+        </div>`;
+      }
+
+      // ── Katta ekran (23a): kalendar + o'ng panel ─────────────────
+      function actDesktopHtml() {
+        const stats = actAllWeekStats();
+        const best = actBestWeekIdx(stats);
+        const dayMap = actDayCounts(actScoped());
+        const max = Math.max(0, ...Object.values(dayMap));
+        const WD2 = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
+
+        const rows = stats
+          .map((s, i) => {
+            const cells = s.week.days
+              .map((iso) => {
+                const n = dayMap[iso] || 0;
+                const bugun = iso === act.today;
+                const tashqari = !actInMonth(iso, act.month);
+                const kelgusi = iso > act.today;
+                const cls = [
+                  "act-day",
+                  `l${actHeatLevel(n, max)}`,
+                  tashqari ? "out" : "",
+                  bugun ? "today" : "",
+                  act.dayIso === iso ? "sel" : "",
+                ].filter(Boolean);
+                return `<button type="button" class="${cls.join(" ")}" onclick="actSelectDay('${iso}')">
+                  <span class="act-dnum">${parseISO(iso).getDate()}</span>
+                  ${kelgusi ? "" : `<span class="act-dn">${n || ""}</span>`}
+                  ${bugun ? `<span class="act-today-lbl">bugun</span>` : ""}
+                </button>`;
+              })
+              .join("");
+            const sum = s.future
+              ? `<div class="act-wsum nil">—</div>`
+              : `<div class="act-wsum">
+                   <div class="act-wn">${s.total}</div>
+                   <div class="act-wl">ta ish</div>
+                   ${s.done ? actDiffHtml(s.diff) : `<span class="act-wgoing">davom etmoqda</span>`}
+                   ${i === best ? `<span class="act-best">Eng yaxshi hafta</span>` : ""}
+                 </div>`;
+            return `<div class="act-wrow${act.weekIdx === i ? " sel" : ""}" onclick="actSelectWeek(${i})">
+              <div class="act-days">${cells}</div>
+              ${sum}
+            </div>`;
+          })
+          .join("");
+
+        return `<div class="act-wrap">
+          <div class="act-cal">
+            ${actMonthBarHtml()}
+            ${actFilterBarHtml()}
+            <div class="act-calhdr">
+              <div class="act-days">${WD2.map((w) => `<div class="act-wd">${w}</div>`).join("")}</div>
+              <div class="act-wd act-wsum-hdr">Hafta jami</div>
+            </div>
+            ${rows}
+            <div class="act-legend">
+              <span class="act-hint">Haftani bosing — o'ngda shu hafta ochiladi</span>
+              <span class="act-scale">Kam ${[1, 2, 3, 4].map((l) => `<i class="l${l}"></i>`).join("")} Ko'p</span>
+            </div>
+          </div>
+          <aside class="act-panel">${actPanelHtml()}</aside>
+        </div>`;
+      }
+
+      // O'ng panel (va mobil "hafta tafsiloti" sahifasi) — bir xil
+      // mazmun: jami, bo'linish, kunlar va kim qancha qilgani.
+      function actPanelHtml() {
+        const s = actWeekStats(act.weekIdx);
+        if (!s) return "";
+        const best = actBestWeekIdx(actAllWeekStats()) === act.weekIdx;
+        if (!s.total) {
+          return `<div class="act-ptop">
+              <div class="act-prange">${escHtml(fmtRangeShort(s.week.start, s.week.end))}</div>
+            </div>
+            <div class="act-empty">Bu haftada ish yo'q</div>`;
+        }
+        // Kun tanlangan bo'lsa "kim qancha qildi" shu kunga torayadi.
+        const kimItems = act.dayIso ? s.items.filter((it) => it.day === act.dayIso) : s.items;
+        const counts = actUserCounts(kimItems);
+        const oldingiHafta =
+          act.weekIdx > 0 ? actUserCounts(actInRange(actScoped(), actWeeks(act.month)[act.weekIdx - 1].start, actWeeks(act.month)[act.weekIdx - 1].end)) : null;
+        const kishilar = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+        const dayMap = actDayCounts(s.items);
+        const maxDay = Math.max(1, ...Object.values(dayMap));
+        const WD2 = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
+
+        return `${
+            act.view === "week" && !best
+              ? ""
+              : `<div class="act-ptop">
+                   ${act.view === "week" ? "" : `<div class="act-prange">${escHtml(fmtRangeShort(s.week.start, s.week.end))}</div>`}
+                   ${best ? `<span class="act-best">Eng yaxshi hafta</span>` : ""}
+                 </div>`
+          }
+          <div class="act-pbig">
+            <div class="act-pn">${s.total}</div>
+            <div class="act-pl">ta ish</div>
+          </div>
+          ${s.diff !== null ? `<div class="act-pdiff">${actDiffHtml(s.diff)} <span>o'tgan haftaga nisbatan</span></div>` : ""}
+          <div class="act-split">
+            ${["post", "story", "task"]
+              .map(
+                (k) => `<div class="act-sp"><div class="act-spn">${s.kinds[k] || 0}</div><div class="act-spl">${ACT_KIND_LABEL[k]}</div></div>`,
+              )
+              .join("")}
+          </div>
+          <div class="act-seclbl">Kunlar</div>
+          <div class="act-bars">
+            ${s.week.days
+              .map((iso, di) => {
+                const n = dayMap[iso] || 0;
+                const kelgusi = iso > act.today;
+                return `<button type="button" class="act-bar${act.dayIso === iso ? " sel" : ""}" onclick="actSelectDay('${iso}')">
+                  <span class="act-barn">${kelgusi ? "" : n || ""}</span>
+                  <span class="act-barv" style="height:${kelgusi ? 0 : Math.round((n / maxDay) * 46)}px"></span>
+                  <span class="act-barl">${WD2[di]}</span>
+                </button>`;
+              })
+              .join("")}
+          </div>
+          <div class="act-seclbl">Kim qancha qildi</div>
+          <div class="act-people">
+            ${
+              kishilar
+                .map((un) => {
+                  const u = actUser(un);
+                  const d = oldingiHafta && !act.dayIso ? counts[un] - (oldingiHafta[un] || 0) : null;
+                  return `<button type="button" class="act-person" onclick="openActivityUser('${escArg(un)}')">
+                    ${actAv(u)}
+                    <span class="act-pname">${escHtml(actShortName(u))}</span>
+                    <span class="act-pcount">${counts[un]}</span>
+                    ${s.done ? actDiffHtml(d) : ""}
+                  </button>`;
+                })
+                .join("") || `<div class="act-empty">Bu kunda ish yo'q</div>`
+            }
+          </div>`;
+      }
+
+      // ── Telefon (23b): ixcham kalendar + tanlangan hafta kartasi ──
+      function actMobileHtml() {
+        const stats = actAllWeekStats();
+        const best = actBestWeekIdx(stats);
+        const dayMap = actDayCounts(actScoped());
+        const max = Math.max(0, ...Object.values(dayMap));
+        const WD2 = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
+
+        const rows = stats
+          .map((s, i) => {
+            const cells = s.week.days
+              .map((iso) => {
+                const n = dayMap[iso] || 0;
+                const cls = [
+                  "act-mday",
+                  `l${actHeatLevel(n, max)}`,
+                  actInMonth(iso, act.month) ? "" : "out",
+                  iso === act.today ? "today" : "",
+                ].filter(Boolean);
+                // Mobil katakda faqat sana — aniq son hafta
+                // tafsilotida ko'rsatiladi.
+                return `<span class="${cls.join(" ")}">${parseISO(iso).getDate()}</span>`;
+              })
+              .join("");
+            const sum = s.future
+              ? `<span class="act-mwsum nil">—</span>`
+              : `<span class="act-mwsum"><b>${s.total}</b>${s.done ? actDiffHtml(s.diff) : `<i>…</i>`}</span>`;
+            return `<button type="button" class="act-mrow${act.weekIdx === i ? " sel" : ""}" onclick="actSelectWeek(${i})">
+              <span class="act-mdays">${cells}</span>
+              ${sum}
+            </button>`;
+          })
+          .join("");
+
+        const s = actWeekStats(act.weekIdx);
+        const counts = s ? actUserCounts(s.items) : {};
+        const top = Object.keys(counts)
+          .sort((a, b) => counts[b] - counts[a])
+          .slice(0, 3);
+        const oldingi =
+          act.weekIdx > 0
+            ? actUserCounts(actInRange(actScoped(), actWeeks(act.month)[act.weekIdx - 1].start, actWeeks(act.month)[act.weekIdx - 1].end))
+            : null;
+        const card = !s
+          ? ""
+          : `<div class="act-mcard">
+              <div class="act-ptop">
+                <div class="act-prange">${escHtml(fmtRangeShort(s.week.start, s.week.end))}</div>
+                ${best === act.weekIdx ? `<span class="act-best">Eng yaxshi</span>` : ""}
+              </div>
+              ${
+                s.total
+                  ? `<div class="act-pbig"><div class="act-pn">${s.total}</div><div class="act-pl">ta ish</div></div>
+                     ${s.diff !== null ? `<div class="act-pdiff">${actDiffHtml(s.diff)} <span>o'tgan haftaga</span></div>` : ""}
+                     <div class="act-people">
+                       ${top
+                         .map((un) => {
+                           const u = actUser(un);
+                           const d = oldingi ? counts[un] - (oldingi[un] || 0) : null;
+                           return `<button type="button" class="act-person" onclick="openActivityUser('${escArg(un)}')">
+                             ${actAv(u)}
+                             <span class="act-pname">${escHtml(actShortName(u))}</span>
+                             <span class="act-pcount">${counts[un]}</span>
+                             ${s.done ? actDiffHtml(d) : ""}
+                           </button>`;
+                         })
+                         .join("")}
+                     </div>
+                     <button type="button" class="act-mbtn-full" onclick="actOpenWeek(${act.weekIdx})">Hafta tafsiloti</button>`
+                  : `<div class="act-empty">Bu haftada ish yo'q</div>`
+              }
+            </div>`;
+
+        return `<div class="act-mwrap">
+          ${actFilterBarHtml()}
+          ${actMonthBarHtml()}
+          <div class="act-mcal">
+            <div class="act-mrow hdr">
+              <span class="act-mdays">${WD2.map((w) => `<span class="act-mwd">${w}</span>`).join("")}</span>
+              <span class="act-mwd act-mwsum-hdr">Hafta</span>
+            </div>
+            ${rows}
+          </div>
+          ${card}
+        </div>`;
+      }
+
+      // ── Telefon (23c): hafta tafsiloti sahifasi ──────────────────
+      function actWeekPageHtml() {
+        const weeks = actWeeks(act.month);
+        const s = actWeekStats(act.weekIdx);
+        if (!s) return "";
+        const oldingiBor = act.weekIdx > 0;
+        // Joriy haftadan keyingisiga o'tib bo'lmaydi.
+        const keyingiBor = act.weekIdx < weeks.length - 1 && weeks[act.weekIdx + 1].start <= act.today;
+        return `<div class="act-wpage">
+          <div class="act-wnav">
+            <button type="button" class="act-mbtn"${oldingiBor ? "" : " disabled"} onclick="actSelectWeek(${act.weekIdx - 1})">${ICON.chevronLeft}</button>
+            <div class="act-wnav-txt">
+              <div class="act-wnav-t">${escHtml(fmtRangeShort(s.week.start, s.week.end))}</div>
+              <div class="act-wnav-s">${act.weekIdx + 1}-hafta · ${actMonthLabel(act.month)}</div>
+            </div>
+            <button type="button" class="act-mbtn"${keyingiBor ? "" : " disabled"} onclick="actSelectWeek(${act.weekIdx + 1})">${ICON.chevronRight}</button>
+          </div>
+          <div class="act-panel plain">${actPanelHtml()}</div>
+        </div>`;
+      }
+
+      // ── Xodim sahifasi (26a / 26c) ───────────────────────────────
+      let actUserState = null;
+      async function openActivityUser(username, month) {
+        const key = month || (act ? act.month : actMonthKey(todayDate()));
+        // Faollik ma'lumoti yo'q bo'lsa (xodimlar ro'yxatidan to'g'ridan
+        // ochilgan) — avval yuklaymiz.
+        if (!act || act.month !== key) {
+          try {
+            const res = await apiFetch(`/api/activity?month=${encodeURIComponent(key)}`);
+            if (!res.ok) throw new Error("Xato");
+            const d = await res.json();
+            act = {
+              month: d.month, today: d.today, items: d.items || [], users: d.users || [],
+              projects: d.projects || [], filter: "", weekIdx: 0, dayIso: null, view: "weeks",
+            };
+          } catch (e) {
+            showToast("⚠ Faollik yuklanmadi");
+            return;
+          }
+        }
+        actUserState = { username, day: null };
+        openSubScreen("screen-activity-user", () => openActivity(act.month));
+        renderActivityUser();
+      }
+      function actUserSetMonth(delta) {
+        openActivityUser(actUserState.username, actShiftMonth(act.month, delta));
+      }
+
+      // Xodimning oydagi ishlari. Asosiy raqam — post va stories
+      // (vazifalar alohida hisoblanadi, TZ shunday).
+      function actUserItems(username, monthKey) {
+        return act.items.filter((it) => it.users.includes(username) && it.day.slice(0, 7) === monthKey);
+      }
+      function actCumulative(items, monthKey, upto) {
+        const n = actDaysInMonth(monthKey);
+        const byDay = actDayCounts(items);
+        const out = [];
+        let sum = 0;
+        for (let d = 1; d <= n; d++) {
+          const iso = `${monthKey}-${actPad(d)}`;
+          sum += byDay[iso] || 0;
+          out.push(upto && iso > upto ? null : sum);
+        }
+        return out;
+      }
+      function actProjectStatus(done, expected) {
+        if (!expected) return null;
+        const r = done / expected;
+        if (r >= 1.05) return { label: "Oldinda", cls: "ahead" };
+        if (r >= 0.9) return { label: "Rejada", cls: "onplan" };
+        return { label: "Ortda", cls: "behind" };
+      }
+      function actLastWorkText(at) {
+        if (!at) return "";
+        const d = new Date(at);
+        const iso = isoOf(d);
+        const soat = `${actPad(d.getHours())}:${actPad(d.getMinutes())}`;
+        if (iso === act.today) return `bugun ${soat}`;
+        if (iso === isoOf(new Date(parseISO(act.today).getTime() - 86400000))) return `kecha ${soat}`;
+        return `${ntfDayShort(iso)} ${soat}`;
+      }
+
+      function renderActivityUser() {
+        const body = document.getElementById("activity-user-body");
+        if (!body || !actUserState) return;
+        const un = actUserState.username;
+        const u = actUser(un);
+        const monthKey = act.month;
+        const prevKey = actShiftMonth(monthKey, -1);
+        const kunlar = actDaysInMonth(monthKey);
+        const bugunOy = monthKey === act.today.slice(0, 7);
+        const otgan = bugunOy ? Number(act.today.slice(8, 10)) : kunlar;
+
+        const hammasi = actUserItems(un, monthKey);
+        const ishlar = hammasi.filter((it) => it.kind !== "task");
+        const prevIshlar = actUserItems(un, prevKey).filter((it) => it.kind !== "task");
+        // Taqqoslash — o'tgan oyning SHU kunigacha bo'lgan soni.
+        const prevShuKunga = prevIshlar.filter((it) => Number(it.day.slice(8, 10)) <= otgan).length;
+        const jami = ishlar.length;
+        const farq = jami - prevShuKunga;
+        const foiz = prevShuKunga ? Math.round((farq / prevShuKunga) * 100) : null;
+
+        const faolKun = new Set(hammasi.map((it) => it.day)).size;
+        // O'z loyihalari — xodim SMM mas'uli bo'lgan loyihalar.
+        const ozLoyihalar = act.projects.filter((p) => p.smm === un);
+        const ozReja = ozLoyihalar.reduce((s, p) => s + (p.plan || 0), 0);
+        const ozBajarilgan = ishlar.filter((it) => it.project && ozLoyihalar.some((p) => p.slug === it.project.slug)).length;
+
+        const header = `<div class="actu-hdr">
+            ${actAv(u, "big")}
+            <div class="actu-hdr-txt">
+              <div class="actu-name">${escHtml(u.name || "@" + un)}</div>
+              <div class="actu-sub">${escHtml(u.jobTitle || "Xodim")} · ${actMonthLabel(monthKey)}</div>
+            </div>
+            <div class="act-monthbar tight">
+              <button type="button" class="act-mbtn" onclick="actUserSetMonth(-1)">${ICON.chevronLeft}</button>
+              <button type="button" class="act-mbtn"${actShiftMonth(monthKey, 1) <= actMonthKey(todayDate()) ? "" : " disabled"} onclick="actUserSetMonth(1)">${ICON.chevronRight}</button>
+            </div>
+          </div>
+          <div class="actu-kpis">
+            <div class="actu-kpi"><b>${faolKun} / ${otgan}</b><span>faol kun</span></div>
+            <div class="actu-kpi"><b>${ozBajarilgan} / ${ozReja}</b><span>o'z loyihalari rejasi</span></div>
+          </div>`;
+
+        if (!hammasi.length) {
+          body.innerHTML = `${header}<div class="act-empty big">Bu oyda hali ish yo'q</div>`;
+          return;
+        }
+
+        const prognoz = otgan ? Math.round((jami / otgan) * kunlar) : 0;
+        const big = `<div class="actu-big">
+            <div class="actu-bign">${jami}</div>
+            <div class="actu-bigl">ta ish · 1–${otgan} ${MONTHS[Number(monthKey.slice(5, 7)) - 1].toLowerCase()}</div>
+            ${
+              prevShuKunga
+                ? `<div class="actu-cmp ${farq >= 0 ? "up" : "down"}">${farq >= 0 ? "+" : "−"}${Math.abs(farq)} ta${foiz === null ? "" : ` · ${farq >= 0 ? "+" : "−"}${Math.abs(foiz)}%`}</div>
+                   <div class="actu-cmp-sub">${MONTHS[Number(prevKey.slice(5, 7)) - 1]}ning shu kuniga nisbatan (${prevShuKunga} ta)</div>`
+                : `<div class="actu-cmp-sub">O'tgan oyda taqqoslash uchun ma'lumot yo'q</div>`
+            }
+          </div>`;
+
+        const chart = actChartHtml(hammasi, monthKey, prevKey, un, otgan, prognoz);
+
+        // Loyiha kartalari — shu oyda ishlangan har loyiha, ko'pidan kamiga.
+        const byProj = {};
+        ishlar.forEach((it) => {
+          const slug = it.project ? it.project.slug : "";
+          if (!slug) return;
+          byProj[slug] = byProj[slug] || { slug, label: it.project.label, n: 0, last: null, days: {} };
+          byProj[slug].n++;
+          byProj[slug].days[it.day] = (byProj[slug].days[it.day] || 0) + 1;
+          if (!byProj[slug].last || it.at > byProj[slug].last) byProj[slug].last = it.at;
+        });
+        const cards = Object.values(byProj)
+          .sort((a, b) => b.n - a.n)
+          .map((p) => {
+            const meta = act.projects.find((x) => x.slug === p.slug);
+            const oz = meta && meta.smm === un;
+            const reja = oz ? meta.plan || 0 : 0;
+            const kutilgan = reja ? (reja * otgan) / kunlar : 0;
+            const st = actProjectStatus(p.n, kutilgan);
+            const oxirgiKun = Object.keys(p.days).sort().pop();
+            const tanaffus = oxirgiKun ? daysBetween(parseISO(oxirgiKun), parseISO(act.today)) : 99;
+            const eskirgan = tanaffus >= 5;
+            return `<div class="actu-proj${eskirgan ? " stale" : ""}">
+              <span class="actu-pdot" style="background:${personColor(p.slug)}"></span>
+              <div class="actu-ptxt">
+                <div class="actu-pname">${escHtml(p.label)}</div>
+                <div class="actu-pmeta">
+                  ${st ? `<span class="actu-pst ${st.cls}">${st.label}</span>` : `<span class="actu-pst sub">${escHtml(actShortName(actUser(meta?.smm || "")))} o'rniga</span>`}
+                  <span class="actu-plast">${eskirgan ? `${tanaffus} kundan beri yo'q` : "· " + escHtml(actLastWorkText(p.last))}</span>
+                </div>
+              </div>
+              <div class="actu-pn">${reja ? `${p.n} <i>/ ${reja}</i>` : `${p.n} <i>ta</i>`}</div>
+            </div>`;
+          })
+          .join("");
+
+        body.innerHTML = `${header}${big}${chart}
+          <div class="act-seclbl">Loyihalar bo'yicha</div>
+          <div class="actu-projs">${cards || `<div class="act-empty">Loyiha ishi yo'q</div>`}</div>`;
+      }
+
+      // O'sish grafigi: ko'k — joriy oy (to'plangan), kulrang — o'tgan
+      // oy, uzuq — shu sur'atdagi prognoz. Pastda kunlik ustunlar.
+      function actChartHtml(items, monthKey, prevKey, username, otgan, prognoz) {
+        const kunlar = actDaysInMonth(monthKey);
+        const cur = actCumulative(items.filter((it) => it.kind !== "task"), monthKey, monthKey === act.today.slice(0, 7) ? act.today : null);
+        const prev = actCumulative(actUserItems(username, prevKey).filter((it) => it.kind !== "task"), prevKey);
+        const prevMax = prev.length ? prev[prev.length - 1] : 0;
+        const jami = cur.filter((v) => v !== null).pop() || 0;
+        const maxY = Math.max(10, jami, prevMax, prognoz) * 1.1;
+        const W = 320;
+        const H = 110;
+        const x = (i) => (i / (kunlar - 1)) * W;
+        const y = (v) => H - (v / maxY) * H;
+        const chiziq = (arr) =>
+          arr
+            .map((v, i) => (v === null ? null : `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(v).toFixed(1)}`))
+            .filter(Boolean)
+            .join(" ");
+        let oxirgiI = cur.length - 1;
+        while (oxirgiI > 0 && cur[oxirgiI] === null) oxirgiI--;
+        const prognozYol =
+          otgan && otgan < kunlar
+            ? `M${x(oxirgiI).toFixed(1)} ${y(jami).toFixed(1)} L${x(kunlar - 1).toFixed(1)} ${y(prognoz).toFixed(1)}`
+            : "";
+        const byDay = actDayCounts(items);
+        const maxKun = Math.max(1, ...Object.values(byDay));
+        const bars = Array.from({ length: kunlar }, (_, i) => {
+          const iso = `${monthKey}-${actPad(i + 1)}`;
+          const n = byDay[iso] || 0;
+          return `<span class="actu-bar" style="height:${Math.round((n / maxKun) * 100)}%" title="${iso}: ${n}"></span>`;
+        }).join("");
+
+        return `<div class="actu-chart">
+          <div class="actu-ylab"><span>${Math.round(maxY)}</span><span>${Math.round(maxY / 2)}</span><span>0</span></div>
+          <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="actu-svg">
+            <line x1="0" y1="${H}" x2="${W}" y2="${H}" class="actu-axis"/>
+            <line x1="0" y1="${H / 2}" x2="${W}" y2="${H / 2}" class="actu-grid"/>
+            ${prevMax ? `<path d="${chiziq(prev)}" class="actu-prev"/>` : ""}
+            ${prognozYol ? `<path d="${prognozYol}" class="actu-fc"/>` : ""}
+            <path d="${chiziq(cur)}" class="actu-cur"/>
+            ${otgan && otgan < kunlar ? `<line x1="${x(oxirgiI)}" y1="0" x2="${x(oxirgiI)}" y2="${H}" class="actu-now"/>` : ""}
+          </svg>
+          <div class="actu-bars">${bars}</div>
+          <div class="actu-xlab"><span>1</span><span>${Math.round(kunlar / 2)}</span><span>${kunlar}</span></div>
+          <div class="actu-legend">
+            <span><i class="cur"></i>${MONTHS[Number(monthKey.slice(5, 7)) - 1]}</span>
+            ${prevMax ? `<span><i class="prev"></i>${MONTHS[Number(prevKey.slice(5, 7)) - 1]}</span>` : ""}
+            ${prognozYol ? `<span><i class="fc"></i>Prognoz ${prognoz}</span>` : ""}
+          </div>
+        </div>`;
+      }
+
       // ── TARIX (barcha loyihalarning davrlari) ─────────────────────
       function setHistFilter(k) {
         histState.filter = k;
