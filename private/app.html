@@ -10151,6 +10151,14 @@
           color: var(--t3);
           margin-bottom: 6px;
         }
+        /* Reja nega o'zgarganini aytadi — "ko'chgan" ishlar sababi */
+        .wk-detail-note {
+          margin-top: 6px;
+          font-size: 11px;
+          line-height: 1.35;
+          color: var(--t3);
+        }
+        .wk-detail-note.late { color: var(--st-behind-dot, #b45309); }
 
         /* ── Loyihalar/Vazifalar: kartochka to'ri va kanban ──────────── */
         .pgrid {
@@ -17215,10 +17223,20 @@
       }
 
       // ── TRACKER O'NG PANELI (faqat katta ekran — "MUDDAT") ─────────
-      // Loyihaning haftalik hisobi — har hafta uchun REJALASHTIRILGAN son
-      // (post/stories'ning chiziqli taqsimlangan "muddat" kuni asosida,
-      // findOverdueItems bilan bir xil formula) va BAJARILGAN son
-      // (checkDetails'dagi haqiqiy workDate asosida, buildDayMap kabi).
+      // Loyihaning haftalik hisobi.
+      //
+      // REJA qat'iy emas: har hafta boshida QOLGAN ishlar QOLGAN
+      // haftalarga teng taqsimlanadi. Ya'ni bir haftada reja
+      // bajarilmasa, farqi keyingi haftalarga ko'chadi va oy oxiriga
+      // hammasi yozilib ulguradi. Avval reja chiziqli "muddat" kuni
+      // bo'yicha qat'iy bo'lgani uchun o'tkazib yuborilgan ish
+      // keyingi haftalarda ko'rinmay qolar, oxirgi haftada esa
+      // birdan qalashib ketardi.
+      //
+      // BAJARILGAN son — checkDetails'dagi haqiqiy workDate asosida
+      // (buildDayMap kabi). Ish sanasi yo'q yoki davrdan tashqaridagi
+      // belgilangan ishlar haftaga yozilmaydi, lekin bajarilgan
+      // hisoblanadi — shuning uchun ular rejadan chiqarib tashlanadi.
       function computeWeeklyProgress(p) {
         const start = parseISO(p.periodStart);
         const end = parseISO(p.periodEnd);
@@ -17234,26 +17252,60 @@
           for (let w = 0; w < bounds.length; w++) if (idx <= bounds[w].end) return w;
           return bounds.length - 1;
         };
-        const dueIdx = (i, count) =>
-          totalDays > 1 ? Math.round(((i - 1) / (count - 1 || 1)) * (totalDays - 1)) : 0;
-
-        const rows = bounds.map(() => ({ plannedK: 0, plannedS: 0, doneK: 0, doneS: 0 }));
-        for (let i = 1; i <= p.k; i++) rows[weekOf(dueIdx(i, p.k))].plannedK++;
-        for (let i = 1; i <= p.s; i++) rows[weekOf(dueIdx(i, p.s))].plannedS++;
+        const rows = bounds.map(() => ({
+          plannedK: 0, plannedS: 0, doneK: 0, doneS: 0, idealK: 0, idealS: 0,
+        }));
 
         const det = p.checkDetails || {};
         const checks = p.checks || {};
+        // Haftaga yozib bo'lmagan, lekin bajarilgan ishlar
+        let sanasizK = 0;
+        let sanasizS = 0;
         Object.keys(checks).forEach((key) => {
           if (!checks[key]) return;
+          const post = key.startsWith("k-");
+          if (!post && !key.startsWith("s-")) return;
           const wd = det[key] && det[key].workDate;
-          if (!wd) return;
-          const idx = daysBetween(start, parseISO(String(wd).slice(0, 10)));
-          if (idx < 0 || idx >= totalDays) return;
+          const idx = wd ? daysBetween(start, parseISO(String(wd).slice(0, 10))) : -1;
+          if (!wd || idx < 0 || idx >= totalDays) {
+            if (post) sanasizK++;
+            else sanasizS++;
+            return;
+          }
           const w = weekOf(idx);
-          if (key.startsWith("k-")) rows[w].doneK++;
-          else if (key.startsWith("s-")) rows[w].doneS++;
+          if (post) rows[w].doneK++;
+          else rows[w].doneS++;
         });
-        return rows;
+
+        // Bugun qaysi haftada — undan keyingi haftalar uchun reja
+        // bajariladi deb olinadi, o'tganlari uchun esa haqiqat.
+        let elapsedIdx = daysBetween(start, todayDate());
+        if (elapsedIdx < 0) elapsedIdx = 0;
+        if (elapsedIdx > totalDays - 1) elapsedIdx = totalDays - 1;
+        const current = weekOf(elapsedIdx);
+
+        // `ideal` — hech narsa o'tkazilmaganda reja qanday bo'lishini
+        // ko'rsatadi; ikkisining farqi "necha ta ish ko'chdi" degani.
+        const taqsimla = (jami, tashqari, reja, bajarilgan, ideal) => {
+          let qolgan = Math.max(0, jami - tashqari);
+          let tekis = qolgan;
+          for (let w = 0; w < rows.length; w++) {
+            const qoldiHafta = rows.length - w;
+            rows[w][reja] = Math.ceil(qolgan / qoldiHafta);
+            rows[w][ideal] = Math.ceil(tekis / qoldiHafta);
+            tekis = Math.max(0, tekis - rows[w][ideal]);
+            // O'tgan hafta — haqiqat (bajarilmagani keyinga ko'chadi).
+            // Joriy hafta — rejasi bajariladi deb olinadi, aks holda
+            // uning yuki keyingi haftalarda IKKI marta hisoblanardi;
+            // bajarilmasa, kelasi hafta o'zi qayta taqsimlaydi.
+            const yechildi =
+              w < current ? rows[w][bajarilgan] : Math.max(rows[w][reja], rows[w][bajarilgan]);
+            qolgan = Math.max(0, qolgan - yechildi);
+          }
+        };
+        taqsimla(p.k, sanasizK, "plannedK", "doneK", "idealK");
+        taqsimla(p.s, sanasizS, "plannedS", "doneS", "idealS");
+        return { rows, current };
       }
       // Haftalik progress grafigi: ustun balandligi shu haftadagi umumiy
       // hajmni (post+stories), to'ldirilgan qism esa bajarilish foizini
@@ -17262,21 +17314,12 @@
       // ochiladi (mobilda hover ishlamaydi, nuqtaga aniq tegish qiyin
       // edi — endi butun ustun bitta katta bosish nishoni).
       function buildWeeklyProgressHtml(p) {
-        const weekly = computeWeeklyProgress(p);
+        // Standart tanlangan hafta — bugungi kun tushadigan hafta; u
+        // hisobning o'zida aniqlanadi, shunda ikki joyda ikki xil
+        // chiqib qolmaydi.
+        const { rows: weekly, current: defaultWeek } = computeWeeklyProgress(p);
         const volumes = weekly.map((r) => Math.max(r.plannedK + r.plannedS, r.doneK + r.doneS));
         const maxVolume = Math.max(1, ...volumes);
-
-        // Standart tanlangan hafta — bugungi kun tushadigan hafta.
-        const start = parseISO(p.periodStart);
-        const end = parseISO(p.periodEnd);
-        const totalDays = daysBetween(start, end) + 1;
-        let elapsedIdx = daysBetween(start, todayDate());
-        if (elapsedIdx < 0) elapsedIdx = 0;
-        if (elapsedIdx > totalDays - 1) elapsedIdx = totalDays - 1;
-        const defaultWeek = Math.min(
-          weekly.length - 1,
-          Math.floor((elapsedIdx / totalDays) * weekly.length),
-        );
 
         const barsHtml = weekly
           .map((r, w) => {
@@ -17297,16 +17340,26 @@
           <div class="wk-detail" id="wk-detail">${weekDetailHtml(weekly[defaultWeek], defaultWeek)}</div>`;
       }
       function weekDetailHtml(r, w) {
+        // Reja tekis taqsimotdan farq qilsa — nega farq qilayotgani
+        // aytiladi, aks holda son "o'z-o'zidan o'zgargandek" ko'rinadi.
+        const kochgan = r.plannedK + r.plannedS - (r.idealK + r.idealS);
+        const izoh =
+          kochgan > 0
+            ? `<div class="wk-detail-note late">Oldingi haftalardan ${kochgan} ta ish ko'chdi</div>`
+            : kochgan < 0
+              ? `<div class="wk-detail-note">Oldindan bajarilgani uchun ${-kochgan} ta kam</div>`
+              : "";
         return `<div class="wk-detail-title">${w + 1}-hafta</div>
           <div class="mini-stat-row">
             <div class="mini-stat"><div class="mini-stat-val">${r.doneK}/${r.plannedK}</div><div class="mini-stat-lbl">Post</div></div>
             <div class="mini-stat"><div class="mini-stat-val">${r.doneS}/${r.plannedS}</div><div class="mini-stat-lbl">Stories</div></div>
-          </div>`;
+          </div>
+          ${izoh}`;
       }
       function showWeekDetail(el, projectId, w) {
         const p = projects.find((pr) => pr.id === projectId);
         if (!p) return;
-        const weekly = computeWeeklyProgress(p);
+        const { rows: weekly } = computeWeeklyProgress(p);
         if (!weekly[w]) return;
         el.parentElement
           .querySelectorAll(".wk-bar-col")
@@ -17352,14 +17405,19 @@
 
         const barsHtml = buildWeeklyProgressHtml(p);
 
+        // Maslahat matni ustunlar bilan bir xil hisobdan olinadi —
+        // aks holda pastdagi son tepadagi rejaga to'g'ri kelmay qolardi.
+        const { rows: hafta, current: joriy } = computeWeeklyProgress(p);
         const remaining = Math.max(0, p.k + p.s - (p.doneK + p.doneS));
-        const daysLeft = Math.max(1, projDaysLeft(p) + 1);
-        const weeksLeft = Math.max(1, Math.ceil(daysLeft / 7));
-        const weeklyNeed = Math.ceil(remaining / weeksLeft);
+        const qoldiHafta = hafta.length - joriy;
+        const buHafta = hafta[joriy] ? hafta[joriy].plannedK + hafta[joriy].plannedS : 0;
+        const keyingi = hafta[joriy + 1] ? hafta[joriy + 1].plannedK + hafta[joriy + 1].plannedS : 0;
         const advisory =
-          remaining > 0
-            ? `Qolgan ${remaining} vazifa ${daysLeft} kunga taqsimlansa, haftada ~${weeklyNeed} ta yetarli.`
-            : "Barcha vazifalar bajarilgan — davr yakunlanishiga tayyor.";
+          remaining <= 0
+            ? "Barcha vazifalar bajarilgan — davr yakunlanishiga tayyor."
+            : qoldiHafta > 1
+              ? `Qolgan ${remaining} ish ${qoldiHafta} haftaga teng taqsimlandi: bu hafta ${buHafta} ta, keyin haftasiga ~${keyingi} ta.`
+              : `Oxirgi hafta — qolgan ${remaining} ishning hammasi shu haftaga to'g'ri keladi.`;
 
         const assignees = p.assignees || [];
         const assigneesHtml = assignees.length
