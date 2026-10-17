@@ -4253,7 +4253,8 @@
       @media (min-width: 860px) {
         /* Sarlavha va oy tanlagich sahifaning o'zida — yuqoridagi
            umumiy sarlavha qatori takror bo'lib qolardi. */
-        #screen-activity > .hdr { display: none !important; }
+        #screen-activity > .hdr,
+        #screen-activity-user > .hdr { display: none !important; }
         /* Faollik sahifasi kengroq joy oladi: kalendar 650px, qolgani
            o'ng panelga. Umumiy 880px chegarasi uni siqib qo'yardi. */
         #screen-activity .scroll,
@@ -4273,8 +4274,10 @@
         /* ── Telefon ─────────────────────────────────────────────────── */
         /* Sarlavha va oy tanlagich sahifaning o'zida chiziladi, shuning
            uchun ilovaning umumiy sarlavha qatori bu yerda ishlatilmaydi. */
-        #screen-activity > .hdr { display: none !important; }
-        #screen-activity .scroll { padding: 0 !important; max-width: none; }
+        #screen-activity > .hdr,
+        #screen-activity-user > .hdr { display: none !important; }
+        #screen-activity .scroll,
+        #screen-activity-user .scroll { padding: 0 !important; max-width: none; }
         .act-mhdr {
           display: flex;
           align-items: center;
@@ -4449,82 +4452,192 @@
       }
 
       /* ── Xodim sahifasi ──────────────────────────────────────────── */
-      .actu-hdr { display: flex; align-items: center; gap: 12px; }
+      .actu-only-m { display: none; }
+      .actu-hdr { display: flex; align-items: center; gap: 14px; }
+      .actu-back {
+        width: 40px;
+        height: 40px;
+        flex: none;
+        border-radius: 12px;
+        background: var(--surf);
+        border: 1px solid var(--bd4);
+        color: var(--t5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-sizing: border-box;
+      }
+      .actu-back svg { width: 19px; height: 19px; }
       .actu-hdr-txt { flex: 1; min-width: 0; }
-      .actu-name { font-size: 17px; font-weight: 700; color: var(--marker); }
-      .actu-sub { font-size: 12.5px; color: var(--v3-t3); margin-top: 2px; }
-      .actu-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
-      .actu-kpi { background: var(--surf); border: 1px solid var(--bd2); border-radius: 12px; padding: 11px 13px; }
-      .actu-kpi b { display: block; font-size: 17px; font-weight: 700; color: var(--marker); }
-      .actu-kpi span { font-size: 11.5px; color: var(--v3-t3); }
-      .actu-big { margin-top: 16px; }
-      .actu-bign { font-size: 40px; font-weight: 700; line-height: 1; color: var(--marker); }
-      .actu-bigl { font-size: 13px; color: var(--v3-t3); margin-top: 3px; }
-      .actu-cmp { font-size: 13.5px; font-weight: 600; margin-top: 8px; }
-      .actu-cmp.up { color: var(--st-ahead, #15803d); }
-      .actu-cmp.down { color: var(--red); }
-      .actu-cmp-sub { font-size: 11.5px; color: var(--v3-t3); margin-top: 2px; }
-      .actu-chart {
-        position: relative;
+      .actu-name {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--marker);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .actu-sub { font-size: 13px; color: var(--v3-t2); margin-top: 2px; white-space: nowrap; }
+      .actu-hkpis { display: flex; align-items: center; gap: 28px; flex: none; }
+      .actu-hkpis .actu-kpi { text-align: right; }
+      .actu-kpi b {
+        display: block;
+        font-size: 19px;
+        font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        color: var(--marker);
+        white-space: nowrap;
+      }
+      .actu-kpi b i { font-style: normal; font-weight: 500; color: var(--v3-t2); }
+      .actu-kpi span { font-size: 12px; font-weight: 500; color: var(--v3-t2); margin-top: 2px; display: block; }
+      .actu-div { width: 1px; height: 36px; background: var(--bd4); flex: none; }
+      .actu-mnav { display: flex; align-items: center; gap: 6px; }
+      .act-mbtn.sm { width: 32px; height: 32px; border-radius: 9px; }
+      .act-mbtn.sm svg { width: 15px; height: 15px; }
+      .actu-month { width: 96px; text-align: center; font-size: 13.5px; font-weight: 600; color: var(--marker); }
+      .actu-mkpis { display: none; }
+
+      .actu-card { background: var(--surf); border: 1px solid var(--bd2); border-radius: 16px; padding: 18px 20px 16px; }
+      .actu-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+      .actu-bign { font-size: 34px; font-weight: 700; line-height: 1; letter-spacing: -0.03em; color: var(--marker); }
+      .actu-bigl { font-size: 14px; font-weight: 500; color: var(--v3-t2); }
+      .actu-badge {
+        height: 24px;
+        padding: 0 8px;
+        border-radius: 7px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        white-space: nowrap;
+        flex: none;
+      }
+      .actu-badge.up { background: var(--st-ahead-bg, #e8f6ec); color: var(--st-ahead, #15803d); }
+      .actu-badge.down { background: var(--red-bg); color: var(--red); }
+      .actu-cmp-sub { font-size: 12.5px; color: var(--v3-t2); margin-top: 6px; }
+      .actu-legend { display: flex; align-items: center; gap: 18px; margin-top: 14px; flex-wrap: wrap; }
+      .actu-legend span { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 500; color: var(--v3-t2); }
+      .actu-legend i { display: block; flex: none; }
+      .actu-legend .actu-only-m { display: none; }
+      .actu-legend i.cur { width: 18px; height: 3px; border-radius: 2px; background: var(--brand); }
+      .actu-legend i.prev { width: 18px; height: 2px; border-radius: 2px; background: #b8bec6; }
+      .actu-legend i.fc { width: 18px; border-top: 2px dashed var(--brand); opacity: 0.75; }
+      .actu-legend i.bar { width: 8px; height: 12px; border-radius: 2px; background: #a7c9e6; }
+      .actu-chart { margin-top: 12px; }
+      .actu-svg { display: block; width: 100%; height: auto; overflow: visible; font-family: inherit; }
+
+      /* Loyiha kartalari (katta ekran) */
+      .actu-projs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+      .actu-proj {
         background: var(--surf);
         border: 1px solid var(--bd2);
         border-radius: 14px;
-        padding: 14px 14px 10px 34px;
-        margin-top: 16px;
+        padding: 12px 14px;
+        box-sizing: border-box;
+        min-width: 0;
       }
-      .actu-svg { width: 100%; height: 110px; display: block; overflow: visible; }
-      .actu-axis { stroke: var(--bd4); stroke-width: 1; }
-      .actu-grid { stroke: var(--bd2); stroke-width: 1; stroke-dasharray: 3 4; }
-      .actu-cur { fill: none; stroke: var(--brand); stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-      .actu-prev { fill: none; stroke: var(--v3-t4); stroke-width: 1.8; vector-effect: non-scaling-stroke; }
-      .actu-fc { fill: none; stroke: var(--brand); stroke-width: 1.6; stroke-dasharray: 4 4; opacity: 0.65; vector-effect: non-scaling-stroke; }
-      .actu-now { stroke: var(--marker); stroke-width: 1; stroke-dasharray: 2 3; opacity: 0.5; }
-      .actu-ylab {
-        position: absolute;
-        left: 8px;
-        top: 14px;
-        height: 110px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        font-size: 9.5px;
-        color: var(--v3-t4);
+      /* 5 va undan ortiq kun ish bo'lmagan loyiha ajratib ko'rsatiladi */
+      .actu-proj.stale { border-color: rgba(217, 119, 6, 0.5); }
+      .actu-ptop { display: flex; align-items: center; gap: 8px; }
+      .actu-pdot { width: 8px; height: 8px; border-radius: 99px; flex: none; }
+      .actu-pname {
+        flex: 1;
+        min-width: 0;
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--marker);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
-      .actu-bars { display: flex; gap: 1px; align-items: flex-end; height: 26px; margin-top: 6px; }
-      .actu-bar { flex: 1; background: var(--chip2); border-radius: 1px; min-height: 1px; }
-      .actu-xlab { display: flex; justify-content: space-between; font-size: 10px; color: var(--v3-t4); margin-top: 4px; }
-      .actu-legend { display: flex; gap: 14px; margin-top: 8px; font-size: 11px; color: var(--v3-t3); }
-      .actu-legend span { display: inline-flex; align-items: center; gap: 5px; }
-      .actu-legend i { width: 12px; height: 2.5px; border-radius: 2px; display: block; }
-      .actu-legend i.cur { background: var(--brand); }
-      .actu-legend i.prev { background: var(--v3-t4); }
-      .actu-legend i.fc { background: repeating-linear-gradient(90deg, var(--brand) 0 4px, transparent 4px 8px); }
-      .actu-projs { display: flex; flex-direction: column; gap: 8px; }
-      .actu-proj {
-        display: flex;
+      .actu-pmid { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+      .actu-pnum {
+        flex: 1;
+        min-width: 0;
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        color: var(--marker);
+      }
+      .actu-pnum i { font-style: normal; font-size: 13px; font-weight: 500; color: var(--v3-t3); }
+      .actu-pst {
+        height: 22px;
+        padding: 0 8px;
+        border-radius: 7px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-flex;
         align-items: center;
-        gap: 10px;
-        background: var(--surf);
-        border: 1px solid var(--bd2);
-        border-radius: 12px;
-        padding: 11px 13px;
+        gap: 5px;
+        white-space: nowrap;
+        flex: none;
       }
-      .actu-proj.stale { border-color: var(--st-behind-dot, #d97706); }
-      .actu-pdot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
-      .actu-ptxt { flex: 1; min-width: 0; }
-      .actu-pname { font-size: 14px; font-weight: 600; color: var(--marker); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .actu-pmeta { display: flex; align-items: center; gap: 6px; margin-top: 3px; font-size: 11.5px; color: var(--v3-t3); min-width: 0; }
-      .actu-pst { font-weight: 600; white-space: nowrap; }
-      .actu-pst.ahead { color: var(--st-ahead, #15803d); }
-      .actu-pst.onplan { color: var(--st-onplan, #255f91); }
-      .actu-pst.behind { color: var(--st-behind, #a45f08); }
-      .actu-pst.sub { color: var(--v3-t3); font-weight: 400; }
-      .actu-plast { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .actu-pn { font-size: 15px; font-weight: 700; color: var(--marker); flex: none; }
-      .actu-pn i { font-style: normal; font-size: 12px; font-weight: 500; color: var(--v3-t3); }
-      @media (max-width: 767px) {
-        .act-wrap { display: block; }
-        .actu-kpis { grid-template-columns: 1fr 1fr; }
+      .actu-pst em { width: 6px; height: 6px; border-radius: 99px; display: block; }
+      .actu-pst.ahead { background: var(--st-ahead-bg, #e8f6ec); color: var(--st-ahead, #15803d); }
+      .actu-pst.ahead em { background: var(--st-ahead-dot, #16a34a); }
+      .actu-pst.onplan { background: var(--st-onplan-bg, #eaf2f9); color: var(--st-onplan, #255f91); }
+      .actu-pst.onplan em { background: var(--st-onplan-dot, #2f7ab9); }
+      .actu-pst.behind { background: var(--st-behind-bg, #fbf1e4); color: var(--st-behind, #a45f08); }
+      .actu-pst.behind em { background: var(--st-behind-dot, #d97706); }
+      .actu-pspark { margin-top: 10px; }
+      .actu-spark { display: block; max-width: 100%; height: auto; }
+      .actu-pfoot { margin-top: 8px; }
+      .actu-time { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 500; color: var(--v3-t2); }
+      .actu-time svg { width: 13px; height: 13px; color: var(--v3-t3); flex: none; }
+      .actu-warn { font-size: 11.5px; font-weight: 600; color: var(--st-behind-dot, #b45309); }
+
+      /* Loyihalar ro'yxati (telefon) */
+      .actu-plist { padding: 12px 14px 2px; }
+      .actu-ptitle { font-size: 15px; font-weight: 700; color: var(--marker); }
+      .actu-prow { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--bd2); }
+      .actu-prow:last-child { border-bottom: 0; }
+      .actu-prow-txt { flex: 1; min-width: 0; }
+      .actu-prow-sub { display: flex; gap: 4px; margin-top: 2px; font-size: 11.5px; white-space: nowrap; }
+      .actu-prow-sub b { font-weight: 600; }
+      .actu-prow-sub b.ahead { color: var(--st-ahead, #15803d); }
+      .actu-prow-sub b.onplan { color: var(--st-onplan, #255f91); }
+      .actu-prow-sub b.behind { color: var(--st-behind-dot, #b45309); }
+      .actu-prow-sub span { font-weight: 400; color: var(--v3-t2); }
+      .actu-prow-n { width: 54px; flex: none; text-align: right; font-size: 13.5px; font-weight: 700; color: var(--marker); }
+
+      @media (max-width: 859px) {
+        .actu-only-d { display: none !important; }
+        .actu-only-m { display: block; }
+        .actu-legend .actu-only-m { display: inline; }
+        /* Sarlavha — yopishgan qator, qolgani aylanadigan qismda */
+        .actu-hdr {
+          gap: 10px;
+          padding: calc(4px + var(--tg-safe-top)) 16px 12px;
+          background: var(--surf);
+          border-bottom: 1px solid var(--bd2);
+        }
+        .act-av.big { width: 36px; height: 36px; border-radius: 12px; font-size: 14px; }
+        .actu-name { font-size: 16px; }
+        .actu-sub { font-size: 12px; margin-top: 1px; }
+        .actu-hkpis { display: none; }
+        .actu-mkpis { display: flex; gap: 8px; margin: 12px 16px 0; }
+        .actu-mkpis .actu-kpi {
+          flex: 1;
+          min-width: 0;
+          background: var(--surf);
+          border: 1px solid var(--bd2);
+          border-radius: 12px;
+          padding: 9px 12px;
+        }
+        .actu-mkpis .actu-kpi b { font-size: 16px; font-variant-numeric: tabular-nums; }
+        .actu-mkpis .actu-kpi span { font-size: 11.5px; font-weight: 400; }
+        .actu-card { margin: 10px 16px 0; border-radius: 14px; padding: 14px; }
+        .actu-top { gap: 8px; }
+        .actu-bign { font-size: 26px; }
+        .actu-bigl { font-size: 13px; }
+        .actu-badge { height: 22px; font-size: 11.5px; }
+        .actu-cmp-sub { font-size: 12px; }
+        .actu-legend { gap: 14px; margin-top: 8px; }
+        .actu-plist { margin-bottom: 16px; }
       }
 
       /* ── VAZIFANI SURIB KO'CHIRISH (drag & drop) ───────────────────
@@ -16315,7 +16428,7 @@
       }
 
       // Xodimning oydagi ishlari. Asosiy raqam — post va stories
-      // (vazifalar alohida hisoblanadi, TZ shunday).
+      // (vazifalar alohida, TZ shunday).
       function actUserItems(username, monthKey) {
         return act.items.filter((it) => it.users.includes(username) && it.day.slice(0, 7) === monthKey);
       }
@@ -16344,9 +16457,11 @@
         const iso = isoOf(d);
         const soat = `${actPad(d.getHours())}:${actPad(d.getMinutes())}`;
         if (iso === act.today) return `bugun ${soat}`;
-        if (iso === isoOf(new Date(parseISO(act.today).getTime() - 86400000))) return `kecha ${soat}`;
+        const kecha = isoOf(new Date(parseISO(act.today).getTime() - 86400000));
+        if (iso === kecha) return `kecha ${soat}`;
         return `${ntfDayShort(iso)} ${soat}`;
       }
+      const ACT_CLOCK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>`;
 
       function renderActivityUser() {
         const body = document.getElementById("activity-user-body");
@@ -16367,27 +16482,37 @@
         const jami = ishlar.length;
         const farq = jami - prevShuKunga;
         const foiz = prevShuKunga ? Math.round((farq / prevShuKunga) * 100) : null;
-
         const faolKun = new Set(hammasi.map((it) => it.day)).size;
         // O'z loyihalari — xodim SMM mas'uli bo'lgan loyihalar.
         const ozLoyihalar = act.projects.filter((p) => p.smm === un);
         const ozReja = ozLoyihalar.reduce((s, p) => s + (p.plan || 0), 0);
         const ozBajarilgan = ishlar.filter((it) => it.project && ozLoyihalar.some((p) => p.slug === it.project.slug)).length;
+        const keyingiOy = actShiftMonth(monthKey, 1) <= actMonthKey(todayDate());
+        const oyNomi = MONTHS[Number(monthKey.slice(5, 7)) - 1];
+        const prevNomi = MONTHS[Number(prevKey.slice(5, 7)) - 1];
 
+        const kpi = (val, lab) => `<div class="actu-kpi"><b>${val}</b><span>${lab}</span></div>`;
         const header = `<div class="actu-hdr">
+            <button type="button" class="actu-back" onclick="openActivity(act.month)" aria-label="Orqaga">${ICON.chevronLeft}</button>
             ${actAv(u, "big")}
             <div class="actu-hdr-txt">
               <div class="actu-name">${escHtml(u.name || "@" + un)}</div>
               <div class="actu-sub">${escHtml(u.jobTitle || "Xodim")} · ${actMonthLabel(monthKey)}</div>
             </div>
-            <div class="act-monthbar tight">
-              <button type="button" class="act-mbtn" onclick="actUserSetMonth(-1)">${ICON.chevronLeft}</button>
-              <button type="button" class="act-mbtn"${actShiftMonth(monthKey, 1) <= actMonthKey(todayDate()) ? "" : " disabled"} onclick="actUserSetMonth(1)">${ICON.chevronRight}</button>
+            <div class="actu-hkpis">
+              ${kpi(`${faolKun} / ${otgan}`, "faol kun")}
+              ${kpi(`${ozBajarilgan} / ${ozReja}`, "o'z loyihalari rejasi")}
+              <span class="actu-div"></span>
+              <span class="actu-mnav">
+                <button type="button" class="act-mbtn sm" onclick="actUserSetMonth(-1)">${ICON.chevronLeft}</button>
+                <span class="actu-month">${actMonthLabel(monthKey)}</span>
+                <button type="button" class="act-mbtn sm"${keyingiOy ? "" : " disabled"} onclick="actUserSetMonth(1)">${ICON.chevronRight}</button>
+              </span>
             </div>
           </div>
-          <div class="actu-kpis">
-            <div class="actu-kpi"><b>${faolKun} / ${otgan}</b><span>faol kun</span></div>
-            <div class="actu-kpi"><b>${ozBajarilgan} / ${ozReja}</b><span>o'z loyihalari rejasi</span></div>
+          <div class="actu-mkpis">
+            ${kpi(`${faolKun}<i> / ${otgan}</i>`, "faol kun")}
+            ${kpi(`${ozBajarilgan}<i> / ${ozReja}</i>`, "o'z loyihalari rejasi")}
           </div>`;
 
         if (!hammasi.length) {
@@ -16396,18 +16521,35 @@
         }
 
         const prognoz = otgan ? Math.round((jami / otgan) * kunlar) : 0;
-        const big = `<div class="actu-big">
-            <div class="actu-bign">${jami}</div>
-            <div class="actu-bigl">ta ish · 1–${otgan} ${MONTHS[Number(monthKey.slice(5, 7)) - 1].toLowerCase()}</div>
-            ${
+        const badge =
+          prevShuKunga && foiz !== null
+            ? `<span class="actu-badge ${farq >= 0 ? "up" : "down"}">${farq >= 0 ? "+" : "−"}${Math.abs(farq)} ta · ${farq >= 0 ? "+" : "−"}${Math.abs(foiz)}%</span>`
+            : "";
+        const mbadge =
+          prevShuKunga && foiz !== null
+            ? `<span class="actu-badge ${farq >= 0 ? "up" : "down"}">${farq >= 0 ? "+" : "−"}${Math.abs(foiz)}%</span>`
+            : "";
+        const chartCard = `<div class="actu-card">
+            <div class="actu-top">
+              <span class="actu-bign">${jami}</span>
+              <span class="actu-bigl">ta ish · 1–${otgan} ${oyNomi.toLowerCase()}</span>
+              <span class="actu-only-d">${badge}</span>
+              <span class="actu-only-m">${mbadge}</span>
+            </div>
+            <div class="actu-cmp-sub">${
               prevShuKunga
-                ? `<div class="actu-cmp ${farq >= 0 ? "up" : "down"}">${farq >= 0 ? "+" : "−"}${Math.abs(farq)} ta${foiz === null ? "" : ` · ${farq >= 0 ? "+" : "−"}${Math.abs(foiz)}%`}</div>
-                   <div class="actu-cmp-sub">${MONTHS[Number(prevKey.slice(5, 7)) - 1]}ning shu kuniga nisbatan (${prevShuKunga} ta)</div>`
-                : `<div class="actu-cmp-sub">O'tgan oyda taqqoslash uchun ma'lumot yo'q</div>`
-            }
+                ? `${escHtml(prevNomi)}ning shu kuniga nisbatan (${prevShuKunga} ta)`
+                : "O'tgan oyda taqqoslash uchun ma'lumot yo'q"
+            }</div>
+            <div class="actu-legend">
+              <span><i class="cur"></i>${escHtml(oyNomi)}</span>
+              <span><i class="prev"></i>${escHtml(prevNomi)}</span>
+              <span><i class="fc"></i><span class="actu-only-d">Prognoz — shu sur'atda</span><span class="actu-only-m">Prognoz</span></span>
+              <span class="actu-only-d"><i class="bar"></i>Kunlik ishlar</span>
+            </div>
+            <div class="actu-chart actu-only-d">${actChartSvg(hammasi, monthKey, prevKey, un, otgan, prognoz, false)}</div>
+            <div class="actu-chart actu-only-m">${actChartSvg(hammasi, monthKey, prevKey, un, otgan, prognoz, true)}</div>
           </div>`;
-
-        const chart = actChartHtml(hammasi, monthKey, prevKey, un, otgan, prognoz);
 
         // Loyiha kartalari — shu oyda ishlangan har loyiha, ko'pidan kamiga.
         const byProj = {};
@@ -16419,7 +16561,7 @@
           byProj[slug].days[it.day] = (byProj[slug].days[it.day] || 0) + 1;
           if (!byProj[slug].last || it.at > byProj[slug].last) byProj[slug].last = it.at;
         });
-        const cards = Object.values(byProj)
+        const projs = Object.values(byProj)
           .sort((a, b) => b.n - a.n)
           .map((p) => {
             const meta = act.projects.find((x) => x.slug === p.slug);
@@ -16430,75 +16572,165 @@
             const oxirgiKun = Object.keys(p.days).sort().pop();
             const tanaffus = oxirgiKun ? daysBetween(parseISO(oxirgiKun), parseISO(act.today)) : 99;
             const eskirgan = tanaffus >= 5;
-            return `<div class="actu-proj${eskirgan ? " stale" : ""}">
-              <span class="actu-pdot" style="background:${personColor(p.slug)}"></span>
-              <div class="actu-ptxt">
-                <div class="actu-pname">${escHtml(p.label)}</div>
-                <div class="actu-pmeta">
-                  ${st ? `<span class="actu-pst ${st.cls}">${st.label}</span>` : `<span class="actu-pst sub">${escHtml(actShortName(actUser(meta?.smm || "")))} o'rniga</span>`}
-                  <span class="actu-plast">${eskirgan ? `${tanaffus} kundan beri yo'q` : "· " + escHtml(actLastWorkText(p.last))}</span>
-                </div>
+            const rang = personColor(p.slug);
+            const kimOrniga = !oz && meta && meta.smm ? `${actShortName(actUser(meta.smm))} o'rniga` : "";
+            const vaqt = eskirgan
+              ? `<span class="actu-warn">${tanaffus} kundan beri yo'q</span>`
+              : `<span class="actu-time">${ACT_CLOCK}${escHtml(actLastWorkText(p.last))}</span>`;
+            const spark = actSparkSvg(p, monthKey, otgan, kunlar, reja, rang);
+            return {
+              p, meta, reja, st, eskirgan, rang, kimOrniga, vaqt, spark, tanaffus,
+            };
+          });
+
+        const projCards = projs
+          .map((x) => `<div class="actu-proj${x.eskirgan ? " stale" : ""}">
+              <div class="actu-ptop">
+                <span class="actu-pdot" style="background:${x.rang}"></span>
+                <span class="actu-pname">${escHtml(x.p.label)}</span>
               </div>
-              <div class="actu-pn">${reja ? `${p.n} <i>/ ${reja}</i>` : `${p.n} <i>ta</i>`}</div>
-            </div>`;
-          })
+              <div class="actu-pmid">
+                <span class="actu-pnum">${x.p.n}<i>${x.reja ? ` / ${x.reja}` : " ta"}</i></span>
+                ${x.st ? `<span class="actu-pst ${x.st.cls}"><em></em>${x.st.label}</span>` : ""}
+              </div>
+              <div class="actu-pspark">${x.spark.big}</div>
+              <div class="actu-pfoot">${x.kimOrniga ? `<span class="actu-warn">${escHtml(x.kimOrniga)}</span>` : x.vaqt}</div>
+            </div>`)
           .join("");
 
-        body.innerHTML = `${header}${big}${chart}
-          <div class="act-seclbl">Loyihalar bo'yicha</div>
-          <div class="actu-projs">${cards || `<div class="act-empty">Loyiha ishi yo'q</div>`}</div>`;
+        const projRows = projs
+          .map((x) => `<div class="actu-prow">
+              <span class="actu-pdot" style="background:${x.rang}"></span>
+              <span class="actu-prow-txt">
+                <span class="actu-pname">${escHtml(x.p.label)}</span>
+                <span class="actu-prow-sub">
+                  ${x.st ? `<b class="${x.st.cls}">${x.st.label}</b>` : ""}
+                  ${x.kimOrniga ? `<b class="behind">${escHtml(x.kimOrniga)}</b>` : x.eskirgan ? `<b class="behind">· ${x.tanaffus} kundan beri yo'q</b>` : `<span>· ${escHtml(actLastWorkText(x.p.last))}</span>`}
+                </span>
+              </span>
+              ${x.spark.sm}
+              <span class="actu-prow-n">${x.p.n}${x.reja ? ` / ${x.reja}` : " ta"}</span>
+            </div>`)
+          .join("");
+
+        body.innerHTML = `${header}${chartCard}
+          <div class="act-seclbl actu-only-d">Loyihalar bo'yicha</div>
+          <div class="actu-projs actu-only-d">${projCards || `<div class="act-empty">Loyiha ishi yo'q</div>`}</div>
+          <div class="actu-card actu-only-m actu-plist">
+            <div class="actu-ptitle">Loyihalar bo'yicha</div>
+            ${projRows || `<div class="act-empty">Loyiha ishi yo'q</div>`}
+          </div>`;
       }
 
-      // O'sish grafigi: ko'k — joriy oy (to'plangan), kulrang — o'tgan
-      // oy, uzuq — shu sur'atdagi prognoz. Pastda kunlik ustunlar.
-      function actChartHtml(items, monthKey, prevKey, username, otgan, prognoz) {
+      // O'sish grafigi: ko'k — joriy oy (oy boshidan to'plangan),
+      // kulrang — o'tgan oy, uzuq — shu sur'atdagi prognoz. Pastda
+      // kunlik ustunlar. Kompyuter va telefon uchun bir xil chizma,
+      // faqat o'lchamlari boshqa.
+      function actNiceStep(max) {
+        const xom = Math.max(1, max) / 4;
+        const daraja = Math.pow(10, Math.floor(Math.log10(xom)));
+        return [1, 2, 2.5, 5, 10].map((k) => k * daraja).find((s) => s >= xom) || daraja * 10;
+      }
+      function actChartSvg(items, monthKey, prevKey, username, otgan, prognoz, mobil) {
         const kunlar = actDaysInMonth(monthKey);
-        const cur = actCumulative(items.filter((it) => it.kind !== "task"), monthKey, monthKey === act.today.slice(0, 7) ? act.today : null);
+        const C = mobil
+          ? { W: 328, H: 190, x0: 24, x1: 280, y0: 130, yTop: 18, barBase: 168, barH: 25, barW: 5, labY: 184, fs: 11, xTicks: [1, 8, 15, 22, kunlar], cw: 2.5, r: 4 }
+          : { W: 966, H: 372, x0: 40, x1: 876, y0: 280, yTop: 24, barBase: 352, barH: 40, barW: 14, labY: 368, fs: 11, xTicks: [1, 5, 10, 15, 20, 25, kunlar], cw: 3, r: 5 };
+
+        const ishlar = items.filter((it) => it.kind !== "task");
+        const cur = actCumulative(ishlar, monthKey, monthKey === act.today.slice(0, 7) ? act.today : null);
         const prev = actCumulative(actUserItems(username, prevKey).filter((it) => it.kind !== "task"), prevKey);
-        const prevMax = prev.length ? prev[prev.length - 1] : 0;
+        const prevKunlar = actDaysInMonth(prevKey);
         const jami = cur.filter((v) => v !== null).pop() || 0;
-        const maxY = Math.max(10, jami, prevMax, prognoz) * 1.1;
-        const W = 320;
-        const H = 110;
-        const x = (i) => (i / (kunlar - 1)) * W;
-        const y = (v) => H - (v / maxY) * H;
-        const chiziq = (arr) =>
+        const prevJami = prev.length ? prev[prev.length - 1] : 0;
+        const step = actNiceStep(Math.max(jami, prevJami, prognoz));
+        const maxY = Math.max(step * 4, Math.ceil(Math.max(jami, prevJami, prognoz) / step) * step);
+        const X = (i, n) => C.x0 + (i / ((n || kunlar) - 1)) * (C.x1 - C.x0);
+        const Y = (v) => C.y0 - (v / maxY) * (C.y0 - C.yTop);
+        const pts = (arr, n) =>
           arr
-            .map((v, i) => (v === null ? null : `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(v).toFixed(1)}`))
+            .map((v, i) => (v === null ? null : `${X(i, n).toFixed(1)},${Y(v).toFixed(1)}`))
             .filter(Boolean)
             .join(" ");
         let oxirgiI = cur.length - 1;
         while (oxirgiI > 0 && cur[oxirgiI] === null) oxirgiI--;
-        const prognozYol =
-          otgan && otgan < kunlar
-            ? `M${x(oxirgiI).toFixed(1)} ${y(jami).toFixed(1)} L${x(kunlar - 1).toFixed(1)} ${y(prognoz).toFixed(1)}`
-            : "";
+        const bugunX = X(oxirgiI);
+        const tugamagan = otgan < kunlar;
+
+        // Y o'qi va to'r chiziqlari
+        let g = "";
+        for (let v = 0; v <= maxY; v += step) {
+          const y = Y(v);
+          g += `<line x1="${C.x0}" x2="${C.x1}" y1="${y}" y2="${y}" stroke="${v === 0 ? "#dde1e6" : "#eef0f3"}"/>
+            <text x="${C.x0 - 10}" y="${y + 4}" font-size="${C.fs}" font-weight="500" fill="#7a828e" text-anchor="end">${v}</text>`;
+        }
+        // Kunlik ustunlar
         const byDay = actDayCounts(items);
         const maxKun = Math.max(1, ...Object.values(byDay));
-        const bars = Array.from({ length: kunlar }, (_, i) => {
-          const iso = `${monthKey}-${actPad(i + 1)}`;
+        let bars = "";
+        for (let d = 1; d <= kunlar; d++) {
+          const iso = `${monthKey}-${actPad(d)}`;
           const n = byDay[iso] || 0;
-          return `<span class="actu-bar" style="height:${Math.round((n / maxKun) * 100)}%" title="${iso}: ${n}"></span>`;
-        }).join("");
+          if (!n) continue;
+          const h = Math.max(3, Math.round((n / maxKun) * C.barH));
+          const x = X(d - 1) - C.barW / 2;
+          const tanlangan = actUserState && actUserState.day === iso;
+          bars += `<rect x="${x.toFixed(1)}" y="${C.barBase - h}" width="${C.barW}" height="${h}" rx="${mobil ? 1.5 : 3}" fill="${tanlangan ? "#2f7ab9" : "#a7c9e6"}"/>`;
+        }
+        const xlab = C.xTicks
+          .map(
+            (d) =>
+              `<text x="${X(d - 1).toFixed(1)}" y="${C.labY}" font-size="${C.fs}" font-weight="${d === otgan ? 700 : 500}" fill="${d === otgan ? "#0e1726" : "#7a828e"}" text-anchor="middle">${d}</text>`,
+          )
+          .join("");
 
-        return `<div class="actu-chart">
-          <div class="actu-ylab"><span>${Math.round(maxY)}</span><span>${Math.round(maxY / 2)}</span><span>0</span></div>
-          <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="actu-svg">
-            <line x1="0" y1="${H}" x2="${W}" y2="${H}" class="actu-axis"/>
-            <line x1="0" y1="${H / 2}" x2="${W}" y2="${H / 2}" class="actu-grid"/>
-            ${prevMax ? `<path d="${chiziq(prev)}" class="actu-prev"/>` : ""}
-            ${prognozYol ? `<path d="${prognozYol}" class="actu-fc"/>` : ""}
-            <path d="${chiziq(cur)}" class="actu-cur"/>
-            ${otgan && otgan < kunlar ? `<line x1="${x(oxirgiI)}" y1="0" x2="${x(oxirgiI)}" y2="${H}" class="actu-now"/>` : ""}
-          </svg>
-          <div class="actu-bars">${bars}</div>
-          <div class="actu-xlab"><span>1</span><span>${Math.round(kunlar / 2)}</span><span>${kunlar}</span></div>
-          <div class="actu-legend">
-            <span><i class="cur"></i>${MONTHS[Number(monthKey.slice(5, 7)) - 1]}</span>
-            ${prevMax ? `<span><i class="prev"></i>${MONTHS[Number(prevKey.slice(5, 7)) - 1]}</span>` : ""}
-            ${prognozYol ? `<span><i class="fc"></i>Prognoz ${prognoz}</span>` : ""}
-          </div>
-        </div>`;
+        const maydon = `${pts(cur)} ${bugunX.toFixed(1)},${C.y0}`;
+        return `<svg viewBox="0 0 ${C.W} ${C.H}" class="actu-svg" preserveAspectRatio="xMidYMid meet">
+          ${g}
+          ${tugamagan ? `<line x1="${bugunX.toFixed(1)}" x2="${bugunX.toFixed(1)}" y1="${C.yTop - 4}" y2="${C.y0}" stroke="#c3c9d1" stroke-dasharray="3 4"/>
+            <text x="${bugunX.toFixed(1)}" y="${C.yTop - 10}" font-size="${C.fs}" font-weight="600" fill="#0e1726" text-anchor="middle">${mobil ? "Bugun" : `Bugun — ${jami} ta`}</text>` : ""}
+          ${prevJami ? `<polyline points="${pts(prev, prevKunlar)}" fill="none" stroke="#b8bec6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>` : ""}
+          <polygon points="${C.x0},${C.y0} ${maydon}" fill="rgba(47,122,185,.08)"/>
+          ${tugamagan ? `<line x1="${bugunX.toFixed(1)}" y1="${Y(jami).toFixed(1)}" x2="${C.x1}" y2="${Y(prognoz).toFixed(1)}" stroke="#2f7ab9" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round" opacity=".75"/>` : ""}
+          <polyline points="${pts(cur)}" fill="none" stroke="#2f7ab9" stroke-width="${C.cw}" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="${bugunX.toFixed(1)}" cy="${Y(jami).toFixed(1)}" r="${C.r}" fill="#2f7ab9"/>
+          ${tugamagan ? `<text x="${C.x1 + 6}" y="${(Y(prognoz) + 4).toFixed(1)}" font-size="${mobil ? 11 : 12}" font-weight="600" fill="#255f91" text-anchor="start">${mobil ? prognoz : "Prognoz " + prognoz}</text>` : ""}
+          ${prevJami ? `<text x="${C.x1 - (mobil ? 3 : 20)}" y="${(Y(prevJami) + 4).toFixed(1)}" font-size="${mobil ? 11 : 12}" font-weight="600" fill="#7a828e" text-anchor="start">${mobil ? prevJami : MONTHS[Number(prevKey.slice(5, 7)) - 1] + " " + prevJami}</text>` : ""}
+          ${bars}
+          <line x1="${C.x0}" x2="${C.x1}" y1="${C.barBase}" y2="${C.barBase}" stroke="#dde1e6"/>
+          ${mobil ? "" : `<text x="${C.x0 - 10}" y="${C.barBase - 8}" font-size="${C.fs}" font-weight="500" fill="#7a828e" text-anchor="end">Kunlik</text>`}
+          ${xlab}
+        </svg>`;
+      }
+
+      // Loyiha kartasidagi kichik chiziq: to'plangan ishlar va (reja
+      // bo'lsa) uzuq chiziq bilan reja sur'ati.
+      function actSparkSvg(p, monthKey, otgan, kunlar, reja, rang) {
+        const byDay = p.days;
+        const seriya = [];
+        let sum = 0;
+        for (let d = 1; d <= otgan; d++) {
+          sum += byDay[`${monthKey}-${actPad(d)}`] || 0;
+          seriya.push(sum);
+        }
+        const maxV = Math.max(1, reja || sum, sum);
+        const chiz = (W, H) => {
+          const x0 = 2;
+          const x1 = W - 2;
+          const yb = H - 3;
+          const yt = 4;
+          const X = (i) => x0 + (i / Math.max(1, kunlar - 1)) * (x1 - x0);
+          const Y = (v) => yb - (v / maxV) * (yb - yt);
+          const pts = seriya.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
+          const oxirgi = seriya.length ? seriya[seriya.length - 1] : 0;
+          return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" class="actu-spark">
+            <line x1="${x0}" x2="${x1}" y1="${yb}" y2="${yb}" stroke="#eef0f3"/>
+            ${reja ? `<line x1="${x0}" y1="${yb}" x2="${x1}" y2="${Y(reja).toFixed(1)}" stroke="#c3c9d1" stroke-width="1.5" stroke-dasharray="3 3"/>` : ""}
+            <polyline points="${pts}" fill="none" stroke="${rang}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="${X(seriya.length - 1).toFixed(1)}" cy="${Y(oxirgi).toFixed(1)}" r="3" fill="${rang}"/>
+          </svg>`;
+        };
+        return { big: chiz(163, 44), sm: chiz(72, 26) };
       }
 
       // ── TARIX (barcha loyihalarning davrlari) ─────────────────────
