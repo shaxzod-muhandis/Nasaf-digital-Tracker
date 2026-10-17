@@ -9,6 +9,14 @@
       "destination": "/api/index"
     },
     {
+      "source": "/kalendar",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/kalendar/(.*)",
+      "destination": "/api/index"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/index"
     }

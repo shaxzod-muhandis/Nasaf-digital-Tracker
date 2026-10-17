@@ -10338,6 +10338,709 @@
           vertical-align: middle;
         }
       }
+
+      /* ═══ KALENDAR ═══════════════════════════════════════════════════
+         Umumiy kalendar: Kun / Hafta / Oy. Soat qatori balandligi —
+         bitta o'zgaruvchi (`--kal-h`), chunki blok joylashuvi JS'da
+         ham shu songa tayanadi: ikkisi bir joydan boshqarilmasa,
+         bloklar vaqt chizig'idan siljib ketadi. */
+      :root {
+        --kal-h: 56px;        /* bitta soat qatori */
+        --kal-gutter: 56px;   /* chapdagi soatlar ustuni */
+        --kal-now: #dc2626;
+        --kal-team: #475569;
+        --kal-line: rgba(15, 23, 42, 0.09);
+      }
+
+      /* Kalendar — yagona ekran: tepa qatori joyida turadi, faqat
+         vaqt to'ri suriladi. Buning uchun ekran balandligi ANIQ
+         bo'lishi shart, aks holda `.kal-body` cho'zilib ketadi. */
+      #screen-kalendar { height: 100vh; height: 100dvh; overflow: hidden; }
+      .kal-wrap { display: flex; flex: 1; min-height: 0; }
+      .kal-side {
+        width: 236px;
+        flex: none;
+        border-right: 1px solid var(--kal-line);
+        padding: 16px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .kal-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+      /* ── Tepa panel ──────────────────────────────────────────────── */
+      .kal-top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--kal-line);
+        flex: none;
+      }
+      .kal-title { font-size: 20px; font-weight: 700; color: var(--marker); letter-spacing: -0.02em; }
+      .kal-title i { font-style: normal; font-weight: 400; color: var(--v3-t3); margin-left: 6px; }
+      .kal-seg {
+        display: inline-flex;
+        background: var(--chip2);
+        border-radius: 10px;
+        padding: 3px;
+        gap: 2px;
+      }
+      .kal-seg button {
+        height: 30px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--v3-t2);
+        cursor: pointer;
+      }
+      .kal-seg button.on { background: var(--surf); color: var(--marker); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08); }
+      .kal-nav { display: inline-flex; align-items: center; gap: 4px; }
+      .kal-nbtn {
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--bd2);
+        border-radius: 9px;
+        background: var(--surf);
+        color: var(--v3-t2);
+        font: inherit;
+        font-size: 15px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .kal-nbtn:hover { border-color: var(--bd4); color: var(--marker); }
+      .kal-nbtn.wide { width: auto; padding: 0 12px; font-size: 13px; font-weight: 600; }
+      .kal-grow { flex: 1; }
+
+      /* ── Chap panel ──────────────────────────────────────────────── */
+      .kal-newbtn {
+        height: 40px;
+        border: 0;
+        border-radius: 10px;
+        background: var(--brand);
+        color: #fff;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+      }
+      .kal-newbtn:hover { filter: brightness(1.06); }
+      .kal-mini-top { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+      .kal-mini-t { flex: 1; font-size: 13.5px; font-weight: 600; color: var(--marker); }
+      .kal-mini-b {
+        width: 24px; height: 24px; border: 0; border-radius: 7px;
+        background: transparent; color: var(--v3-t3); cursor: pointer; font: inherit;
+      }
+      .kal-mini-b:hover { background: var(--chip2); color: var(--marker); }
+      .kal-mini { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+      .kal-mini-wd { font-size: 10.5px; font-weight: 600; color: var(--v3-t4); text-align: center; padding-bottom: 2px; }
+      .kal-mini-d {
+        height: 26px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--v3-t2);
+        cursor: pointer;
+      }
+      .kal-mini-d:hover { background: var(--chip2); }
+      .kal-mini-d.out { color: var(--v3-t4); opacity: 0.6; }
+      /* Ko'rsatilayotgan davr fonda belgilanadi — qaysi hafta ochiqligi
+         kichik kalendardan ham ko'rinib tursin. */
+      .kal-mini-d.in { background: rgba(47, 122, 185, 0.1); }
+      .kal-mini-d.today { background: var(--brand); color: #fff; font-weight: 700; }
+
+      .kal-flt-t { font-size: 12px; font-weight: 600; color: var(--v3-t3); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px; }
+      .kal-flt-row {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 6px 4px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        color: var(--marker);
+      }
+      .kal-flt-row:hover { background: var(--chip2); }
+      .kal-flt-box {
+        width: 17px;
+        height: 17px;
+        border-radius: 5px;
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        border: 1.5px solid var(--bd4);
+      }
+      .kal-flt-row.on .kal-flt-box { border-color: transparent; }
+      .kal-flt-nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .kal-flt-hint { font-size: 11.5px; line-height: 1.4; color: var(--v3-t4); margin-top: 8px; }
+
+      /* ── Hafta / Kun to'ri ───────────────────────────────────────── */
+      .kal-head {
+        display: grid;
+        border-bottom: 1px solid var(--kal-line);
+        flex: none;
+      }
+      .kal-head-pad { border-right: 1px solid var(--kal-line); }
+      .kal-hd {
+        padding: 8px 6px 10px;
+        text-align: center;
+        border-left: 1px solid var(--kal-line);
+      }
+      .kal-hd.we { background: rgba(15, 23, 42, 0.02); }
+      .kal-hd-w { font-size: 11.5px; font-weight: 600; color: var(--v3-t3); }
+      .kal-hd-n {
+        margin: 3px auto 0;
+        width: 30px;
+        height: 30px;
+        border-radius: 99px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--marker);
+        cursor: pointer;
+      }
+      .kal-hd-n.today { background: var(--brand); color: #fff; }
+      .kal-hd-n:hover { background: var(--chip2); }
+      .kal-hd-n.today:hover { background: var(--brand); }
+
+      /* «butun kun» qatori */
+      .kal-allday {
+        display: grid;
+        border-bottom: 1px solid var(--kal-line);
+        min-height: 30px;
+        flex: none;
+      }
+      .kal-allday-lbl {
+        font-size: 10.5px;
+        color: var(--v3-t4);
+        text-align: right;
+        padding: 6px 8px 0 0;
+        border-right: 1px solid var(--kal-line);
+      }
+      .kal-allday-col { border-left: 1px solid var(--kal-line); padding: 4px; display: flex; flex-direction: column; gap: 3px; }
+      .kal-ad-ev {
+        font-size: 11.5px;
+        font-weight: 600;
+        padding: 3px 7px;
+        border-radius: 6px;
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .kal-body { flex: 1; overflow-y: auto; position: relative; }
+      .kal-grid { display: grid; position: relative; }
+      .kal-hours { border-right: 1px solid var(--kal-line); position: relative; }
+      .kal-hour {
+        height: var(--kal-h);
+        font-size: 11px;
+        color: var(--v3-t3);
+        text-align: right;
+        padding-right: 8px;
+        /* Yozuv chiziqning o'ziga emas, biroz tepasiga tushsin */
+        transform: translateY(-7px);
+      }
+      .kal-col {
+        position: relative;
+        border-left: 1px solid var(--kal-line);
+      }
+      .kal-col.we { background: rgba(15, 23, 42, 0.02); }
+      .kal-slot {
+        height: var(--kal-h);
+        border-bottom: 1px solid var(--kal-line);
+        box-sizing: border-box;
+      }
+      /* Yarim soat chizig'i — xira, faqat ko'z uchun o'lchov */
+      .kal-slot::after {
+        content: "";
+        display: block;
+        height: calc(var(--kal-h) / 2);
+        border-bottom: 1px dashed rgba(15, 23, 42, 0.05);
+      }
+
+      /* Hozirgi vaqt chizig'i */
+      .kal-now { position: absolute; left: 0; right: 0; height: 0; pointer-events: none; z-index: 4; }
+      .kal-now::before { content: ""; display: block; border-top: 1px solid var(--kal-now); opacity: 0.35; }
+      .kal-now.on::before { border-top-width: 2px; opacity: 1; }
+      .kal-now-lbl {
+        position: absolute;
+        left: 4px;
+        top: -9px;
+        font-size: 10.5px;
+        font-weight: 700;
+        color: #fff;
+        background: var(--kal-now);
+        border-radius: 5px;
+        padding: 1px 5px;
+        z-index: 5;
+      }
+
+      /* ── Reja bloki ──────────────────────────────────────────────── */
+      .kal-ev {
+        position: absolute;
+        border-radius: 7px;
+        padding: 4px 7px 4px 10px;
+        overflow: hidden;
+        cursor: pointer;
+        box-sizing: border-box;
+        min-height: 22px;
+        z-index: 2;
+      }
+      .kal-ev::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        border-radius: 7px 0 0 7px;
+        background: var(--kal-c);
+      }
+      .kal-ev:hover { box-shadow: 0 2px 8px rgba(15, 23, 42, 0.16); z-index: 3; }
+      /* O'tib ketgan reja xiraroq — bugungi ish ko'zga birinchi tashlansin */
+      .kal-ev.past { opacity: 0.6; }
+      .kal-ev-t {
+        font-size: 12.5px;
+        font-weight: 600;
+        line-height: 1.25;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .kal-ev-s { font-size: 11px; font-weight: 500; opacity: 0.85; margin-top: 1px; }
+      .kal-ev-av { display: flex; gap: 2px; margin-top: 4px; }
+      .kal-ev-av span {
+        width: 18px;
+        height: 18px;
+        border-radius: 99px;
+        font-size: 9px;
+        font-weight: 700;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1.5px solid var(--surf);
+        margin-left: -5px;
+      }
+      .kal-ev-av span:first-child { margin-left: 0; }
+      /* Tortib ko'chirilayotgan blok — asl joyida xiralashadi */
+      .kal-ev.drag { opacity: 0.35; }
+      .kal-ev-grip {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 7px;
+        cursor: ns-resize;
+      }
+
+      /* ── Oy ko'rinishi ───────────────────────────────────────────── */
+      .kal-m {
+        flex: 1;
+        display: grid;
+        grid-template-rows: auto repeat(6, 1fr);
+        min-height: 0;
+      }
+      .kal-m-wd { display: grid; grid-template-columns: repeat(7, 1fr); border-bottom: 1px solid var(--kal-line); }
+      .kal-m-wd div { padding: 7px 0; text-align: center; font-size: 11.5px; font-weight: 600; color: var(--v3-t3); }
+      .kal-m-row { display: grid; grid-template-columns: repeat(7, 1fr); border-bottom: 1px solid var(--kal-line); min-height: 0; }
+      .kal-m-cell {
+        border-left: 1px solid var(--kal-line);
+        padding: 4px 5px 5px;
+        min-width: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        cursor: pointer;
+      }
+      .kal-m-cell.we { background: rgba(15, 23, 42, 0.02); }
+      .kal-m-cell.out .kal-m-n { color: var(--v3-t4); }
+      .kal-m-n {
+        align-self: flex-start;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 5px;
+        border-radius: 99px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--marker);
+      }
+      .kal-m-n.today { background: var(--brand); color: #fff; }
+      .kal-m-ev {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11.5px;
+        line-height: 1.3;
+        border-radius: 5px;
+        padding: 1px 4px;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .kal-m-dot { width: 6px; height: 6px; border-radius: 99px; flex: none; }
+      .kal-m-time { font-weight: 600; color: var(--v3-t3); flex: none; }
+      .kal-m-nm { overflow: hidden; text-overflow: ellipsis; color: var(--marker); }
+      .kal-m-more { font-size: 11px; font-weight: 600; color: var(--brand); padding: 0 4px; cursor: pointer; }
+
+      /* ── Tafsilot kartasi ────────────────────────────────────────── */
+      .kal-pop {
+        position: fixed;
+        z-index: 1200;
+        width: 340px;
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 14px;
+        box-shadow: 0 18px 48px rgba(15, 23, 42, 0.22);
+        padding: 16px 18px 14px;
+      }
+      .kal-pop-top { display: flex; align-items: flex-start; gap: 10px; }
+      .kal-pop-bar { width: 4px; align-self: stretch; border-radius: 99px; flex: none; margin-top: 3px; }
+      .kal-pop-t { flex: 1; min-width: 0; font-size: 16.5px; font-weight: 700; color: var(--marker); line-height: 1.25; }
+      .kal-pop-x {
+        width: 26px; height: 26px; flex: none; border: 0; border-radius: 8px;
+        background: transparent; color: var(--v3-t3); font: inherit; font-size: 15px; cursor: pointer;
+      }
+      .kal-pop-x:hover { background: var(--chip2); color: var(--marker); }
+      .kal-pop-when { font-size: 13px; color: var(--v3-t2); margin: 4px 0 0 14px; }
+      .kal-pop-rows { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+      .kal-pop-row { display: flex; gap: 10px; font-size: 13px; }
+      .kal-pop-k { width: 86px; flex: none; color: var(--v3-t3); }
+      .kal-pop-v { flex: 1; min-width: 0; color: var(--marker); line-height: 1.45; white-space: pre-wrap; }
+      .kal-pop-av { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+      .kal-pop-av span {
+        width: 24px; height: 24px; border-radius: 99px; color: #fff;
+        font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+      }
+      .kal-pop-foot { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+      .kal-pop-btn {
+        height: 34px; padding: 0 14px; border-radius: 9px; border: 1px solid var(--bd2);
+        background: var(--surf); font: inherit; font-size: 13px; font-weight: 600;
+        color: var(--marker); cursor: pointer;
+      }
+      .kal-pop-btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+      .kal-pop-btn.danger { color: var(--red); }
+      .kal-pop-btn:hover { border-color: var(--bd4); }
+
+      /* ── Yaratish / tahrirlash oynasi ────────────────────────────── */
+      .kal-ov {
+        position: fixed;
+        inset: 0;
+        z-index: 1300;
+        background: rgba(15, 23, 42, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .kal-form {
+        width: 560px;
+        max-width: 100%;
+        max-height: 100%;
+        background: var(--surf);
+        border-radius: 18px;
+        box-shadow: 0 30px 80px rgba(15, 23, 42, 0.3);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .kal-f-hdr {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--bd2);
+        flex: none;
+      }
+      .kal-f-t { flex: 1; font-size: 16px; font-weight: 700; color: var(--marker); }
+      .kal-f-body { padding: 18px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+      .kal-f-title {
+        width: 100%;
+        height: 46px;
+        border: 1px solid var(--bd2);
+        border-radius: 10px;
+        padding: 0 13px;
+        font: inherit;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--marker);
+        background: var(--surf);
+      }
+      .kal-f-title:focus { outline: none; border-color: var(--brand); }
+      .kal-f-title.bad { border-color: var(--red); }
+      .kal-f-lbl { font-size: 12px; font-weight: 600; color: var(--v3-t3); margin-bottom: 6px; }
+      .kal-f-grid { display: flex; gap: 10px; }
+      .kal-f-grid > div { flex: 1; min-width: 0; }
+      .kal-f-in, .kal-f-sel {
+        width: 100%;
+        height: 40px;
+        border: 1px solid var(--bd2);
+        border-radius: 10px;
+        padding: 0 11px;
+        font: inherit;
+        font-size: 14px;
+        color: var(--marker);
+        background: var(--surf);
+      }
+      .kal-f-in:focus, .kal-f-sel:focus { outline: none; border-color: var(--brand); }
+      .kal-f-area {
+        width: 100%;
+        min-height: 72px;
+        border: 1px solid var(--bd2);
+        border-radius: 10px;
+        padding: 10px 11px;
+        font: inherit;
+        font-size: 14px;
+        color: var(--marker);
+        background: var(--surf);
+        resize: vertical;
+      }
+      .kal-f-area:focus { outline: none; border-color: var(--brand); }
+      .kal-f-sw { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--marker); cursor: pointer; }
+      .kal-f-sw input { width: 18px; height: 18px; accent-color: var(--brand); }
+      .kal-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+      .kal-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 34px;
+        padding: 0 11px 0 7px;
+        border-radius: 99px;
+        border: 1px solid var(--bd2);
+        background: var(--surf);
+        font: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--marker);
+        cursor: pointer;
+      }
+      .kal-chip i {
+        width: 22px; height: 22px; border-radius: 99px; font-style: normal;
+        font-size: 9px; font-weight: 700; color: #fff;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .kal-chip.on { border-color: var(--brand); background: rgba(47, 122, 185, 0.08); font-weight: 600; }
+      .kal-chip.busy { border-color: #d97706; }
+      .kal-warn {
+        display: flex;
+        gap: 9px;
+        background: #fcf1e1;
+        border: 1px solid rgba(217, 119, 6, 0.35);
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 12.5px;
+        line-height: 1.45;
+        color: #92400e;
+      }
+      .kal-warn b { font-weight: 700; }
+      .kal-f-foot {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 20px;
+        border-top: 1px solid var(--bd2);
+        flex: none;
+      }
+      .kal-f-note { flex: 1; font-size: 12px; color: var(--v3-t4); }
+      .kal-f-err { flex: 1; font-size: 12.5px; color: var(--red); font-weight: 500; }
+
+      /* ── Qidiruv natijalari ──────────────────────────────────────── */
+      .kal-srch { position: relative; }
+      .kal-srch input {
+        width: 190px;
+        height: 32px;
+        border: 1px solid var(--bd2);
+        border-radius: 9px;
+        padding: 0 11px;
+        font: inherit;
+        font-size: 13px;
+        color: var(--marker);
+        background: var(--surf);
+      }
+      .kal-srch input:focus { outline: none; border-color: var(--brand); width: 260px; }
+      .kal-res {
+        position: absolute;
+        top: 38px;
+        right: 0;
+        width: 340px;
+        max-height: 380px;
+        overflow-y: auto;
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 12px;
+        box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+        z-index: 1100;
+        padding: 6px;
+      }
+      .kal-res-row { display: flex; gap: 9px; padding: 8px 10px; border-radius: 9px; cursor: pointer; }
+      .kal-res-row:hover { background: var(--chip2); }
+      .kal-res-dot { width: 7px; height: 7px; border-radius: 99px; flex: none; margin-top: 6px; }
+      .kal-res-t { font-size: 13px; font-weight: 600; color: var(--marker); }
+      .kal-res-s { font-size: 11.5px; color: var(--v3-t3); margin-top: 1px; }
+
+      .kal-empty {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        pointer-events: none;
+      }
+      .kal-empty div { font-size: 13.5px; color: var(--v3-t3); }
+      .kal-empty button { pointer-events: auto; }
+      .kal-skel {
+        position: absolute;
+        border-radius: 7px;
+        background: var(--chip2);
+        animation: kal-pulse 1.3s ease-in-out infinite;
+      }
+      @keyframes kal-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+      /* ── Telefon ─────────────────────────────────────────────────── */
+      @media (max-width: 859px) {
+        :root { --kal-h: 60px; --kal-gutter: 48px; }
+        .kal-side { display: none; }
+        .kal-top {
+          padding: calc(8px + var(--tg-safe-top)) 14px 10px;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .kal-title { font-size: 17px; }
+        .kal-srch { display: none; }
+        .kal-seg button { padding: 0 11px; font-size: 12.5px; }
+        /* Hafta tasmasi — telefonda kunlar shu yerdan tanlanadi */
+        .kal-strip {
+          display: flex;
+          gap: 4px;
+          padding: 8px 10px;
+          overflow-x: auto;
+          border-bottom: 1px solid var(--kal-line);
+          flex: none;
+          -webkit-overflow-scrolling: touch;
+        }
+        .kal-strip::-webkit-scrollbar { display: none; }
+        .kal-sd {
+          flex: 1;
+          min-width: 44px;
+          border: 0;
+          background: transparent;
+          border-radius: 12px;
+          padding: 6px 2px 5px;
+          font: inherit;
+          cursor: pointer;
+        }
+        .kal-sd.on { background: var(--brand); }
+        .kal-sd-w { font-size: 10.5px; font-weight: 600; color: var(--v3-t3); }
+        .kal-sd-n { font-size: 16px; font-weight: 700; color: var(--marker); margin-top: 1px; }
+        .kal-sd.on .kal-sd-w, .kal-sd.on .kal-sd-n { color: #fff; }
+        .kal-sd-dots { display: flex; gap: 2px; justify-content: center; height: 6px; margin-top: 3px; }
+        .kal-sd-dots i { width: 4px; height: 4px; border-radius: 99px; display: block; }
+        .kal-fchips {
+          display: flex;
+          gap: 6px;
+          padding: 8px 10px;
+          overflow-x: auto;
+          border-bottom: 1px solid var(--kal-line);
+          flex: none;
+        }
+        .kal-fchips::-webkit-scrollbar { display: none; }
+        .kal-fchip {
+          flex: none;
+          height: 30px;
+          padding: 0 11px;
+          border-radius: 99px;
+          border: 1px solid var(--bd2);
+          background: var(--surf);
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 500;
+          color: var(--v3-t2);
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .kal-fchip i { width: 7px; height: 7px; border-radius: 99px; display: block; }
+        .kal-fchip.on { border-color: var(--brand); color: var(--marker); font-weight: 600; }
+        /* Telefonda hafta ustunlari tor — blokda faqat nom */
+        .kal-ev-s, .kal-ev-av { display: none; }
+        .kal-ev { padding: 3px 5px 3px 8px; }
+        .kal-ev-t { font-size: 11.5px; -webkit-line-clamp: 3; }
+        body.kal-day .kal-ev-s { display: block; }
+        .kal-fab {
+          position: fixed;
+          right: 16px;
+          bottom: calc(96px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
+          width: 54px;
+          height: 54px;
+          border-radius: 99px;
+          border: 0;
+          background: var(--brand);
+          color: #fff;
+          font-size: 26px;
+          line-height: 1;
+          box-shadow: 0 8px 22px rgba(47, 122, 185, 0.4);
+          cursor: pointer;
+          z-index: 500;
+        }
+        /* Oynalar pastdan chiqadi */
+        .kal-ov { padding: 0; align-items: flex-end; }
+        .kal-form {
+          width: 100%;
+          border-radius: 20px 20px 0 0;
+          max-height: 92vh;
+          padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px));
+        }
+        .kal-f-grid { flex-direction: column; }
+        .kal-pop {
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          top: auto !important;
+          width: auto;
+          border-radius: 20px 20px 0 0;
+          padding-bottom: calc(14px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
+        }
+        /* Kun ko'rinishida tepadagi ustun sarlavhasi keraksiz — hafta
+           tasmasi allaqachon qaysi kun ochiqligini ko'rsatib turibdi. */
+        body.kal-day .kal-head { display: none; }
+        /* Pastdagi menyu `fixed` — oxirgi soatlar uning ostida qolmasin */
+        .kal-body { padding-bottom: calc(96px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))); }
+        .kal-m { padding-bottom: calc(80px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))); }
+        .kal-m-ev { display: none; }
+        .kal-m-dots { display: flex; gap: 3px; flex-wrap: wrap; }
+        .kal-m-dots i { width: 5px; height: 5px; border-radius: 99px; display: block; }
+      }
+      @media (min-width: 860px) {
+        .kal-strip, .kal-fchips, .kal-fab, .kal-m-dots { display: none; }
+      }
     </style>
   </head>
   <body>
@@ -10555,6 +11258,11 @@
       </div>
     </div>
 
+    <!-- ── KALENDAR ──────────────────────────────────────────────────── -->
+    <!-- Ichki tuzilish to'liq JS'da quriladi: ko'rinish (Kun/Hafta/Oy)
+         va tanlangan sana bo'yicha har safar qaytadan chiziladi. -->
+    <div class="screen" id="screen-kalendar"></div>
+
     <!-- ── FAOLLIK (jamoa va xodim) ──────────────────────────────────── -->
     <div class="screen" id="screen-activity">
       <div class="hdr" style="display: flex; align-items: center; gap: 12px">
@@ -10624,6 +11332,10 @@
         <div class="nav-ico"></div>
         <div class="nav-lbl">Bugun</div>
       </button>
+      <button class="nav-item" id="nav-kalendar" onclick="showTab('kalendar')">
+        <div class="nav-ico"></div>
+        <div class="nav-lbl">Kalendar</div>
+      </button>
       <button class="nav-item" id="nav-projects" onclick="showTab('projects')">
         <div class="nav-ico"></div>
         <div class="nav-lbl">Loyihalar</div>
@@ -10666,6 +11378,9 @@
       <nav class="sb-nav">
         <button class="sb-item" id="sidebar-nav-today" onclick="showTab('today')" title="Bugun">
           <span class="sb-ico"></span><span class="sb-lbl">Bugun</span>
+        </button>
+        <button class="sb-item" id="sidebar-nav-kalendar" onclick="showTab('kalendar')" title="Kalendar">
+          <span class="sb-ico"></span><span class="sb-lbl">Kalendar</span>
         </button>
         <button class="sb-item" id="sidebar-nav-projects" onclick="showTab('projects')" title="Loyihalar">
           <span class="sb-ico"></span><span class="sb-lbl">Loyihalar</span>
@@ -11041,6 +11756,7 @@
       function applyStaticIcons() {
         const map = {
           "nav-today": "home", "sidebar-nav-today": "home",
+          "nav-kalendar": "calendar", "sidebar-nav-kalendar": "calendar",
           "nav-projects": "folder", "sidebar-nav-projects": "folder",
           "nav-tasks": "checkSquare", "sidebar-nav-tasks": "checkSquare",
           "nav-nshop": "shoppingBag", "sidebar-nav-nshop": "shoppingBag",
@@ -11915,7 +12631,7 @@
       }
 
       // ── TAB NAVIGATSIYASI ─────────────────────────────────────────
-      const ROOT_TABS = ["today", "projects", "tasks", "nshop", "history", "admin"];
+      const ROOT_TABS = ["today", "kalendar", "projects", "tasks", "nshop", "history", "admin"];
       function showTab(tab) {
         // Vazifa sahifasi ochiq bo'lsa, menyudan boshqa bo'limga
         // o'tish avval uni yopadi. Yozilgani qoralamada qoladi.
@@ -11937,7 +12653,11 @@
         // flex, katta ekran: sidebar bor — none) o'zi hal qiladi.
         document.getElementById("bottom-nav").style.display = "";
         if (tg()?.BackButton) tg().BackButton.hide();
+        if (tab !== "kalendar" && location.pathname.startsWith("/kalendar")) {
+          history.replaceState(null, "", "/");
+        }
         if (tab === "today") renderToday();
+        else if (tab === "kalendar") openCalendar();
         else if (tab === "projects") renderProjectsScreen();
         else if (tab === "tasks") renderTasksScreen();
         else if (tab === "nshop") renderNShopScreen();
@@ -15986,6 +16706,1274 @@
         }
         (document.getElementById(`${fieldId}-field`) || document.getElementById(fieldId))?.classList.remove("invalid");
       }
+
+      // ═══ KALENDAR ═══════════════════════════════════════════════════
+      // Jamoaning umumiy kalendari: Kun / Hafta / Oy. Hamma hammaning
+      // rejasini ko'radi, tahrirlashni esa faqat yaratgan odam va admin
+      // (tekshiruv backendda ham bor — bu yerda faqat tugmalar).
+      //
+      // VAQT. Brauzer qaysi mintaqada turganidan qat'i nazar hamma
+      // hisob Toshkent (UTC+5) bo'yicha yuritiladi — backend ham
+      // shunday. Aks holda chet eldan kirilganda bloklar boshqa soatga
+      // tushib qolardi.
+      const KAL_TZ = 5 * 60 * 60 * 1000;
+      const KAL_WD = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
+      const KAL_STEP = 15; // tortib ko'chirish qadami, daqiqa
+      const KAL_REMIND = [
+        { v: "", t: "Yo'q" }, { v: "15", t: "15 daqiqa oldin" }, { v: "30", t: "30 daqiqa oldin" },
+        { v: "60", t: "1 soat oldin" }, { v: "1440", t: "1 kun oldin" },
+      ];
+      const KAL_REPEAT = [
+        { v: "", t: "Takrorlanmaydi" },
+        { v: "FREQ=DAILY", t: "Har kuni" },
+        { v: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR", t: "Har ish kuni (Du–Ju)" },
+        { v: "FREQ=WEEKLY", t: "Har hafta" },
+        { v: "FREQ=MONTHLY", t: "Har oy" },
+      ];
+
+      let kal = null;
+      let kalNowTimer = null;
+
+      // ── Vaqt yordamchilari (hammasi Toshkent bo'yicha) ─────────────
+      // `kalLoc` qaytargan Date'ning UTC maydonlari Toshkent vaqtini
+      // ko'rsatadi — shuning uchun quyida hamma joyda getUTC*.
+      function kalLoc(x) { return new Date(new Date(x).getTime() + KAL_TZ); }
+      function kalDateStr(x) { return kalLoc(x).toISOString().slice(0, 10); }
+      function kalMinutes(x) { const d = kalLoc(x); return d.getUTCHours() * 60 + d.getUTCMinutes(); }
+      function kalHHMM(x) {
+        const d = kalLoc(x);
+        return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+      }
+      // Toshkentdagi sana + daqiqa → UTC ISO (backend shuni kutadi)
+      function kalToIso(dateStr, minutes) {
+        const [y, m, d] = dateStr.split("-").map(Number);
+        return new Date(Date.UTC(y, m - 1, d, 0, minutes) - KAL_TZ).toISOString();
+      }
+      function kalAddDays(dateStr, n) {
+        const [y, m, d] = dateStr.split("-").map(Number);
+        const t = new Date(Date.UTC(y, m - 1, d));
+        t.setUTCDate(t.getUTCDate() + n);
+        return t.toISOString().slice(0, 10);
+      }
+      function kalWeekday(dateStr) {
+        const [y, m, d] = dateStr.split("-").map(Number);
+        return (new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7; // 0 = dushanba
+      }
+      function kalWeekStart(dateStr) { return kalAddDays(dateStr, -kalWeekday(dateStr)); }
+      function kalToday() { return kalDateStr(Date.now()); }
+      function kalNowMinutes() { return kalMinutes(Date.now()); }
+      function kalDayLabel(dateStr) {
+        const [y, m, d] = dateStr.split("-").map(Number);
+        return `${KAL_WD[kalWeekday(dateStr)]}, ${d}-${MONTHS[m - 1].toLowerCase()}`;
+      }
+      function kalMonthLabel(dateStr) {
+        const [y, m] = dateStr.split("-").map(Number);
+        return `${MONTHS[m - 1]} <i>${y}</i>`;
+      }
+
+      // Rang: blok foni — rangning och varianti, matn — to'q varianti.
+      // Shunda har xodim o'z rangida, lekin matn har doim o'qiladi.
+      function kalRgb(hex) {
+        const h = String(hex || "#2f7ab9").replace("#", "");
+        const n = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+        return [parseInt(n.slice(0, 2), 16) || 0, parseInt(n.slice(2, 4), 16) || 0, parseInt(n.slice(4, 6), 16) || 0];
+      }
+      function kalTint(hex, a) { const [r, g, b] = kalRgb(hex); return `rgba(${r},${g},${b},${a})`; }
+      function kalDark(hex) {
+        const [r, g, b] = kalRgb(hex);
+        const f = 0.72; // qora bilan aralashtirish — kontrast uchun
+        return `rgb(${Math.round(r * f)},${Math.round(g * f)},${Math.round(b * f)})`;
+      }
+      function kalEvColor(ev) { return ev.is_team ? "#475569" : (ev.owner && ev.owner.color) || "#2f7ab9"; }
+      function kalInit(name) {
+        return String(name || "?").trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+      }
+
+      // ── Ochilishi ─────────────────────────────────────────────────
+      function kalReadUrl() {
+        const q = new URLSearchParams(location.search);
+        const v = q.get("view");
+        const d = q.get("d");
+        return {
+          view: ["kun", "hafta", "oy"].includes(v) ? v : null,
+          anchor: /^\d{4}-\d{2}-\d{2}$/.test(d || "") ? d : null,
+        };
+      }
+      function kalWriteUrl() {
+        if (!kal) return;
+        const url = `/kalendar?view=${kal.view}&d=${kal.anchor}`;
+        if (location.pathname + location.search !== url) history.replaceState({ kal: 1 }, "", url);
+      }
+      async function openCalendar(opts = {}) {
+        const mobil = window.matchMedia("(max-width: 859px)").matches;
+        const url = kalReadUrl();
+        if (!kal) {
+          let hidden = [];
+          try { hidden = JSON.parse(localStorage.getItem("kal-hidden") || "[]"); } catch (e) {}
+          kal = {
+            view: opts.view || url.view || localStorage.getItem("kal-view") || (mobil ? "kun" : "hafta"),
+            anchor: opts.anchor || url.anchor || kalToday(),
+            items: [], from: null, to: null,
+            hidden: new Set(hidden),
+            users: [], projects: [],
+            loading: true, scrolled: false, search: "", pop: null,
+          };
+        } else {
+          if (opts.view) kal.view = opts.view;
+          if (opts.anchor) kal.anchor = opts.anchor;
+        }
+        // Telefonda Hafta ko'rinishi juda tor — TZ bo'yicha default Kun.
+        if (mobil && kal.view === "hafta" && !opts.view && !url.view) kal.view = "kun";
+        kalWriteUrl();
+        kalRender();
+        await kalLoadUsers();
+        await kalLoad();
+      }
+      function closeCalendar() { showTab("today"); }
+
+      async function kalLoadUsers() {
+        if (kal.users.length) return;
+        try {
+          const [u, p] = await Promise.all([
+            apiFetch("/api/users/directory").then((r) => r.json()).catch(() => ({ users: [] })),
+            apiFetch("/api/projects").then((r) => r.json()).catch(() => ({ projects: [] })),
+          ]);
+          kal.users = (u.users || []).filter((x) => x.isActive !== false);
+          kal.projects = (p.projects || []).map((x) => ({ id: x.id, label: x.label }));
+        } catch (e) {
+          kal.users = [];
+        }
+      }
+
+      // Ko'rinayotgan davr + ikki tomonga bir hafta zaxira: ‹ › bosilganda
+      // kutish bo'lmasin (TZ 13-bo'lim).
+      function kalRange() {
+        if (kal.view === "kun") return [kalAddDays(kal.anchor, -3), kalAddDays(kal.anchor, 4)];
+        if (kal.view === "hafta") {
+          const s = kalWeekStart(kal.anchor);
+          return [kalAddDays(s, -7), kalAddDays(s, 14)];
+        }
+        const [y, m] = kal.anchor.split("-").map(Number);
+        const birinchi = `${kal.anchor.slice(0, 7)}-01`;
+        const grid = kalWeekStart(birinchi);
+        return [kalAddDays(grid, -7), kalAddDays(grid, 49)];
+      }
+      async function kalLoad() {
+        const [from, to] = kalRange();
+        kal.loading = true;
+        try {
+          const res = await apiFetch(
+            `/api/events?from=${encodeURIComponent(kalToIso(from, 0))}&to=${encodeURIComponent(kalToIso(to, 0))}`,
+          );
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Yuklanmadi");
+          const d = await res.json();
+          kal.items = d.items || [];
+          kal.from = from;
+          kal.to = to;
+          kal.error = null;
+        } catch (e) {
+          kal.error = e.message;
+        }
+        kal.loading = false;
+        kalRender();
+      }
+      // Davr chetiga chiqdikmi — chiqqan bo'lsa qayta yuklanadi.
+      function kalNeedsLoad() {
+        if (!kal.from) return true;
+        const [from, to] = kalRange();
+        return from < kal.from || to > kal.to;
+      }
+
+      // ── Ko'rinish boshqaruvi ──────────────────────────────────────
+      function kalSetView(v) {
+        kal.view = v;
+        localStorage.setItem("kal-view", v);
+        kal.scrolled = false;
+        kalWriteUrl();
+        kalRender();
+        if (kalNeedsLoad()) kalLoad();
+      }
+      function kalStep(dir) {
+        if (kal.view === "kun") kal.anchor = kalAddDays(kal.anchor, dir);
+        else if (kal.view === "hafta") kal.anchor = kalAddDays(kal.anchor, dir * 7);
+        else {
+          const [y, m] = kal.anchor.split("-").map(Number);
+          const t = new Date(Date.UTC(y, m - 1 + dir, 1));
+          kal.anchor = t.toISOString().slice(0, 10);
+        }
+        kalWriteUrl();
+        kalRender();
+        if (kalNeedsLoad()) kalLoad();
+      }
+      function kalGoToday() { kalGoDate(kalToday()); }
+      function kalGoDate(dateStr, view) {
+        kal.anchor = dateStr;
+        if (view) { kal.view = view; localStorage.setItem("kal-view", view); }
+        kal.scrolled = false;
+        kalWriteUrl();
+        kalRender();
+        if (kalNeedsLoad()) kalLoad();
+      }
+      function kalToggleUser(id) {
+        const key = String(id);
+        if (kal.hidden.has(key)) kal.hidden.delete(key);
+        else kal.hidden.add(key);
+        localStorage.setItem("kal-hidden", JSON.stringify([...kal.hidden]));
+        kalRender();
+      }
+      function kalClearFilter() {
+        kal.hidden.clear();
+        localStorage.setItem("kal-hidden", "[]");
+        kalRender();
+      }
+      // Reja ko'rinadimi: egasi yoki ishtirokchisi yashirilmagan bo'lsa.
+      function kalVisible(ev) {
+        if (!kal.hidden.size) return true;
+        if (ev.is_team && !kal.hidden.has("team")) return true;
+        const ids = [ev.owner && ev.owner.id, ...(ev.participants || []).map((p) => p.id)].filter(Boolean);
+        return ids.some((id) => !kal.hidden.has(String(id)));
+      }
+      function kalDayItems(dateStr) {
+        return kal.items
+          .filter((ev) => kalVisible(ev) && kalDateStr(ev.start) <= dateStr && kalDateStr(new Date(new Date(ev.end).getTime() - 1)) >= dateStr)
+          .sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0));
+      }
+
+      // ── Xodim ma'lumoti ───────────────────────────────────────────
+      function kalUserName(u) {
+        if (!u) return "";
+        return u.name || (u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : u.username || "");
+      }
+      function kalUserShort(u) {
+        const n = kalUserName(u).split(/\s+/);
+        return n.length > 1 ? `${n[0]} ${n[1][0]}.` : n[0] || "";
+      }
+      function kalUserColor(u) {
+        if (!u) return "#2f7ab9";
+        return u.color || personColor(u.username || String(u.id));
+      }
+      function kalUser(id) { return kal.users.find((u) => String(u.id) === String(id)); }
+
+      // ── Umumiy chizish ────────────────────────────────────────────
+      function kalRender() {
+        const host = document.getElementById("screen-kalendar");
+        if (!host || !kal) return;
+        const mobil = window.matchMedia("(max-width: 859px)").matches;
+        document.body.classList.toggle("kal-day", kal.view === "kun");
+
+        host.innerHTML = `
+          <div class="kal-wrap">
+            ${mobil ? "" : `<div class="kal-side">${kalSideHtml()}</div>`}
+            <div class="kal-main">
+              ${kalTopHtml(mobil)}
+              ${mobil ? kalStripHtml() + kalChipsHtml() : ""}
+              ${kal.view === "oy" ? kalMonthHtml() : kalGridHtml()}
+            </div>
+          </div>
+          ${mobil ? `<button class="kal-fab" onclick="kalOpenForm({})" aria-label="Yangi reja">+</button>` : ""}`;
+
+        kalPaintNow();
+        kalScrollToNow();
+        kalBindDrag();
+        if (kalNowTimer) clearInterval(kalNowTimer);
+        // Hozirgi vaqt chizig'i har daqiqada suriladi (TZ 4-bo'lim).
+        kalNowTimer = setInterval(() => {
+          if (document.getElementById("screen-kalendar")?.classList.contains("active")) kalPaintNow();
+        }, 60000);
+      }
+
+      function kalTopHtml(mobil) {
+        const sarlavha = kal.view === "kun" ? kalDayLabel(kal.anchor) : kalMonthLabel(kal.anchor);
+        return `<div class="kal-top">
+            <div class="kal-title">${sarlavha}</div>
+            ${mobil ? "" : '<div class="kal-grow"></div>'}
+            <div class="kal-seg">
+              ${["kun", "hafta", "oy"].map((v) => `<button class="${kal.view === v ? "on" : ""}" onclick="kalSetView('${v}')">${v === "kun" ? "Kun" : v === "hafta" ? "Hafta" : "Oy"}</button>`).join("")}
+            </div>
+            <div class="kal-nav">
+              <button class="kal-nbtn" onclick="kalStep(-1)" aria-label="Oldingi">‹</button>
+              <button class="kal-nbtn wide" onclick="kalGoToday()">Bugun</button>
+              <button class="kal-nbtn" onclick="kalStep(1)" aria-label="Keyingi">›</button>
+            </div>
+            <div class="kal-srch">
+              <input id="kal-search" placeholder="Qidirish" oninput="kalSearch(this.value)" onfocus="kalSearch(this.value)" />
+              <div id="kal-results"></div>
+            </div>
+          </div>`;
+      }
+
+      // ── Chap panel: kichik kalendar + xodim filtri ────────────────
+      function kalSideHtml() {
+        const [y, m] = kal.anchor.split("-").map(Number);
+        const birinchi = `${kal.anchor.slice(0, 7)}-01`;
+        const grid = kalWeekStart(birinchi);
+        const [ichFrom, ichTo] = kal.view === "oy"
+          ? [birinchi, kalAddDays(`${kal.anchor.slice(0, 7)}-01`, 31)]
+          : kal.view === "hafta"
+            ? [kalWeekStart(kal.anchor), kalAddDays(kalWeekStart(kal.anchor), 6)]
+            : [kal.anchor, kal.anchor];
+        const bugun = kalToday();
+        let kunlar = "";
+        for (let i = 0; i < 42; i++) {
+          const d = kalAddDays(grid, i);
+          const tashqari = d.slice(0, 7) !== kal.anchor.slice(0, 7);
+          const ich = d >= ichFrom && d <= ichTo;
+          kunlar += `<button class="kal-mini-d${tashqari ? " out" : ""}${ich ? " in" : ""}${d === bugun ? " today" : ""}" onclick="kalGoDate('${d}')">${Number(d.slice(8, 10))}</button>`;
+        }
+        const xodimlar = kal.users
+          .map((u) => {
+            const id = String(u.id);
+            const on = !kal.hidden.has(id);
+            const c = kalUserColor(u);
+            return `<div class="kal-flt-row${on ? " on" : ""}" onclick="kalToggleUser('${escArg(id)}')">
+                <span class="kal-flt-box" style="${on ? `background:${c};` : ""}">${on ? "✓" : ""}</span>
+                <span class="kal-flt-nm">${escHtml(kalUserShort(u))}</span>
+              </div>`;
+          })
+          .join("");
+        const hammasiOn = !kal.hidden.has("team");
+        return `<button class="kal-newbtn" onclick="kalOpenForm({})">+ Yangi reja</button>
+          <div>
+            <div class="kal-mini-top">
+              <div class="kal-mini-t">${MONTHS[m - 1]} ${y}</div>
+              <button class="kal-mini-b" onclick="kalStepMini(-1)">‹</button>
+              <button class="kal-mini-b" onclick="kalStepMini(1)">›</button>
+            </div>
+            <div class="kal-mini">
+              ${KAL_WD.map((w) => `<div class="kal-mini-wd">${w}</div>`).join("")}
+              ${kunlar}
+            </div>
+          </div>
+          <div>
+            <div class="kal-flt-t">Kimning rejalari</div>
+            <div class="kal-flt-row${hammasiOn ? " on" : ""}" onclick="kalToggleUser('team')">
+              <span class="kal-flt-box" style="${hammasiOn ? "background:#475569;" : ""}">${hammasiOn ? "✓" : ""}</span>
+              <span class="kal-flt-nm">Hammasi</span>
+            </div>
+            ${xodimlar}
+            <div class="kal-flt-hint">Belgini olib tashlasangiz, o'sha xodimning rejalari yashiriladi.</div>
+          </div>`;
+      }
+      function kalStepMini(dir) {
+        const [y, m] = kal.anchor.split("-").map(Number);
+        kal.anchor = new Date(Date.UTC(y, m - 1 + dir, 1)).toISOString().slice(0, 10);
+        kalWriteUrl();
+        kalRender();
+        if (kalNeedsLoad()) kalLoad();
+      }
+
+      // ── Telefon: hafta tasmasi va filtr chiplari ──────────────────
+      function kalStripHtml() {
+        const s = kalWeekStart(kal.anchor);
+        const bugun = kalToday();
+        let out = "";
+        for (let i = 0; i < 7; i++) {
+          const d = kalAddDays(s, i);
+          const ranglar = [...new Set(kalDayItems(d).map((ev) => kalEvColor(ev)))].slice(0, 3);
+          out += `<button class="kal-sd${d === kal.anchor ? " on" : ""}" onclick="kalGoDate('${d}')">
+              <div class="kal-sd-w">${KAL_WD[i]}</div>
+              <div class="kal-sd-n">${Number(d.slice(8, 10))}${d === bugun && d !== kal.anchor ? "" : ""}</div>
+              <div class="kal-sd-dots">${ranglar.map((c) => `<i style="background:${c}"></i>`).join("")}</div>
+            </button>`;
+        }
+        return `<div class="kal-strip">${out}</div>`;
+      }
+      function kalChipsHtml() {
+        const chip = (id, nom, rang) => {
+          const on = !kal.hidden.has(id);
+          return `<button class="kal-fchip${on ? " on" : ""}" onclick="kalToggleUser('${escArg(id)}')">
+              <i style="background:${on ? rang : "var(--bd4)"}"></i>${escHtml(nom)}
+            </button>`;
+        };
+        return `<div class="kal-fchips">
+            ${chip("team", "Hammasi", "#475569")}
+            ${kal.users.map((u) => chip(String(u.id), kalUserShort(u).split(" ")[0], kalUserColor(u))).join("")}
+          </div>`;
+      }
+
+      // ── Hafta / Kun to'ri ─────────────────────────────────────────
+      function kalDays() {
+        if (kal.view === "kun") return [kal.anchor];
+        const s = kalWeekStart(kal.anchor);
+        return Array.from({ length: 7 }, (_, i) => kalAddDays(s, i));
+      }
+      function kalGridHtml() {
+        const kunlar = kalDays();
+        const cols = `var(--kal-gutter) repeat(${kunlar.length}, minmax(0, 1fr))`;
+        const bugun = kalToday();
+
+        const sarlavhalar = kunlar
+          .map((d) => {
+            const wd = kalWeekday(d);
+            return `<div class="kal-hd${wd >= 5 ? " we" : ""}">
+                <div class="kal-hd-w">${KAL_WD[wd]}</div>
+                <div class="kal-hd-n${d === bugun ? " today" : ""}" onclick="kalGoDate('${d}','kun')">${Number(d.slice(8, 10))}</div>
+              </div>`;
+          })
+          .join("");
+
+        // «butun kun» qatori — butun kunlik va bir necha kunlik rejalar
+        const adQatori = kunlar
+          .map((d) => {
+            const list = kalDayItems(d).filter((ev) => ev.all_day || kalDateStr(ev.start) !== kalDateStr(new Date(new Date(ev.end).getTime() - 1)));
+            return `<div class="kal-allday-col">${list
+              .map((ev) => {
+                const c = kalEvColor(ev);
+                return `<div class="kal-ad-ev" style="background:${kalTint(c, 0.14)};color:${kalDark(c)}" onclick="kalOpenDetail(event,'${escArg(ev.id)}','${escArg(ev.occurrence_start)}')">${escHtml(ev.title)}</div>`;
+              })
+              .join("")}</div>`;
+          })
+          .join("");
+
+        const soatlar = Array.from({ length: 24 }, (_, h) => `<div class="kal-hour">${h ? `${h}:00` : ""}</div>`).join("");
+        const ustunlar = kunlar
+          .map((d, i) => {
+            const wd = kalWeekday(d);
+            const slots = Array.from({ length: 24 }, () => `<div class="kal-slot"></div>`).join("");
+            return `<div class="kal-col${wd >= 5 ? " we" : ""}" data-day="${d}" ondblclick="kalEmptyClick(event,'${d}')">
+                ${slots}
+                ${kalBlocksHtml(d)}
+                <div class="kal-now" data-now="${d}"><div class="kal-now-lbl" style="display:none"></div></div>
+              </div>`;
+          })
+          .join("");
+
+        const bosh = !kal.loading && !kal.items.filter(kalVisible).length;
+        return `<div class="kal-head" style="grid-template-columns:${cols}">
+            <div class="kal-head-pad"></div>${sarlavhalar}
+          </div>
+          <div class="kal-allday" style="grid-template-columns:${cols}">
+            <div class="kal-allday-lbl">butun kun</div>${adQatori}
+          </div>
+          <div class="kal-body" id="kal-body">
+            <div class="kal-grid" style="grid-template-columns:${cols}">
+              <div class="kal-hours">${soatlar}</div>
+              ${ustunlar}
+            </div>
+            ${bosh ? kalEmptyHtml() : ""}
+          </div>`;
+      }
+
+      function kalEmptyHtml() {
+        if (kal.error) {
+          return `<div class="kal-empty"><div style="color:var(--red)">⚠ ${escHtml(kal.error)}</div>
+            <button class="kal-pop-btn" onclick="kalLoad()">Qayta urinish</button></div>`;
+        }
+        if (kal.hidden.size) {
+          return `<div class="kal-empty"><div>Tanlangan xodimlarda reja yo'q</div>
+            <button class="kal-pop-btn" onclick="kalClearFilter()">Filtrni tozalash</button></div>`;
+        }
+        const qaysi = kal.view === "kun" ? "Bu kunda" : kal.view === "hafta" ? "Bu haftada" : "Bu oyda";
+        return `<div class="kal-empty"><div>${qaysi} reja yo'q</div>
+          <button class="kal-pop-btn primary" onclick="kalOpenForm({})">Yangi reja</button></div>`;
+      }
+
+      // Bir vaqtga to'g'ri kelgan rejalar ustun kengligini teng bo'lishadi.
+      // Kesishgan GURUH bo'yicha hisoblanadi: a–b va b–c kesishsa, lekin
+      // a–c kesishmasa ham uchalasi bitta guruhda uchdan bir bo'ladi —
+      // aks holda bloklar bir-birining ustiga chiqib ketardi.
+      function kalLayout(list) {
+        const sorted = [...list].sort((a, b) => a.s - b.s || b.e - a.e);
+        const guruhlar = [];
+        let joriy = [];
+        let maxE = -1;
+        sorted.forEach((x) => {
+          if (joriy.length && x.s >= maxE) {
+            guruhlar.push(joriy);
+            joriy = [];
+            maxE = -1;
+          }
+          joriy.push(x);
+          maxE = Math.max(maxE, x.e);
+        });
+        if (joriy.length) guruhlar.push(joriy);
+
+        const out = [];
+        guruhlar.forEach((g) => {
+          // Har biriga eng chap bo'sh ustun beriladi.
+          const ustunlar = [];
+          g.forEach((x) => {
+            let i = ustunlar.findIndex((oxiri) => oxiri <= x.s);
+            if (i === -1) { i = ustunlar.length; ustunlar.push(x.e); }
+            else ustunlar[i] = x.e;
+            x.col = i;
+          });
+          const n = ustunlar.length;
+          g.forEach((x) => out.push({ ...x, col: x.col, cols: n }));
+        });
+        return out;
+      }
+
+      function kalBlocksHtml(dateStr) {
+        const H = window.matchMedia("(max-width: 859px)").matches ? 60 : 56;
+        const list = kalDayItems(dateStr)
+          .filter((ev) => !ev.all_day && kalDateStr(ev.start) === kalDateStr(new Date(new Date(ev.end).getTime() - 1)))
+          .map((ev) => {
+            const s = kalMinutes(ev.start);
+            const e = Math.max(s + 15, kalMinutes(ev.end) || 1440);
+            return { ev, s, e };
+          });
+        const hozir = Date.now();
+        return kalLayout(list)
+          .map((x) => {
+            const ev = x.ev;
+            const c = kalEvColor(ev);
+            const top = (x.s / 60) * H;
+            const h = Math.max(22, ((x.e - x.s) / 60) * H - 2);
+            const w = 100 / x.cols;
+            const otgan = new Date(ev.end).getTime() < hozir;
+            const av = h > 70 && (ev.participants || []).length
+              ? `<div class="kal-ev-av">${ev.participants.slice(0, 4).map((p) => `<span style="background:${kalUserColor(p)}">${kalInit(p.name)}</span>`).join("")}</div>`
+              : "";
+            return `<div class="kal-ev${otgan ? " past" : ""}" data-id="${escHtml(ev.id)}" data-occ="${escHtml(ev.occurrence_start)}"
+                data-edit="${ev.can_edit ? "1" : ""}"
+                style="--kal-c:${c};background:${kalTint(c, 0.13)};color:${kalDark(c)};top:${top.toFixed(1)}px;height:${h.toFixed(1)}px;left:calc(${x.col * w}% + 2px);width:calc(${w}% - 4px)"
+                onclick="kalOpenDetail(event,'${escArg(ev.id)}','${escArg(ev.occurrence_start)}')">
+                <div class="kal-ev-t">${escHtml(ev.title)}</div>
+                <div class="kal-ev-s">${kalHHMM(ev.start)}–${kalHHMM(ev.end)}</div>
+                ${av}
+                ${ev.can_edit ? '<div class="kal-ev-grip"></div>' : ""}
+              </div>`;
+          })
+          .join("");
+      }
+
+      // ── Oy ko'rinishi ─────────────────────────────────────────────
+      function kalMonthHtml() {
+        const birinchi = `${kal.anchor.slice(0, 7)}-01`;
+        const grid = kalWeekStart(birinchi);
+        const bugun = kalToday();
+        const mobil = window.matchMedia("(max-width: 859px)").matches;
+        let qatorlar = "";
+        for (let r = 0; r < 6; r++) {
+          let kataklar = "";
+          for (let c = 0; c < 7; c++) {
+            const d = kalAddDays(grid, r * 7 + c);
+            const tashqari = d.slice(0, 7) !== kal.anchor.slice(0, 7);
+            const list = kalDayItems(d);
+            const ichi = mobil
+              ? `<div class="kal-m-dots">${[...new Set(list.map(kalEvColor))].slice(0, 6).map((x) => `<i style="background:${x}"></i>`).join("")}</div>`
+              : list.slice(0, 3).map((ev) => {
+                  const col = kalEvColor(ev);
+                  return `<div class="kal-m-ev"${ev.is_team ? ' style="background:#eef1f5"' : ""} onclick="event.stopPropagation();kalOpenDetail(event,'${escArg(ev.id)}','${escArg(ev.occurrence_start)}')">
+                      <i class="kal-m-dot" style="background:${col}"></i>
+                      ${ev.all_day ? "" : `<span class="kal-m-time">${kalHHMM(ev.start)}</span>`}
+                      <span class="kal-m-nm">${escHtml(ev.title)}</span>
+                    </div>`;
+                }).join("")
+                + (list.length > 3 ? `<div class="kal-m-more" onclick="event.stopPropagation();kalGoDate('${d}','kun')">+${list.length - 3} yana</div>` : "");
+            kataklar += `<div class="kal-m-cell${tashqari ? " out" : ""}${c >= 5 ? " we" : ""}"
+                ondblclick="kalEmptyClick(event,'${d}')" onclick="${mobil ? `kalGoDate('${d}','kun')` : "void 0"}">
+                <div class="kal-m-n${d === bugun ? " today" : ""}" onclick="event.stopPropagation();kalGoDate('${d}','kun')">${Number(d.slice(8, 10))}</div>
+                ${ichi}
+              </div>`;
+          }
+          qatorlar += `<div class="kal-m-row">${kataklar}</div>`;
+        }
+        return `<div class="kal-m">
+            <div class="kal-m-wd">${KAL_WD.map((w) => `<div>${w}</div>`).join("")}</div>
+            ${qatorlar}
+          </div>`;
+      }
+
+      // ── Hozirgi vaqt chizig'i ─────────────────────────────────────
+      function kalPaintNow() {
+        const H = window.matchMedia("(max-width: 859px)").matches ? 60 : 56;
+        const bugun = kalToday();
+        const m = kalNowMinutes();
+        document.querySelectorAll("#screen-kalendar .kal-now").forEach((el) => {
+          const d = el.getAttribute("data-now");
+          el.style.top = `${((m / 60) * H).toFixed(1)}px`;
+          const shu = d === bugun;
+          el.classList.toggle("on", shu);
+          const lbl = el.querySelector(".kal-now-lbl");
+          // Belgi faqat birinchi ustunda — har ustunda takrorlansa
+          // chalkash bo'lardi.
+          const birinchi = el.parentElement && el.parentElement.previousElementSibling
+            && el.parentElement.previousElementSibling.classList.contains("kal-hours");
+          if (lbl) {
+            // Belgi faqat eng chapda — TZ 4-bo'lim. Har ustunda
+            // takrorlansa chizma shovqinli bo'lib ketardi.
+            lbl.style.display = birinchi ? "" : "none";
+            lbl.textContent = kalHHMM(Date.now());
+          }
+        });
+      }
+      function kalScrollToNow() {
+        if (kal.scrolled || kal.view === "oy") return;
+        const body = document.getElementById("kal-body");
+        if (!body) return;
+        // O'lchamlar hali hisoblanmagan bo'lishi mumkin — keyingi
+        // kadrda suramiz, aks holda scrollTop 0 bo'lib qoladi.
+        if (!body.clientHeight || body.scrollHeight <= body.clientHeight) {
+          requestAnimationFrame(() => kalScrollToNow());
+          return;
+        }
+        const H = window.matchMedia("(max-width: 859px)").matches ? 60 : 56;
+        const kunlar = kalDays();
+        // Bugun ko'rinayotgan davrda bo'lsa — hozirgi vaqtdan bir soat
+        // oldinga, bo'lmasa 8:00 ga (TZ 4-bo'lim).
+        const bugunBor = kunlar.includes(kalToday());
+        const m = bugunBor ? Math.max(0, kalNowMinutes() - 60) : 8 * 60;
+        body.scrollTop = (m / 60) * H;
+        // Yuklanish paytidagi chizishda ham suriladi, lekin "bajarildi"
+        // deb belgilanmaydi: ma'lumot kelgach to'r qaytadan chiziladi
+        // va skroll nolga qaytib qolardi.
+        if (!kal.loading) kal.scrolled = true;
+      }
+
+      // ── Tafsilot kartasi ──────────────────────────────────────────
+      function kalFind(id, occ) {
+        return kal.items.find((e) => String(e.id) === String(id) && e.occurrence_start === occ)
+          || kal.items.find((e) => String(e.id) === String(id));
+      }
+      function kalCloseDetail() {
+        document.getElementById("kal-pop")?.remove();
+        kal.pop = null;
+        kalPopBack(false);
+      }
+      function kalPopBack(on) {
+        const i = pageBackStack.indexOf(kalCloseDetail);
+        if (on && i === -1) pageBackStack.push(kalCloseDetail);
+        if (!on && i !== -1) pageBackStack.splice(i, 1);
+        pageSyncBack();
+      }
+      function kalOpenDetail(e, id, occ) {
+        if (e) e.stopPropagation();
+        const ev = kalFind(id, occ);
+        if (!ev) return;
+        kalCloseDetail();
+        kal.pop = { id, occ };
+
+        const c = kalEvColor(ev);
+        const vaqt = ev.all_day
+          ? `${kalDayLabel(kalDateStr(ev.start))} · butun kun`
+          : `${kalDayLabel(kalDateStr(ev.start))} · ${kalHHMM(ev.start)}–${kalHHMM(ev.end)}`;
+        const takror = ev.recurring ? KAL_REPEAT.find((r) => r.t) && "Takrorlanadi" : "";
+        const row = (k, v) => (v ? `<div class="kal-pop-row"><div class="kal-pop-k">${k}</div><div class="kal-pop-v">${v}</div></div>` : "");
+        const men = (ev.participants || []).some((p) => String(p.id) === String(kalMeId()));
+        const eslatma = ev.remind_before != null
+          ? (KAL_REMIND.find((x) => x.v === String(ev.remind_before)) || { t: `${ev.remind_before} daqiqa oldin` }).t
+          : "";
+
+        const el = document.createElement("div");
+        el.className = "kal-pop";
+        el.id = "kal-pop";
+        el.innerHTML = `
+          <div class="kal-pop-top">
+            <div class="kal-pop-bar" style="background:${c}"></div>
+            <div class="kal-pop-t">${escHtml(ev.title)}</div>
+            <button class="kal-pop-x" onclick="kalCloseDetail()">✕</button>
+          </div>
+          <div class="kal-pop-when">${vaqt}${takror ? ` · ${takror}` : ""}</div>
+          <div class="kal-pop-rows">
+            ${row("Joy", ev.place ? escHtml(ev.place) : "")}
+            ${row("Kim uchun", `<div class="kal-pop-av">${(ev.participants || []).slice(0, 8).map((p) => `<span style="background:${kalUserColor(p)}" title="${escHtml(p.name)}">${kalInit(p.name)}</span>`).join("")}${ev.is_team ? ' <b style="font-weight:600;font-size:12.5px">Hammasi</b>' : ""}</div>`)}
+            ${row("Loyiha", ev.project ? escHtml(ev.project.label) : "")}
+            ${row("Izoh", ev.note ? escHtml(ev.note) : "")}
+            ${row("Eslatma", eslatma ? `${eslatma} · Telegram` : "")}
+            ${row("Egasi", ev.owner ? escHtml(kalUserShort(ev.owner)) : "")}
+          </div>
+          <div class="kal-pop-foot">
+            ${ev.can_edit
+              ? `<button class="kal-pop-btn primary" onclick="kalOpenForm({id:'${escArg(ev.id)}',occ:'${escArg(ev.occurrence_start)}'})">Tahrirlash</button>
+                 <button class="kal-pop-btn" onclick="kalDuplicate('${escArg(ev.id)}','${escArg(ev.occurrence_start)}')">Nusxalash</button>
+                 <div style="flex:1"></div>
+                 <button class="kal-pop-btn danger" onclick="kalDelete('${escArg(ev.id)}','${escArg(ev.occurrence_start)}')">O'chirish</button>`
+              : men
+                ? `<div style="flex:1"></div><button class="kal-pop-btn" onclick="kalDecline('${escArg(ev.id)}')">Men qatnasha olmayman</button>`
+                : `<div class="kal-f-note">Bu rejani faqat egasi yoki admin o'zgartiradi</div>`}
+          </div>`;
+        document.body.appendChild(el);
+
+        // Joylashuv: bosilgan blok yonida, ekran chetiga sig'masa — ichkarida.
+        const mobil = window.matchMedia("(max-width: 859px)").matches;
+        if (!mobil) {
+          const r = (e && e.currentTarget && e.currentTarget.getBoundingClientRect()) || { right: 200, top: 120, left: 200 };
+          const w = 340, g = 10;
+          let left = r.right + g;
+          if (left + w > innerWidth - 8) left = Math.max(8, r.left - w - g);
+          let top = r.top;
+          const h = el.offsetHeight;
+          if (top + h > innerHeight - 8) top = Math.max(8, innerHeight - h - 8);
+          el.style.left = `${left}px`;
+          el.style.top = `${top}px`;
+        }
+        kalPopBack(true);
+        setTimeout(() => document.addEventListener("mousedown", kalPopOutside), 0);
+      }
+      function kalPopOutside(e) {
+        const el = document.getElementById("kal-pop");
+        if (!el) { document.removeEventListener("mousedown", kalPopOutside); return; }
+        if (!el.contains(e.target)) {
+          document.removeEventListener("mousedown", kalPopOutside);
+          kalCloseDetail();
+        }
+      }
+      function kalMeId() {
+        const u = kal.users.find((x) => x.username === currentUser);
+        return u ? u.id : null;
+      }
+
+      async function kalDecline(id) {
+        try {
+          const r = await apiFetch(`/api/events/${encodeURIComponent(id)}/decline`, { method: "POST" });
+          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
+          showToast("Rejadan chiqdingiz");
+          kalCloseDetail();
+          kalLoad();
+        } catch (e) { showToast("⚠ " + e.message); }
+      }
+      function kalDuplicate(id, occ) {
+        const ev = kalFind(id, occ);
+        if (!ev) return;
+        kalCloseDetail();
+        kalOpenForm({ copyFrom: ev });
+      }
+
+      // Takrorlanuvchi rejada qaysi nusxaga tegilayotgani so'raladi.
+      function kalAskScope(ev, amal) {
+        if (!ev.recurring) return Promise.resolve("all");
+        return new Promise((resolve) => {
+          const ov = document.createElement("div");
+          ov.className = "kal-ov";
+          ov.innerHTML = `<div class="kal-form" style="width:420px">
+              <div class="kal-f-hdr"><div class="kal-f-t">${amal}</div></div>
+              <div class="kal-f-body">
+                <div class="kal-f-note" style="font-size:13px">Bu takrorlanuvchi reja. Qaysi nusxalarga tegsin?</div>
+                <button class="kal-pop-btn" data-s="one">Faqat shu reja</button>
+                <button class="kal-pop-btn" data-s="following">Shu va keyingilari</button>
+                <button class="kal-pop-btn" data-s="all">Hammasi</button>
+              </div>
+              <div class="kal-f-foot"><div style="flex:1"></div><button class="kal-pop-btn" data-s="">Bekor qilish</button></div>
+            </div>`;
+          ov.onclick = (e) => {
+            const b = e.target.closest("[data-s]");
+            if (!b && e.target !== ov) return;
+            ov.remove();
+            resolve(b ? b.getAttribute("data-s") : "");
+          };
+          document.body.appendChild(ov);
+        });
+      }
+
+      async function kalDelete(id, occ) {
+        const ev = kalFind(id, occ);
+        if (!ev) return;
+        const scope = await kalAskScope(ev, "Rejani o'chirish");
+        if (!scope) return;
+        if (!ev.recurring && !confirm(`«${ev.title}» o'chirilsinmi?`)) return;
+        try {
+          const q = `?scope=${scope}&occurrence=${encodeURIComponent(occ)}`;
+          const r = await apiFetch(`/api/events/${encodeURIComponent(id)}${q}`, { method: "DELETE" });
+          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
+          showToast("Reja o'chirildi");
+          kalCloseDetail();
+          kalLoad();
+        } catch (e) { showToast("⚠ " + e.message); }
+      }
+
+      // ── Yaratish / tahrirlash oynasi ──────────────────────────────
+      function kalEmptyClick(e, dateStr) {
+        // Bo'sh joyga bosish — shu vaqtdan boshlanadigan 1 soatlik reja.
+        const col = e.currentTarget;
+        const H = window.matchMedia("(max-width: 859px)").matches ? 60 : 56;
+        let start = 9 * 60;
+        if (col && col.classList.contains("kal-col")) {
+          const y = e.clientY - col.getBoundingClientRect().top;
+          start = Math.max(0, Math.round((y / H) * 60 / KAL_STEP) * KAL_STEP);
+        }
+        kalOpenForm({ date: dateStr, start, end: Math.min(24 * 60, start + 60) });
+      }
+
+      function kalOpenForm(opts) {
+        kalCloseDetail();
+        const me = kalMeId();
+        let f;
+        if (opts.id) {
+          const ev = kalFind(opts.id, opts.occ);
+          if (!ev) return;
+          f = {
+            id: ev.id, occ: ev.occurrence_start, recurring: ev.recurring,
+            title: ev.title,
+            date: kalDateStr(ev.start),
+            start: kalMinutes(ev.start),
+            end: kalMinutes(ev.end) || 1440,
+            allDay: ev.all_day,
+            rrule: ev.recurring ? (ev.rrule || "FREQ=WEEKLY") : "",
+            participants: new Set((ev.participants || []).map((p) => String(p.id))),
+            isTeam: ev.is_team,
+            project: ev.project ? ev.project.id : "",
+            remind: ev.remind_before == null ? "" : String(ev.remind_before),
+            place: ev.place || "", note: ev.note || "",
+          };
+        } else if (opts.copyFrom) {
+          const ev = opts.copyFrom;
+          f = {
+            id: null, title: `${ev.title} (nusxa)`,
+            date: kalDateStr(ev.start), start: kalMinutes(ev.start), end: kalMinutes(ev.end) || 1440,
+            allDay: ev.all_day, rrule: "",
+            participants: new Set((ev.participants || []).map((p) => String(p.id))),
+            isTeam: ev.is_team, project: ev.project ? ev.project.id : "",
+            remind: ev.remind_before == null ? "" : String(ev.remind_before),
+            place: ev.place || "", note: ev.note || "",
+          };
+        } else {
+          const start = opts.start != null ? opts.start : Math.min(23 * 60, Math.ceil(kalNowMinutes() / 60) * 60);
+          f = {
+            id: null, title: "",
+            date: opts.date || kal.anchor,
+            start, end: opts.end != null ? opts.end : Math.min(24 * 60, start + 60),
+            allDay: false, rrule: "",
+            participants: new Set(me ? [String(me)] : []),
+            isTeam: false, project: "", remind: "30", place: "", note: "",
+          };
+        }
+        f.saving = false; f.error = null; f.conflicts = []; f.dirty = false;
+        kal.form = f;
+
+        const ov = document.createElement("div");
+        ov.className = "kal-ov";
+        ov.id = "kal-form-ov";
+        ov.onclick = (e) => { if (e.target === ov) kalFormClose(); };
+        document.body.appendChild(ov);
+        kalFormRender();
+        pageBackStack.push(kalFormClose);
+        pageSyncBack();
+        document.addEventListener("keydown", kalFormKey);
+        setTimeout(() => document.getElementById("kal-f-title")?.focus(), 30);
+      }
+      function kalFormClose() {
+        const f = kal.form;
+        if (f && f.dirty && !confirm("O'zgarishlar saqlanmaydi. Yopilsinmi?")) return;
+        document.getElementById("kal-form-ov")?.remove();
+        kal.form = null;
+        const i = pageBackStack.indexOf(kalFormClose);
+        if (i !== -1) pageBackStack.splice(i, 1);
+        pageSyncBack();
+        document.removeEventListener("keydown", kalFormKey);
+      }
+      function kalFormKey(e) {
+        if (e.key === "Escape") { e.preventDefault(); kalFormClose(); }
+        if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); kalSave(); }
+      }
+      function kalMin2hhmm(m) {
+        return `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+      }
+      function kalHhmm2min(s) {
+        const [h, m] = String(s || "0:0").split(":").map(Number);
+        return (h || 0) * 60 + (m || 0);
+      }
+
+      function kalFormRender() {
+        const ov = document.getElementById("kal-form-ov");
+        const f = kal.form;
+        if (!ov || !f) return;
+        const admin = isAdmin;
+        const chips = kal.users
+          .map((u) => {
+            const id = String(u.id);
+            const on = f.participants.has(id);
+            const band = f.conflicts.some((c) => String(c.user.id) === id);
+            return `<button type="button" class="kal-chip${on ? " on" : ""}${band ? " busy" : ""}" onclick="kalToggleP('${escArg(id)}')">
+                <i style="background:${kalUserColor(u)}">${kalInit(kalUserName(u))}</i>${escHtml(kalUserShort(u))}
+              </button>`;
+          })
+          .join("");
+        const ogoh = f.conflicts.length
+          ? `<div class="kal-warn"><span>!</span><div>${f.conflicts
+              .slice(0, 4)
+              .map((c) => `<b>${escHtml(c.user.name)}</b> shu vaqtda band: ${escHtml(c.event.title)}, ${kalHHMM(c.event.start)}–${kalHHMM(c.event.end)}`)
+              .join("<br>")}</div></div>`
+          : "";
+
+        ov.innerHTML = `<div class="kal-form" onclick="event.stopPropagation()">
+            <div class="kal-f-hdr">
+              <div class="kal-f-t">${f.id ? "Rejani tahrirlash" : "Yangi reja"}</div>
+              <button class="kal-pop-x" onclick="kalFormClose()">✕</button>
+            </div>
+            <div class="kal-f-body">
+              <input id="kal-f-title" class="kal-f-title${f.error === "title" ? " bad" : ""}" maxlength="120"
+                     placeholder="Reja nomi" value="${escHtml(f.title)}" oninput="kalField('title',this.value)" />
+              <div class="kal-f-grid">
+                <div>
+                  <div class="kal-f-lbl">Sana</div>
+                  <input type="date" class="kal-f-in" value="${f.date}" onchange="kalField('date',this.value)" />
+                </div>
+                ${f.allDay ? "" : `
+                <div>
+                  <div class="kal-f-lbl">Boshlanishi</div>
+                  <input type="time" step="900" class="kal-f-in" value="${kalMin2hhmm(f.start)}" onchange="kalTime('start',this.value)" />
+                </div>
+                <div>
+                  <div class="kal-f-lbl">Tugashi</div>
+                  <input type="time" step="900" class="kal-f-in" value="${kalMin2hhmm(f.end)}" onchange="kalTime('end',this.value)" />
+                </div>`}
+              </div>
+              <div class="kal-f-grid">
+                <label class="kal-f-sw"><input type="checkbox" ${f.allDay ? "checked" : ""} onchange="kalField('allDay',this.checked)" /> Butun kun</label>
+                <div>
+                  <select class="kal-f-sel" onchange="kalField('rrule',this.value)">
+                    ${KAL_REPEAT.map((r) => `<option value="${r.v}"${f.rrule === r.v ? " selected" : ""}>${r.t}</option>`).join("")}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <div class="kal-f-lbl">Kim uchun</div>
+                <div class="kal-chips">
+                  ${chips}
+                  ${admin ? `<button type="button" class="kal-chip${f.isTeam ? " on" : ""}" onclick="kalToggleTeam()"><i style="background:#475569"></i>Hammasi</button>` : ""}
+                </div>
+              </div>
+              ${ogoh}
+              <div class="kal-f-grid">
+                <div>
+                  <div class="kal-f-lbl">Loyiha</div>
+                  <select class="kal-f-sel" onchange="kalField('project',this.value)">
+                    <option value="">—</option>
+                    ${kal.projects.map((p) => `<option value="${escHtml(p.id)}"${String(f.project) === String(p.id) ? " selected" : ""}>${escHtml(p.label)}</option>`).join("")}
+                  </select>
+                </div>
+                <div>
+                  <div class="kal-f-lbl">Eslatma</div>
+                  <select class="kal-f-sel" onchange="kalField('remind',this.value)">
+                    ${KAL_REMIND.map((r) => `<option value="${r.v}"${f.remind === r.v ? " selected" : ""}>${r.t}</option>`).join("")}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <div class="kal-f-lbl">Joy</div>
+                <input class="kal-f-in" maxlength="200" placeholder="Masalan: Granix ofisi, Qarshi"
+                       value="${escHtml(f.place)}" oninput="kalField('place',this.value)" />
+              </div>
+              <div>
+                <div class="kal-f-lbl">Izoh</div>
+                <textarea class="kal-f-area" maxlength="2000" placeholder="Nima olinishi, kerakli jihozlar…"
+                          oninput="kalField('note',this.value)">${escHtml(f.note)}</textarea>
+              </div>
+            </div>
+            <div class="kal-f-foot">
+              ${f.error && f.error !== "title"
+                ? `<div class="kal-f-err">${escHtml(f.error)}</div>`
+                : `<div class="kal-f-note">Tanlanganlarga Telegram'da xabar boradi</div>`}
+              <button class="kal-pop-btn" onclick="kalFormClose()">Bekor qilish</button>
+              <button class="kal-pop-btn primary" onclick="kalSave()" ${f.saving ? "disabled" : ""}>${f.saving ? "Saqlanmoqda…" : "Saqlash"}</button>
+            </div>
+          </div>`;
+      }
+
+      let kalConflictTimer = null;
+      function kalField(k, v) {
+        const f = kal.form;
+        if (!f) return;
+        f[k] = v;
+        f.dirty = true;
+        if (k === "title" || k === "place" || k === "note") return; // qayta chizish shart emas
+        if (k === "date" || k === "allDay") kalCheckConflicts();
+        kalFormRender();
+      }
+      function kalTime(k, v) {
+        const f = kal.form;
+        if (!f) return;
+        const m = kalHhmm2min(v);
+        if (k === "start") {
+          // Boshlanish surilsa tugash davomiylikni saqlab suriladi.
+          const dav = Math.max(15, f.end - f.start);
+          f.start = m;
+          f.end = Math.min(24 * 60, m + dav);
+        } else {
+          f.end = m;
+        }
+        f.dirty = true;
+        kalFormRender();
+        kalCheckConflicts();
+      }
+      function kalToggleP(id) {
+        const f = kal.form;
+        if (f.participants.has(id)) f.participants.delete(id);
+        else f.participants.add(id);
+        f.dirty = true;
+        kalFormRender();
+        kalCheckConflicts();
+      }
+      function kalToggleTeam() {
+        const f = kal.form;
+        f.isTeam = !f.isTeam;
+        // «Hammasi» — barcha xodimlar ishtirokchi bo'ladi.
+        if (f.isTeam) kal.users.forEach((u) => f.participants.add(String(u.id)));
+        f.dirty = true;
+        kalFormRender();
+        kalCheckConflicts();
+      }
+      // Bandlik tekshiruvi — 300ms kechikish bilan (TZ 8-bo'lim).
+      function kalCheckConflicts() {
+        if (kalConflictTimer) clearTimeout(kalConflictTimer);
+        kalConflictTimer = setTimeout(async () => {
+          const f = kal.form;
+          if (!f || f.allDay || !f.participants.size) return;
+          try {
+            const q = new URLSearchParams({
+              users: [...f.participants].join(","),
+              start: kalToIso(f.date, f.start),
+              end: kalToIso(f.date, f.end),
+            });
+            if (f.id) q.set("exclude", f.id);
+            const r = await apiFetch(`/api/events/conflicts?${q}`);
+            const d = await r.json();
+            if (kal.form === f) { f.conflicts = d.items || []; kalFormRender(); }
+          } catch (e) { /* tekshiruv ishlamasa saqlash baribir ishlaydi */ }
+        }, 300);
+      }
+
+      async function kalSave() {
+        const f = kal.form;
+        if (!f || f.saving) return;
+        const title = String(f.title || "").trim();
+        if (title.length < 2) { f.error = "title"; kalFormRender(); document.getElementById("kal-f-title")?.focus(); return; }
+        if (!f.allDay && f.end <= f.start) { f.error = "Tugash vaqti boshlanishdan keyin bo'lishi kerak"; kalFormRender(); return; }
+        if (!f.participants.size) { f.error = "Kamida bitta xodim tanlanishi kerak"; kalFormRender(); return; }
+
+        const body = {
+          title,
+          start_at: f.allDay ? kalToIso(f.date, 0) : kalToIso(f.date, f.start),
+          end_at: f.allDay ? kalToIso(kalAddDays(f.date, 1), 0) : kalToIso(f.date, f.end),
+          all_day: !!f.allDay,
+          rrule: f.rrule || null,
+          is_team: !!f.isTeam,
+          project_id: f.project || null,
+          place: f.place || null,
+          note: f.note || null,
+          remind_before: f.remind === "" ? null : Number(f.remind),
+          participants: [...f.participants],
+        };
+        f.saving = true; f.error = null; kalFormRender();
+        try {
+          let url = "/api/events";
+          let method = "POST";
+          if (f.id) {
+            let scope = "all";
+            if (f.recurring) {
+              scope = await kalAskScope({ recurring: true }, "Rejani tahrirlash");
+              if (!scope) { f.saving = false; kalFormRender(); return; }
+            }
+            url = `/api/events/${encodeURIComponent(f.id)}?scope=${scope}&occurrence=${encodeURIComponent(f.occ || "")}`;
+            method = "PATCH";
+          }
+          const r = await apiFetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Saqlanmadi");
+          f.dirty = false;
+          kalFormClose();
+          showToast("Reja saqlandi");
+          tg()?.HapticFeedback?.notificationOccurred?.("success");
+          await kalLoad();
+        } catch (e) {
+          f.saving = false;
+          f.error = e.message;
+          kalFormRender();
+        }
+      }
+
+      // ── Tortib ko'chirish (faqat kompyuter va ruxsat bo'lsa) ──────
+      // Blokni tortish vaqt va kunni, pastki chetidan tortish
+      // davomiylikni o'zgartiradi. Qadam — 15 daqiqa. Qo'yib
+      // yuborilganda darhol saqlanadi; xato bo'lsa joyiga qaytadi.
+      let kalDrag = null;
+      function kalBindDrag() {
+        if (window.matchMedia("(max-width: 859px)").matches) return;
+        const body = document.getElementById("kal-body");
+        if (!body) return;
+        body.addEventListener("pointerdown", kalDragStart);
+      }
+      function kalDragStart(e) {
+        if (e.button !== 0) return;
+        const blok = e.target.closest(".kal-ev");
+        if (!blok || !blok.getAttribute("data-edit")) return;
+        const col = blok.closest(".kal-col");
+        if (!col) return;
+        const H = 56;
+        const resize = !!e.target.closest(".kal-ev-grip");
+        const ev = kalFind(blok.getAttribute("data-id"), blok.getAttribute("data-occ"));
+        if (!ev) return;
+        kalDrag = {
+          blok, ev, resize, H,
+          y0: e.clientY, x0: e.clientX,
+          start: kalMinutes(ev.start),
+          end: kalMinutes(ev.end) || 1440,
+          day: col.getAttribute("data-day"),
+          moved: false,
+        };
+        blok.setPointerCapture?.(e.pointerId);
+        document.addEventListener("pointermove", kalDragMove);
+        document.addEventListener("pointerup", kalDragEnd, { once: true });
+      }
+      function kalDragMove(e) {
+        const d = kalDrag;
+        if (!d) return;
+        const dy = e.clientY - d.y0;
+        if (!d.moved && Math.abs(dy) < 4 && Math.abs(e.clientX - d.x0) < 4) return;
+        d.moved = true;
+        d.blok.classList.add("drag");
+        const siljish = Math.round((dy / d.H) * 60 / KAL_STEP) * KAL_STEP;
+        if (d.resize) {
+          d.newStart = d.start;
+          d.newEnd = Math.min(24 * 60, Math.max(d.start + KAL_STEP, d.end + siljish));
+        } else {
+          const dav = d.end - d.start;
+          d.newStart = Math.max(0, Math.min(24 * 60 - dav, d.start + siljish));
+          d.newEnd = d.newStart + dav;
+          // Qaysi kun ustiga olib borilgani
+          const ustida = document.elementFromPoint(e.clientX, e.clientY)?.closest(".kal-col");
+          d.newDay = ustida ? ustida.getAttribute("data-day") : d.day;
+        }
+        d.blok.style.top = `${((d.newStart / 60) * d.H).toFixed(1)}px`;
+        d.blok.style.height = `${Math.max(22, ((d.newEnd - d.newStart) / 60) * d.H - 2).toFixed(1)}px`;
+        const s = d.blok.querySelector(".kal-ev-s");
+        if (s) s.textContent = `${kalMin2hhmm(d.newStart)}–${kalMin2hhmm(d.newEnd)}`;
+      }
+      async function kalDragEnd() {
+        document.removeEventListener("pointermove", kalDragMove);
+        const d = kalDrag;
+        kalDrag = null;
+        if (!d) return;
+        d.blok.classList.remove("drag");
+        if (!d.moved) return;
+        const kun = d.newDay || d.day;
+        if (d.newStart === d.start && d.newEnd === d.end && kun === d.day) { kalRender(); return; }
+        const ev = d.ev;
+        try {
+          let scope = "all";
+          if (ev.recurring) {
+            scope = await kalAskScope(ev, "Rejani ko'chirish");
+            if (!scope) { kalRender(); return; }
+          }
+          const body = {
+            title: ev.title,
+            start_at: kalToIso(kun, d.newStart),
+            end_at: kalToIso(kun, d.newEnd),
+            all_day: ev.all_day,
+            rrule: ev.recurring ? ev.rrule || "FREQ=WEEKLY" : null,
+            is_team: ev.is_team,
+            project_id: ev.project ? ev.project.id : null,
+            place: ev.place, note: ev.note, remind_before: ev.remind_before,
+            participants: (ev.participants || []).map((p) => p.id),
+          };
+          const r = await apiFetch(
+            `/api/events/${encodeURIComponent(ev.id)}?scope=${scope}&occurrence=${encodeURIComponent(ev.occurrence_start)}`,
+            { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) },
+          );
+          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Saqlanmadi");
+          showToast("Reja ko'chirildi");
+          await kalLoad();
+        } catch (e) {
+          showToast("⚠ " + e.message);
+          kalRender(); // joyiga qaytadi
+        }
+      }
+
+      // ── Qidiruv ───────────────────────────────────────────────────
+      let kalSearchTimer = null;
+      function kalSearch(q) {
+        kal.search = q;
+        if (kalSearchTimer) clearTimeout(kalSearchTimer);
+        const box = document.getElementById("kal-results");
+        if (!box) return;
+        if (String(q).trim().length < 2) { box.innerHTML = ""; return; }
+        kalSearchTimer = setTimeout(async () => {
+          try {
+            const r = await apiFetch(`/api/events/search?q=${encodeURIComponent(q)}`);
+            const d = await r.json();
+            const list = d.items || [];
+            const el = document.getElementById("kal-results");
+            if (!el) return;
+            el.className = "kal-res";
+            el.innerHTML = list.length
+              ? list
+                  .map((ev) => `<div class="kal-res-row" onclick="kalJump('${escArg(ev.id)}','${escArg(ev.occurrence_start)}','${kalDateStr(ev.start)}')">
+                      <i class="kal-res-dot" style="background:${kalEvColor(ev)}"></i>
+                      <div style="flex:1;min-width:0">
+                        <div class="kal-res-t">${escHtml(ev.title)}</div>
+                        <div class="kal-res-s">${kalDayLabel(kalDateStr(ev.start))}${ev.all_day ? "" : ` · ${kalHHMM(ev.start)}`}${ev.project ? ` · ${escHtml(ev.project.label)}` : ""}</div>
+                      </div>
+                    </div>`)
+                  .join("")
+              : `<div class="kal-res-row"><div class="kal-res-s">Topilmadi</div></div>`;
+          } catch (e) { /* jim */ }
+        }, 250);
+      }
+      async function kalJump(id, occ, dateStr) {
+        const box = document.getElementById("kal-results");
+        if (box) { box.innerHTML = ""; box.className = ""; }
+        const inp = document.getElementById("kal-search");
+        if (inp) inp.value = "";
+        kalGoDate(dateStr, kal.view === "oy" ? "kun" : kal.view);
+        await kalLoad();
+        // Kartani ochish uchun blokni topamiz
+        setTimeout(() => {
+          const blok = document.querySelector(`#screen-kalendar .kal-ev[data-id="${CSS.escape(String(id))}"]`);
+          if (blok) blok.click();
+        }, 80);
+      }
+
+      // Telegram xabaridagi «Ilovani ochish» tugmasi shu yo'l bilan
+      // aynan o'sha rejani ochadi: avval sanasiga o'tiladi, keyin
+      // blok topilib kartasi chiqariladi.
+      async function kalOpenById(id) {
+        try {
+          const r = await apiFetch(`/api/events/${encodeURIComponent(id)}`);
+          if (!r.ok) {
+            showToast(r.status === 410 ? "Bu reja o'chirilgan" : "Reja topilmadi");
+            return;
+          }
+          const ev = await r.json();
+          kalGoDate(kalDateStr(ev.start), "kun");
+          await kalLoad();
+          setTimeout(() => {
+            document.querySelector(`#screen-kalendar .kal-ev[data-id="${CSS.escape(String(id))}"]`)?.click();
+          }, 100);
+        } catch (e) { /* jim */ }
+      }
+
+      // ── Klaviatura (faqat kompyuter) ──────────────────────────────
+      function kalKeys(e) {
+        if (!document.getElementById("screen-kalendar")?.classList.contains("active")) return;
+        if (document.getElementById("kal-form-ov")) return;
+        const t = e.target;
+        if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) {
+          if (e.key === "Escape") t.blur();
+          return;
+        }
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        const k = e.key.toLowerCase();
+        if (e.key === "ArrowLeft") { e.preventDefault(); kalStep(-1); }
+        else if (e.key === "ArrowRight") { e.preventDefault(); kalStep(1); }
+        else if (k === "t") kalGoToday();
+        else if (k === "d") kalSetView("kun");
+        else if (k === "w") kalSetView("hafta");
+        else if (k === "m") kalSetView("oy");
+        else if (k === "n") { e.preventDefault(); kalOpenForm({}); }
+        else if (e.key === "Escape") kalCloseDetail();
+        else if (e.key === "/") { e.preventDefault(); document.getElementById("kal-search")?.focus(); }
+      }
+      document.addEventListener("keydown", kalKeys);
+
+      // Boshqa xodim reja qo'shsa, ochiq kalendar o'zi yangilanadi.
+      // SSE yo'q — 60 soniyalik tekshiruv va oyna fokusga qaytganda
+      // (TZ 13-bo'lim; «5 soniya» uchun real-time kanal kerak).
+      setInterval(() => {
+        if (kal && document.getElementById("screen-kalendar")?.classList.contains("active")
+            && !document.getElementById("kal-form-ov") && document.visibilityState === "visible") {
+          kalLoad();
+        }
+      }, 60000);
+      window.addEventListener("focus", () => {
+        if (kal && document.getElementById("screen-kalendar")?.classList.contains("active")
+            && !document.getElementById("kal-form-ov")) kalLoad();
+      });
+
       // ═══ FAOLLIK — jamoa va xodim ═══════════════════════════════════
       // Ma'lumot manbasi: chiqqan post va stories hamda "Bajarildi"
       // holatiga o'tgan vazifalar. Har ish uni HAQIQATDA bajargan
@@ -22559,10 +24547,16 @@
           // to'g'ridan-to'g'ri o'sha vazifaga/bo'limga ochiladi.
           const params = new URLSearchParams(window.location.search);
           const openTaskId = params.get("openTask");
+          const openEventId = params.get("openEvent");
           const tabParam = params.get("tab");
           if (openTaskId) {
             showTab("tasks");
             openTaskActions(openTaskId);
+          } else if (openEventId || location.pathname.startsWith("/kalendar")) {
+            // Telegram xabaridagi tugma yoki nusxalangan havola —
+            // ikkalasi ham to'g'ridan-to'g'ri kalendarni ochadi.
+            showTab("kalendar");
+            if (openEventId) kalOpenById(openEventId);
           } else if (tabParam && ROOT_TABS.includes(tabParam) && !(isDesignerOnlyNav && ["today", "projects"].includes(tabParam))) {
             showTab(tabParam);
           } else {

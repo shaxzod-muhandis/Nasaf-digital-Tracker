@@ -47,6 +47,12 @@ const {
   buildPacingMessage,
 } = require("./lib/notify");
 const { getBalance, awardNcoin, reverseNcoin } = require("./lib/ncoin");
+const {
+  expandOccurrences,
+  shapeOccurrence,
+  isSupportedRrule,
+  userBrief,
+} = require("./lib/events");
 const { put: blobPut } = require("@vercel/blob");
 
 // Faqat Telegram bildirishnoma matnlarini tuzish uchun (Vazifalar
@@ -198,6 +204,10 @@ app.get("/", (req, res) => sendAppHtml(res));
 // tugmasi ishlashi uchun. Ilova bitta sahifa bo'lgani sabab shu
 // manzillarda ham o'sha HTML uzatiladi, qolganini front hal qiladi.
 app.get(/^\/vazifalar(\/|$)/, (req, res) => sendAppHtml(res));
+// Kalendar ham o'z manzilida (/kalendar?view=hafta&d=2026-10-17) —
+// havolani nusxalab boshqa brauzerda ochsa, xuddi shu ko'rinish va
+// sana ochilishi kerak (TZ 3-bo'lim).
+app.get(/^\/kalendar(\/|$)/, (req, res) => sendAppHtml(res));
 app.post("/api/get-app", auth, (req, res) => sendAppHtml(res));
 
 // ── /api/auth ─────────────────────────────────────────────────────────
@@ -567,7 +577,7 @@ app.get("/api/users/directory", auth, async (req, res) => {
     // yoziladi ("SMM", "SMM manager"), shuning uchun nom bo'yicha
     // ham, loyihadagi `smm` roli bo'yicha ham tekshiriladi.
     const r = await db.query(
-      `select u.id, u.username, u.first_name, u.last_name, u.job_title, u.avatar_url,
+      `select u.id, u.username, u.first_name, u.last_name, u.job_title, u.avatar_url, u.color,
               (u.job_title ilike '%smm%'
                or u.role in ('admin', 'super_admin')
                or exists (select 1 from permissions pm where pm.user_id = u.id and pm.role = 'smm')) as can_smm
@@ -1814,6 +1824,675 @@ app.get("/api/team-activity", auth, async (req, res) => {
     res.json({ days, todayCount: days.length ? days[days.length - 1].count : 0 });
   } catch (e) {
     serverError(res, e, "GET /api/team-activity");
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// KALENDAR («Nasaf Tracker · Umumiy kalendar» TZ v1.0)
+// ═══════════════════════════════════════════════════════════════════════
+// Ko'rishni hamma ko'radi (TZ 2-bo'lim), o'zgartirishni esa faqat
+// rejani YARATGAN odam yoki admin. Tekshiruv shu yerda, backendda —
+// frontend tugmani yashirgani yetarli emas.
+
+const EV_SELECT = `
+  select e.*,
+         ou.username as o_username, ou.first_name as o_first, ou.last_name as o_last,
+         ou.full_name as o_full, ou.color as o_color,
+         p.slug as p_slug, p.label as p_label
+    from events e
+    join users ou on ou.id = e.owner_id
+    left join projects p on p.id = e.project_id`;
+
+function evCanEdit(req, row) {
+  return String(row.created_by) === String(req.user.id) || isAdminRole(req.user.role);
+}
+function evOwner(row) {
+  return userBrief({
+    id: row.owner_id, username: row.o_username, first_name: row.o_first,
+    last_name: row.o_last, full_name: row.o_full, color: row.o_color,
+  });
+}
+function evProject(row) {
+  return row.project_id ? { id: row.project_id, slug: row.p_slug, label: row.p_label } : null;
+}
+
+// Rejadagi ishtirokchilar — bir nechta reja uchun bitta so'rovda.
+async function evParticipants(eventIds) {
+  if (!eventIds.length) return {};
+  const r = await db.query(
+    `select ep.event_id, ep.status, u.id, u.username, u.first_name, u.last_name, u.full_name, u.color
+       from event_participants ep
+       join users u on u.id = ep.user_id
+      where ep.event_id = any($1::uuid[])
+      order by u.first_name nulls last, u.username`,
+    [eventIds],
+  );
+  const out = {};
+  r.rows.forEach((row) => {
+    (out[row.event_id] = out[row.event_id] || []).push({ ...userBrief(row), status: row.status });
+  });
+  return out;
+}
+
+// Bitta nusxaning istisnolari (alohida o'zgartirilgan/bekor qilingan)
+async function evExceptions(eventIds) {
+  if (!eventIds.length) return {};
+  const r = await db.query(
+    `select event_id, original_start, is_cancelled, override_json
+       from event_exceptions where event_id = any($1::uuid[])`,
+    [eventIds],
+  );
+  const out = {};
+  r.rows.forEach((row) => {
+    const key = `${row.event_id}|${new Date(row.original_start).toISOString()}`;
+    out[key] = row;
+  });
+  return out;
+}
+
+// Eslatmalar navbatini qayta quradi. Yuborilganlariga tegilmaydi —
+// aks holda vaqt o'zgarganda bir eslatma ikki marta ketardi.
+// Faqat yaqin 60 kun uchun quriladi; cron undan keyingisini davom
+// ettiradi (cheksiz seriya uchun navbatni to'ldirib yubormaslik kerak).
+const EV_REMINDER_HORIZON_DAYS = 60;
+async function evRescheduleReminders(eventId) {
+  const r = await db.query(`select * from events where id = $1 and deleted_at is null`, [eventId]);
+  const ev = r.rows[0];
+  await db.query(`delete from event_reminders where event_id = $1 and sent_at is null`, [eventId]);
+  if (!ev || ev.remind_before == null) return;
+
+  const pr = await db.query(
+    `select user_id from event_participants where event_id = $1 and status = 'going'`,
+    [eventId],
+  );
+  const userIds = pr.rows.map((x) => x.user_id);
+  if (!userIds.length) return;
+
+  const hozir = new Date();
+  const oxiri = new Date(hozir.getTime() + EV_REMINDER_HORIZON_DAYS * 86400000);
+  const nusxalar = expandOccurrences(ev, hozir, oxiri, 200);
+  const qatorlar = [];
+  nusxalar.forEach((occ) => {
+    const sendAt = new Date(occ.getTime() - ev.remind_before * 60000);
+    if (sendAt.getTime() <= hozir.getTime()) return; // vaqti o'tib ketgan
+    userIds.forEach((uid) => qatorlar.push([eventId, uid, occ.toISOString(), sendAt.toISOString()]));
+  });
+  if (!qatorlar.length) return;
+
+  const values = qatorlar
+    .map((_, i) => `($${i * 4 + 1}, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`)
+    .join(",");
+  await db.query(
+    `insert into event_reminders (event_id, user_id, occurrence_start, send_at)
+     values ${values}
+     on conflict (event_id, user_id, occurrence_start) do update set send_at = excluded.send_at`,
+    qatorlar.flat(),
+  );
+}
+
+// ── Telegram xabarlari ───────────────────────────────────────────────
+const EV_WD = ["Ya", "Du", "Se", "Ch", "Pa", "Ju", "Sh"];
+const EV_MON = ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul",
+  "avgust", "sentabr", "oktabr", "noyabr", "dekabr"];
+function evFmtRange(startIso, endIso, allDay) {
+  const s = new Date(new Date(startIso).getTime() + 5 * 3600000);
+  const e = new Date(new Date(endIso).getTime() + 5 * 3600000);
+  const kun = `${EV_WD[s.getUTCDay()]}, ${s.getUTCDate()}-${EV_MON[s.getUTCMonth()]}`;
+  if (allDay) return `${kun} · butun kun`;
+  const t = (d) => `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+  return `${kun} · ${t(s)}–${t(e)}`;
+}
+async function evNotify(eventId, userIds, text) {
+  if (!process.env.BOT_TOKEN || !userIds.length) return;
+  const r = await db.query(
+    `select telegram_chat_id from users where id = any($1::uuid[]) and telegram_chat_id is not null`,
+    [userIds],
+  );
+  const markup = appOpenButton(`?openEvent=${eventId}`);
+  await Promise.allSettled(r.rows.map((u) => sendMsg(db, u.telegram_chat_id, text, { replyMarkup: markup })));
+}
+
+// ── Kiruvchi ma'lumotni tekshirish ───────────────────────────────────
+function evValidate(b) {
+  const title = String(b.title || "").trim();
+  if (title.length < 2 || title.length > 120) return { error: "Nom 2–120 belgi bo'lishi kerak" };
+  const start = new Date(b.start_at);
+  const end = new Date(b.end_at);
+  if (isNaN(start) || isNaN(end)) return { error: "Sana noto'g'ri" };
+  if (end.getTime() <= start.getTime()) return { error: "Tugash vaqti boshlanishdan keyin bo'lishi kerak" };
+  const ids = Array.isArray(b.participants) ? b.participants.filter(Boolean) : [];
+  if (!ids.length) return { error: "Kamida bitta xodim tanlanishi kerak" };
+  const rrule = b.rrule ? String(b.rrule) : null;
+  if (rrule && !isSupportedRrule(rrule)) return { error: "Takrorlanish qoidasi noto'g'ri" };
+  const remind = b.remind_before == null || b.remind_before === "" ? null : Number(b.remind_before);
+  if (remind != null && (!Number.isFinite(remind) || remind < 0 || remind > 10080)) {
+    return { error: "Eslatma vaqti noto'g'ri" };
+  }
+  return {
+    title,
+    start_at: start.toISOString(),
+    end_at: end.toISOString(),
+    all_day: !!b.all_day,
+    rrule,
+    rrule_until: b.rrule_until ? new Date(b.rrule_until).toISOString() : null,
+    is_team: !!b.is_team,
+    project_id: b.project_id || null,
+    place: b.place ? String(b.place).slice(0, 200) : null,
+    note: b.note ? String(b.note).slice(0, 2000) : null,
+    remind_before: remind,
+    participants: ids,
+  };
+}
+
+// ── GET /api/events — davrdagi rejalar, nusxalarga yoyilgan ──────────
+app.get("/api/events", auth, async (req, res) => {
+  try {
+    const from = new Date(req.query.from || Date.now() - 7 * 86400000);
+    const to = new Date(req.query.to || Date.now() + 30 * 86400000);
+    if (isNaN(from) || isNaN(to) || to <= from) return res.status(400).json({ error: "Davr noto'g'ri" });
+    // Juda keng so'rovni cheklaymiz — bir martada eng ko'pi 1 yil.
+    if (to.getTime() - from.getTime() > 400 * 86400000) {
+      return res.status(400).json({ error: "Davr juda uzun" });
+    }
+
+    // Takrorlanmaydiganlar davr bilan kesishgani bo'yicha, takrorlanuvchilar
+    // esa butunicha olinadi (seriya oldinroq boshlangan bo'lishi mumkin) —
+    // keyin yoyilib, davrga tushgani qoladi.
+    const r = await db.query(
+      `${EV_SELECT}
+        where e.deleted_at is null
+          and (
+            (e.rrule is null and e.start_at < $2 and e.end_at > $1)
+            or (e.rrule is not null and e.start_at < $2
+                and (e.rrule_until is null or e.rrule_until > $1))
+          )
+        order by e.start_at`,
+      [from.toISOString(), to.toISOString()],
+    );
+    const ids = r.rows.map((x) => x.id);
+    const [parts, excs] = await Promise.all([evParticipants(ids), evExceptions(ids)]);
+
+    // Xodim filtri: egasi yoki ishtirokchisi tanlanganlar ichida bo'lsa.
+    const filter = String(req.query.users || "").trim();
+    const wanted = filter ? new Set(filter.split(",").map((s) => s.trim()).filter(Boolean)) : null;
+
+    const items = [];
+    r.rows.forEach((row) => {
+      const ps = parts[row.id] || [];
+      if (wanted) {
+        const mos = String(row.owner_id) === String(req.query.__never)
+          || wanted.has(String(row.owner_id))
+          || ps.some((p) => wanted.has(String(p.id)));
+        if (!mos) return;
+      }
+      const canEdit = evCanEdit(req, row);
+      const owner = evOwner(row);
+      const project = evProject(row);
+      expandOccurrences(row, from, to).forEach((occ) => {
+        const exc = excs[`${row.id}|${occ.toISOString()}`];
+        if (exc && exc.is_cancelled) return;
+        items.push(shapeOccurrence(row, occ, { participants: ps, owner, project, canEdit, exception: exc }));
+      });
+    });
+    items.sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0));
+    res.json({ items });
+    // Javob yuborilgandan keyin — vaqti kelgan eslatmalarni yuborib
+    // qo'yamiz. Vercel'da daqiqalik cron har doim mavjud emas, shuning
+    // uchun kalendar ochiq bo'lgan payt ham navbatni suradi. Xatosi
+    // foydalanuvchiga ta'sir qilmaydi.
+    evSendDueReminders().catch((err) => console.error("[eslatma navbati]", err.message));
+  } catch (e) {
+    serverError(res, e, "GET /api/events");
+  }
+});
+
+// ── GET /api/events/conflicts — bandlik tekshiruvi ───────────────────
+// TZ 8-bo'lim: ogohlantiradi, lekin saqlashni to'smaydi.
+app.get("/api/events/conflicts", auth, async (req, res) => {
+  try {
+    const users = String(req.query.users || "").split(",").map((s) => s.trim()).filter(Boolean);
+    const start = new Date(req.query.start);
+    const end = new Date(req.query.end);
+    if (!users.length || isNaN(start) || isNaN(end) || end <= start) return res.json({ items: [] });
+    const exclude = req.query.exclude || null;
+
+    // Takrorlanuvchilar ham tekshiriladi, shuning uchun oraliq atrofidagi
+    // hammasi olinadi va yoyiladi.
+    const r = await db.query(
+      `${EV_SELECT}
+        where e.deleted_at is null
+          and ($3::uuid is null or e.id <> $3)
+          and (
+            (e.rrule is null and e.start_at < $2 and e.end_at > $1)
+            or (e.rrule is not null and e.start_at < $2
+                and (e.rrule_until is null or e.rrule_until > $1))
+          )`,
+      [start.toISOString(), end.toISOString(), exclude],
+    );
+    const ids = r.rows.map((x) => x.id);
+    const [parts, excs] = await Promise.all([evParticipants(ids), evExceptions(ids)]);
+    const want = new Set(users);
+
+    const items = [];
+    r.rows.forEach((row) => {
+      const ps = parts[row.id] || [];
+      const band = ps.filter((p) => p.status === "going" && want.has(String(p.id)));
+      if (!band.length) return;
+      expandOccurrences(row, start, end).forEach((occ) => {
+        const exc = excs[`${row.id}|${occ.toISOString()}`];
+        if (exc && exc.is_cancelled) return;
+        const sh = shapeOccurrence(row, occ, {
+          participants: ps, owner: evOwner(row), project: evProject(row),
+          canEdit: false, exception: exc,
+        });
+        if (new Date(sh.start) >= end || new Date(sh.end) <= start) return;
+        band.forEach((u) => items.push({
+          user: { id: u.id, name: u.name },
+          event: { id: sh.id, title: sh.title, start: sh.start, end: sh.end, project: sh.project },
+        }));
+      });
+    });
+    res.json({ items: items.slice(0, 20) });
+  } catch (e) {
+    serverError(res, e, "GET /api/events/conflicts");
+  }
+});
+
+// ── GET /api/events/search — nom, joy, loyiha, xodim bo'yicha ────────
+app.get("/api/events/search", auth, async (req, res) => {
+  try {
+    const q = String(req.query.q || "").trim();
+    if (q.length < 2) return res.json({ items: [] });
+    // TZ 9-bo'lim: ±6 oy oralig'ida qidiriladi.
+    const from = new Date(Date.now() - 183 * 86400000);
+    const to = new Date(Date.now() + 183 * 86400000);
+    const like = `%${q}%`;
+    const r = await db.query(
+      `${EV_SELECT}
+        where e.deleted_at is null
+          and (e.title ilike $1 or e.place ilike $1 or p.label ilike $1
+               or exists (
+                 select 1 from event_participants ep join users u on u.id = ep.user_id
+                  where ep.event_id = e.id
+                    and (u.first_name ilike $1 or u.last_name ilike $1
+                         or u.full_name ilike $1 or u.username ilike $1)
+               ))
+        order by e.start_at
+        limit 60`,
+      [like],
+    );
+    const ids = r.rows.map((x) => x.id);
+    const [parts, excs] = await Promise.all([evParticipants(ids), evExceptions(ids)]);
+    const items = [];
+    r.rows.forEach((row) => {
+      const ps = parts[row.id] || [];
+      expandOccurrences(row, from, to, 20).forEach((occ) => {
+        const exc = excs[`${row.id}|${occ.toISOString()}`];
+        if (exc && exc.is_cancelled) return;
+        items.push(shapeOccurrence(row, occ, {
+          participants: ps, owner: evOwner(row), project: evProject(row),
+          canEdit: evCanEdit(req, row), exception: exc,
+        }));
+      });
+    });
+    // Yaqin kelajak birinchi: bugundan keyingilar oldinga, keyin o'tmish.
+    const hozir = Date.now();
+    items.sort((a, b) => {
+      const ak = new Date(a.start).getTime() >= hozir ? 0 : 1;
+      const bk = new Date(b.start).getTime() >= hozir ? 0 : 1;
+      if (ak !== bk) return ak - bk;
+      return ak === 0 ? new Date(a.start) - new Date(b.start) : new Date(b.start) - new Date(a.start);
+    });
+    res.json({ items: items.slice(0, 40) });
+  } catch (e) {
+    serverError(res, e, "GET /api/events/search");
+  }
+});
+
+// ── GET /api/events/:id ──────────────────────────────────────────────
+app.get("/api/events/:id", auth, async (req, res) => {
+  try {
+    const r = await db.query(`${EV_SELECT} where e.id = $1`, [req.params.id]);
+    const row = r.rows[0];
+    if (!row) return res.status(404).json({ error: "Reja topilmadi" });
+    if (row.deleted_at) return res.status(410).json({ error: "Bu reja o'chirilgan" });
+    const parts = await evParticipants([row.id]);
+    res.json(shapeOccurrence(row, new Date(row.start_at), {
+      participants: parts[row.id] || [], owner: evOwner(row), project: evProject(row),
+      canEdit: evCanEdit(req, row), exception: null,
+    }));
+  } catch (e) {
+    serverError(res, e, "GET /api/events/:id");
+  }
+});
+
+// ── POST /api/events ─────────────────────────────────────────────────
+app.post("/api/events", auth, async (req, res) => {
+  try {
+    const v = evValidate(req.body || {});
+    if (v.error) return res.status(400).json({ error: v.error });
+    // «Hammasi» uchun reja — faqat admin (TZ 2-bo'lim).
+    if (v.is_team && !isAdminRole(req.user.role)) {
+      return res.status(403).json({ error: "«Hammasi» uchun rejani faqat admin yarata oladi" });
+    }
+    // Birinchi tanlangan xodim — reja egasi, blok rangi shundan.
+    const ownerId = v.participants[0];
+    const ins = await db.query(
+      `insert into events (title, start_at, end_at, all_day, rrule, rrule_until, is_team,
+                           owner_id, project_id, place, note, remind_before, created_by)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) returning id`,
+      [v.title, v.start_at, v.end_at, v.all_day, v.rrule, v.rrule_until, v.is_team,
+        ownerId, v.project_id, v.place, v.note, v.remind_before, req.user.id],
+    );
+    const id = ins.rows[0].id;
+    const vals = v.participants.map((_, i) => `($1, $${i + 2}, 'going')`).join(",");
+    await db.query(
+      `insert into event_participants (event_id, user_id, status) values ${vals}
+       on conflict do nothing`,
+      [id, ...v.participants],
+    );
+    await evRescheduleReminders(id);
+
+    // Yaratuvchidan boshqa ishtirokchilarga xabar (TZ 10-bo'lim).
+    const boshqalar = v.participants.filter((u) => String(u) !== String(req.user.id));
+    const joyLine = v.place ? `\n📍 ${v.place}` : "";
+    await evNotify(id, boshqalar,
+      `📅 <b>Yangi reja:</b> ${v.title}\n${evFmtRange(v.start_at, v.end_at, v.all_day)}${joyLine}\nQo'shdi: @${req.user.username}`);
+
+    const r = await db.query(`${EV_SELECT} where e.id = $1`, [id]);
+    const parts = await evParticipants([id]);
+    res.status(201).json(shapeOccurrence(r.rows[0], new Date(r.rows[0].start_at), {
+      participants: parts[id] || [], owner: evOwner(r.rows[0]), project: evProject(r.rows[0]),
+      canEdit: true, exception: null,
+    }));
+  } catch (e) {
+    serverError(res, e, "POST /api/events");
+  }
+});
+
+// ── PATCH /api/events/:id ────────────────────────────────────────────
+// scope: all (default) | one | following. Takrorlanuvchi rejada
+// «faqat shu nusxa» istisno sifatida saqlanadi, «shu va keyingilari»
+// esa eski seriyani shu sanada tugatib, yangisini ochadi.
+app.patch("/api/events/:id", auth, async (req, res) => {
+  try {
+    const cur = await db.query(`select * from events where id = $1 and deleted_at is null`, [req.params.id]);
+    const ev = cur.rows[0];
+    if (!ev) return res.status(404).json({ error: "Reja topilmadi" });
+    if (!evCanEdit(req, ev)) return res.status(403).json({ error: "Bu rejani faqat egasi yoki admin o'zgartiradi" });
+
+    const v = evValidate({ ...req.body, participants: req.body.participants || [req.user.id] });
+    if (v.error) return res.status(400).json({ error: v.error });
+    if (v.is_team && !isAdminRole(req.user.role)) {
+      return res.status(403).json({ error: "«Hammasi» uchun rejani faqat admin belgilaydi" });
+    }
+
+    const scope = ev.rrule ? String(req.query.scope || "all") : "all";
+    const occ = req.query.occurrence ? new Date(req.query.occurrence) : null;
+
+    if (scope === "one" && occ && !isNaN(occ)) {
+      await db.query(
+        `insert into event_exceptions (event_id, original_start, is_cancelled, override_json)
+         values ($1,$2,false,$3)
+         on conflict (event_id, original_start)
+         do update set is_cancelled = false, override_json = excluded.override_json`,
+        [ev.id, occ.toISOString(), JSON.stringify({
+          title: v.title, start_at: v.start_at, end_at: v.end_at, place: v.place, note: v.note,
+        })],
+      );
+      return res.json({ ok: true, scope: "one" });
+    }
+
+    if (scope === "following" && occ && !isNaN(occ)) {
+      // Eski seriya shu nusxadan oldin tugaydi.
+      await db.query(`update events set rrule_until = $2, updated_at = now() where id = $1`,
+        [ev.id, new Date(occ.getTime() - 60000).toISOString()]);
+      const ownerId = v.participants[0];
+      const ins = await db.query(
+        `insert into events (title, start_at, end_at, all_day, rrule, rrule_until, is_team,
+                             owner_id, project_id, place, note, remind_before, created_by)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) returning id`,
+        [v.title, v.start_at, v.end_at, v.all_day, v.rrule, v.rrule_until, v.is_team,
+          ownerId, v.project_id, v.place, v.note, v.remind_before, req.user.id],
+      );
+      const yangiId = ins.rows[0].id;
+      const vals = v.participants.map((_, i) => `($1, $${i + 2}, 'going')`).join(",");
+      await db.query(`insert into event_participants (event_id, user_id, status) values ${vals} on conflict do nothing`,
+        [yangiId, ...v.participants]);
+      await Promise.all([evRescheduleReminders(ev.id), evRescheduleReminders(yangiId)]);
+      return res.json({ ok: true, scope: "following", id: yangiId });
+    }
+
+    const ownerId = v.participants[0];
+    await db.query(
+      `update events set title=$2, start_at=$3, end_at=$4, all_day=$5, rrule=$6, rrule_until=$7,
+              is_team=$8, owner_id=$9, project_id=$10, place=$11, note=$12, remind_before=$13,
+              updated_at = now()
+        where id = $1`,
+      [ev.id, v.title, v.start_at, v.end_at, v.all_day, v.rrule, v.rrule_until, v.is_team,
+        ownerId, v.project_id, v.place, v.note, v.remind_before],
+    );
+    // Ishtirokchilar ro'yxatini almashtiramiz, lekin kim qo'shilgani va
+    // kim chiqarilganini bilish uchun avvalgisini saqlab qolamiz.
+    const oldR = await db.query(`select user_id from event_participants where event_id = $1`, [ev.id]);
+    const eski = new Set(oldR.rows.map((x) => String(x.user_id)));
+    const yangi = new Set(v.participants.map(String));
+    await db.query(`delete from event_participants where event_id = $1 and user_id <> all($2::uuid[])`,
+      [ev.id, v.participants]);
+    const vals = v.participants.map((_, i) => `($1, $${i + 2}, 'going')`).join(",");
+    await db.query(`insert into event_participants (event_id, user_id, status) values ${vals} on conflict do nothing`,
+      [ev.id, ...v.participants]);
+    await evRescheduleReminders(ev.id);
+
+    // Vaqt yoki joy o'zgardi — ishtirokchilarga aytiladi (TZ 10-bo'lim).
+    const vaqtOzgardi = new Date(ev.start_at).getTime() !== new Date(v.start_at).getTime()
+      || new Date(ev.end_at).getTime() !== new Date(v.end_at).getTime();
+    const joyOzgardi = (ev.place || "") !== (v.place || "");
+    if (vaqtOzgardi || joyOzgardi) {
+      const qatorlar = [`✏️ <b>Reja o'zgardi:</b> ${v.title}`];
+      if (vaqtOzgardi) {
+        qatorlar.push(`Avval: ${evFmtRange(ev.start_at, ev.end_at, ev.all_day)}`);
+        qatorlar.push(`Endi: ${evFmtRange(v.start_at, v.end_at, v.all_day)}`);
+      }
+      if (joyOzgardi) qatorlar.push(`📍 ${v.place || "joy ko'rsatilmagan"}`);
+      await evNotify(ev.id, v.participants.filter((u) => String(u) !== String(req.user.id) && eski.has(String(u))),
+        qatorlar.join("\n"));
+    }
+    const qoshilgan = v.participants.filter((u) => !eski.has(String(u)) && String(u) !== String(req.user.id));
+    if (qoshilgan.length) {
+      await evNotify(ev.id, qoshilgan,
+        `📅 <b>Siz rejaga qo'shildingiz:</b> ${v.title}\n${evFmtRange(v.start_at, v.end_at, v.all_day)}`);
+    }
+    const chiqarilgan = [...eski].filter((u) => !yangi.has(u) && String(u) !== String(req.user.id));
+    if (chiqarilgan.length) {
+      await evNotify(ev.id, chiqarilgan, `➖ Siz «${v.title}» rejasidan chiqarildingiz`);
+    }
+    res.json({ ok: true, scope: "all" });
+  } catch (e) {
+    serverError(res, e, "PATCH /api/events/:id");
+  }
+});
+
+// ── DELETE /api/events/:id ───────────────────────────────────────────
+app.delete("/api/events/:id", auth, async (req, res) => {
+  try {
+    const cur = await db.query(`select * from events where id = $1 and deleted_at is null`, [req.params.id]);
+    const ev = cur.rows[0];
+    if (!ev) return res.status(404).json({ error: "Reja topilmadi" });
+    if (!evCanEdit(req, ev)) return res.status(403).json({ error: "Bu rejani faqat egasi yoki admin o'chiradi" });
+
+    const scope = ev.rrule ? String(req.query.scope || "all") : "all";
+    const occ = req.query.occurrence ? new Date(req.query.occurrence) : null;
+
+    if (scope === "one" && occ && !isNaN(occ)) {
+      await db.query(
+        `insert into event_exceptions (event_id, original_start, is_cancelled)
+         values ($1,$2,true)
+         on conflict (event_id, original_start) do update set is_cancelled = true`,
+        [ev.id, occ.toISOString()],
+      );
+      await db.query(`delete from event_reminders where event_id = $1 and occurrence_start = $2 and sent_at is null`,
+        [ev.id, occ.toISOString()]);
+      return res.json({ ok: true, scope: "one" });
+    }
+    if (scope === "following" && occ && !isNaN(occ)) {
+      await db.query(`update events set rrule_until = $2, updated_at = now() where id = $1`,
+        [ev.id, new Date(occ.getTime() - 60000).toISOString()]);
+      await db.query(`delete from event_reminders where event_id = $1 and occurrence_start >= $2 and sent_at is null`,
+        [ev.id, occ.toISOString()]);
+      return res.json({ ok: true, scope: "following" });
+    }
+
+    await db.query(`update events set deleted_at = now() where id = $1`, [ev.id]);
+    await db.query(`delete from event_reminders where event_id = $1 and sent_at is null`, [ev.id]);
+    const pr = await db.query(`select user_id from event_participants where event_id = $1`, [ev.id]);
+    await evNotify(ev.id, pr.rows.map((x) => x.user_id).filter((u) => String(u) !== String(req.user.id)),
+      `❌ <b>Reja bekor qilindi:</b> ${ev.title}\n${evFmtRange(ev.start_at, ev.end_at, ev.all_day)}`);
+    res.json({ ok: true, scope: "all" });
+  } catch (e) {
+    serverError(res, e, "DELETE /api/events/:id");
+  }
+});
+
+// ── POST /api/events/:id/decline — «Men qatnasha olmayman» ───────────
+app.post("/api/events/:id/decline", auth, async (req, res) => {
+  try {
+    const r = await db.query(
+      `update event_participants set status = 'declined'
+        where event_id = $1 and user_id = $2 returning event_id`,
+      [req.params.id, req.user.id],
+    );
+    if (!r.rows.length) return res.status(404).json({ error: "Siz bu rejada yo'qsiz" });
+    await db.query(`delete from event_reminders where event_id = $1 and user_id = $2 and sent_at is null`,
+      [req.params.id, req.user.id]);
+    res.json({ ok: true });
+  } catch (e) {
+    serverError(res, e, "POST /api/events/:id/decline");
+  }
+});
+
+// ── POST /api/events/reminders/run — navbatni yuborish ───────────────
+// Cron chaqiradi. Vaqti kelgan va hali yuborilmagan eslatmalar
+// yuboriladi; `sent_at` bitta so'rovda belgilanadi, shuning uchun ikki
+// marta ishga tushsa ham bir eslatma ikki marta ketmaydi.
+// Navbatni suradigan umumiy funksiya — cron ham, kalendar ochilgani
+// ham shuni chaqiradi.
+let _evReminderBusy = false;
+async function evSendDueReminders() {
+  // Bir vaqtda bitta yurish yetarli; `sent_at` baribir qo'riqlaydi,
+  // lekin keraksiz so'rovlar qilmaymiz.
+  if (_evReminderBusy) return 0;
+  _evReminderBusy = true;
+  try {
+    const due = await db.query(
+      `update event_reminders set sent_at = now()
+        where id in (
+          select id from event_reminders
+           where sent_at is null and send_at <= now() and send_at > now() - interval '2 hours'
+           order by send_at limit 200
+        )
+        returning event_id, user_id, occurrence_start`,
+    );
+    if (!due.rows.length) return 0;
+
+    const evIds = [...new Set(due.rows.map((x) => x.event_id))];
+    const evR = await db.query(`${EV_SELECT} where e.id = any($1::uuid[]) and e.deleted_at is null`, [evIds]);
+    const byId = {};
+    evR.rows.forEach((x) => (byId[x.id] = x));
+    let sent = 0;
+    for (const row of due.rows) {
+      const ev = byId[row.event_id];
+      if (!ev) continue;
+      const occ = new Date(row.occurrence_start);
+      const davomiylik = new Date(ev.end_at).getTime() - new Date(ev.start_at).getTime();
+      const daqiqa = ev.remind_before || 0;
+      const qachon = daqiqa >= 1440 ? `${Math.round(daqiqa / 1440)} kundan` : daqiqa >= 60 ? `${Math.round(daqiqa / 60)} soatdan` : `${daqiqa} daqiqadan`;
+      await evNotify(ev.id, [row.user_id],
+        `⏰ <b>${qachon} keyin:</b> ${ev.title}\n${evFmtRange(occ.toISOString(), new Date(occ.getTime() + davomiylik).toISOString(), ev.all_day)}${ev.place ? `\n📍 ${ev.place}` : ""}`);
+      sent++;
+    }
+    return sent;
+  } finally {
+    _evReminderBusy = false;
+  }
+}
+
+app.post("/api/events/reminders/run", async (req, res) => {
+  try {
+    const caller = await resolveCronOrAdminCaller(req);
+    if (!caller.ok) return res.status(caller.status).json({ error: caller.error });
+    const sent = await evSendDueReminders();
+    res.json({ ok: true, sent });
+  } catch (e) {
+    serverError(res, e, "POST /api/events/reminders/run");
+  }
+});
+
+// ── POST /api/events/digest/run — kunlik xulosa ──────────────────────
+// Har xodimga bugungi rejalari ro'yxati. Rejasi yo'q bo'lsa xabar
+// umuman yuborilmaydi (TZ 10-bo'lim) — bo'sh xabar faqat bezovta
+// qiladi.
+app.post("/api/events/digest/run", async (req, res) => {
+  try {
+    const caller = await resolveCronOrAdminCaller(req);
+    if (!caller.ok) return res.status(caller.status).json({ error: caller.error });
+
+    const bugun = todayTashkent();
+    const from = new Date(`${bugun}T00:00:00+05:00`);
+    const to = new Date(from.getTime() + 86400000);
+    const r = await db.query(
+      `${EV_SELECT}
+        where e.deleted_at is null
+          and (
+            (e.rrule is null and e.start_at < $2 and e.end_at > $1)
+            or (e.rrule is not null and e.start_at < $2
+                and (e.rrule_until is null or e.rrule_until > $1))
+          )`,
+      [from.toISOString(), to.toISOString()],
+    );
+    const ids = r.rows.map((x) => x.id);
+    const [parts, excs] = await Promise.all([evParticipants(ids), evExceptions(ids)]);
+
+    // Har xodim uchun bugungi nusxalar
+    const perUser = {};
+    r.rows.forEach((row) => {
+      const ps = (parts[row.id] || []).filter((p) => p.status === "going");
+      if (!ps.length) return;
+      expandOccurrences(row, from, to).forEach((occ) => {
+        const exc = excs[`${row.id}|${occ.toISOString()}`];
+        if (exc && exc.is_cancelled) return;
+        const sh = shapeOccurrence(row, occ, {
+          participants: ps, owner: evOwner(row), project: evProject(row),
+          canEdit: false, exception: exc,
+        });
+        ps.forEach((p) => (perUser[p.id] = perUser[p.id] || []).push(sh));
+      });
+    });
+
+    const userIds = Object.keys(perUser);
+    if (!userIds.length) return res.json({ ok: true, sent: 0 });
+    const ur = await db.query(
+      `select id, telegram_chat_id from users
+        where id = any($1::uuid[]) and is_active and telegram_chat_id is not null`,
+      [userIds],
+    );
+    let sent = 0;
+    for (const u of ur.rows) {
+      const list = (perUser[u.id] || []).sort((a, b) => (a.start < b.start ? -1 : 1));
+      if (!list.length) continue;
+      const soat = (iso) => {
+        const d = new Date(new Date(iso).getTime() + 5 * 3600000);
+        return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+      };
+      const qatorlar = list.map((x) => `• ${x.all_day ? "butun kun" : soat(x.start)} — ${x.title}${x.place ? ` (${x.place})` : ""}`);
+      await sendMsg(db, u.telegram_chat_id,
+        `📅 <b>Bugungi rejalaringiz: ${list.length} ta</b>\n${qatorlar.join("\n")}`,
+        { replyMarkup: appOpenButton("kalendar") });
+      sent++;
+    }
+    res.json({ ok: true, sent });
+  } catch (e) {
+    serverError(res, e, "POST /api/events/digest/run");
   }
 });
 
@@ -4234,7 +4913,14 @@ app.all("/api/cron-daily", async (req, res) => {
   if (!authorized) return res.status(401).json({ error: "Ruxsatsiz" });
 
   const base = process.env.APP_URL || `https://${req.headers.host}`;
-  const endpoints = ["/api/cycles/rollover", "/api/reminder/run", "/api/birthdays/run"];
+  const endpoints = [
+    "/api/cycles/rollover",
+    "/api/reminder/run",
+    "/api/birthdays/run",
+    // Kalendar: kunlik xulosa va vaqti kelgan eslatmalar.
+    "/api/events/digest/run",
+    "/api/events/reminders/run",
+  ];
   const results = [];
 
   // Kundalik tozalash. Bu ikkala jadval ham cheksiz o'sardi:
