@@ -1991,9 +1991,21 @@ async function evNotify(eventId, userIds, text) {
 }
 
 // ── Kiruvchi ma'lumotni tekshirish ───────────────────────────────────
+const EV_LIMITS = { title: 120, place: 200, note: 400 };
 function evValidate(b) {
   const title = String(b.title || "").trim();
-  if (title.length < 2 || title.length > 120) return { error: "Nom 2–120 belgi bo'lishi kerak" };
+  if (title.length < 2) return { error: "Nom kamida 2 belgi bo'lishi kerak" };
+  if (title.length > EV_LIMITS.title) {
+    return { error: `Nom ${EV_LIMITS.title} belgidan oshmasligi kerak (hozir ${title.length})` };
+  }
+  const place = b.place == null ? "" : String(b.place);
+  if (place.length > EV_LIMITS.place) {
+    return { error: `Joy ${EV_LIMITS.place} belgidan oshmasligi kerak (hozir ${place.length})` };
+  }
+  const note = b.note == null ? "" : String(b.note);
+  if (note.length > EV_LIMITS.note) {
+    return { error: `Izoh ${EV_LIMITS.note} belgidan oshmasligi kerak (hozir ${note.length})` };
+  }
   const start = new Date(b.start_at);
   const end = new Date(b.end_at);
   if (isNaN(start) || isNaN(end)) return { error: "Sana noto'g'ri" };
@@ -2015,8 +2027,8 @@ function evValidate(b) {
     rrule_until: b.rrule_until ? new Date(b.rrule_until).toISOString() : null,
     is_team: !!b.is_team,
     project_id: b.project_id || null,
-    place: b.place ? String(b.place).slice(0, 200) : null,
-    note: b.note ? String(b.note).slice(0, 2000) : null,
+    place: place.trim() ? place : null,
+    note: note.trim() ? note : null,
     remind_before: remind,
     participants: ids,
   };

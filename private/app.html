@@ -10821,6 +10821,10 @@
         resize: vertical;
       }
       .kal-f-area:focus { outline: none; border-color: var(--brand); }
+      /* Belgilar hisoblagichi — chegaraga yaqinlashganini oldindan
+         ko'rsatadi, oshib ketsa qizarib ogohlantiradi. */
+      .kal-f-count { margin-top: 5px; font-size: 11.5px; color: var(--v3-t4); text-align: right; font-variant-numeric: tabular-nums; }
+      .kal-f-count.over { color: var(--red); font-weight: 700; }
       .kal-f-sw { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--marker); cursor: pointer; }
       .kal-f-sw input { width: 18px; height: 18px; accent-color: var(--brand); }
       .kal-chips { display: flex; flex-wrap: wrap; gap: 7px; }
@@ -16747,6 +16751,10 @@
         { v: "FREQ=MONTHLY", t: "Har oy" },
       ];
 
+      // Matn chegaralari — backend bilan bir xil. Oshib ketgan matn
+      // JIMGINA kesilmaydi: hisoblagich qizaradi va saqlashda aniq
+      // xato chiqadi, shunda yozilgan narsa yo'qolib ketmaydi.
+      const KAL_LIMITS = { title: 120, place: 200, note: 400 };
       let kal = null;
       let kalNowTimer = null;
 
@@ -17627,8 +17635,11 @@
               <button class="kal-pop-x" onclick="kalFormClose()">✕</button>
             </div>
             <div class="kal-f-body">
-              <input id="kal-f-title" class="kal-f-title${f.error === "title" ? " bad" : ""}" maxlength="120"
-                     placeholder="Reja nomi" value="${escHtml(f.title)}" oninput="kalField('title',this.value)" />
+              <div>
+                <input id="kal-f-title" class="kal-f-title${f.error === "title" ? " bad" : ""}"
+                       placeholder="Reja nomi" value="${escHtml(f.title)}" oninput="kalField('title',this.value)" />
+                ${kalCountHtml("title", f.title)}
+              </div>
               <div class="kal-f-grid">
                 <div>
                   <div class="kal-f-lbl">Sana</div>
@@ -17677,13 +17688,15 @@
               </div>
               <div>
                 <div class="kal-f-lbl">Joy</div>
-                <input class="kal-f-in" maxlength="200" placeholder="Masalan: Granix ofisi, Qarshi"
+                <input class="kal-f-in" placeholder="Masalan: Granix ofisi, Qarshi"
                        value="${escHtml(f.place)}" oninput="kalField('place',this.value)" />
+                ${kalCountHtml("place", f.place)}
               </div>
               <div>
                 <div class="kal-f-lbl">Izoh</div>
-                <textarea class="kal-f-area" maxlength="2000" placeholder="Nima olinishi, kerakli jihozlar…"
+                <textarea class="kal-f-area" placeholder="Nima olinishi, kerakli jihozlar…"
                           oninput="kalField('note',this.value)">${escHtml(f.note)}</textarea>
+                ${kalCountHtml("note", f.note)}
               </div>
             </div>
             <div class="kal-f-foot">
@@ -17696,13 +17709,34 @@
           </div>`;
       }
 
+      function kalCountHtml(k, val) {
+        const n = String(val || "").length;
+        const max = KAL_LIMITS[k];
+        // Maydon deyarli bo'sh bo'lsa hisoblagich ko'zga tashlanmasin.
+        if (n < max * 0.5) return `<div class="kal-f-count" id="kal-count-${k}"></div>`;
+        return `<div class="kal-f-count${n > max ? " over" : ""}" id="kal-count-${k}">${n} / ${max}</div>`;
+      }
+      // Matn yozilayotganda butun oynani qayta chizmaymiz (fokus va
+      // kursor joyi yo'qolardi) — faqat hisoblagich yangilanadi.
+      function kalCountSync() {
+        const f = kal.form;
+        if (!f) return;
+        Object.keys(KAL_LIMITS).forEach((k) => {
+          const el = document.getElementById("kal-count-" + k);
+          if (!el) return;
+          const n = String(f[k] || "").length;
+          const max = KAL_LIMITS[k];
+          el.textContent = n < max * 0.5 ? "" : `${n} / ${max}`;
+          el.classList.toggle("over", n > max);
+        });
+      }
       let kalConflictTimer = null;
       function kalField(k, v) {
         const f = kal.form;
         if (!f) return;
         f[k] = v;
         f.dirty = true;
-        if (k === "title" || k === "place" || k === "note") return; // qayta chizish shart emas
+        if (k === "title" || k === "place" || k === "note") { kalCountSync(); return; }
         if (k === "date" || k === "allDay") kalCheckConflicts();
         kalFormRender();
       }
@@ -17764,6 +17798,15 @@
         if (!f || f.saving) return;
         const title = String(f.title || "").trim();
         if (title.length < 2) { f.error = "title"; kalFormRender(); document.getElementById("kal-f-title")?.focus(); return; }
+        // Chegaradan oshgan matnni serverga yubormaymiz — darhol
+        // aytamiz, shunda yozilgani oynada turaveradi.
+        const nomlar = { title: "Nomi", place: "Joy", note: "Izoh" };
+        const oshgan = Object.keys(KAL_LIMITS).find((k) => String(f[k] || "").length > KAL_LIMITS[k]);
+        if (oshgan) {
+          f.error = `${nomlar[oshgan]} ${KAL_LIMITS[oshgan]} belgidan oshmasligi kerak (hozir ${String(f[oshgan]).length})`;
+          kalFormRender();
+          return;
+        }
         if (!f.allDay && f.end <= f.start) { f.error = "Tugash vaqti boshlanishdan keyin bo'lishi kerak"; kalFormRender(); return; }
         if (!f.participants.size) { f.error = "Kamida bitta xodim tanlanishi kerak"; kalFormRender(); return; }
 
