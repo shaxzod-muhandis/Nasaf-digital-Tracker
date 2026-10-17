@@ -4268,7 +4268,14 @@
         #screen-activity-user .scroll {
           max-width: 1240px;
           padding-top: 56px;
+          /* Yon chekka "Bugun" sahifasi bilan bir xil (32px) — avval
+             20px edi va bu sahifalar yonbosh menyuga yaqinroq turardi. */
+          padding-left: 32px;
+          padding-right: 32px;
         }
+        /* Sarlavha qatori bilan grafik kartasi yopishib turardi.
+           Oraliq "Bugun" sahifasidagi kartalar oralig'icha. */
+        #screen-activity-user .actu-card { margin-top: 16px; }
         .act-top,
         .actu-hdr { padding-right: 132px; }
         /* Vazifa sahifasi ham o'sha burchakni bo'sh qoldiradi —
