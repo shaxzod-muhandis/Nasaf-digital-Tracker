@@ -3974,55 +3974,58 @@
       .tm-act-chev { font-size: 16px; color: var(--v3-t4); line-height: 1; }
 
       /* ═══ FAOLLIK — jamoa va xodim ══════════════════════════════════
-         Kalendarning har qatori — bitta hafta; kun rangi shu kungi
-         ishlar soniga qarab. Qator oxirida haftaning jami va o'tgan
-         haftaga farqi. */
-      .act-wrap { display: flex; gap: 16px; align-items: flex-start; }
-      @media (min-width: 860px) {
-        #screen-activity .scroll,
-        #screen-activity-user .scroll { max-width: 1240px; }
+         Kalendarning har qatori — bitta hafta; kun katagining rangi shu
+         kungi ishlar soniga qarab. Qator oxirida haftaning jami va
+         o'tgan haftaga farqi. */
+      /* Issiqlik shkalasi — ko'k rangning besh bosqichi. Ataylab aniq
+         qiymatlar: shaffoflik bilan qilinganda karta foni ostidan
+         ko'rinib, bosqichlar bir-biridan ajralmay qolardi. */
+      .act-day.l0 { background: #eef0f3; }
+      .act-day.l1 { background: #d3e3f1; }
+      .act-day.l2 { background: #a7c9e6; }
+      .act-day.l3 { background: #6fa6d6; }
+      .act-day.l4 { background: #2f7ab9; }
+      .act-day.l4 .act-dnum,
+      .act-day.l4 .act-dn { color: #fff; }
+      .act-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+      .act-h1 {
+        flex: 1;
+        min-width: 0;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--marker);
       }
-      .act-cal { flex: 1; min-width: 0; }
-      .act-panel {
-        flex: none;
-        width: 340px;
-        background: var(--surf);
-        border: 1px solid var(--bd2);
-        border-radius: 14px;
-        padding: 16px;
-      }
-      .act-panel.plain { width: auto; border: 0; background: transparent; padding: 0; }
-      .act-monthbar { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
-      .act-monthbar.tight { margin: 0; }
-      .act-month { font-size: 15px; font-weight: 700; color: var(--marker); min-width: 120px; }
+      .act-monthbar { display: flex; align-items: center; gap: 6px; flex: none; }
+      .act-month { font-size: 15px; font-weight: 700; color: var(--marker); width: 118px; text-align: center; }
       .act-mbtn {
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
         flex: none;
         border: 1px solid var(--bd4);
-        border-radius: 9px;
+        border-radius: 10px;
         background: var(--surf);
-        color: var(--t5);
+        color: var(--v3-t2);
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
       }
-      .act-mbtn svg { width: 15px; height: 15px; }
+      .act-mbtn svg { width: 16px; height: 16px; }
       .act-mbtn[disabled] { opacity: 0.35; cursor: default; }
       /* Xodim filtrlari — bir qatorda, sig'masa yonga suriladi */
       .act-filters {
         display: flex;
-        gap: 6px;
+        gap: 7px;
         overflow-x: auto;
         scrollbar-width: none;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
         padding-bottom: 2px;
       }
       .act-filters::-webkit-scrollbar { display: none; }
       .act-fchip {
         flex: none;
-        height: 32px;
+        height: 34px;
         padding: 0 12px;
         border-radius: 99px;
         border: 1px solid var(--bd4);
@@ -4030,127 +4033,152 @@
         color: var(--t5);
         font-family: inherit;
         font-size: 13px;
-        font-weight: 500;
+        font-weight: 600;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 7px;
         white-space: nowrap;
+        box-sizing: border-box;
       }
       .act-fchip.on { background: var(--marker); border-color: var(--marker); color: var(--bg); }
-      .act-fdot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
-      /* Kalendar */
-      .act-calhdr { display: flex; gap: 10px; padding: 0 2px 6px; }
-      .act-days { flex: 1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; min-width: 0; }
-      .act-wd {
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--v3-t3);
-        text-transform: uppercase;
-        text-align: center;
+      .act-fchip.on .act-fdot { display: none; }
+      .act-fdot { width: 8px; height: 8px; border-radius: 99px; flex: none; }
+      /* Chapda kalendar (qat'iy en), o'ngda qolgan joy — panel */
+      .act-wrap { display: grid; grid-template-columns: 650px minmax(0, 1fr); gap: 16px; align-items: start; }
+      .act-cal {
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 16px;
+        padding: 12px 10px 14px;
       }
-      .act-wsum-hdr { width: 124px; flex: none; text-align: left; }
+      .act-calhdr { display: flex; gap: 6px; padding: 0 6px 6px; }
+      .act-calhdr .act-wd { flex: 1; min-width: 0; }
+      .act-wd { font-size: 12px; font-weight: 600; color: var(--v3-t2); white-space: nowrap; }
+      .act-wd.dim { color: var(--v3-t3); }
+      .act-wsum-hdr { width: 124px; flex: none; padding-left: 8px; }
+      .act-rows { display: flex; flex-direction: column; gap: 2px; }
       .act-wrow {
         display: flex;
-        gap: 10px;
-        align-items: center;
-        min-height: 62px;
-        padding: 4px;
-        border-radius: 12px;
+        gap: 6px;
+        padding: 6px;
+        border-radius: 14px;
         cursor: pointer;
-        border: 1.5px solid transparent;
       }
-      .act-wrow .act-days { align-self: center; }
       .act-wrow:hover { background: var(--chip2); }
-      .act-wrow.sel { border-color: var(--brand); background: var(--nav-act-bg, #eaf2f9); }
+      .act-wrow.is-sel {
+        background: var(--nav-act-bg, #eef5fb);
+        box-shadow: inset 0 0 0 1.5px rgba(47, 122, 185, 0.5);
+      }
       .act-day {
-        position: relative;
-        height: 52px;
+        flex: 1;
+        min-width: 0;
+        height: 60px;
         border: 0;
-        border-radius: 9px;
-        background: var(--chip2);
-        cursor: pointer;
+        border-radius: 10px;
+        padding: 7px 8px;
+        box-sizing: border-box;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 1px;
+        justify-content: space-between;
+        align-items: stretch;
+        cursor: pointer;
         font-family: inherit;
+        text-align: left;
       }
-      /* Shkala — kam ishdan ko'p ishga */
-      .act-day.l0 { background: var(--chip2); }
-      .act-day.l1 { background: rgba(47, 122, 185, 0.16); }
-      .act-day.l2 { background: rgba(47, 122, 185, 0.34); }
-      .act-day.l3 { background: rgba(47, 122, 185, 0.6); }
-      .act-day.l4 { background: var(--brand); }
-      .act-day.l3 .act-dn, .act-day.l4 .act-dn,
-      .act-day.l3 .act-dnum, .act-day.l4 .act-dnum { color: #fff; }
-      .act-day.out { opacity: 0.45; }
+      .act-day.out { opacity: 0.5; }
       .act-day.today { outline: 2px solid var(--marker); outline-offset: -2px; }
-      .act-day.sel { outline: 2px solid var(--brand); outline-offset: -2px; }
-      .act-dnum { font-size: 11px; color: var(--v3-t3); }
-      .act-dn { font-size: 14px; font-weight: 700; color: var(--marker); }
-      .act-today-lbl { position: absolute; bottom: 2px; font-size: 8.5px; color: #fff; opacity: 0.9; }
-      .act-day.l0 .act-today-lbl, .act-day.l1 .act-today-lbl, .act-day.l2 .act-today-lbl { color: var(--v3-t3); }
+      /* Holat sinfi ataylab `is-sel` — ilovada umumiy `.sel` sinfi bor
+         (balandligi 34px) va qatorni siqib qo'yardi. */
+      .act-day.is-sel { outline: 2px solid var(--brand); outline-offset: -2px; }
+      /* Kelgusi kunlar bo'sh — faqat sana */
+      .act-day.next { background: var(--surf); border: 1px solid var(--bd2); cursor: default; }
+      .act-day.next .act-dnum { font-size: 12.5px; font-weight: 500; color: var(--v3-t3); }
+      .act-dnum { font-size: 12px; font-weight: 600; color: var(--v3-t2); white-space: nowrap; }
+      .act-dbot { display: flex; align-items: baseline; justify-content: space-between; gap: 4px; }
+      .act-dn { font-size: 16px; font-weight: 700; line-height: 1; color: var(--marker); }
+      .act-today-lbl { font-size: 11px; font-weight: 600; color: var(--marker); flex: none; }
+      .act-day.l4 .act-today-lbl { color: #fff; }
       .act-wsum {
         width: 124px;
         flex: none;
+        padding-left: 8px;
         display: flex;
         flex-direction: column;
-        align-items: flex-start;
         justify-content: center;
-        gap: 1px;
-        padding-left: 4px;
+        align-items: flex-start;
+        gap: 5px;
       }
-      /* Sinf nomi ataylab `nil` — umumiy `.empty` sinfida 40px
-         padding bor va hafta qatorini cho'zib yuborardi. */
-      .act-wsum.nil { color: var(--v3-t4); }
-      .act-wn { font-size: 18px; font-weight: 700; color: var(--marker); line-height: 1.1; }
-      .act-wl { font-size: 11px; color: var(--v3-t3); }
-      .act-wgoing { font-size: 10.5px; color: var(--v3-t3); }
+      /* Sinf nomi ataylab `nil` — umumiy `.empty` sinfida 40px padding
+         bor va hafta qatorini cho'zib yuborardi. */
+      .act-wsum.nil { font-size: 14px; font-weight: 500; color: var(--v3-t3); }
+      .act-wtop { display: flex; align-items: baseline; gap: 5px; }
+      .act-wn { font-size: 20px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; color: var(--marker); }
+      .act-wl { font-size: 12px; font-weight: 500; color: var(--v3-t2); white-space: nowrap; }
+      .act-wgoing { font-size: 12px; font-weight: 500; color: var(--v3-t2); }
       .act-best {
-        display: inline-block;
-        font-size: 9.5px;
-        font-weight: 700;
-        color: var(--st-ahead, #15803d);
+        height: 22px;
+        padding: 0 8px;
+        border-radius: 7px;
         background: var(--st-ahead-bg, #e8f6ec);
-        border-radius: 6px;
-        padding: 2px 6px;
+        color: var(--st-ahead, #15803d);
+        font-size: 11.5px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
         white-space: nowrap;
+        flex: none;
       }
-      .act-diff { font-size: 11.5px; font-weight: 600; white-space: nowrap; }
-      .act-diff.up { color: var(--st-ahead, #15803d); }
+      .act-diff { font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+      .act-diff.up { color: var(--st-ahead-dot, #16a34a); }
       .act-diff.down { color: var(--red); }
-      .act-diff.flat { color: var(--v3-t3); }
-      .act-legend { display: flex; align-items: center; gap: 12px; padding: 10px 4px 0; }
-      .act-hint { flex: 1; font-size: 11.5px; color: var(--v3-t3); }
-      .act-scale { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--v3-t3); }
-      .act-scale i { width: 12px; height: 12px; border-radius: 3px; display: block; }
-      .act-scale i.l1 { background: rgba(47, 122, 185, 0.16); }
-      .act-scale i.l2 { background: rgba(47, 122, 185, 0.34); }
-      .act-scale i.l3 { background: rgba(47, 122, 185, 0.6); }
-      .act-scale i.l4 { background: var(--brand); }
-      /* O'ng panel */
-      .act-ptop { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-      .act-prange { font-size: 14.5px; font-weight: 700; color: var(--marker); }
-      .act-pbig { display: flex; align-items: baseline; gap: 6px; margin-top: 10px; }
-      .act-pn { font-size: 34px; font-weight: 700; line-height: 1; color: var(--marker); }
-      .act-pl { font-size: 13px; color: var(--v3-t3); }
-      .act-pdiff { font-size: 12px; color: var(--v3-t3); margin-top: 4px; }
-      .act-split { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
-      .act-sp { background: var(--chip2); border-radius: 10px; padding: 9px 10px; }
-      .act-spn { font-size: 17px; font-weight: 700; color: var(--marker); }
-      .act-spl { font-size: 11px; color: var(--v3-t3); margin-top: 1px; }
-      .act-seclbl {
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: var(--v3-t3);
-        margin: 16px 0 8px;
+      .act-diff.flat { color: var(--v3-t2); }
+      .act-legend {
+        display: flex;
+        align-items: center;
+        margin: 12px 6px 0;
+        padding-top: 12px;
+        border-top: 1px solid var(--bd2);
       }
-      .act-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; align-items: end; }
+      .act-hint { flex: 1; font-size: 12.5px; color: var(--v3-t2); }
+      .act-scale { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; color: var(--v3-t2); }
+      .act-scale i { width: 14px; height: 14px; border-radius: 4px; display: block; }
+      .act-scale i.l0 { background: #eef0f3; }
+      .act-scale i.l1 { background: #d3e3f1; }
+      .act-scale i.l2 { background: #a7c9e6; }
+      .act-scale i.l3 { background: #6fa6d6; }
+      .act-scale i.l4 { background: #2f7ab9; }
+      /* ── O'ng panel ──────────────────────────────────────────────── */
+      .act-panel {
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 16px;
+        padding: 18px 18px 10px;
+      }
+      .act-panel.plain { border: 0; background: transparent; padding: 0; }
+      .act-ptop { display: flex; align-items: center; gap: 8px; }
+      .act-prange { flex: 1; min-width: 0; font-size: 16px; font-weight: 700; color: var(--marker); }
+      .act-pbig { display: flex; align-items: baseline; gap: 8px; margin-top: 14px; }
+      .act-pn { font-size: 36px; font-weight: 700; line-height: 1; letter-spacing: -0.03em; color: var(--marker); }
+      .act-pl { font-size: 14px; font-weight: 500; color: var(--v3-t2); }
+      .act-pdiff { margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--v3-t2); }
+      .act-pdiff span { font-weight: 500; }
+      .act-split { display: flex; gap: 8px; margin-top: 14px; }
+      .act-sp { flex: 1; min-width: 0; background: var(--chip2); border-radius: 10px; padding: 9px 10px; }
+      .act-spn { font-size: 16px; font-weight: 700; color: var(--marker); }
+      .act-spl { font-size: 12px; font-weight: 500; color: var(--v3-t2); }
+      .act-seclbl {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--v3-t2);
+        margin: 18px 0 10px;
+      }
+      .act-bars { display: flex; gap: 8px; align-items: flex-end; }
       .act-bar {
+        flex: 1;
+        min-width: 0;
         border: 0;
         background: transparent;
         padding: 0;
@@ -4158,22 +4186,24 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 3px;
+        gap: 5px;
         cursor: pointer;
       }
-      .act-barn { font-size: 11px; font-weight: 600; color: var(--marker); height: 13px; }
-      .act-barv { width: 100%; background: var(--brand); border-radius: 4px; min-height: 2px; }
-      .act-bar.sel .act-barv { background: var(--marker); }
-      .act-barl { font-size: 10px; color: var(--v3-t3); }
-      .act-people { display: flex; flex-direction: column; }
+      .act-barn { font-size: 11.5px; font-weight: 600; color: var(--v3-t2); height: 14px; }
+      .act-barn.top { color: var(--marker); }
+      .act-barv { width: 100%; border-radius: 5px; background: #a7c9e6; }
+      .act-barv.top { background: var(--brand); }
+      .act-bar.is-sel .act-barv { background: var(--marker); }
+      .act-barl { font-size: 11.5px; font-weight: 500; color: var(--v3-t2); }
+      .act-people { display: flex; flex-direction: column; margin-top: 4px; }
       .act-person {
         display: flex;
         align-items: center;
-        gap: 9px;
+        gap: 10px;
         width: 100%;
         border: 0;
         background: transparent;
-        padding: 8px 0;
+        padding: 9px 0;
         font-family: inherit;
         cursor: pointer;
         text-align: left;
@@ -4182,7 +4212,7 @@
       .act-av {
         width: 28px;
         height: 28px;
-        border-radius: 9px;
+        border-radius: 10px;
         flex: none;
         position: relative;
         overflow: hidden;
@@ -4191,24 +4221,50 @@
         justify-content: center;
         color: #fff;
         font-size: 11px;
-        font-weight: 700;
+        font-weight: 600;
       }
       .act-av.big { width: 44px; height: 44px; border-radius: 15px; font-size: 17px; }
       .act-pname {
-        flex: 1;
-        min-width: 0;
+        width: 104px;
+        flex: none;
         font-size: 13.5px;
-        font-weight: 500;
-        color: var(--t5);
+        font-weight: 600;
+        color: var(--marker);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      .act-pcount { font-size: 14px; font-weight: 700; color: var(--marker); }
+      /* Ulush chizig'i — kim ko'proq ishlagani raqamni o'qimasdan
+         ko'rinadi; rang xodimning o'z rangi. */
+      .act-ptrack {
+        flex: 1;
+        min-width: 40px;
+        height: 8px;
+        border-radius: 99px;
+        background: var(--chip2);
+        overflow: hidden;
+      }
+      .act-pfill { display: block; height: 100%; border-radius: 99px; }
+      .act-pcount { width: 22px; flex: none; text-align: right; font-size: 14px; font-weight: 700; color: var(--marker); }
+      .act-pdelta { width: 34px; flex: none; text-align: right; }
       .act-empty { font-size: 13px; color: var(--v3-t3); text-align: center; padding: 20px 8px; }
       .act-empty.big { padding: 40px 8px; }
 
       /* ── Telefon ─────────────────────────────────────────────────── */
+      @media (min-width: 860px) {
+        /* Sarlavha va oy tanlagich sahifaning o'zida — yuqoridagi
+           umumiy sarlavha qatori takror bo'lib qolardi. */
+        /* Sarlavha inline `display:flex` bilan yozilgan — uni faqat
+           `!important` bosa oladi. */
+        #screen-activity > .hdr { display: none !important; }
+        /* Faollik sahifasi kengroq joy oladi: kalendar 650px, qolgani
+           o'ng panelga. Umumiy 880px chegarasi uni siqib qo'yardi. */
+        #screen-activity .scroll,
+        #screen-activity-user .scroll {
+          max-width: 1240px;
+          padding-top: 22px;
+        }
+      }
       .act-mwrap { display: flex; flex-direction: column; }
       .act-mcal { background: var(--surf); border: 1px solid var(--bd2); border-radius: 14px; padding: 6px; }
       .act-mrow {
@@ -4224,7 +4280,7 @@
         cursor: pointer;
       }
       .act-mrow.hdr { cursor: default; padding-bottom: 2px; }
-      .act-mrow.sel { border-color: var(--brand); background: var(--nav-act-bg, #eaf2f9); }
+      .act-mrow.is-sel { border-color: var(--brand); background: var(--nav-act-bg, #eaf2f9); }
       .act-mdays { flex: 1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; min-width: 0; }
       .act-mwd { font-size: 10px; font-weight: 600; color: var(--v3-t3); text-align: center; }
       .act-mwsum-hdr { width: 62px; flex: none; }
@@ -15829,7 +15885,7 @@
         </div>`;
       }
 
-      // ── Katta ekran (23a): kalendar + o'ng panel ─────────────────
+      // ── Katta ekran (23a): kalendar kartasi + o'ng panel ─────────
       function actDesktopHtml() {
         const stats = actAllWeekStats();
         const best = actBestWeekIdx(stats);
@@ -15841,55 +15897,69 @@
           .map((s, i) => {
             const cells = s.week.days
               .map((iso) => {
-                const n = dayMap[iso] || 0;
+                const kelgusi = iso > act.today;
                 const bugun = iso === act.today;
                 const tashqari = !actInMonth(iso, act.month);
-                const kelgusi = iso > act.today;
+                const kun = parseISO(iso).getDate();
+                // Kelgusi kunlar bo'sh — faqat sana, oq fonda.
+                if (kelgusi) {
+                  return `<button type="button" class="act-day next"><span class="act-dnum">${kun}</span></button>`;
+                }
+                const n = dayMap[iso] || 0;
                 const cls = [
                   "act-day",
                   `l${actHeatLevel(n, max)}`,
                   tashqari ? "out" : "",
                   bugun ? "today" : "",
-                  act.dayIso === iso ? "sel" : "",
+                  act.dayIso === iso ? "is-sel" : "",
                 ].filter(Boolean);
-                return `<button type="button" class="${cls.join(" ")}" onclick="actSelectDay('${iso}')">
-                  <span class="act-dnum">${parseISO(iso).getDate()}</span>
-                  ${kelgusi ? "" : `<span class="act-dn">${n || ""}</span>`}
-                  ${bugun ? `<span class="act-today-lbl">bugun</span>` : ""}
+                return `<button type="button" class="${cls.join(" ")}" onclick="event.stopPropagation();actSelectDay('${iso}')">
+                  <span class="act-dnum">${kun}</span>
+                  <span class="act-dbot">
+                    <span class="act-dn">${n}</span>
+                    ${bugun ? `<span class="act-today-lbl">bugun</span>` : ""}
+                  </span>
                 </button>`;
               })
               .join("");
             const sum = s.future
               ? `<div class="act-wsum nil">—</div>`
               : `<div class="act-wsum">
-                   <div class="act-wn">${s.total}</div>
-                   <div class="act-wl">ta ish</div>
-                   ${s.done ? actDiffHtml(s.diff) : `<span class="act-wgoing">davom etmoqda</span>`}
-                   ${i === best ? `<span class="act-best">Eng yaxshi hafta</span>` : ""}
+                   <div class="act-wtop"><span class="act-wn">${s.total}</span><span class="act-wl">ta ish</span></div>
+                   ${
+                     i === best
+                       ? `<span class="act-best">Eng yaxshi hafta</span>`
+                       : s.done
+                         ? actDiffHtml(s.diff)
+                         : `<span class="act-wgoing">davom etmoqda</span>`
+                   }
                  </div>`;
-            return `<div class="act-wrow${act.weekIdx === i ? " sel" : ""}" onclick="actSelectWeek(${i})">
-              <div class="act-days">${cells}</div>
+            return `<div class="act-wrow${act.weekIdx === i ? " is-sel" : ""}" onclick="actSelectWeek(${i})">
+              ${cells}
               ${sum}
             </div>`;
           })
           .join("");
 
-        return `<div class="act-wrap">
-          <div class="act-cal">
+        return `<div class="act-top">
+            <div class="act-h1">Jamoa faolligi</div>
             ${actMonthBarHtml()}
-            ${actFilterBarHtml()}
-            <div class="act-calhdr">
-              <div class="act-days">${WD2.map((w) => `<div class="act-wd">${w}</div>`).join("")}</div>
-              <div class="act-wd act-wsum-hdr">Hafta jami</div>
-            </div>
-            ${rows}
-            <div class="act-legend">
-              <span class="act-hint">Haftani bosing — o'ngda shu hafta ochiladi</span>
-              <span class="act-scale">Kam ${[1, 2, 3, 4].map((l) => `<i class="l${l}"></i>`).join("")} Ko'p</span>
-            </div>
           </div>
-          <aside class="act-panel">${actPanelHtml()}</aside>
-        </div>`;
+          ${actFilterBarHtml()}
+          <div class="act-wrap">
+            <div class="act-cal">
+              <div class="act-calhdr">
+                ${WD2.map((w, i) => `<div class="act-wd${i > 4 ? " dim" : ""}">${w}</div>`).join("")}
+                <div class="act-wd act-wsum-hdr">Hafta jami</div>
+              </div>
+              <div class="act-rows">${rows}</div>
+              <div class="act-legend">
+                <span class="act-hint">Haftani bosing — o'ngda shu hafta ochiladi</span>
+                <span class="act-scale">Kam ${[0, 1, 2, 3, 4].map((l) => `<i class="l${l}"></i>`).join("")} Ko'p</span>
+              </div>
+            </div>
+            <aside class="act-panel">${actPanelHtml()}</aside>
+          </div>`;
       }
 
       // O'ng panel (va mobil "hafta tafsiloti" sahifasi) — bir xil
@@ -15898,35 +15968,32 @@
         const s = actWeekStats(act.weekIdx);
         if (!s) return "";
         const best = actBestWeekIdx(actAllWeekStats()) === act.weekIdx;
-        if (!s.total) {
-          return `<div class="act-ptop">
-              <div class="act-prange">${escHtml(fmtRangeShort(s.week.start, s.week.end))}</div>
-            </div>
-            <div class="act-empty">Bu haftada ish yo'q</div>`;
-        }
+        const sarlavha = `<div class="act-ptop">
+            ${act.view === "week" ? "" : `<div class="act-prange">${escHtml(fmtRangeShort(s.week.start, s.week.end))}</div>`}
+            ${best ? `<span class="act-best">Eng yaxshi hafta</span>` : ""}
+          </div>`;
+        if (!s.total) return `${sarlavha}<div class="act-empty">Bu haftada ish yo'q</div>`;
+
         // Kun tanlangan bo'lsa "kim qancha qildi" shu kunga torayadi.
         const kimItems = act.dayIso ? s.items.filter((it) => it.day === act.dayIso) : s.items;
         const counts = actUserCounts(kimItems);
-        const oldingiHafta =
-          act.weekIdx > 0 ? actUserCounts(actInRange(actScoped(), actWeeks(act.month)[act.weekIdx - 1].start, actWeeks(act.month)[act.weekIdx - 1].end)) : null;
+        const weeks = actWeeks(act.month);
+        const oldingi =
+          act.weekIdx > 0 && !act.dayIso
+            ? actUserCounts(actInRange(actScoped(), weeks[act.weekIdx - 1].start, weeks[act.weekIdx - 1].end))
+            : null;
         const kishilar = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+        const maxKishi = Math.max(1, ...Object.values(counts));
         const dayMap = actDayCounts(s.items);
         const maxDay = Math.max(1, ...Object.values(dayMap));
         const WD2 = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
 
-        return `${
-            act.view === "week" && !best
-              ? ""
-              : `<div class="act-ptop">
-                   ${act.view === "week" ? "" : `<div class="act-prange">${escHtml(fmtRangeShort(s.week.start, s.week.end))}</div>`}
-                   ${best ? `<span class="act-best">Eng yaxshi hafta</span>` : ""}
-                 </div>`
-          }
+        return `${sarlavha}
           <div class="act-pbig">
             <div class="act-pn">${s.total}</div>
             <div class="act-pl">ta ish</div>
           </div>
-          ${s.diff !== null ? `<div class="act-pdiff">${actDiffHtml(s.diff)} <span>o'tgan haftaga nisbatan</span></div>` : ""}
+          ${s.diff !== null ? `<div class="act-pdiff">${actDiffHtml(s.diff, "")} <span>o'tgan haftaga nisbatan</span></div>` : ""}
           <div class="act-split">
             ${["post", "story", "task"]
               .map(
@@ -15938,11 +16005,12 @@
           <div class="act-bars">
             ${s.week.days
               .map((iso, di) => {
-                const n = dayMap[iso] || 0;
                 const kelgusi = iso > act.today;
-                return `<button type="button" class="act-bar${act.dayIso === iso ? " sel" : ""}" onclick="actSelectDay('${iso}')">
-                  <span class="act-barn">${kelgusi ? "" : n || ""}</span>
-                  <span class="act-barv" style="height:${kelgusi ? 0 : Math.round((n / maxDay) * 46)}px"></span>
+                const n = kelgusi ? 0 : dayMap[iso] || 0;
+                const eng = n === maxDay && n > 0;
+                return `<button type="button" class="act-bar${act.dayIso === iso ? " is-sel" : ""}" onclick="actSelectDay('${iso}')">
+                  <span class="act-barn${eng ? " top" : ""}">${kelgusi || !n ? "" : n}</span>
+                  <span class="act-barv${eng ? " top" : ""}" style="height:${Math.max(3, Math.round((n / maxDay) * 64))}px"></span>
                   <span class="act-barl">${WD2[di]}</span>
                 </button>`;
               })
@@ -15954,12 +16022,14 @@
               kishilar
                 .map((un) => {
                   const u = actUser(un);
-                  const d = oldingiHafta && !act.dayIso ? counts[un] - (oldingiHafta[un] || 0) : null;
+                  const d = oldingi ? counts[un] - (oldingi[un] || 0) : null;
+                  const rang = personColor(un);
                   return `<button type="button" class="act-person" onclick="openActivityUser('${escArg(un)}')">
                     ${actAv(u)}
                     <span class="act-pname">${escHtml(actShortName(u))}</span>
+                    <span class="act-ptrack"><span class="act-pfill" style="width:${Math.round((counts[un] / maxKishi) * 100)}%;background:${rang}"></span></span>
                     <span class="act-pcount">${counts[un]}</span>
-                    ${s.done ? actDiffHtml(d) : ""}
+                    <span class="act-pdelta">${s.done && d !== null ? actDiffHtml(d) : ""}</span>
                   </button>`;
                 })
                 .join("") || `<div class="act-empty">Bu kunda ish yo'q</div>`
@@ -15994,7 +16064,7 @@
             const sum = s.future
               ? `<span class="act-mwsum nil">—</span>`
               : `<span class="act-mwsum"><b>${s.total}</b>${s.done ? actDiffHtml(s.diff) : `<i>…</i>`}</span>`;
-            return `<button type="button" class="act-mrow${act.weekIdx === i ? " sel" : ""}" onclick="actSelectWeek(${i})">
+            return `<button type="button" class="act-mrow${act.weekIdx === i ? " is-sel" : ""}" onclick="actSelectWeek(${i})">
               <span class="act-mdays">${cells}</span>
               ${sum}
             </button>`;
