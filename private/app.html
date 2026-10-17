@@ -4287,8 +4287,19 @@
            uchun ilovaning umumiy sarlavha qatori bu yerda ishlatilmaydi. */
         #screen-activity > .hdr,
         #screen-activity-user > .hdr { display: none !important; }
+        /* Ichkaridagi bloklar yon chekkasini o'zi beradi; pastda esa
+           telefonning o'z chekkasi (home chizig'i) uchun joy qoldiriladi. */
         #screen-activity .scroll,
-        #screen-activity-user .scroll { padding: 0 !important; max-width: none; }
+        #screen-activity-user .scroll {
+          max-width: none;
+          padding: 0 0 calc(20px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))) !important;
+        }
+        /* Haftalar ro'yxatida pastki menyu ko'rinib turadi va u `fixed` —
+           oxirgi karta uning ostida qolib ketmasligi uchun menyu
+           balandligicha joy kerak ("Vazifalar" ro'yxatidagi kabi). */
+        #screen-activity.nav-on .scroll {
+          padding-bottom: calc(100px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))) !important;
+        }
         .act-mhdr {
           display: flex;
           align-items: center;
@@ -16086,10 +16097,12 @@
         // Haftalar ro'yxati — asosiy sahifa, pastki menyu ko'rinadi.
         // Hafta tafsiloti esa ichki sahifa: u yerda menyu yashiriladi.
         const bn = document.getElementById("bottom-nav");
-        if (bn) {
-          const mobil = window.matchMedia("(max-width: 859px)").matches;
-          bn.style.display = mobil && act.view === "weeks" ? "" : "none";
-        }
+        const mobil = window.matchMedia("(max-width: 859px)").matches;
+        const menyuBor = mobil && act.view === "weeks";
+        if (bn) bn.style.display = menyuBor ? "" : "none";
+        // Menyu `fixed` — kontent uning ostiga kirib ketmasligi uchun
+        // aylanadigan qism pastdan shuncha joy qoldiradi.
+        document.getElementById("screen-activity").classList.toggle("nav-on", menyuBor);
         body.innerHTML =
           act.view === "week"
             ? `<div class="mobile-only">${actWeekPageHtml()}</div>`
