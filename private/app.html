@@ -4257,22 +4257,25 @@
         #screen-activity-user > .hdr { display: none !important; }
         /* Faollik sahifasi kengroq joy oladi: kalendar 650px, qolgani
            o'ng panelga. Umumiy 880px chegarasi uni siqib qo'yardi. */
+        /* Telegram kompyuterda "⋯" va "✕" tugmalarini kontent USTIGA,
+           o'ng yuqori burchakka chizadi va bu joy uchun hech qanday
+           o'lcham bermaydi. Avval bu bo'shliq "Telegram ichidamizmi?"
+           degan tekshiruvga bog'langan edi — u ishonchsiz chiqdi
+           (tugmalar baribir sarlavha ustida qolaverdi), shuning uchun
+           endi joy har doim qoldiriladi: brauzerda ham shunchaki
+           kengroq bo'shliq bo'lib ko'rinadi, zarari yo'q. */
         #screen-activity .scroll,
         #screen-activity-user .scroll {
           max-width: 1240px;
-          padding-top: 22px;
+          padding-top: 56px;
         }
-        /* Telegram kompyuterda "⋯" va "✕" tugmalarini kontent USTIGA,
-           o'ng yuqori burchakka chizadi. Shuning uchun bu sahifalar
-           tepadan ham, o'ngdan ham joy qoldiradi — "Bugun" sahifasidagi
-           kabi sarlavha tugmalar ostida qolib ketmaydi. */
-        body.tg-chrome #screen-activity .scroll,
-        body.tg-chrome #screen-activity-user .scroll { padding-top: 56px; }
-        body.tg-chrome .act-top,
-        body.tg-chrome .actu-hdr { padding-right: 132px; }
+        .act-top,
+        .actu-hdr { padding-right: 132px; }
         /* Vazifa sahifasi ham o'sha burchakni bo'sh qoldiradi —
-           "Qoralama saqlandi" yozuvi tugmalar ostida qolmasin. */
-        body.tg-chrome .ntf-hdr {
+           "Qoralama saqlandi" yozuvi tugmalar ostida qolmasin.
+           `#ntf-page` ataylab: `.ntf-hdr` ning asosiy qoidasi quyida,
+           ya'ni kuchliroq selektorsiz u bu yerdagini bosib ketadi. */
+        #ntf-page .ntf-hdr {
           height: auto;
           min-height: 64px;
           padding-top: 34px;
@@ -22238,16 +22241,6 @@
         const tgBottom = (t.safeAreaInset?.bottom || 0) + (t.contentSafeAreaInset?.bottom || 0);
         const bottom = isDesktop ? 0 : Math.max(tgBottom, 12);
         document.documentElement.style.setProperty("--tg-safe-bottom", bottom + "px");
-        // Kompyuterdagi Telegram o'zining "⋯" va "✕" tugmalarini o'ng
-        // yuqori burchakka, kontent USTIGA chizadi. Bu joy uchun
-        // o'lcham bermaydi, shuning uchun holat sinf bilan belgilanadi
-        // va sahifalar o'sha burchakni bo'sh qoldiradi.
-        // `initData` ba'zi ochilish yo'llarida bo'sh kelardi va shu
-        // sababli joy ajratilmay qolardi. Telegram ichida ekanimiz
-        // `platform` orqali aniqroq bilinadi: brauzerda skript yuklansa
-        // ham u "unknown" bo'lib qoladi.
-        const tgIchida = !!t.platform && t.platform !== "unknown";
-        document.body.classList.toggle("tg-chrome", isDesktop && tgIchida);
       }
       async function initApp() {
         if (tg()) {
