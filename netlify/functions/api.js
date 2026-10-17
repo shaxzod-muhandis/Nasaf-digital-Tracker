@@ -1873,7 +1873,25 @@ function evOwner(row) {
   });
 }
 function evProject(row) {
-  return row.project_id ? { id: row.project_id, slug: row.p_slug, label: row.p_label } : null;
+  // Ilovaning qolgan qismi loyihani SLUG bilan tanaydi (/api/projects
+  // ham `id` sifatida slug qaytaradi), shuning uchun bu yerda ham
+  // slug beriladi — aks holda tahrirlashda loyiha tanlanmay qolardi.
+  return row.project_id
+    ? { id: row.p_slug, slug: row.p_slug, label: row.p_label, uuid: row.project_id }
+    : null;
+}
+
+// Frontend loyihani slug bilan yuboradi, `events.project_id` esa uuid.
+// Shu yerda almashtiriladi; tanimagan slug — loyihasiz reja (rejani
+// butunlay rad etishdan ko'ra shunisi afzal).
+const EV_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+async function evProjectId(raw) {
+  if (!raw) return null;
+  const val = String(raw).trim();
+  if (!val) return null;
+  if (EV_UUID.test(val)) return val;
+  const r = await db.query(`select id from projects where slug = $1`, [val]);
+  return r.rows[0] ? r.rows[0].id : null;
 }
 
 // Rejadagi ishtirokchilar — bir nechta reja uchun bitta so'rovda.
@@ -2197,12 +2215,13 @@ app.post("/api/events", auth, async (req, res) => {
     }
     // Birinchi tanlangan xodim — reja egasi, blok rangi shundan.
     const ownerId = v.participants[0];
+    const projectId = await evProjectId(v.project_id);
     const ins = await db.query(
       `insert into events (title, start_at, end_at, all_day, rrule, rrule_until, is_team,
                            owner_id, project_id, place, note, remind_before, created_by)
        values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) returning id`,
       [v.title, v.start_at, v.end_at, v.all_day, v.rrule, v.rrule_until, v.is_team,
-        ownerId, v.project_id, v.place, v.note, v.remind_before, req.user.id],
+        ownerId, projectId, v.place, v.note, v.remind_before, req.user.id],
     );
     const id = ins.rows[0].id;
     const vals = v.participants.map((_, i) => `($1, $${i + 2}, 'going')`).join(",");
@@ -2272,12 +2291,13 @@ app.patch("/api/events/:id", auth, async (req, res) => {
       await db.query(`update events set rrule_until = $2, updated_at = now() where id = $1`,
         [ev.id, new Date(occ.getTime() - 60000).toISOString()]);
       const ownerId = v.participants[0];
+      const projectId = await evProjectId(v.project_id);
       const ins = await db.query(
         `insert into events (title, start_at, end_at, all_day, rrule, rrule_until, is_team,
                              owner_id, project_id, place, note, remind_before, created_by)
          values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) returning id`,
         [v.title, v.start_at, v.end_at, v.all_day, v.rrule, v.rrule_until, v.is_team,
-          ownerId, v.project_id, v.place, v.note, v.remind_before, req.user.id],
+          ownerId, projectId, v.place, v.note, v.remind_before, req.user.id],
       );
       const yangiId = ins.rows[0].id;
       const vals = v.participants.map((_, i) => `($1, $${i + 2}, 'going')`).join(",");
@@ -2288,13 +2308,14 @@ app.patch("/api/events/:id", auth, async (req, res) => {
     }
 
     const ownerId = v.participants[0];
+    const projectId = await evProjectId(v.project_id);
     await db.query(
       `update events set title=$2, start_at=$3, end_at=$4, all_day=$5, rrule=$6, rrule_until=$7,
               is_team=$8, owner_id=$9, project_id=$10, place=$11, note=$12, remind_before=$13,
               updated_at = now()
         where id = $1`,
       [ev.id, v.title, v.start_at, v.end_at, v.all_day, v.rrule, v.rrule_until, v.is_team,
-        ownerId, v.project_id, v.place, v.note, v.remind_before],
+        ownerId, projectId, v.place, v.note, v.remind_before],
     );
     // Ishtirokchilar ro'yxatini almashtiramiz, lekin kim qo'shilgani va
     // kim chiqarilganini bilish uchun avvalgisini saqlab qolamiz.
