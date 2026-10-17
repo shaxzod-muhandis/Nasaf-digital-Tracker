@@ -11040,6 +11040,12 @@
       }
       @media (min-width: 860px) {
         .kal-strip, .kal-fchips, .kal-fab, .kal-m-dots { display: none; }
+        /* Telegram kompyuterda "⋯" va "✕" tugmalarini kontent ustiga,
+           o'ng yuqori burchakka chizadi. Faollik sahifalaridagi kabi
+           tepadan va o'ngdan joy qoldiriladi — sarlavha qatori va
+           qidiruv maydoni tugmalar ostida qolib ketmaydi. */
+        .kal-top { padding: 56px 152px 14px 32px; }
+        .kal-side { padding-top: 56px; }
       }
     </style>
   </head>
@@ -16821,6 +16827,7 @@
         } else {
           if (opts.view) kal.view = opts.view;
           if (opts.anchor) kal.anchor = opts.anchor;
+          kal.scrolled = false;
         }
         // Telefonda Hafta ko'rinishi juda tor — TZ bo'yicha default Kun.
         if (mobil && kal.view === "hafta" && !opts.view && !url.view) kal.view = "kun";
@@ -16960,6 +16967,11 @@
         if (!host || !kal) return;
         const mobil = window.matchMedia("(max-width: 859px)").matches;
         document.body.classList.toggle("kal-day", kal.view === "kun");
+        // To'r har safar qaytadan quriladi, shuning uchun skroll
+        // joyini eslab qolamiz: filtrni bosganda yoki ma'lumot
+        // yangilanganda kalendar tepaga sakrab ketmasin.
+        const eski = document.getElementById("kal-body");
+        const eskiScroll = eski ? eski.scrollTop : null;
 
         host.innerHTML = `
           <div class="kal-wrap">
@@ -16972,6 +16984,10 @@
           </div>
           ${mobil ? `<button class="kal-fab" onclick="kalOpenForm({})" aria-label="Yangi reja">+</button>` : ""}`;
 
+        if (kal.scrolled && eskiScroll != null) {
+          const yangi = document.getElementById("kal-body");
+          if (yangi) yangi.scrollTop = eskiScroll;
+        }
         kalPaintNow();
         kalScrollToNow();
         kalBindDrag();

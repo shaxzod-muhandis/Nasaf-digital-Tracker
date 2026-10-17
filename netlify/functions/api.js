@@ -893,6 +893,15 @@ const { buildXlsx, STYLE: XLSX_STYLE } = require("./lib/xlsx");
 // xatolari jadval va ustun nomlarini oshkor qilardi.
 function serverError(res, e, where) {
   console.error(`[${where}]`, e && e.stack ? e.stack : e);
+  // Jadval yo'qligi (42P01) deyarli har doim bitta narsani bildiradi:
+  // migratsiya ishlatilmagan. Umumiy "server xatosi" o'rniga shuni
+  // aytib qo'ygan ma'qul — aks holda sababini topish uchun loglarni
+  // titish kerak bo'ladi.
+  if (e && e.code === "42P01") {
+    return res.status(503).json({
+      error: "Baza yangilanmagan — `npm run db:migrate` ishlatilishi kerak.",
+    });
+  }
   res.status(500).json({ error: "Server xatosi. Birozdan keyin qayta urinib ko'ring." });
 }
 
