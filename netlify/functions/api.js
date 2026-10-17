@@ -891,8 +891,16 @@ const { buildXlsx, STYLE: XLSX_STYLE } = require("./lib/xlsx");
 // Server xatosi — mijozga umumiy xabar, batafsili faqat log'ga.
 // Avval `e.message` to'g'ridan-to'g'ri javobga tushardi: Postgres
 // xatolari jadval va ustun nomlarini oshkor qilardi.
-function serverError(res, e, where) {
+function serverError(res, e, where, req) {
   console.error(`[${where}]`, e && e.stack ? e.stack : e);
+  // Adminlarga xatoning haqiqiy sababini ham aytamiz. Umumiy "server
+  // xatosi" xabari muammoni aynan tuzata oladigan odamdan ham
+  // yashirib qo'yardi — sababni bilish uchun Vercel loglarini titish
+  // kerak bo'lardi. Oddiy xodim baribir faqat qisqa xabarni ko'radi.
+  const adminDetail =
+    req && req.user && isAdminRole(req.user.role) && e
+      ? [e.code, e.message].filter(Boolean).join(" · ")
+      : null;
   // Jadval yo'qligi (42P01) deyarli har doim bitta narsani bildiradi:
   // migratsiya ishlatilmagan. Umumiy "server xatosi" o'rniga shuni
   // aytib qo'ygan ma'qul — aks holda sababini topish uchun loglarni
@@ -902,7 +910,10 @@ function serverError(res, e, where) {
       error: "Baza yangilanmagan — `npm run db:migrate` ishlatilishi kerak.",
     });
   }
-  res.status(500).json({ error: "Server xatosi. Birozdan keyin qayta urinib ko'ring." });
+  res.status(500).json({
+    error: "Server xatosi. Birozdan keyin qayta urinib ko'ring.",
+    ...(adminDetail ? { detail: adminDetail } : {}),
+  });
 }
 
 const TABEL_REASONS = { sick: "Kasallik", vacation: "Ta'til", urgent: "Shoshilinch", other: "Boshqa" };
@@ -2051,7 +2062,7 @@ app.get("/api/events", auth, async (req, res) => {
     // foydalanuvchiga ta'sir qilmaydi.
     evSendDueReminders().catch((err) => console.error("[eslatma navbati]", err.message));
   } catch (e) {
-    serverError(res, e, "GET /api/events");
+    serverError(res, e, "GET /api/events", req);
   }
 });
 
@@ -2103,7 +2114,7 @@ app.get("/api/events/conflicts", auth, async (req, res) => {
     });
     res.json({ items: items.slice(0, 20) });
   } catch (e) {
-    serverError(res, e, "GET /api/events/conflicts");
+    serverError(res, e, "GET /api/events/conflicts", req);
   }
 });
 
@@ -2154,7 +2165,7 @@ app.get("/api/events/search", auth, async (req, res) => {
     });
     res.json({ items: items.slice(0, 40) });
   } catch (e) {
-    serverError(res, e, "GET /api/events/search");
+    serverError(res, e, "GET /api/events/search", req);
   }
 });
 
@@ -2171,7 +2182,7 @@ app.get("/api/events/:id", auth, async (req, res) => {
       canEdit: evCanEdit(req, row), exception: null,
     }));
   } catch (e) {
-    serverError(res, e, "GET /api/events/:id");
+    serverError(res, e, "GET /api/events/:id", req);
   }
 });
 
@@ -2200,13 +2211,17 @@ app.post("/api/events", auth, async (req, res) => {
        on conflict do nothing`,
       [id, ...v.participants],
     );
-    await evRescheduleReminders(id);
-
-    // Yaratuvchidan boshqa ishtirokchilarga xabar (TZ 10-bo'lim).
+    // Reja allaqachon saqlandi. Eslatma navbati yoki Telegram xabari
+    // ishlamasa — buni jurnalga yozamiz, lekin so'rovni yiqitmaymiz:
+    // aks holda foydalanuvchi "saqlanmadi" deb o'ylab, bir xil rejani
+    // qayta-qayta yuborardi.
     const boshqalar = v.participants.filter((u) => String(u) !== String(req.user.id));
     const joyLine = v.place ? `\n📍 ${v.place}` : "";
-    await evNotify(id, boshqalar,
-      `📅 <b>Yangi reja:</b> ${v.title}\n${evFmtRange(v.start_at, v.end_at, v.all_day)}${joyLine}\nQo'shdi: @${req.user.username}`);
+    await Promise.allSettled([
+      evRescheduleReminders(id),
+      evNotify(id, boshqalar,
+        `📅 <b>Yangi reja:</b> ${v.title}\n${evFmtRange(v.start_at, v.end_at, v.all_day)}${joyLine}\nQo'shdi: @${req.user.username}`),
+    ]).then((r) => r.forEach((x) => x.status === "rejected" && console.error("[reja yaratildi, yon ish xato]", x.reason)));
 
     const r = await db.query(`${EV_SELECT} where e.id = $1`, [id]);
     const parts = await evParticipants([id]);
@@ -2215,7 +2230,7 @@ app.post("/api/events", auth, async (req, res) => {
       canEdit: true, exception: null,
     }));
   } catch (e) {
-    serverError(res, e, "POST /api/events");
+    serverError(res, e, "POST /api/events", req);
   }
 });
 
@@ -2318,7 +2333,7 @@ app.patch("/api/events/:id", auth, async (req, res) => {
     }
     res.json({ ok: true, scope: "all" });
   } catch (e) {
-    serverError(res, e, "PATCH /api/events/:id");
+    serverError(res, e, "PATCH /api/events/:id", req);
   }
 });
 
@@ -2359,7 +2374,7 @@ app.delete("/api/events/:id", auth, async (req, res) => {
       `❌ <b>Reja bekor qilindi:</b> ${ev.title}\n${evFmtRange(ev.start_at, ev.end_at, ev.all_day)}`);
     res.json({ ok: true, scope: "all" });
   } catch (e) {
-    serverError(res, e, "DELETE /api/events/:id");
+    serverError(res, e, "DELETE /api/events/:id", req);
   }
 });
 
@@ -2376,7 +2391,7 @@ app.post("/api/events/:id/decline", auth, async (req, res) => {
       [req.params.id, req.user.id]);
     res.json({ ok: true });
   } catch (e) {
-    serverError(res, e, "POST /api/events/:id/decline");
+    serverError(res, e, "POST /api/events/:id/decline", req);
   }
 });
 
@@ -2433,7 +2448,7 @@ app.post("/api/events/reminders/run", async (req, res) => {
     const sent = await evSendDueReminders();
     res.json({ ok: true, sent });
   } catch (e) {
-    serverError(res, e, "POST /api/events/reminders/run");
+    serverError(res, e, "POST /api/events/reminders/run", req);
   }
 });
 
@@ -2501,7 +2516,7 @@ app.post("/api/events/digest/run", async (req, res) => {
     }
     res.json({ ok: true, sent });
   } catch (e) {
-    serverError(res, e, "POST /api/events/digest/run");
+    serverError(res, e, "POST /api/events/digest/run", req);
   }
 });
 

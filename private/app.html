@@ -10867,7 +10867,17 @@
         flex: none;
       }
       .kal-f-note { flex: 1; font-size: 12px; color: var(--v3-t4); }
-      .kal-f-err { flex: 1; font-size: 12.5px; color: var(--red); font-weight: 500; }
+      .kal-f-err {
+        flex: 1;
+        min-width: 0;
+        font-size: 12.5px;
+        color: var(--red);
+        font-weight: 500;
+        line-height: 1.35;
+        max-height: 54px;
+        overflow-y: auto;
+        overflow-wrap: anywhere;
+      }
 
       /* ── Qidiruv natijalari ──────────────────────────────────────── */
       .kal-srch { position: relative; }
@@ -16865,6 +16875,14 @@
         const grid = kalWeekStart(birinchi);
         return [kalAddDays(grid, -7), kalAddDays(grid, 49)];
       }
+      // Server xato qaytarsa — matnini ochib beradi. Admin uchun
+      // `detail` ham keladi (aniq sabab), oddiy xodimga faqat qisqa
+      // xabar.
+      async function kalErrText(res) {
+        const d = await res.json().catch(() => ({}));
+        const asos = d.error || "Xato";
+        return d.detail ? `${asos} — ${d.detail}` : asos;
+      }
       async function kalLoad() {
         const [from, to] = kalRange();
         kal.loading = true;
@@ -16872,7 +16890,7 @@
           const res = await apiFetch(
             `/api/events?from=${encodeURIComponent(kalToIso(from, 0))}&to=${encodeURIComponent(kalToIso(to, 0))}`,
           );
-          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Yuklanmadi");
+          if (!res.ok) throw new Error(await kalErrText(res));
           const d = await res.json();
           kal.items = d.items || [];
           kal.from = from;
@@ -17434,7 +17452,7 @@
       async function kalDecline(id) {
         try {
           const r = await apiFetch(`/api/events/${encodeURIComponent(id)}/decline`, { method: "POST" });
-          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
+          if (!r.ok) throw new Error(await kalErrText(r));
           showToast("Rejadan chiqdingiz");
           kalCloseDetail();
           kalLoad();
@@ -17482,7 +17500,7 @@
         try {
           const q = `?scope=${scope}&occurrence=${encodeURIComponent(occ)}`;
           const r = await apiFetch(`/api/events/${encodeURIComponent(id)}${q}`, { method: "DELETE" });
-          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
+          if (!r.ok) throw new Error(await kalErrText(r));
           showToast("Reja o'chirildi");
           kalCloseDetail();
           kalLoad();
@@ -17780,7 +17798,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
           });
-          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Saqlanmadi");
+          if (!r.ok) throw new Error(await kalErrText(r));
           f.dirty = false;
           kalFormClose();
           showToast("Reja saqlandi");
@@ -17881,7 +17899,7 @@
             `/api/events/${encodeURIComponent(ev.id)}?scope=${scope}&occurrence=${encodeURIComponent(ev.occurrence_start)}`,
             { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) },
           );
-          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Saqlanmadi");
+          if (!r.ok) throw new Error(await kalErrText(r));
           showToast("Reja ko'chirildi");
           await kalLoad();
         } catch (e) {
