@@ -4262,12 +4262,23 @@
           max-width: 1240px;
           padding-top: 22px;
         }
-        /* Telegram tugmalari o'ng yuqori burchakni egallaydi — oy
-           tanlagich ular ostida qolib ketmasligi kerak. */
+        /* Telegram kompyuterda "⋯" va "✕" tugmalarini kontent USTIGA,
+           o'ng yuqori burchakka chizadi. Shuning uchun bu sahifalar
+           tepadan ham, o'ngdan ham joy qoldiradi — "Bugun" sahifasidagi
+           kabi sarlavha tugmalar ostida qolib ketmaydi. */
         body.tg-chrome #screen-activity .scroll,
-        body.tg-chrome #screen-activity-user .scroll { padding-top: 34px; }
+        body.tg-chrome #screen-activity-user .scroll { padding-top: 56px; }
         body.tg-chrome .act-top,
         body.tg-chrome .actu-hdr { padding-right: 132px; }
+        /* Vazifa sahifasi ham o'sha burchakni bo'sh qoldiradi —
+           "Qoralama saqlandi" yozuvi tugmalar ostida qolmasin. */
+        body.tg-chrome .ntf-hdr {
+          height: auto;
+          min-height: 64px;
+          padding-top: 34px;
+          padding-bottom: 10px;
+          padding-right: 156px;
+        }
       }
 
       @media (max-width: 859px) {
@@ -4517,6 +4528,28 @@
       }
       .actu-badge.up { background: var(--st-ahead-bg, #e8f6ec); color: var(--st-ahead, #15803d); }
       .actu-badge.down { background: var(--red-bg); color: var(--red); }
+      /* Grafik qaysi loyiha bo'yicha chizilganini bildiradi; bosilsa
+         yana barcha loyihalar ko'rinishiga qaytadi. */
+      .actu-sel {
+        height: 26px;
+        padding: 0 7px 0 9px;
+        border-radius: 8px;
+        border: 1px solid var(--bd2);
+        background: var(--chip2);
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font: inherit;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--marker);
+        cursor: pointer;
+        flex: none;
+      }
+      .actu-sel i { width: 8px; height: 8px; border-radius: 99px; flex: none; }
+      .actu-sel em { font-style: normal; font-size: 13px; line-height: 1; color: var(--v3-t3); }
+      .actu-sel:hover { border-color: var(--bd4); }
+      .actu-sel:hover em { color: var(--marker); }
       .actu-cmp-sub { font-size: 12.5px; color: var(--v3-t2); margin-top: 6px; }
       .actu-legend { display: flex; align-items: center; gap: 18px; margin-top: 14px; flex-wrap: wrap; }
       .actu-legend span { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 500; color: var(--v3-t2); }
@@ -4538,9 +4571,14 @@
         padding: 12px 14px;
         box-sizing: border-box;
         min-width: 0;
+        /* Karta bosilsa yuqoridagi asosiy grafik shu loyihaga o'tadi */
+        cursor: pointer;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
       }
       /* 5 va undan ortiq kun ish bo'lmagan loyiha ajratib ko'rsatiladi */
       .actu-proj.stale { border-color: rgba(217, 119, 6, 0.5); }
+      .actu-proj:hover { border-color: var(--bd4); }
+      .actu-proj.is-sel { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); }
       .actu-ptop { display: flex; align-items: center; gap: 8px; }
       .actu-pdot { width: 8px; height: 8px; border-radius: 99px; flex: none; }
       .actu-pname {
@@ -4593,8 +4631,17 @@
       /* Loyihalar ro'yxati (telefon) */
       .actu-plist { padding: 12px 14px 2px; }
       .actu-ptitle { font-size: 15px; font-weight: 700; color: var(--marker); }
-      .actu-prow { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--bd2); }
+      .actu-prow { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--bd2); cursor: pointer; }
       .actu-prow:last-child { border-bottom: 0; }
+      /* Tanlangan qator — grafik shu loyiha bo'yicha chizilyapti */
+      .actu-prow.is-sel {
+        background: var(--chip2);
+        box-shadow: inset 2px 0 0 var(--brand);
+        border-radius: 8px;
+        margin: 0 -8px;
+        padding-left: 10px;
+        padding-right: 8px;
+      }
       .actu-prow-txt { flex: 1; min-width: 0; }
       .actu-prow-sub { display: flex; gap: 4px; margin-top: 2px; font-size: 11.5px; white-space: nowrap; }
       .actu-prow-sub b { font-weight: 600; }
@@ -9338,6 +9385,10 @@
           box-sizing: border-box;
         }
         .d2-card.tight { padding: 14px 16px 6px; }
+        /* Bosiladigan karta — kursor va yengil ta'kid bilan bildiriladi */
+        .d2-card.act-open { cursor: pointer; }
+        .d2-card.act-open:hover { border-color: var(--bd4); }
+        .d2-card.act-open:hover .d2-card-side { color: var(--brand); }
         .d2-card-hdr {
           display: flex;
           align-items: center;
@@ -16419,12 +16470,27 @@
             return;
           }
         }
-        actUserState = { username, day: null };
+        // Tanlangan loyiha oy almashganda ham saqlanadi — xodim bir
+        // loyihani kuzatayotgan bo'lsa, har oyda qaytadan bosmaydi.
+        const avvalgiProj = actUserState && actUserState.username === username ? actUserState.proj : "";
+        actUserState = { username, day: null, proj: avvalgiProj || "" };
         openSubScreen("screen-activity-user", () => openActivity(act.month));
         renderActivityUser();
       }
       function actUserSetMonth(delta) {
         openActivityUser(actUserState.username, actShiftMonth(act.month, delta));
+      }
+      // Loyiha kartasi bosilganda asosiy grafik o'sha loyihaga o'tadi.
+      // Qayta bosilsa yoki chipdagi "✕" bosilsa — barcha loyihalarga
+      // qaytadi. Bo'sh slug ham shu yo'l bilan keladi.
+      function actUserPickProj(slug) {
+        if (!actUserState) return;
+        actUserState.proj = actUserState.proj === slug ? "" : slug;
+        tg()?.HapticFeedback?.selectionChanged?.();
+        renderActivityUser();
+        // Grafik tepada — tanlov natijasi ko'rinib tursin.
+        const sc = document.querySelector("#screen-activity-user .scroll");
+        if (sc) sc.scrollTo({ top: 0, behavior: "smooth" });
       }
 
       // Xodimning oydagi ishlari. Asosiy raqam — post va stories
@@ -16474,19 +16540,31 @@
         const bugunOy = monthKey === act.today.slice(0, 7);
         const otgan = bugunOy ? Number(act.today.slice(8, 10)) : kunlar;
 
-        const hammasi = actUserItems(un, monthKey);
+        // Loyiha tanlangan bo'lsa asosiy grafik o'shanga o'tadi, lekin
+        // tepadagi KPI'lar va pastdagi kartalar oyning to'liq manzarasini
+        // ko'rsatib turadi — shuning uchun ikki xil ro'yxat kerak.
+        const barchaIsh = actUserItems(un, monthKey);
+        const barchaIshlar = barchaIsh.filter((it) => it.kind !== "task");
+        // Tanlangan loyihada bu oyda ish bo'lmasa — tanlov bekor qilinadi.
+        if (actUserState.proj && !barchaIsh.some((it) => it.project && it.project.slug === actUserState.proj)) {
+          actUserState.proj = "";
+        }
+        const tanlanganSlug = actUserState.proj || "";
+        const faqatProj = (list) =>
+          tanlanganSlug ? list.filter((it) => it.project && it.project.slug === tanlanganSlug) : list;
+        const hammasi = faqatProj(barchaIsh);
         const ishlar = hammasi.filter((it) => it.kind !== "task");
-        const prevIshlar = actUserItems(un, prevKey).filter((it) => it.kind !== "task");
+        const prevIshlar = faqatProj(actUserItems(un, prevKey)).filter((it) => it.kind !== "task");
         // Taqqoslash — o'tgan oyning SHU kunigacha bo'lgan soni.
         const prevShuKunga = prevIshlar.filter((it) => Number(it.day.slice(8, 10)) <= otgan).length;
         const jami = ishlar.length;
         const farq = jami - prevShuKunga;
         const foiz = prevShuKunga ? Math.round((farq / prevShuKunga) * 100) : null;
-        const faolKun = new Set(hammasi.map((it) => it.day)).size;
+        const faolKun = new Set(barchaIsh.map((it) => it.day)).size;
         // O'z loyihalari — xodim SMM mas'uli bo'lgan loyihalar.
         const ozLoyihalar = act.projects.filter((p) => p.smm === un);
         const ozReja = ozLoyihalar.reduce((s, p) => s + (p.plan || 0), 0);
-        const ozBajarilgan = ishlar.filter((it) => it.project && ozLoyihalar.some((p) => p.slug === it.project.slug)).length;
+        const ozBajarilgan = barchaIshlar.filter((it) => it.project && ozLoyihalar.some((p) => p.slug === it.project.slug)).length;
         const keyingiOy = actShiftMonth(monthKey, 1) <= actMonthKey(todayDate());
         const oyNomi = MONTHS[Number(monthKey.slice(5, 7)) - 1];
         const prevNomi = MONTHS[Number(prevKey.slice(5, 7)) - 1];
@@ -16515,7 +16593,7 @@
             ${kpi(`${ozBajarilgan}<i> / ${ozReja}</i>`, "o'z loyihalari rejasi")}
           </div>`;
 
-        if (!hammasi.length) {
+        if (!barchaIsh.length) {
           body.innerHTML = `${header}<div class="act-empty big">Bu oyda hali ish yo'q</div>`;
           return;
         }
@@ -16529,12 +16607,25 @@
           prevShuKunga && foiz !== null
             ? `<span class="actu-badge ${farq >= 0 ? "up" : "down"}">${farq >= 0 ? "+" : "−"}${Math.abs(foiz)}%</span>`
             : "";
+        // Tanlangan loyiha chipi — grafik nima bo'yicha chizilganini
+        // aytadi va bosilsa barcha loyihalarga qaytaradi.
+        const tanlanganIsh = tanlanganSlug
+          ? barchaIsh.find((it) => it.project && it.project.slug === tanlanganSlug)
+          : null;
+        const projChip = tanlanganSlug
+          ? `<button type="button" class="actu-sel" onclick="actUserPickProj('')" title="Barcha loyihalarga qaytish">
+              <i style="background:${personColor(tanlanganSlug)}"></i>
+              <span>${escHtml(tanlanganIsh ? tanlanganIsh.project.label : tanlanganSlug)}</span>
+              <em>✕</em>
+            </button>`
+          : "";
         const chartCard = `<div class="actu-card">
             <div class="actu-top">
               <span class="actu-bign">${jami}</span>
               <span class="actu-bigl">ta ish · 1–${otgan} ${oyNomi.toLowerCase()}</span>
               <span class="actu-only-d">${badge}</span>
               <span class="actu-only-m">${mbadge}</span>
+              ${projChip}
             </div>
             <div class="actu-cmp-sub">${
               prevShuKunga
@@ -16547,13 +16638,13 @@
               <span><i class="fc"></i><span class="actu-only-d">Prognoz — shu sur'atda</span><span class="actu-only-m">Prognoz</span></span>
               <span class="actu-only-d"><i class="bar"></i>Kunlik ishlar</span>
             </div>
-            <div class="actu-chart actu-only-d">${actChartSvg(hammasi, monthKey, prevKey, un, otgan, prognoz, false)}</div>
-            <div class="actu-chart actu-only-m">${actChartSvg(hammasi, monthKey, prevKey, un, otgan, prognoz, true)}</div>
+            <div class="actu-chart actu-only-d">${actChartSvg(hammasi, monthKey, prevKey, un, otgan, prognoz, false, tanlanganSlug)}</div>
+            <div class="actu-chart actu-only-m">${actChartSvg(hammasi, monthKey, prevKey, un, otgan, prognoz, true, tanlanganSlug)}</div>
           </div>`;
 
         // Loyiha kartalari — shu oyda ishlangan har loyiha, ko'pidan kamiga.
         const byProj = {};
-        ishlar.forEach((it) => {
+        barchaIshlar.forEach((it) => {
           const slug = it.project ? it.project.slug : "";
           if (!slug) return;
           byProj[slug] = byProj[slug] || { slug, label: it.project.label, n: 0, last: null, days: {} };
@@ -16584,7 +16675,7 @@
           });
 
         const projCards = projs
-          .map((x) => `<div class="actu-proj${x.eskirgan ? " stale" : ""}">
+          .map((x) => `<div class="actu-proj${x.eskirgan ? " stale" : ""}${x.p.slug === tanlanganSlug ? " is-sel" : ""}" onclick="actUserPickProj('${escArg(x.p.slug)}')" title="Grafikni shu loyiha bo'yicha ko'rish">
               <div class="actu-ptop">
                 <span class="actu-pdot" style="background:${x.rang}"></span>
                 <span class="actu-pname">${escHtml(x.p.label)}</span>
@@ -16599,7 +16690,7 @@
           .join("");
 
         const projRows = projs
-          .map((x) => `<div class="actu-prow">
+          .map((x) => `<div class="actu-prow${x.p.slug === tanlanganSlug ? " is-sel" : ""}" onclick="actUserPickProj('${escArg(x.p.slug)}')">
               <span class="actu-pdot" style="background:${x.rang}"></span>
               <span class="actu-prow-txt">
                 <span class="actu-pname">${escHtml(x.p.label)}</span>
@@ -16631,7 +16722,7 @@
         const daraja = Math.pow(10, Math.floor(Math.log10(xom)));
         return [1, 2, 2.5, 5, 10].map((k) => k * daraja).find((s) => s >= xom) || daraja * 10;
       }
-      function actChartSvg(items, monthKey, prevKey, username, otgan, prognoz, mobil) {
+      function actChartSvg(items, monthKey, prevKey, username, otgan, prognoz, mobil, proj) {
         const kunlar = actDaysInMonth(monthKey);
         const C = mobil
           ? { W: 328, H: 190, x0: 24, x1: 280, y0: 130, yTop: 18, barBase: 168, barH: 25, barW: 5, labY: 184, fs: 11, xTicks: [1, 8, 15, 22, kunlar], cw: 2.5, r: 4 }
@@ -16639,7 +16730,10 @@
 
         const ishlar = items.filter((it) => it.kind !== "task");
         const cur = actCumulative(ishlar, monthKey, monthKey === act.today.slice(0, 7) ? act.today : null);
-        const prev = actCumulative(actUserItems(username, prevKey).filter((it) => it.kind !== "task"), prevKey);
+        // Loyiha tanlangan bo'lsa o'tgan oy chizig'i ham faqat shu
+        // loyiha bo'yicha chiziladi — aks holda taqqoslash noto'g'ri.
+        const prevXom = actUserItems(username, prevKey).filter((it) => it.kind !== "task");
+        const prev = actCumulative(proj ? prevXom.filter((it) => it.project && it.project.slug === proj) : prevXom, prevKey);
         const prevKunlar = actDaysInMonth(prevKey);
         const jami = cur.filter((v) => v !== null).pop() || 0;
         const prevJami = prev.length ? prev[prev.length - 1] : 0;
@@ -22135,7 +22229,12 @@
         // yuqori burchakka, kontent USTIGA chizadi. Bu joy uchun
         // o'lcham bermaydi, shuning uchun holat sinf bilan belgilanadi
         // va sahifalar o'sha burchakni bo'sh qoldiradi.
-        document.body.classList.toggle("tg-chrome", isDesktop && !!t.initData);
+        // `initData` ba'zi ochilish yo'llarida bo'sh kelardi va shu
+        // sababli joy ajratilmay qolardi. Telegram ichida ekanimiz
+        // `platform` orqali aniqroq bilinadi: brauzerda skript yuklansa
+        // ham u "unknown" bo'lib qoladi.
+        const tgIchida = !!t.platform && t.platform !== "unknown";
+        document.body.classList.toggle("tg-chrome", isDesktop && tgIchida);
       }
       async function initApp() {
         if (tg()) {
