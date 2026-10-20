@@ -11401,6 +11401,106 @@
       .mk-opt-s em { font-style: normal; color: var(--brand); font-weight: 600; }
       .mk-empty { font-size: 13px; color: var(--v3-t3); text-align: center; padding: 22px 8px; }
       .mk-foot-note { font-size: 12px; color: var(--v3-t4); margin-top: 14px; line-height: 1.4; }
+      /* ── 09-ekran · Natija ────────────────────────────────────────
+         Saqlangandan keyin toast emas, to'liq ekran: kim nechta coin
+         oldi va rejadan qancha qoldi. */
+      .mk-done-top { display: flex; align-items: center; gap: 12px; flex: none; }
+      .mk-done-tick {
+        width: 40px;
+        height: 40px;
+        border-radius: 99px;
+        flex: none;
+        background: var(--st-ahead-bg, #e8f6ec);
+        color: var(--st-ahead, #15803d);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .mk-done-tick svg { width: 21px; height: 21px; }
+      .mk-done-t { font-size: 19px; font-weight: 700; color: var(--marker); line-height: 1.2; }
+      .mk-done-s { font-size: 13px; color: var(--v3-t2); margin-top: 2px; }
+      .mk-rsub { font-style: normal; font-weight: 400; color: var(--v3-t3); }
+      .mk-lefts { display: flex; gap: 10px; margin-top: 14px; flex: none; }
+      .mk-left {
+        flex: 1;
+        min-width: 0;
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 12px;
+        padding: 11px 13px;
+      }
+      .mk-left-l { display: block; font-size: 11.5px; color: var(--v3-t3); }
+      .mk-left-v { display: block; font-size: 20px; font-weight: 700; color: var(--marker); margin-top: 2px; }
+      .mk-left-v i { font-style: normal; font-size: 13px; font-weight: 500; color: var(--v3-t3); }
+
+      /* ── 10-ekran · Belgilangan katak ─────────────────────────────── */
+      .mk-det-top { display: flex; align-items: center; gap: 12px; flex: none; }
+      .mk-det-num {
+        width: 44px;
+        height: 44px;
+        border-radius: 13px;
+        flex: none;
+        background: var(--brand);
+        color: #fff;
+        font-size: 18px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .mk-det-t { font-size: 18px; font-weight: 700; color: var(--marker); display: flex; align-items: center; gap: 8px; }
+      .mk-det-ok {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--st-ahead, #15803d);
+        background: var(--st-ahead-bg, #e8f6ec);
+        border-radius: 7px;
+        padding: 2px 7px;
+      }
+      /* Kim bosgani — audit, shuning uchun xira va pastda */
+      .mk-audit { font-size: 11.5px; color: var(--v3-t4); margin-top: 10px; flex: none; }
+
+      /* ── 11-ekran · Tasdiqlash oynasi ─────────────────────────────── */
+      .mk-ov {
+        position: fixed;
+        inset: 0;
+        z-index: 1400;
+        background: rgba(15, 23, 42, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .mk-dlg {
+        width: 420px;
+        max-width: 100%;
+        background: var(--surf);
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: 0 30px 80px rgba(15, 23, 42, 0.32);
+      }
+      .mk-dlg-t { font-size: 18px; font-weight: 700; color: var(--marker); line-height: 1.25; }
+      .mk-dlg-s { font-size: 13.5px; line-height: 1.5; color: var(--v3-t2); margin-top: 8px; }
+      .mk-dlg-list {
+        margin-top: 14px;
+        border: 1px solid var(--bd2);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .mk-dlg-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 13px;
+        font-size: 13.5px;
+        color: var(--marker);
+        border-top: 1px solid var(--bd1);
+      }
+      .mk-dlg-row:first-child { border-top: 0; }
+      .mk-dlg-row b { font-weight: 700; color: var(--red); }
+      .ntv3-submit.danger { background: var(--red); color: #fff; }
+      .ntv3-submit.danger:hover { filter: brightness(1.05); }
+
     </style>
   </head>
   <body>
@@ -19967,7 +20067,9 @@
           // Stories YANGI belgilanayotganda avval turi so'raladi —
           // undan keyin forma ikki xil bo'ladi. Post uchun bu qadam
           // yo'q, mavjud belgida esa tur allaqachon ma'lum.
-          step: type === "s" && !already ? "kind" : "form",
+          // Bajarilgan katak bosilsa forma emas, TAFSILOT ochiladi.
+          // Yangi stories belgilanayotganda esa avval turi so'raladi.
+          step: already ? "detail" : type === "s" ? "kind" : "form",
         };
 
         const ov = document.createElement("div");
@@ -20366,11 +20468,244 @@
           </div>`;
       }
 
+      // ── Ishtirokchilar ro'yxati (natija va tafsilot uchun) ────────
+      // Formadagi tanlovdan yoki saqlangan yozuvdan — ikkalasi ham
+      // bir xil shaklga keltiriladi.
+      function mkPeople(fromInfo) {
+        const c = mkCoins();
+        const pickers = cwdShowPickers();
+        const info = cwd.info || {};
+        const out = [];
+        if (pickers) {
+          const vid = cwdRoleOpt("mobilograf", fromInfo ? info.videographerUserId : cwd.videographerUserId);
+          const mon = cwdRoleOpt("montajchi", fromInfo ? info.editorUserId : cwd.editorUserId);
+          out.push({
+            rol: "video",
+            label: "Video olgan",
+            name: (vid && vid.name) || info.videographerUserName || "",
+            username: vid ? vid.username : "",
+            avatarUrl: vid ? vid.avatarUrl : "",
+            coin: c.video,
+          });
+          out.push({
+            rol: "montaj",
+            label: "Montaj",
+            name: (mon && mon.name) || info.editorUserName || "",
+            username: mon ? mon.username : "",
+            avatarUrl: mon ? mon.avatarUrl : "",
+            coin: c.montaj,
+          });
+        }
+        const smmUser =
+          cwd.performerId === cwd.assigneeUsername && cwd.assignee
+            ? cwd.assignee
+            : cwd.directory.find((x) => x.username === cwd.performerId) || {};
+        out.push({
+          rol: "smm",
+          label: "Chiqardi",
+          name: cwdPerformerName(),
+          username: cwd.performerId,
+          avatarUrl: smmUser.avatarUrl || smmUser.avatar_url,
+          coin: c.smm,
+        });
+        return out;
+      }
+
+      // ── 09-ekran · Belgilandi ─────────────────────────────────────
+      // Natija bitta ekranda: kim nechta coin oldi va rejadan qancha
+      // qoldi. Ketma-ket bir nechta ish chiqargan SMM uchun keyingi
+      // raqamni darhol belgilash tugmasi bor.
+      function mkDoneHtml() {
+        const r = cwd.result || {};
+        const list = (r.people || []).filter((p) => p.name);
+        const qoldi = (tur, bajarilgan, reja) =>
+          `<div class="mk-left"><span class="mk-left-l">${tur} qoldi</span><span class="mk-left-v">${Math.max(0, reja - bajarilgan)}<i> / ${reja}</i></span></div>`;
+        return `
+          <div class="mk-done-top">
+            <span class="mk-done-tick">${ICON.check}</span>
+            <div>
+              <div class="mk-done-t">${escHtml(cwd.label)} ${cwd.num} belgilandi</div>
+              <div class="mk-done-s">${escHtml(cwd.projectLabel)} · ${escHtml(fmtDay(parseISO(cwd.workDate)))}</div>
+            </div>
+          </div>
+          <div class="mk-card" style="margin-top:16px">
+            ${list
+              .map(
+                (p) => `<div class="mk-row" style="cursor:default">
+                  ${mkAv(p.username, p.name, p.avatarUrl)}
+                  <span class="mk-rtxt"><span class="mk-rname">${escHtml(p.name)}<i class="mk-rsub"> · ${escHtml(p.rol === "smm" ? "SMM" : p.rol)}</i></span></span>
+                  ${p.coin > 0 ? `<span class="mk-coin">+${mkNum(p.coin)}</span>` : `<span class="mk-coin nil">—</span>`}
+                </div>`,
+              )
+              .join("")}
+          </div>
+          <div class="mk-lefts">
+            ${qoldi("Post", r.doneK || 0, r.k || 0)}
+            ${qoldi("Stories", r.doneS || 0, r.s || 0)}
+          </div>
+          ${list.length > 1 ? `<div class="mk-hint">${list.length} kishiga Telegram xabari yuborildi</div>` : `<div class="mk-hint">Telegram xabari yuborildi</div>`}`;
+      }
+
+      // Keyingi bo'sh raqam — "yana belgilash" tugmasi shuni oladi.
+      function mkNextFree(type) {
+        const p = projects.find((x) => x.id === cwd.slug);
+        if (!p) return null;
+        const jami = type === "k" ? p.k : p.s;
+        const checks = p.checks || {};
+        for (let i = 1; i <= jami; i++) if (!checks[`${type}-${i}`]) return i;
+        return null;
+      }
+      // Oldingi ishtirokchilar bilan to'ldirib ochadi — ketma-ket
+      // chiqarilgan ishlarda odatda o'sha odamlar ishlaydi.
+      async function mkMarkNext() {
+        const type = cwd.type;
+        const slug = cwd.slug;
+        const oldingi = {
+          videographerUserId: cwd.videographerUserId,
+          editorUserId: cwd.editorUserId,
+          storyKind: cwd.storyKind,
+          workDate: cwd.workDate,
+        };
+        const n = mkNextFree(type);
+        cwdClose();
+        if (!n) return;
+        await openCheckModal(slug, type, n);
+        if (!cwd) return;
+        Object.assign(cwd, oldingi);
+        // Tur allaqachon ma'lum — tanlash qadami o'tkazib yuboriladi.
+        cwd.step = "form";
+        cwdRender();
+      }
+
+      // ── 10-ekran · Belgilangan katak tafsiloti ────────────────────
+      function mkDetailHtml() {
+        const info = cwd.info || {};
+        const list = mkPeople(true).filter((p) => p.name);
+        const sabab = CWD_REASONS.find((r) => r.key === info.substitutionReason);
+        const asgName = cwd.assignee ? cwdPersonName(cwd.assignee) : "";
+        const kun = parseISO(cwd.workDate);
+        const belgiladi = info.markedByName
+          ? `Belgiladi: ${info.markedByName}${info.doneAt ? ` · ${fmtDay(new Date(info.doneAt))}, ${fmtTime(new Date(info.doneAt))}` : ""}`
+          : "";
+        return `
+          <div class="mk-det-top">
+            <span class="mk-det-num">${cwd.num}</span>
+            <div style="flex:1;min-width:0">
+              <div class="mk-det-t">${escHtml(cwd.label)} ${cwd.num}<span class="mk-det-ok">Bajarildi</span></div>
+              <div class="mk-done-s">Chiqdi ${escHtml(fmtDay(kun))}, ${NTF_WEEKDAYS[kun.getDay()].toLowerCase()}</div>
+            </div>
+          </div>
+          <div class="mk-card" style="margin-top:14px">
+            ${list
+              .map(
+                (p) => `<div class="mk-row" style="cursor:default">
+                  ${mkAv(p.username, p.name, p.avatarUrl)}
+                  <span class="mk-rtxt"><span class="mk-rlbl">${escHtml(p.label)}</span><span class="mk-rname">${escHtml(p.name)}</span></span>
+                  ${p.coin > 0 ? `<span class="mk-coin">+${mkNum(p.coin)}</span>` : `<span class="mk-coin nil">—</span>`}
+                </div>`,
+              )
+              .join("")}
+            ${
+              sabab
+                ? `<div class="mk-sub"><div class="mk-sub-t" style="margin:0">
+                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg>
+                     ${escHtml(asgName || "mas'ul")} o'rniga · ${escHtml(sabab.key === "other" && info.substitutionNote ? info.substitutionNote : sabab.label)}
+                   </div></div>`
+                : ""
+            }
+          </div>
+          ${belgiladi ? `<div class="mk-audit">${escHtml(belgiladi)}</div>` : ""}`;
+      }
+      function mkEdit() {
+        if (!cwd) return;
+        cwd.step = "form";
+        cwdRender();
+      }
+      function mkBackToDetail() {
+        if (!cwd) return;
+        cwd.step = "detail";
+        cwdRender();
+      }
+
+      // ── 11-ekran · Belgini olib tashlash ──────────────────────────
+      // Qaytarib bo'lmaydigan amal — oqibat raqamlarda ko'rsatiladi:
+      // qarz qancha oshadi va kimdan nechta coin olinadi.
+      function mkConfirmRemove() {
+        if (!cwd || document.getElementById("mk-confirm")) return;
+        const list = mkPeople(true).filter((p) => p.name && p.coin > 0);
+        const jami = Math.round(list.reduce((a, p) => a + p.coin, 0) * 100) / 100;
+        const ov = document.createElement("div");
+        ov.className = "mk-ov";
+        ov.id = "mk-confirm";
+        ov.onclick = (e) => {
+          if (e.target === ov) mkCloseConfirm();
+        };
+        ov.innerHTML = `<div class="mk-dlg">
+            <div class="mk-dlg-t">${escHtml(cwd.label)} ${cwd.num} belgisini olasizmi?</div>
+            <div class="mk-dlg-s">Katak bo'sh bo'ladi va reja bo'yicha qarz 1 ${cwd.type === "k" ? "postga" : "storiesga"} oshadi.${list.length ? " Berilgan coinlar qaytarib olinadi:" : ""}</div>
+            ${
+              list.length
+                ? `<div class="mk-dlg-list">${list
+                    .map((p) => `<div class="mk-dlg-row"><span>${escHtml(p.name)}</span><b>−${mkNum(p.coin)}</b></div>`)
+                    .join("")}</div>`
+                : ""
+            }
+            <button type="button" class="ntv3-submit danger" style="margin-top:16px" onclick="mkDoRemove(this)">Belgini olish${jami ? ` · −${mkNum(jami)} Ncoin` : ""}</button>
+            <button type="button" class="ntv3-submit ghost" style="margin-top:8px" onclick="mkCloseConfirm()">Bekor qilish</button>
+          </div>`;
+        document.body.appendChild(ov);
+        pageBackStack.push(mkCloseConfirm);
+        pageSyncBack();
+      }
+      function mkCloseConfirm() {
+        const ov = document.getElementById("mk-confirm");
+        if (!ov) return;
+        ov.remove();
+        const i = pageBackStack.indexOf(mkCloseConfirm);
+        if (i !== -1) pageBackStack.splice(i, 1);
+        pageSyncBack();
+      }
+      async function mkDoRemove(btn) {
+        setBtnLoading(btn, true, "Olinmoqda…");
+        try {
+          await onCheck(cwd.slug, cwd.type, cwd.num, false);
+          mkCloseConfirm();
+          cwdClose();
+          showToast("Belgi olib tashlandi");
+        } catch (e) {
+          setBtnLoading(btn, false);
+        }
+      }
+
       // ── Asosiy sahifa ─────────────────────────────────────────────
       function cwdRender() {
         const host = document.getElementById("cwd-body");
         const foot = document.getElementById("cwd-foot");
         if (!host || !cwd) return;
+
+        // 09-ekran: saqlangandan keyingi natija.
+        if (cwd.step === "done") {
+          host.innerHTML = mkDoneHtml();
+          const keyingi = mkNextFree(cwd.type);
+          if (foot) {
+            foot.innerHTML = `
+              ${keyingi ? `<button type="button" class="ntv3-submit" onclick="mkMarkNext()">${escHtml(cwd.label)} ${keyingi} ni ham belgilash</button>` : ""}
+              <button type="button" class="ntv3-submit ghost"${keyingi ? ' style="margin-top:8px"' : ""} onclick="cwdClose()">Loyihaga qaytish</button>`;
+          }
+          applyStaticIcons?.();
+          return;
+        }
+
+        // 10-ekran: allaqachon belgilangan katak — forma emas, tafsilot.
+        if (cwd.step === "detail") {
+          host.innerHTML = mkDetailHtml();
+          if (foot) {
+            foot.innerHTML = `<button type="button" class="ntv3-submit ghost" onclick="mkEdit()">Tahrirlash</button>
+              <button type="button" class="ntv3-submit ghost" style="margin-top:8px;color:var(--red)" onclick="mkConfirmRemove()">Belgini olish</button>`;
+          }
+          applyStaticIcons?.();
+          return;
+        }
 
         // 02-ekran: stories turi. Faqat YANGI belgilashda — mavjud
         // belgini tahrirlashda tur allaqachon ma'lum.
@@ -20469,7 +20804,7 @@
           foot.innerHTML = `
             ${kerak.bor ? `<div class="mk-miss">${escHtml(mkMissingText())}</div>` : ""}
             <button type="button" class="ntv3-submit" id="cwd-save"${kerak.bor ? " disabled" : ""} onclick="cwdSave(this)">${cwd.already ? "Yangilash" : escHtml(label)}</button>
-            ${cwd.already ? `<button type="button" class="ntv3-submit ghost" style="margin-top:8px" onclick="cwdRemove()">Belgini olib tashlash</button>` : ""}`;
+            ${cwd.already ? `<button type="button" class="ntv3-submit ghost" style="margin-top:8px;color:var(--red)" onclick="mkConfirmRemove()">Belgini olish</button>` : ""}`;
         }
         applyStaticIcons?.();
       }
@@ -20636,6 +20971,9 @@
         if (!cwd.workDate) return cwdShowErr("«Qaysi kuni» — sanani tanlang.");
         setBtnLoading(btn, true, "Saqlanmoqda…");
         try {
+          // Ishtirokchilarni saqlashdan OLDIN olamiz: `onCheck`
+          // loyihalarni qayta yuklaydi va holat yangilanadi.
+          const people = mkPeople(false);
           await onCheck(cwd.slug, cwd.type, cwd.num, true, null, {
             editorUserId: pickers ? cwd.editorUserId : null,
             videographerUserId: pickers ? cwd.videographerUserId : null,
@@ -20645,8 +20983,21 @@
             substitutionReason: isSub ? cwd.reason : null,
             substitutionNote: isSub && cwd.reason === "other" ? cwd.note : null,
           });
-          cwdClose();
-          showToast("✅ Belgilandi");
+          if (!cwd) return;
+          // Tahrirlashda natija ekrani ortiqcha — faqat yangi
+          // belgilashda ko'rsatiladi.
+          if (cwd.already) {
+            cwdClose();
+            showToast("Yangilandi");
+            return;
+          }
+          const p = projects.find((x) => x.id === cwd.slug) || {};
+          cwd.result = { people, k: p.k || 0, s: p.s || 0, doneK: p.doneK || 0, doneS: p.doneS || 0 };
+          cwd.step = "done";
+          cwd.already = true;
+          tg()?.HapticFeedback?.notificationOccurred?.("success");
+          cwdRender();
+          return;
         } catch (e) {
           setBtnLoading(btn, false);
         }

@@ -2600,6 +2600,8 @@ app.get("/api/projects", auth, async (req, res) => {
         `select c.type, c.seq_number, c.work_date, c.editor_id, c.videographer_id,
                 c.editor_user_id, c.videographer_user_id, c.story_kind,
                 c.assignee_id, c.performer_id, c.substitution_reason, c.substitution_note,
+                c.done_at, c.marked_by,
+                coalesce(nullif(trim(concat(mb.first_name, ' ', mb.last_name)), ''), mb.full_name, mb.username) as marked_by_name,
                 e.full_name as editor_name, v.full_name as videographer_name,
                 coalesce(eu.full_name, eu.username) as editor_user_name,
                 coalesce(vu.full_name, vu.username) as videographer_user_name,
@@ -2611,6 +2613,7 @@ app.get("/api/projects", auth, async (req, res) => {
            left join users eu on eu.id = c.editor_user_id
            left join users vu on vu.id = c.videographer_user_id
            left join users pf on pf.id = c.performer_id
+           left join users mb on mb.id = c.marked_by
           where c.cycle_id = $1`,
         [summary.cycle.id],
       );
@@ -2638,6 +2641,9 @@ app.get("/api/projects", auth, async (req, res) => {
           performerUsername: c.performer_username,
           substitutionReason: c.substitution_reason,
           substitutionNote: c.substitution_note,
+          // Kim va qachon belgiladi — tafsilot ekranidagi audit qatori
+          markedByName: c.marked_by_name,
+          doneAt: c.done_at,
         };
       });
       return {
