@@ -25811,8 +25811,20 @@
           // to'g'ridan-to'g'ri o'sha vazifaga/bo'limga ochiladi.
           const params = new URLSearchParams(window.location.search);
           const openTaskId = params.get("openTask");
-          const openEventId = params.get("openEvent");
           const tabParam = params.get("tab");
+          // Google/Apple kalendardagi rejaning havolasi Mini App'ni
+          // `?startapp=event_<id>` bilan ochadi. Telegram bu qiymatni
+          // ODDIY QIDIRUV QATORIGA QO'SHMAYDI — u `start_param` da
+          // (zaxira sifatida hash'dagi `tgWebAppStartParam` da)
+          // keladi, shuning uchun uchta joy ham tekshiriladi.
+          const startParam =
+            tg()?.initDataUnsafe?.start_param ||
+            new URLSearchParams(location.hash.slice(1)).get("tgWebAppStartParam") ||
+            params.get("startapp") ||
+            "";
+          const openEventId =
+            params.get("openEvent") ||
+            (/^event_[0-9a-f-]{36}$/i.test(startParam) ? startParam.slice(6) : null);
           if (openTaskId) {
             showTab("tasks");
             openTaskActions(openTaskId);
