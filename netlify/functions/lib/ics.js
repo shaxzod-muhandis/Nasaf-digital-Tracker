@@ -116,4 +116,56 @@ function buildCalendar(items, { name, domain, linkFor }) {
   return rows.map(fold).join("\r\n") + "\r\n";
 }
 
-module.exports = { buildCalendar, WINDOW_BACK_DAYS, WINDOW_FORWARD_DAYS };
+
+// ── Email taklifnomasi ─────────────────────────────────────────────
+// Obuna feed'idan farqli: bu yerda takrorlanuvchi reja RRULE bilan
+// BITTA taklifnoma sifatida yuboriladi, aks holda har bir nusxa uchun
+// alohida xat ketib, xodimning pochtasini to'ldirib yuborardi.
+//
+// UID seriya bo'yicha bitta: shu sabab keyingi o'zgarish o'sha
+// rejani YANGILAYDI, yangisini yaratmaydi. SEQUENCE har o'zgarishda
+// oshadi — Gmail va Apple Mail eski nusxani shu son bilan ajratadi.
+function buildInvite({ ev, organizer, attendees, method, sequence, link, domain }) {
+  const rows = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Nasaf Digital//Tracker//UZ",
+    "CALSCALE:GREGORIAN",
+    `METHOD:${method}`,
+    "BEGIN:VEVENT",
+    `UID:${ev.id}@${domain}`,
+    `SEQUENCE:${sequence || 0}`,
+    `DTSTAMP:${stamp(new Date())}`,
+  ];
+  if (ev.all_day) {
+    rows.push(`DTSTART;VALUE=DATE:${dayStamp(ev.start_at)}`);
+    rows.push(`DTEND;VALUE=DATE:${dayStamp(ev.end_at)}`);
+  } else {
+    rows.push(`DTSTART:${stamp(ev.start_at)}`);
+    rows.push(`DTEND:${stamp(ev.end_at)}`);
+  }
+  if (ev.rrule) {
+    // UNTIL iCalendar'da UTC bo'lishi kerak va qoidaning ichiga kiradi.
+    const until = ev.rrule_until ? `;UNTIL=${stamp(ev.rrule_until)}` : "";
+    rows.push(`RRULE:${ev.rrule}${until}`);
+  }
+  rows.push(`SUMMARY:${esc(ev.title)}`);
+  if (ev.place) rows.push(`LOCATION:${esc(ev.place)}`);
+  const desc = [ev.note || "", link ? `Trackerda ochish: ${link}` : ""].filter(Boolean).join("\n\n");
+  if (desc) rows.push(`DESCRIPTION:${esc(desc)}`);
+  if (link) rows.push(`URL:${link}`);
+  if (organizer) {
+    rows.push(`ORGANIZER;CN=${esc(organizer.name)}:mailto:${organizer.email}`);
+  }
+  (attendees || []).forEach((a) => {
+    rows.push(
+      `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN=${esc(a.name)}:mailto:${a.email}`,
+    );
+  });
+  rows.push(`STATUS:${method === "CANCEL" ? "CANCELLED" : "CONFIRMED"}`);
+  if (method !== "CANCEL") rows.push(...alarm(ev.remind_before, ev.title));
+  rows.push("END:VEVENT", "END:VCALENDAR");
+  return rows.map(fold).join("\r\n") + "\r\n";
+}
+
+module.exports = { buildCalendar, buildInvite, WINDOW_BACK_DAYS, WINDOW_FORWARD_DAYS };

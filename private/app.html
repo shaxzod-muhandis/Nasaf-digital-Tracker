@@ -1391,6 +1391,14 @@
         gap: 4px;
         margin-top: 3px;
       }
+      /* Pochta manzili ismdan uzun bo'lishi mumkin — qatorni cho'zib
+         yubormasligi uchun kesiladi (to'lig'i `title` da qoladi). */
+      .r-subrow .r-email {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
       .r-subrow .r-sub {
         margin-top: 0;
       }
@@ -21893,6 +21901,7 @@
                 <div class="r-subrow">
                   ${sub ? `<span class="r-sub"${complete ? "" : ' style="color:var(--red)"'}>${escHtml(sub)}</span>` : ""}
                   ${complete ? phoneCopyHtml(u.phone) : ""}
+                  ${u.email ? `<span class="r-sub r-email" title="${escHtml(u.email)}">${escHtml(u.email)}</span>` : ""}
                 </div>
               </div>
               ${userAccessBadgeHtml(u)}
@@ -21925,6 +21934,7 @@
               <div class="r-subrow">
                 ${sub ? `<span class="r-sub"${complete ? "" : ' style="color:var(--red)"'}>${escHtml(sub)}</span>` : ""}
                 ${complete ? phoneCopyHtml(u.phone) : ""}
+                ${u.email ? `<span class="r-sub r-email" title="${escHtml(u.email)}">${escHtml(u.email)}</span>` : ""}
               </div>
               ${userAccessBadgeHtml(u, "margin-top:8px")}
             </div>`;
@@ -22759,6 +22769,12 @@
           </div>
           <div class="f-group"><label class="f-label">Telefon raqami</label><input class="f-input" id="ue-phone" value="${escHtml(u.phone || "")}" placeholder="+998 90 123 45 67" oninput="formatPhoneInput(this)"/></div>
           <div class="f-group"><label class="f-label">Lavozimi</label><input class="f-input" id="ue-job" value="${escHtml(u.job_title || "")}"/></div>
+          <div class="f-group">
+            <label class="f-label">Email</label>
+            <input class="f-input" id="ue-email" type="email" inputmode="email" autocapitalize="off" autocorrect="off"
+                   value="${escHtml(u.email || "")}" placeholder="ism@gmail.com"/>
+            <div class="f-hint" style="margin-top:6px">Kalendar rejalari shu pochtaga taklifnoma bo'lib boradi.</div>
+          </div>
           <div class="f-group"><label class="f-label">Tug'ilgan sana</label>${renderDateFieldHtml("ue-birth", u.birth_date ? String(u.birth_date).slice(0, 10) : "", "Sana tanlang")}</div>
           <button class="btn btn-blue" id="ue-save-btn" onclick="saveUserEdit('${escArg(username)}')" style="margin-bottom:18px">Saqlash</button>
           ${
@@ -22799,6 +22815,7 @@
           lastName: document.getElementById("ue-last")?.value.trim(),
           phone: document.getElementById("ue-phone")?.value.trim(),
           jobTitle: document.getElementById("ue-job")?.value.trim(),
+          email: document.getElementById("ue-email")?.value.trim() || null,
           birthDate: document.getElementById("ue-birth")?.value || null,
         };
         if (btn) {
@@ -23727,6 +23744,7 @@
         "pf-last": "Familiya",
         "pf-phone": "Telefon raqami",
         "pf-job": "Lavozimi",
+        "pf-email": "Email",
         "pf-birth": "Tug'ilgan sana",
       };
 
@@ -23822,6 +23840,12 @@
                   <div class="f-group">
                     <label class="f-label">Lavozimi</label>
                     <input class="f-input" id="pf-job" value="${escHtml(p.jobTitle || "")}" placeholder="SMM manager" oninput="pfCheckDirty()"/>
+                  </div>
+                  <div class="f-group">
+                    <label class="f-label">Email</label>
+                    <input class="f-input" id="pf-email" type="email" inputmode="email" autocapitalize="off" autocorrect="off"
+                           value="${escHtml(p.email || "")}" placeholder="ism@gmail.com" oninput="pfCheckDirty()"/>
+                    <div class="f-hint" style="margin-top:6px">Kalendardagi rejalaringiz shu pochtaga taklifnoma bo'lib boradi va telefoningizdagi kalendarda ko'rinadi.</div>
                   </div>
                   <div class="f-group">
                     <label class="f-label">Tug'ilgan sana</label>
@@ -24288,6 +24312,7 @@
           "pf-last": document.getElementById("pf-last")?.value.trim() || "",
           "pf-phone": document.getElementById("pf-phone")?.value.trim() || "",
           "pf-job": document.getElementById("pf-job")?.value.trim() || "",
+          "pf-email": document.getElementById("pf-email")?.value.trim() || "",
           "pf-birth": document.getElementById("pf-birth")?.value || "",
         };
       }
@@ -24315,6 +24340,7 @@
         document.getElementById("pf-last").value = pfOriginalValues["pf-last"];
         document.getElementById("pf-phone").value = pfOriginalValues["pf-phone"];
         document.getElementById("pf-job").value = pfOriginalValues["pf-job"];
+        document.getElementById("pf-email").value = pfOriginalValues["pf-email"];
         document.getElementById("pf-birth").value = pfOriginalValues["pf-birth"];
         pfUpdateSaveBar([]);
       }
@@ -24326,6 +24352,7 @@
           lastName: values["pf-last"],
           phone: values["pf-phone"],
           jobTitle: values["pf-job"],
+          email: values["pf-email"] || null,
           birthDate: values["pf-birth"] || null,
         };
         if (btn) {

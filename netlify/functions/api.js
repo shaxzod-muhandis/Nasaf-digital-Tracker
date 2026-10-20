@@ -53,7 +53,8 @@ const {
   isSupportedRrule,
   userBrief,
 } = require("./lib/events");
-const { buildCalendar, WINDOW_BACK_DAYS, WINDOW_FORWARD_DAYS } = require("./lib/ics");
+const { buildCalendar, buildInvite, WINDOW_BACK_DAYS, WINDOW_FORWARD_DAYS } = require("./lib/ics");
+const { sendMail, mailReady, MAIL_FROM } = require("./lib/mail");
 const { put: blobPut } = require("@vercel/blob");
 
 // Faqat Telegram bildirishnoma matnlarini tuzish uchun (Vazifalar
@@ -475,6 +476,11 @@ app.patch("/api/me", auth, async (req, res) => {
     await db.query(`update users set ${sets.join(", ")} where id = $${values.length}`, values);
     res.json({ ok: true });
   } catch (e) {
+    // idx_users_email — bir pochta ikki xodimda bo'lmaydi. Aks holda
+    // kalendar taklifnomalari kimga tegishli ekani chalkashardi.
+    if (e.code === "23505") {
+      return res.status(409).json({ error: "Bu email boshqa xodimga biriktirilgan" });
+    }
     serverError(res, e, "PATCH /api/me");
   }
 });
@@ -568,7 +574,7 @@ app.get("/api/users", auth, async (req, res) => {
     const r = await db.query(
       `select username, full_name, role, is_active, access_status, access_granted_at, blocked_at,
               telegram_user_id, (telegram_chat_id is not null) as has_chat,
-              first_name, last_name, birth_date, phone, job_title, avatar_url
+              first_name, last_name, birth_date, phone, job_title, avatar_url, email
        from users order by (role = 'employee'), username`,
     );
     res.json({ users: r.rows });
@@ -712,12 +718,21 @@ app.patch("/api/users/:username", auth, async (req, res) => {
       birthDate: "birth_date",
       phone: "phone",
       jobTitle: "job_title",
+      // Kalendar taklifnomasi shu pochtaga ketadi — admin ham
+      // to'g'rilay olishi kerak.
+      email: "email",
     };
     for (const [bodyKey, column] of Object.entries(profileFieldMap)) {
       if (typeof req.body[bodyKey] === "undefined") continue;
       let v = req.body[bodyKey] || null;
       if (bodyKey === "firstName" || bodyKey === "lastName") v = titleCaseName(v) || null;
       if (bodyKey === "phone") v = formatUzPhone(v) || null;
+      if (bodyKey === "email") {
+        v = v ? String(v).trim().toLowerCase() : null;
+        if (v && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) {
+          return res.status(400).json({ error: "Email manzili noto'g'ri" });
+        }
+      }
       values.push(v);
       sets.push(`${column} = $${values.length}`);
     }
@@ -725,12 +740,15 @@ app.patch("/api/users/:username", auth, async (req, res) => {
     values.push(uname);
     const r = await db.query(
       `update users set ${sets.join(", ")} where username = $${values.length}
-       returning username, full_name, role, is_active, first_name, last_name, birth_date, phone, job_title`,
+       returning username, full_name, role, is_active, first_name, last_name, birth_date, phone, job_title, email`,
       values,
     );
     if (!r.rows[0]) return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
     res.json({ ok: true, user: r.rows[0] });
   } catch (e) {
+    if (e.code === "23505") {
+      return res.status(409).json({ error: "Bu email boshqa xodimga biriktirilgan" });
+    }
     serverError(res, e, "PATCH /api/users/:username");
   }
 });
@@ -2046,6 +2064,81 @@ function evValidate(b) {
   };
 }
 
+
+// ── Email taklifnomasi ───────────────────────────────────────────────
+// Xodim pochtasini kiritgan bo'lsa, reja uning shaxsiy kalendariga
+// (Gmail, Apple Mail) taklifnoma sifatida tushadi — hech narsa
+// sozlamaydi. Pochtasi yo'q xodim avvalgidek faqat Telegram xabarini
+// oladi; taklifnoma qo'shimcha imkoniyat, majburiy emas.
+const MAIL_FROM_EMAIL = (MAIL_FROM.match(/<([^>]+)>/) || [null, MAIL_FROM])[1].trim();
+
+function evFmtWhen(ev) {
+  return evFmtRange(ev.start_at, ev.end_at, ev.all_day);
+}
+
+async function evSendInvites(eventId, method) {
+  if (!mailReady()) return;
+  const r = await db.query(`${EV_SELECT} where e.id = $1`, [eventId]);
+  const ev = r.rows[0];
+  if (!ev) return;
+
+  // Faqat qatnashadiganlar va faqat pochtasi borlar.
+  const pr = await db.query(
+    `select u.email, u.username, u.first_name, u.last_name, u.full_name
+       from event_participants ep join users u on u.id = ep.user_id
+      where ep.event_id = $1 and ep.status = 'going'
+        and u.email is not null and u.is_active`,
+    [eventId],
+  );
+  const attendees = pr.rows.map((u) => ({
+    email: u.email,
+    name: u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : u.full_name || u.username,
+  }));
+  if (!attendees.length) return;
+
+  const link = eventDeepLink(ev.id);
+  const ics = buildInvite({
+    ev,
+    organizer: { name: "Nasaf Tracker", email: MAIL_FROM_EMAIL },
+    attendees,
+    method,
+    sequence: ev.sequence || 0,
+    link,
+    domain: "nasafdigital.uz",
+  });
+
+  const bekor = method === "CANCEL";
+  const sarlavha = bekor ? `Bekor qilindi: ${ev.title}` : ev.title;
+  const joy = ev.place ? `\n📍 ${ev.place}` : "";
+  const matn = bekor
+    ? `«${ev.title}» rejasi bekor qilindi.\n${evFmtWhen(ev)}`
+    : `${ev.title}\n${evFmtWhen(ev)}${joy}\n\nTrackerda ochish: ${link}`;
+  const html = bekor
+    ? `<p><b>${escHtmlMail(ev.title)}</b> rejasi bekor qilindi.</p><p>${escHtmlMail(evFmtWhen(ev))}</p>`
+    : `<p><b>${escHtmlMail(ev.title)}</b></p>
+       <p>${escHtmlMail(evFmtWhen(ev))}${ev.place ? `<br>📍 ${escHtmlMail(ev.place)}` : ""}</p>
+       ${ev.note ? `<p>${escHtmlMail(ev.note).replace(/\n/g, "<br>")}</p>` : ""}
+       <p><a href="${link}">Trackerda ochish</a></p>`;
+
+  await sendMail(db, {
+    to: attendees.map((a) => a.email),
+    subject: sarlavha,
+    text: matn,
+    html,
+    ics,
+    filename: bekor ? "bekor.ics" : "reja.ics",
+  });
+}
+
+// Pochta matnidagi HTML uchun — api.js da `escHtml` yo'q.
+function escHtmlMail(v) {
+  return String(v == null ? "" : v)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 // ── GET /api/events — davrdagi rejalar, nusxalarga yoyilgan ──────────
 app.get("/api/events", auth, async (req, res) => {
   try {
@@ -2262,6 +2355,7 @@ app.post("/api/events", auth, async (req, res) => {
     const joyLine = v.place ? `\n📍 ${v.place}` : "";
     await Promise.allSettled([
       evRescheduleReminders(id),
+      evSendInvites(id, "REQUEST"),
       evNotify(id, boshqalar,
         `📅 <b>Yangi reja:</b> ${v.title}\n${evFmtRange(v.start_at, v.end_at, v.all_day)}${joyLine}\nQo'shdi: @${req.user.username}`),
     ]).then((r) => r.forEach((x) => x.status === "rejected" && console.error("[reja yaratildi, yon ish xato]", x.reason)));
@@ -2351,7 +2445,11 @@ app.patch("/api/events/:id", auth, async (req, res) => {
     const vals = v.participants.map((_, i) => `($1, $${i + 2}, 'going')`).join(",");
     await db.query(`insert into event_participants (event_id, user_id, status) values ${vals} on conflict do nothing`,
       [ev.id, ...v.participants]);
+    // Taklifnoma versiyasi oshiriladi — aks holda pochta dasturlari
+    // xatni eski nusxa deb hisoblab, kalendarni yangilamaydi.
+    await db.query(`update events set sequence = sequence + 1 where id = $1`, [ev.id]);
     await evRescheduleReminders(ev.id);
+    evSendInvites(ev.id, "REQUEST").catch((e) => console.error("[taklifnoma]", e.message));
 
     // Vaqt yoki joy o'zgardi — ishtirokchilarga aytiladi (TZ 10-bo'lim).
     const vaqtOzgardi = new Date(ev.start_at).getTime() !== new Date(v.start_at).getTime()
@@ -2412,6 +2510,10 @@ app.delete("/api/events/:id", auth, async (req, res) => {
       return res.json({ ok: true, scope: "following" });
     }
 
+    // Bekor qilish xati yozuv o'chirilishidan OLDIN yuboriladi:
+    // `evSendInvites` ishtirokchilarni bazadan o'qiydi.
+    await db.query(`update events set sequence = sequence + 1 where id = $1`, [ev.id]);
+    await evSendInvites(ev.id, "CANCEL").catch((e) => console.error("[bekor xati]", e.message));
     await db.query(`update events set deleted_at = now() where id = $1`, [ev.id]);
     await db.query(`delete from event_reminders where event_id = $1 and sent_at is null`, [ev.id]);
     const pr = await db.query(`select user_id from event_participants where event_id = $1`, [ev.id]);
