@@ -11500,6 +11500,123 @@
       .mk-dlg-row b { font-weight: 700; color: var(--red); }
       .ntv3-submit.danger { background: var(--red); color: #fff; }
       .ntv3-submit.danger:hover { filter: brightness(1.05); }
+      /* ── 01-ekran · Loyiha kataklari ───────────────────────────────
+         Avval faqat bitta tur (post YOKI stories) raqamli checkbox
+         bo'lib ko'rinardi. Endi ikkala to'r birga turadi, bajarilgan
+         katakda esa sana bor — qaysi kun chiqqani darhol ko'rinadi. */
+      .mkg-wrap { display: flex; flex-direction: column; gap: 14px; }
+      .mkg-card {
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 16px;
+        padding: 14px;
+      }
+      .mkg-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 11px; }
+      .mkg-t { font-size: 14px; font-weight: 700; color: var(--marker); }
+      .mkg-n { font-size: 12.5px; font-weight: 600; color: var(--v3-t3); }
+      .mkg-grow { flex: 1; }
+      .mkg-leg { display: flex; align-items: center; gap: 12px; }
+      .mkg-leg span { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--v3-t3); }
+      .mkg-leg i { width: 8px; height: 8px; border-radius: 99px; display: block; }
+
+      /* Dizaynda bir qatorda 8 tagacha katak. Keng ekranda to'r
+         cho'zilib ketmasligi uchun eni cheklanadi. */
+      .mkg-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+        gap: 7px;
+        max-width: 600px;
+      }
+      /* Kompyuterda dizayndagidek aniq 8 ta ustun; telefonda esa
+         joyiga qarab 6-7 ta sig'adi. */
+      @media (min-width: 860px) {
+        .mkg-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+      }
+      .mkg-cell {
+        aspect-ratio: 1 / 1;
+        min-height: 46px;
+        border-radius: 12px;
+        border: 1px solid var(--bd2);
+        background: var(--surf);
+        color: var(--v3-t4);
+        font: inherit;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1px;
+        padding: 2px;
+        overflow: hidden;
+      }
+      .mkg-cell:hover { border-color: var(--bd4); }
+      .mkg-num { font-size: 14px; font-weight: 700; line-height: 1.1; }
+      .mkg-date { font-size: 9.5px; font-weight: 500; line-height: 1.1; opacity: 0.85; }
+      /* Bajarilgan — to'ldirilgan katak. Stories ikki tusda: qaysi
+         turda chiqqani bir qarashda ko'rinsin. */
+      .mkg-cell.done { border-color: transparent; color: #fff; background: var(--brand); }
+      .mkg-cell.done.atm { background: #7c3aed; }
+      .mkg-cell.done.info { background: #c4b5fd; color: #3b2a66; }
+      .mkg-cell.done:hover { filter: brightness(1.06); }
+      /* Keyingi bo'sh katak — pastdagi tugma aynan shuni oladi */
+      .mkg-cell.next {
+        border: 1.5px dashed var(--brand);
+        color: var(--brand);
+        background: rgba(47, 122, 185, 0.05);
+      }
+      .mkg-cell.next.s { border-color: #7c3aed; color: #7c3aed; background: rgba(124, 58, 237, 0.05); }
+      .mkg-cell.next .mkg-date { font-weight: 600; opacity: 1; }
+      /* Muddati o'tgan davrda bo'sh kataklar qizil chiziqli */
+      .mkg-cell.debt { border: 1.5px dashed rgba(220, 38, 38, 0.55); color: var(--red); }
+
+      /* Pastdagi ikki tugma — keyingi raqamni o'zi oladi, katak
+         qidirish shart emas. */
+      .mkg-acts { display: flex; gap: 10px; margin-top: 16px; }
+      .mkg-act {
+        flex: 1;
+        min-width: 0;
+        height: 46px;
+        border: 0;
+        border-radius: 13px;
+        background: var(--brand);
+        color: #fff;
+        font: inherit;
+        font-size: 14.5px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+      }
+      .mkg-act.s { background: #7c3aed; }
+      .mkg-act:hover { filter: brightness(1.06); }
+      .mkg-act[disabled] { background: var(--chip2); color: var(--v3-t4); cursor: default; }
+      .mkg-act[disabled]:hover { filter: none; }
+
+      /* ── 12-ekran · Qarzli davr ───────────────────────────────────
+         Muddat o'tgan bo'lsa ekran qizil holatga o'tadi: qancha
+         kechikkan, nima qolgan va nega yangi davr ochilmayotgani. */
+      .mkg-debt {
+        background: var(--red-bg);
+        border: 1px solid rgba(220, 38, 38, 0.25);
+        border-radius: 14px;
+        padding: 12px 14px;
+        margin-bottom: 14px;
+      }
+      .mkg-debt-t { display: flex; align-items: center; gap: 8px; }
+      .mkg-debt-b {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #fff;
+        background: var(--red);
+        border-radius: 7px;
+        padding: 3px 8px;
+      }
+      .mkg-debt-p { font-size: 12.5px; font-weight: 600; color: var(--marker); }
+      .mkg-debt-s { font-size: 12.5px; line-height: 1.45; color: #8a2020; margin-top: 7px; }
+      .mkg-debt-s b { font-weight: 700; }
+
 
     </style>
   </head>
@@ -19549,6 +19666,100 @@
             .join("");
       }
 
+      // ── 01 / 12-ekran · Loyiha kataklari ──────────────────────────
+      // Ikkala to'r birga: bajarilgan katakda chiqqan sana, keyingi
+      // bo'sh katak chiziqli ramkada. Katak qidirish shart emas —
+      // pastdagi tugma keyingi raqamni o'zi oladi.
+      function mkgNextFree(p, type) {
+        const jami = type === "k" ? p.k : p.s;
+        const checks = p.checks || {};
+        for (let i = 1; i <= jami; i++) if (!checks[`${type}-${i}`]) return i;
+        return null;
+      }
+      function mkgGridHtml(p, type, qarzli) {
+        const jami = type === "k" ? p.k : p.s;
+        if (!jami) return "";
+        const checks = p.checks || {};
+        const det = p.checkDetails || {};
+        const done = type === "k" ? p.doneK : p.doneS;
+        const keyingi = mkgNextFree(p, type);
+        let kataklar = "";
+        for (let i = 1; i <= jami; i++) {
+          const key = `${type}-${i}`;
+          const on = !!checks[key];
+          const info = det[key] || {};
+          const kind = type === "s" ? (info.storyKind === "atmospheric" ? "atm" : "info") : "";
+          const sana = on && info.workDate ? ntfDayShort(String(info.workDate).slice(0, 10)) : "";
+          const cls = on
+            ? `done ${kind}`
+            : i === keyingi
+              ? `next${type === "s" ? " s" : ""}`
+              : qarzli
+                ? "debt"
+                : "";
+          const past = on ? (sana ? `<span class="mkg-date">${escHtml(sana)}</span>` : "")
+            : i === keyingi ? `<span class="mkg-date">keyingi</span>` : "";
+          kataklar += `<button type="button" class="mkg-cell ${cls}" onclick="openCheckModal('${escArg(p.id)}','${type}',${i})">
+              <span class="mkg-num">${i}</span>${past}
+            </button>`;
+        }
+        const leg =
+          type === "s"
+            ? `<div class="mkg-leg"><span><i style="background:#7c3aed"></i>Atmosferali</span><span><i style="background:#c4b5fd"></i>Gapirib</span></div>`
+            : "";
+        return `<div class="mkg-card">
+            <div class="mkg-hdr">
+              <span class="mkg-t">${type === "k" ? "Post" : "Stories"}</span>
+              <span class="mkg-n">${done} / ${jami}</span>
+              <span class="mkg-grow"></span>
+              ${leg}
+            </div>
+            <div class="mkg-grid">${kataklar}</div>
+          </div>`;
+      }
+
+      function mkgDebtHtml(p) {
+        const kech = -projDaysLeft(p);
+        const qolgan = [];
+        if (p.k - p.doneK > 0) qolgan.push(`${p.k - p.doneK} post`);
+        if (p.s - p.doneS > 0) qolgan.push(`${p.s - p.doneS} stories`);
+        const davr = p.cycleIndex || 0;
+        return `<div class="mkg-debt">
+            <div class="mkg-debt-t">
+              <span class="mkg-debt-b">${kech > 0 ? `${kech} kun kechikdi` : "Muddat tugadi"}</span>
+              <span class="mkg-debt-p">${davr ? `${davr}-davr · ` : ""}${escHtml(fmtDay(parseISO(p.periodEnd)))}da tugagan</span>
+            </div>
+            <div class="mkg-debt-s">Qarz yopilmaguncha ${davr ? davr + 1 + "-davr" : "keyingi davr"} ochilmaydi. Qoldi: <b>${qolgan.join(", ") || "—"}</b>. Belgilangan ish ${davr ? davr + "-davrga" : "shu davrga"} yoziladi.</div>
+          </div>`;
+      }
+
+      function mkgActsHtml(p) {
+        const kn = mkgNextFree(p, "k");
+        const sn = mkgNextFree(p, "s");
+        const btn = (type, n) => {
+          if ((type === "k" ? p.k : p.s) === 0) return "";
+          const nom = type === "k" ? "Post" : "Stories";
+          if (!n) return `<button type="button" class="mkg-act${type === "s" ? " s" : ""}" disabled>${nom} — hammasi bajarildi</button>`;
+          return `<button type="button" class="mkg-act${type === "s" ? " s" : ""}" onclick="openCheckModal('${escArg(p.id)}','${type}',${n})">+ ${nom} ${n}</button>`;
+        };
+        const ikki = btn("k", kn) + btn("s", sn);
+        return ikki ? `<div class="mkg-acts">${ikki}</div>` : "";
+      }
+
+      // Davr muddati o'tgan va reja to'lmagan bo'lsa — qarzli holat.
+      function mkgIsDebt(p) {
+        return projDaysLeft(p) < 0 && (p.doneK < p.k || p.doneS < p.s);
+      }
+      function mkgSectionHtml(p) {
+        const qarzli = mkgIsDebt(p);
+        return `${qarzli ? mkgDebtHtml(p) : ""}
+          <div class="mkg-wrap">
+            ${mkgGridHtml(p, "k", qarzli)}
+            ${mkgGridHtml(p, "s", qarzli)}
+          </div>
+          ${mkgActsHtml(p)}`;
+      }
+
       // ── TRACKER ───────────────────────────────────────────────────
       function openTracker(id) {
         const p = projects.find((x) => x.id === id);
@@ -19673,17 +19884,6 @@
         if (!todayHtml)
           todayHtml = `<div style="padding:16px 14px;font-size:12.5px;color:var(--t3)">Bugun hali hech narsa belgilanmagan</div>`;
 
-        // ── BARCHA VAZIFALAR: 1..N alohida checkbox ─────────────────
-        const typeLabel = trackerType === "k" ? "Post" : "Stories";
-        let allHtml = "";
-        for (let i = 1; i <= count; i++) {
-          const on = !!checks[`${trackerType}-${i}`];
-          allHtml += `<label class="cbi">
-            <input type="checkbox" ${on ? "checked" : ""} onchange="onCheckboxToggle(event,'${escArg(p.id)}','${trackerType}',${i},this.checked)"/>
-            <span class="cbi-box">${i}</span>
-          </label>`;
-        }
-
         document.getElementById("tracker-body").innerHTML = `
           <div class="cal-week">${WD.map((w) => `<span>${w}</span>`).join("")}</div>
           <div class="cal-grid">${cells}</div>
@@ -19694,11 +19894,8 @@
             <div style="padding:11px 14px;border-bottom:1px solid var(--bd1);font-weight:600;font-size:11px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase">${fmtDay(today)} · bugun belgilangan</div>
             ${todayHtml}
           </div>
-          <div class="sec-upper" style="margin:20px 0 9px">Barcha ${trackerType === "k" ? "postlar" : "stories"}</div>
-          <div class="list-card" style="padding:14px">
-            <div class="cb-row">${allHtml}</div>
-            <div class="f-hint" style="margin-top:12px">${trackerType === "k" ? "Post belgilanganda kim montaj qilgani va kim video olgani so'raladi." : "Belgilangan " + typeLabel.toLowerCase() + " bugungi kunga yoziladi — sanani o'zgartirish uchun ustiga bosing."}</div>
-          </div>`;
+          <div class="sec-upper" style="margin:20px 0 9px">Kataklar</div>
+          ${mkgSectionHtml(p)}`;
 
         const railEl = document.getElementById("trk-rail");
         if (railEl) railEl.innerHTML = buildTrackerRailHtml(p);
