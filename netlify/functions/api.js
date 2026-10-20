@@ -53,6 +53,7 @@ const {
   isSupportedRrule,
   userBrief,
 } = require("./lib/events");
+const { buildCalendar, WINDOW_BACK_DAYS, WINDOW_FORWARD_DAYS } = require("./lib/ics");
 const { put: blobPut } = require("@vercel/blob");
 
 // Faqat Telegram bildirishnoma matnlarini tuzish uchun (Vazifalar
@@ -422,6 +423,7 @@ app.get("/api/me", auth, async (req, res) => {
       birthDate: u.birth_date,
       phone: u.phone,
       jobTitle: u.job_title,
+      email: u.email || null,
       avatarUrl: u.avatar_url,
       role: u.role,
       isAdmin: isAdminRole(u.role),
@@ -447,6 +449,10 @@ app.patch("/api/me", auth, async (req, res) => {
       birthDate: "birth_date",
       phone: "phone",
       jobTitle: "job_title",
+      // Shaxsiy kalendarga ulanish uchun so'raladi. Majburiy emas —
+      // PROFILE_REQUIRED_FIELDS ga ataylab qo'shilmagan, aks holda
+      // pochtasini kiritmagan xodim ilovaga kira olmay qolardi.
+      email: "email",
     };
     const sets = [];
     const values = [];
@@ -455,6 +461,12 @@ app.patch("/api/me", auth, async (req, res) => {
       let v = req.body[bodyKey] || null;
       if (bodyKey === "firstName" || bodyKey === "lastName") v = titleCaseName(v) || null;
       if (bodyKey === "phone") v = formatUzPhone(v) || null;
+      if (bodyKey === "email") {
+        v = v ? String(v).trim().toLowerCase() : null;
+        if (v && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) {
+          return res.status(400).json({ error: "Email manzili noto'g'ri" });
+        }
+      }
       values.push(v);
       sets.push(`${column} = $${values.length}`);
     }
@@ -2482,6 +2494,131 @@ app.post("/api/events/reminders/run", async (req, res) => {
     res.json({ ok: true, sent });
   } catch (e) {
     serverError(res, e, "POST /api/events/reminders/run", req);
+  }
+});
+
+
+// ── KALENDAR OBUNASI (ICS) ───────────────────────────────────────────
+// Xodim trackerdagi rejalarini o'z telefonidagi kalendarda ko'rishi
+// uchun. Havoladagi token PAROL o'rnida: `auth` middleware YO'Q,
+// chunki Google va Apple serverlari Telegram initData yubora olmaydi.
+// Shuning uchun token tasodifiy uuid va faqat egasiga ko'rsatiladi.
+
+// Mini App havolasi — kalendardagi rejadan trackerga qaytish uchun.
+// BotFather'dagi "Direct Link" shaklida bo'ladi, masalan:
+//   https://t.me/nasafdigital_bot/tracker
+// Sozlanmagan bo'lsa oddiy veb manzil ishlatiladi (brauzerda ochiladi).
+const MINIAPP_URL = (process.env.MINIAPP_URL || "").replace(/\/$/, "");
+function eventDeepLink(eventId) {
+  if (MINIAPP_URL) return `${MINIAPP_URL}?startapp=event_${eventId}`;
+  return `${APP_URL}/kalendar?openEvent=${eventId}`;
+}
+
+app.get(/^\/api\/kalendar\/([0-9a-f-]{36})\.ics$/i, async (req, res) => {
+  try {
+    const token = req.params[0];
+    const ur = await db.query(
+      `select id, username, first_name, last_name, full_name
+         from users where calendar_token = $1 and is_active`,
+      [token],
+    );
+    const user = ur.rows[0];
+    // Noto'g'ri token — 404. "Bunday token yo'q" deb aniqlashtirish
+    // tokenlarni tanlab ko'rishga yordam berardi.
+    if (!user) return res.status(404).send("Not found");
+
+    const now = Date.now();
+    const from = new Date(now - WINDOW_BACK_DAYS * 86400000);
+    const to = new Date(now + WINDOW_FORWARD_DAYS * 86400000);
+
+    // Faqat shu xodim ishtirok etadigan rejalar.
+    const r = await db.query(
+      `${EV_SELECT}
+        where e.deleted_at is null
+          and exists (
+            select 1 from event_participants ep
+             where ep.event_id = e.id and ep.user_id = $3 and ep.status = 'going'
+          )
+          and (
+            (e.rrule is null and e.start_at < $2 and e.end_at > $1)
+            or (e.rrule is not null and e.start_at < $2
+                and (e.rrule_until is null or e.rrule_until > $1))
+          )`,
+      [from.toISOString(), to.toISOString(), user.id],
+    );
+    const ids = r.rows.map((x) => x.id);
+    const excs = await evExceptions(ids);
+
+    const items = [];
+    r.rows.forEach((row) => {
+      expandOccurrences(row, from, to, 400).forEach((occ) => {
+        const exc = excs[`${row.id}|${occ.toISOString()}`];
+        if (exc && exc.is_cancelled) return;
+        const davomiylik = new Date(row.end_at).getTime() - new Date(row.start_at).getTime();
+        let start = occ;
+        let end = new Date(occ.getTime() + davomiylik);
+        let ev = row;
+        // Alohida o'zgartirilgan nusxa — o'sha qiymatlar bilan.
+        if (exc && exc.override_json) {
+          const o = exc.override_json;
+          ev = { ...row, title: o.title || row.title, place: o.place !== undefined ? o.place : row.place, note: o.note !== undefined ? o.note : row.note };
+          if (o.start_at) start = new Date(o.start_at);
+          if (o.end_at) end = new Date(o.end_at);
+          else if (o.start_at) end = new Date(start.getTime() + davomiylik);
+        }
+        items.push({ ev, start, end });
+      });
+    });
+    items.sort((a, b) => a.start - b.start);
+
+    const ism = user.first_name
+      ? `${user.first_name} ${user.last_name || ""}`.trim()
+      : user.full_name || user.username;
+    const body = buildCalendar(items, {
+      name: `Nasaf Tracker — ${ism}`,
+      domain: "nasafdigital.uz",
+      linkFor: (ev) => eventDeepLink(ev.id),
+    });
+
+    res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+    res.setHeader("Content-Disposition", `inline; filename="nasaf-tracker.ics"`);
+    // Obuna manzili — qisqa keshlash yetarli; Google baribir o'z
+    // jadvali bo'yicha so'raydi.
+    res.setHeader("Cache-Control", "public, max-age=300");
+    res.send(body);
+  } catch (e) {
+    console.error("[GET /api/kalendar/:token.ics]", e && e.stack ? e.stack : e);
+    res.status(500).send("Server error");
+  }
+});
+
+// Xodimning o'z obuna havolasi. Token faqat shu yerda, so'ralganda
+// yaratiladi — hech kim ishlatmasa ochiq havola ham mavjud bo'lmaydi.
+app.get("/api/me/calendar-link", auth, async (req, res) => {
+  try {
+    const r = await db.query(
+      `update users set calendar_token = coalesce(calendar_token, gen_random_uuid())
+        where id = $1 returning calendar_token`,
+      [req.user.id],
+    );
+    const token = r.rows[0]?.calendar_token;
+    res.json({ url: `${APP_URL}/api/kalendar/${token}.ics`, hasMiniApp: !!MINIAPP_URL });
+  } catch (e) {
+    serverError(res, e, "GET /api/me/calendar-link", req);
+  }
+});
+
+// Havola oshkor bo'lsa — yangisini yaratish. Eski havola o'sha zahoti
+// ishlamay qoladi.
+app.post("/api/me/calendar-link/reset", auth, async (req, res) => {
+  try {
+    const r = await db.query(
+      `update users set calendar_token = gen_random_uuid() where id = $1 returning calendar_token`,
+      [req.user.id],
+    );
+    res.json({ url: `${APP_URL}/api/kalendar/${r.rows[0].calendar_token}.ics` });
+  } catch (e) {
+    serverError(res, e, "POST /api/me/calendar-link/reset", req);
   }
 });
 
