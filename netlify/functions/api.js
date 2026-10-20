@@ -2096,7 +2096,7 @@ async function evSendInvites(eventId, method) {
   }));
   if (!attendees.length) return;
 
-  const link = eventDeepLink(ev.id);
+  const link = await eventDeepLink(ev.id);
   const ics = buildInvite({
     ev,
     organizer: { name: "Nasaf Tracker", email: MAIL_FROM_EMAIL },
@@ -2611,9 +2611,51 @@ app.post("/api/events/reminders/run", async (req, res) => {
 //   https://t.me/nasafdigital_bot/tracker
 // Sozlanmagan bo'lsa oddiy veb manzil ishlatiladi (brauzerda ochiladi).
 const MINIAPP_URL = (process.env.MINIAPP_URL || "").replace(/\/$/, "");
-function eventDeepLink(eventId) {
-  if (MINIAPP_URL) return `${MINIAPP_URL}?startapp=event_${eventId}`;
-  return `${APP_URL}/kalendar?openEvent=${eventId}`;
+
+// Bot nomi (`nasafdigital_bot`) BOT_TOKEN dan o'zi aniqlanadi —
+// MINIAPP_URL ni qo'lda sozlash shart emas. getMe javobi o'zgarmaydi,
+// shuning uchun bir marta so'ralib keshlanadi; xato bo'lsa bo'sh satr
+// keshlanadi va har so'rovda qayta urinilmaydi (sovuq start sekin
+// bo'lib qolmasin).
+let botUsernameCache = null;
+async function botUsername() {
+  if (botUsernameCache !== null) return botUsernameCache;
+  const token = process.env.BOT_TOKEN || "";
+  if (!token) return (botUsernameCache = "");
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+    const j = await r.json().catch(() => ({}));
+    botUsernameCache = (j.ok && j.result && j.result.username) || "";
+    if (!botUsernameCache) console.error("[getMe]", JSON.stringify(j).slice(0, 200));
+  } catch (e) {
+    console.error("[getMe]", e.message);
+    botUsernameCache = "";
+  }
+  return botUsernameCache;
+}
+
+// Kalendardagi rejadan trackerga qaytish havolasi. Uch pog'ona, eng
+// yaxshisidan eng yomoniga:
+//   miniapp — BotFather'dagi Mini App manzili (ENV bilan ustun qilinsa)
+//   bot     — `https://t.me/<bot>?startapp=event_<id>`; bot nomi o'zi
+//             topiladi. BotFather'da "Main Mini App" yoqilgan bo'lsa
+//             reja ochiladi, yoqilmagan bo'lsa hech bo'lmasa bot
+//             suhbati ochiladi — havola o'lik bo'lib qolmaydi.
+//   web     — tokeni ham, boti ham yo'q: oddiy veb manzil. Ilova
+//             Telegram tashqarisida ishlamaydi, lekin bu holat faqat
+//             BOT_TOKEN sozlanmaganda yuz beradi.
+async function eventLinkBase() {
+  if (MINIAPP_URL) return { kind: "miniapp", base: MINIAPP_URL };
+  const uname = await botUsername();
+  if (uname) return { kind: "bot", base: `https://t.me/${uname}` };
+  return { kind: "web", base: APP_URL };
+}
+function eventLinkFrom(b, eventId) {
+  if (b.kind === "web") return `${b.base}/kalendar?openEvent=${eventId}`;
+  return `${b.base}?startapp=event_${eventId}`;
+}
+async function eventDeepLink(eventId) {
+  return eventLinkFrom(await eventLinkBase(), eventId);
 }
 
 app.get(/^\/api\/kalendar\/([0-9a-f-]{36})\.ics$/i, async (req, res) => {
@@ -2676,10 +2718,14 @@ app.get(/^\/api\/kalendar\/([0-9a-f-]{36})\.ics$/i, async (req, res) => {
     const ism = user.first_name
       ? `${user.first_name} ${user.last_name || ""}`.trim()
       : user.full_name || user.username;
+    // `linkFor` buildCalendar ichida SINXRON chaqiriladi, shuning
+    // uchun manba oldin aniqlanadi — aks holda havola o'rniga
+    // Promise tushib qolardi.
+    const baza = await eventLinkBase();
     const body = buildCalendar(items, {
       name: `Nasaf Tracker — ${ism}`,
       domain: "nasafdigital.uz",
-      linkFor: (ev) => eventDeepLink(ev.id),
+      linkFor: (ev) => eventLinkFrom(baza, ev.id),
     });
 
     res.setHeader("Content-Type", "text/calendar; charset=utf-8");
@@ -2704,7 +2750,15 @@ app.get("/api/me/calendar-link", auth, async (req, res) => {
       [req.user.id],
     );
     const token = r.rows[0]?.calendar_token;
-    res.json({ url: `${APP_URL}/api/kalendar/${token}.ics`, hasMiniApp: !!MINIAPP_URL });
+    const url = `${APP_URL}/api/kalendar/${token}.ics`;
+    // `webcal://` — iPhone va Mac'da bosilishi bilan Kalendar ilovasi
+    // "Obuna bo'lish" so'rovini chiqaradi. `https://` esa Google
+    // Calendar'ning "URL orqali qo'shish" maydoni uchun.
+    res.json({
+      url,
+      webcal: url.replace(/^https?:\/\//, "webcal://"),
+      hasMiniApp: !!MINIAPP_URL,
+    });
   } catch (e) {
     serverError(res, e, "GET /api/me/calendar-link", req);
   }
@@ -2718,7 +2772,10 @@ app.post("/api/me/calendar-link/reset", auth, async (req, res) => {
       `update users set calendar_token = gen_random_uuid() where id = $1 returning calendar_token`,
       [req.user.id],
     );
-    res.json({ url: `${APP_URL}/api/kalendar/${r.rows[0].calendar_token}.ics` });
+    // Shakl /api/me/calendar-link bilan bir xil bo'lsin — frontend
+    // javobni butunlay almashtiradi, maydon tushib qolmasligi kerak.
+    const url = `${APP_URL}/api/kalendar/${r.rows[0].calendar_token}.ics`;
+    res.json({ url, webcal: url.replace(/^https?:\/\//, "webcal://"), hasMiniApp: !!MINIAPP_URL });
   } catch (e) {
     serverError(res, e, "POST /api/me/calendar-link/reset", req);
   }

@@ -1067,6 +1067,60 @@
       .pf-card-body {
         padding: 20px;
       }
+      /* ── Telefon kalendariga ulash kartasi ──────────────────────── */
+      .pf-cal-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 44px;
+        padding: 0 13px;
+        border-radius: 11px;
+        background: var(--surf2);
+        border: 1px solid var(--bd1);
+      }
+      /* Havola uzun va bo'shliqsiz — kartani cho'zib yubormasligi
+         uchun kesiladi, "Ko'rsatish" da esa qatorga bo'linadi. */
+      .pf-cal-url {
+        flex: 1;
+        min-width: 0;
+        font-size: 12.5px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        color: var(--t2);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding: 10px 0;
+      }
+      .pf-cal-link.ochiq .pf-cal-url {
+        white-space: normal;
+        word-break: break-all;
+      }
+      .pf-cal-eye {
+        flex: none;
+        border: 0;
+        background: none;
+        font: inherit;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--brand);
+        cursor: pointer;
+        padding: 0;
+      }
+      .pf-cal-acts { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+      .pf-cal-acts .btn { flex: 1; min-width: 150px; }
+      .pf-cal-steps { margin-top: 16px; display: flex; flex-direction: column; gap: 12px; }
+      .pf-cal-step { display: flex; flex-direction: column; gap: 4px; }
+      .pf-cal-step b { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+      .pf-cal-step span { font-size: 12.5px; line-height: 1.5; color: var(--t3); }
+      .pf-cal-warn {
+        margin-top: 16px;
+        padding: 11px 13px;
+        border-radius: 11px;
+        background: var(--chip);
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--t3);
+      }
       .pf-avatar-row {
         display: flex;
         align-items: center;
@@ -23860,6 +23914,7 @@
                   </div>
                 </div>
               </div>
+              ${pfCalendarCardHtml()}
             </div>
             <div class="pf-col-right" style="display:flex;flex-direction:column;gap:18px">
               <div class="pf-ncoin-card">
@@ -23896,6 +23951,127 @@
       function pfFmtTime(sec) {
         sec = Math.max(0, Math.floor(sec || 0));
         return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
+      }
+
+      // ── Telefon kalendariga ulash ─────────────────────────────────
+      // Xodim bu havolani iPhone yoki Google kalendariga BIR MARTA
+      // qo'shadi, keyin trackerdagi rejalari o'sha yerda o'zi
+      // yangilanib turadi. Har bir rejaga alohida fayl yuborishdan
+      // afzal: reja ko'chirilsa yoki bekor qilinsa, obuna buni o'zi
+      // oladi, alohida fayl esa eskirib qolardi.
+      //
+      // Havola PAROL o'rnini bosadi — unga ega bo'lgan har kim shu
+      // xodimning jadvalini o'qiy oladi. Shuning uchun ekranda
+      // yashirilgan holda turadi va faqat so'ralganda ko'rsatiladi.
+      let pfCalLink = null;
+      let pfCalShown = false;
+
+      function pfCalendarCardHtml() {
+        return `<div class="pf-card">
+          <div class="pf-card-hdr">Telefon kalendariga ulash</div>
+          <div class="pf-card-body">
+            <div class="f-hint" style="margin:0 0 14px">
+              Trackerda sizga belgilangan rejalar iPhone yoki Google
+              kalendaringizda ko'rinib turadi. Bir marta ulanadi — keyin
+              yangi rejalar, vaqt o'zgarishi va bekor qilishlar o'zi
+              yangilanadi.
+            </div>
+            <div id="pf-cal-box">
+              <button type="button" class="btn btn-blue" onclick="pfCalLoadLink(this)">Havolamni olish</button>
+            </div>
+          </div>
+        </div>`;
+      }
+
+      // Havola SO'RALGANDA yaratiladi (backend tokenni shu chaqiruvda
+      // qo'yadi) — hech kim ulanmasa, ochiq havola ham mavjud bo'lmaydi.
+      async function pfCalLoadLink(btn) {
+        setBtnLoading(btn, true, "Olinmoqda…");
+        try {
+          const res = await apiFetch("/api/me/calendar-link");
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
+          pfCalLink = await res.json();
+          pfCalShown = false;
+          pfCalRenderBox();
+        } catch (e) {
+          setBtnLoading(btn, false);
+          showToast(e.message || "Havolani olib bo'lmadi");
+        }
+      }
+
+      function pfCalMasked(url) {
+        // Oxirgi 6 belgi qoldiriladi: qaysi havola ekanini ajratish
+        // uchun yetarli, lekin yelka ustidan o'qib olish uchun kam.
+        const s = String(url || "");
+        return s.length > 30 ? s.slice(0, 24) + "••••••" + s.slice(-6) : s;
+      }
+
+      function pfCalRenderBox() {
+        const box = document.getElementById("pf-cal-box");
+        if (!box || !pfCalLink) return;
+        const url = pfCalLink.url;
+        box.innerHTML = `
+          <div class="pf-cal-link${pfCalShown ? " ochiq" : ""}">
+            <span class="pf-cal-url" id="pf-cal-url">${escHtml(pfCalShown ? url : pfCalMasked(url))}</span>
+            <button type="button" class="pf-cal-eye" onclick="pfCalToggleShown()" aria-label="${pfCalShown ? "Yashirish" : "Ko'rsatish"}">${pfCalShown ? "Yashirish" : "Ko'rsatish"}</button>
+          </div>
+          <div class="pf-cal-acts">
+            <button type="button" class="btn btn-blue" onclick="pfCalCopy(this)">Havolani nusxalash</button>
+            <button type="button" class="btn btn-soft" onclick="pfCalOpen()">Brauzerda ochish</button>
+          </div>
+          <div class="pf-cal-steps">
+            <div class="pf-cal-step">
+              <b>iPhone / Mac</b>
+              <span>Sozlamalar → Ilovalar → Kalendar → Hisoblar → Hisob qo'shish → Boshqa → Obuna bo'lingan kalendar qo'shish → havolani qo'yish.
+              Yoki «Brauzerda ochish» — Safari o'zi obuna bo'lishni taklif qiladi.</span>
+            </div>
+            <div class="pf-cal-step">
+              <b>Google Calendar</b>
+              <span>calendar.google.com → Sozlamalar → Kalendar qo'shish → URL orqali → havolani qo'yish.
+              Google bir necha soatda bir marta yangilaydi, shuning uchun yangi reja darhol chiqmasligi mumkin.</span>
+            </div>
+          </div>
+          <div class="pf-cal-warn">
+            Havola shaxsiy: unga ega bo'lgan har kim jadvalingizni ko'ra oladi. Hech kimga bermang.
+            Oshkor bo'lsa — <span class="stat-link" onclick="pfCalReset()">yangi havola yarating</span> (eskisi o'sha zahoti ishlamay qoladi).
+          </div>`;
+      }
+
+      function pfCalToggleShown() {
+        pfCalShown = !pfCalShown;
+        pfCalRenderBox();
+      }
+
+      async function pfCalCopy(btn) {
+        if (!pfCalLink) return;
+        const ok = await copyToClipboard(pfCalLink.url);
+        showToast(ok ? "Havola nusxalandi" : "Nusxalab bo'lmadi — «Ko'rsatish» bosib qo'lda belgilang");
+        if (ok) tg()?.HapticFeedback?.notificationOccurred?.("success");
+      }
+
+      // Telegram ichidagi webview `webcal://` ni ocholmaydi, shuning
+      // uchun `https` manzili tashqi brauzerda ochiladi: iOS Safari
+      // `text/calendar` javobini o'zi tanib, kalendarga qo'shishni
+      // taklif qiladi.
+      function pfCalOpen() {
+        if (!pfCalLink) return;
+        const t = tg();
+        if (t?.openLink) t.openLink(pfCalLink.url, { try_instant_view: false });
+        else window.open(pfCalLink.url, "_blank");
+      }
+
+      async function pfCalReset() {
+        if (!confirm("Yangi havola yaratilsa, eski havola ishlamay qoladi va kalendarni qaytadan ulash kerak bo'ladi. Davom etasizmi?")) return;
+        try {
+          const res = await apiFetch("/api/me/calendar-link/reset", { method: "POST" });
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
+          pfCalLink = await res.json();
+          pfCalShown = false;
+          pfCalRenderBox();
+          showToast("Yangi havola yaratildi");
+        } catch (e) {
+          showToast(e.message || "Bo'lmadi");
+        }
       }
 
       function pfCelebrationSoundCardHtml() {
