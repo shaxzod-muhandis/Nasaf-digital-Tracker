@@ -11061,6 +11061,346 @@
         .kal-top { padding: 56px 152px 14px 32px; }
         .kal-side { padding-top: 56px; }
       }
+
+      /* ═══ BELGILASH OQIMI (qayta dizayn) ═════════════════════════════
+         Post/stories belgilash. Avvalgi forma bir xil qatorlardan
+         iborat edi va ish zanjiri ko'rinmasdi. Endi qatorlar ish
+         tartibida (syomka → montaj → chiqarish) va har birida kimga
+         qancha Ncoin tushishi yozib qo'yilgan — bosishdan oldin
+         oqibat ko'rinadi. */
+      .mk-sec {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--v3-t3);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin: 18px 0 8px;
+      }
+      .mk-sec:first-child { margin-top: 0; }
+      .mk-sec, .mk-sum, .mk-hint, .mk-kind { flex: none; }
+
+      .mk-card {
+        background: var(--surf);
+        border: 1px solid var(--bd2);
+        border-radius: 14px;
+        overflow: hidden;
+        /* Sahifa tanasi flex ustun: `flex: none` bo'lmasa karta
+           siqilib, oxirgi qatori kesilib qolardi. */
+        flex: none;
+      }
+      /* Qatorlar bir-biridan ingichka chiziq bilan ajraladi; birinchisida
+         chiziq bo'lmaydi, aks holda karta chekkasi qo'sh chiziq bo'lardi. */
+      .mk-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 11px 14px;
+        border-top: 1px solid var(--bd1);
+        background: none;
+        border-left: 0;
+        border-right: 0;
+        border-bottom: 0;
+        width: 100%;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        color: var(--marker);
+      }
+      .mk-row:first-child { border-top: 0; }
+      .mk-row:hover { background: var(--chip2); }
+      .mk-row[disabled] { cursor: default; }
+      .mk-row[disabled]:hover { background: none; }
+      .mk-av {
+        width: 34px;
+        height: 34px;
+        border-radius: 99px;
+        flex: none;
+        position: relative;
+        overflow: hidden;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      /* Hali tanlanmagan — bo'sh doira, savol belgisi bilan.
+         Sinf nomi ataylab alohida: ilovada umumiy `.empty` qoidasi
+         bor (40px padding) va u bu yerga tushib, avatarni 82px ga
+         cho'zib yuborardi. */
+      .mk-av-empty {
+        background: var(--chip2);
+        color: var(--v3-t4);
+        border: 1px dashed var(--bd4);
+      }
+      .mk-rtxt { flex: 1; min-width: 0; display: block; }
+      .mk-rlbl { display: block; font-size: 11.5px; line-height: 1.3; color: var(--v3-t3); }
+      .mk-rlbl i { font-style: normal; color: var(--red); margin-left: 2px; }
+      .mk-rname {
+        font-size: 14.5px;
+        line-height: 1.3;
+        font-weight: 500;
+        color: var(--marker);
+        margin-top: 1px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mk-rname.ph { color: var(--v3-t4); font-weight: 400; }
+      .mk-badge {
+        font-size: 10.5px;
+        font-weight: 600;
+        color: var(--v3-t3);
+        background: var(--chip2);
+        border-radius: 6px;
+        padding: 2px 6px;
+        flex: none;
+      }
+      /* Ncoin — sariq, chunki u pul emas, mukofot: ko'k (asosiy) rang
+         bilan aralashib ketmasligi kerak. */
+      .mk-coin { font-size: 12.5px; font-weight: 600; color: #a45f08; flex: none; }
+      .mk-coin.nil { color: var(--v3-t4); font-weight: 500; }
+      .mk-chev { width: 16px; height: 16px; flex: none; color: var(--bd4); }
+      .mk-chev svg { width: 16px; height: 16px; display: block; }
+
+      /* ── Almashtirish sababi — qatorning o'zida ochiladi ────────── */
+      .mk-sub {
+        background: #fff9f0;
+        border-top: 1px solid rgba(217, 119, 6, 0.18);
+        padding: 10px 14px 12px;
+      }
+      .mk-sub-t {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #b45309;
+        margin-bottom: 8px;
+      }
+      .mk-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+      .mk-chip {
+        height: 30px;
+        padding: 0 12px;
+        border-radius: 99px;
+        border: 1px solid var(--bd2);
+        background: var(--surf);
+        font: inherit;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--marker);
+        cursor: pointer;
+      }
+      .mk-chip:hover { border-color: var(--bd4); }
+      .mk-chip.on {
+        background: var(--marker);
+        border-color: var(--marker);
+        color: #fff;
+        font-weight: 600;
+      }
+      .mk-note {
+        width: 100%;
+        margin-top: 8px;
+        min-height: 60px;
+        border: 1px solid var(--bd2);
+        border-radius: 10px;
+        padding: 9px 11px;
+        font: inherit;
+        font-size: 13.5px;
+        color: var(--marker);
+        background: var(--surf);
+        resize: vertical;
+      }
+      .mk-note:focus { outline: none; border-color: var(--brand); }
+
+      /* ── Stories turi (02-ekran) ─────────────────────────────────── */
+      .mk-kind {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: var(--surf);
+        border: 1.5px solid var(--bd2);
+        border-radius: 14px;
+        padding: 0;
+        margin-bottom: 12px;
+        cursor: pointer;
+        font: inherit;
+        overflow: hidden;
+      }
+      .mk-kind.on { border-color: var(--brand); }
+      .mk-kind-top { display: flex; align-items: flex-start; gap: 12px; padding: 14px; }
+      .mk-kind-txt, .mk-kind-t, .mk-kind-s, .mk-kind-coins { display: block; }
+      .mk-kind-ico {
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+        flex: none;
+        background: var(--chip2);
+        color: var(--brand);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .mk-kind-ico svg { width: 19px; height: 19px; }
+      .mk-kind.on .mk-kind-ico { background: rgba(47, 122, 185, 0.12); }
+      .mk-kind-txt { flex: 1; min-width: 0; }
+      .mk-kind-t { font-size: 15.5px; font-weight: 600; color: var(--marker); }
+      .mk-kind-s { font-size: 12.5px; line-height: 1.4; color: var(--v3-t2); margin-top: 2px; }
+      .mk-kind-tick {
+        width: 22px;
+        height: 22px;
+        border-radius: 99px;
+        flex: none;
+        border: 1.5px solid var(--bd4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+      }
+      .mk-kind.on .mk-kind-tick { background: var(--brand); border-color: var(--brand); }
+      .mk-kind-tick svg { width: 13px; height: 13px; }
+      /* Tanlashdan OLDIN kim qancha coin olishi ko'rinadi */
+      .mk-kind-coins { border-top: 1px solid var(--bd1); padding: 8px 14px 10px; }
+      .mk-kind-coin {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        font-size: 12.5px;
+        color: var(--v3-t2);
+        padding: 2px 0;
+      }
+      .mk-kind-coin b { font-weight: 600; color: #a45f08; }
+      .mk-kind-coin b.nil { color: var(--v3-t4); }
+
+      /* ── Sana tugmalari (07-ekran) ───────────────────────────────── */
+      .mk-days { display: flex; gap: 8px; flex: none; }
+      .mk-day {
+        flex: 1;
+        min-width: 0;
+        height: 40px;
+        border-radius: 10px;
+        border: 1px solid var(--bd2);
+        background: var(--surf);
+        font: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--marker);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .mk-day:hover { border-color: var(--bd4); }
+      .mk-day.on {
+        background: var(--marker);
+        border-color: var(--marker);
+        color: #fff;
+        font-weight: 600;
+      }
+      .mk-day svg { width: 15px; height: 15px; flex: none; }
+
+      /* ── Ncoin xulosasi ──────────────────────────────────────────── */
+      .mk-sum {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #fff9f0;
+        border: 1px solid rgba(217, 119, 6, 0.2);
+        border-radius: 12px;
+        padding: 11px 13px;
+        margin-top: 14px;
+        font-size: 13px;
+        color: #7c4a06;
+        line-height: 1.4;
+      }
+      .mk-sum b { font-weight: 700; }
+      .mk-sum-ico {
+        width: 26px;
+        height: 26px;
+        border-radius: 99px;
+        flex: none;
+        background: #f6d9ae;
+        color: #a45f08;
+        font-size: 12px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .mk-hint { font-size: 12.5px; line-height: 1.45; color: var(--v3-t3); margin-top: 10px; }
+
+      /* Tugma o'chiq bo'lsa — nima yetishmayotgani ustida yoziladi */
+      .mk-miss {
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--v3-t3);
+        text-align: center;
+        margin-bottom: 8px;
+      }
+
+      /* ── Xodim tanlash (04-ekran) ────────────────────────────────── */
+      .mk-search {
+        position: relative;
+        margin-bottom: 12px;
+      }
+      .mk-search input {
+        width: 100%;
+        height: 42px;
+        border: 1px solid var(--bd2);
+        border-radius: 11px;
+        padding: 0 12px 0 36px;
+        font: inherit;
+        font-size: 14px;
+        color: var(--marker);
+        background: var(--surf);
+      }
+      .mk-search input:focus { outline: none; border-color: var(--brand); }
+      .mk-search-ico {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        color: var(--v3-t4);
+        pointer-events: none;
+      }
+      .mk-search-ico svg { width: 16px; height: 16px; display: block; }
+      .mk-grp {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--v3-t3);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin: 14px 0 6px;
+      }
+      .mk-opt {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 9px 10px;
+        border-radius: 11px;
+        cursor: pointer;
+        border: 0;
+        background: none;
+        width: 100%;
+        font: inherit;
+        text-align: left;
+      }
+      .mk-opt:hover { background: var(--chip2); }
+      .mk-opt.on { background: rgba(47, 122, 185, 0.08); }
+      .mk-opt-txt { flex: 1; min-width: 0; }
+      .mk-opt-n { font-size: 14px; font-weight: 500; color: var(--marker); }
+      .mk-opt-s { font-size: 12px; color: var(--v3-t3); margin-top: 1px; }
+      .mk-opt-s em { font-style: normal; color: var(--brand); font-weight: 600; }
+      .mk-empty { font-size: 13px; color: var(--v3-t3); text-align: center; padding: 22px 8px; }
+      .mk-foot-note { font-size: 12px; color: var(--v3-t4); margin-top: 14px; line-height: 1.4; }
     </style>
   </head>
   <body>
@@ -19563,12 +19903,10 @@
         { key: "other", label: "Boshqa" },
       ];
       const CWD_TITLES = {
-        kim: "Kim bajardi?",
-        sabab: "Nega boshqa xodim?",
+        kim: "Kim chiqardi?",
         sana: "Qaysi kuni chiqdi?",
-        turi: "Stories turi",
-        montaj: "Video montajini kim qildi?",
-        video: "Videoni kim oldi?",
+        montaj: "Kim montaj qildi?",
+        video: "Kim video oldi?",
       };
       let cwd = null;
       let cwdCal = null;
@@ -19626,6 +19964,10 @@
           videographerUserId: info.videographerUserId || null,
           directory: [],
           info,
+          // Stories YANGI belgilanayotganda avval turi so'raladi —
+          // undan keyin forma ikki xil bo'ladi. Post uchun bu qadam
+          // yo'q, mavjud belgida esa tur allaqachon ma'lum.
+          step: type === "s" && !already ? "kind" : "form",
         };
 
         const ov = document.createElement("div");
@@ -19705,9 +20047,10 @@
         const list = assigned.map((a) => ({
           id: a.userId,
           name: a.fullName || [a.firstName, a.lastName].filter(Boolean).join(" ") || `@${a.username}`,
-          sub: "Loyihaga biriktirilgan",
+          sub: POSITION_LABELS[role] || "Loyihaga biriktirilgan",
           username: a.username,
           avatarUrl: a.avatarUrl,
+          roleMatch: true,
         }));
         (cwd.directory || [])
           .filter((u) => !assignedIds.has(u.id))
@@ -19719,6 +20062,9 @@
               sub: u.job_title || "",
               username: u.username,
               avatarUrl: u.avatar_url,
+              // Loyihaga biriktirilmagan, lekin lavozimi mos kelsa ham
+              // ro'yxatning birinchi guruhida turadi.
+              roleMatch: String(u.job_title || "").toLowerCase().includes(role),
             }),
           );
         return list;
@@ -19727,108 +20073,420 @@
         if (!id) return "";
         return cwdRoleOptions(role).find((o) => o.id === id)?.name || "";
       }
+      // Tanlangan xodimning avatari uchun — ism bilan bir qatorda
+      // username va rasm ham kerak bo'ladi.
+      function cwdRoleOpt(role, id) {
+        return id ? cwdRoleOptions(role).find((o) => o.id === id) : null;
+      }
+      function cwdRoleUsername(role, id) {
+        return cwdRoleOpt(role, id)?.username || "";
+      }
+      function cwdRoleAvatar(role, id) {
+        return cwdRoleOpt(role, id)?.avatarUrl || "";
+      }
+
+      // ── 04-ekran · Xodim tanlash ──────────────────────────────────
+      // Ro'yxat maydonga MOS lavozimdan boshlanadi ("Video olgan" uchun
+      // mobilograflar), shu loyihada oxirgi marta ishlagan odam esa
+      // alohida belgilanadi — ko'pincha bitta bosish yetadi.
+      let mkQuery = "";
+      const MK_SEARCH_ICO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>`;
+
+      function mkSearchHtml(ph) {
+        return `<div class="mk-search">
+            <span class="mk-search-ico">${MK_SEARCH_ICO}</span>
+            <input id="mk-q" placeholder="${escHtml(ph)}" value="${escHtml(mkQuery)}" oninput="mkSetQuery(this.value)" />
+          </div>`;
+      }
+      function mkSetQuery(v) {
+        mkQuery = v;
+        const body = document.getElementById("cwd-pick-body");
+        const ov = document.getElementById("cwd-pick");
+        if (!body || !ov) return;
+        const list = document.getElementById("mk-list");
+        if (list) list.innerHTML = mkOptsHtml(ov.dataset.key);
+      }
+      function mkMatch(nom, sub) {
+        const q = mkQuery.trim().toLowerCase();
+        if (!q) return true;
+        return `${nom} ${sub || ""}`.toLowerCase().includes(q);
+      }
+      function mkOptHtml(on, o, onclick) {
+        return `<button type="button" class="mk-opt${on ? " on" : ""}" onclick="${onclick}">
+            ${mkAv(o.username, o.name, o.avatarUrl)}
+            <span class="mk-opt-txt">
+              <span class="mk-opt-n">${escHtml(o.name)}</span>
+              ${o.sub ? `<span class="mk-opt-s">${o.sub}</span>` : ""}
+            </span>
+            ${on ? `<span class="mk-chev" style="color:var(--brand)">${ICON.check}</span>` : ""}
+          </button>`;
+      }
+
+      // Shu loyihada oxirgi marta ishlagan xodimlar — tanlovni
+      // tezlashtiradi. Ma'lumot allaqachon yuklangan checkDetails'dan
+      // olinadi, qo'shimcha so'rov kerak emas.
+      function mkRecent(role) {
+        const p = projects.find((x) => x.id === cwd.slug) || {};
+        const det = p.checkDetails || {};
+        const maydon = role === "montajchi" ? "editorUserId" : role === "mobilograf" ? "videographerUserId" : "performerUsername";
+        const sanalar = Object.keys(det)
+          .map((k) => ({ k, d: det[k] }))
+          .filter((x) => x.d && x.d[maydon])
+          .sort((a, b) => String(b.d.workDate || "").localeCompare(String(a.d.workDate || "")))
+          .slice(0, 3);
+        const soni = {};
+        sanalar.forEach((x) => {
+          const v = String(x.d[maydon]);
+          soni[v] = (soni[v] || 0) + 1;
+        });
+        return soni;
+      }
+
+      function mkOptsHtml(key) {
+        if (key === "montaj" || key === "video") {
+          const role = key === "montaj" ? "montajchi" : "mobilograf";
+          const cur = key === "montaj" ? cwd.editorUserId : cwd.videographerUserId;
+          const oxirgi = mkRecent(role);
+          const opts = cwdRoleOptions(role).filter((o) => mkMatch(o.name, o.sub));
+          if (!opts.length) return `<div class="mk-empty">Topilmadi</div>`;
+          // Mos lavozim birinchi guruhda; qolganlari ikkinchi guruhda.
+          const roleLbl = role === "montajchi" ? "Montajchilar" : "Mobilograflar";
+          const mos = opts.filter((o) => o.roleMatch);
+          const qolgan = opts.filter((o) => !o.roleMatch);
+          const chiz = (o) => {
+            const n = oxirgi[String(o.id)] || 0;
+            // Lavozimi va (bo'lsa) shu loyihadagi oxirgi ishi —
+            // ko'pincha shu ikkisi bitta bosish uchun yetarli.
+            const sub = [
+              o.sub ? escHtml(o.sub) : "",
+              n ? `<em>oxirgi ${n} ${cwd.type === "k" ? "postda" : "storiesda"}</em>` : "",
+            ].filter(Boolean).join(" · ");
+            return mkOptHtml(cur === o.id, { ...o, sub }, `cwdPickValue('${key}','${escArg(o.id)}')`);
+          };
+          const qismlar = [];
+          if (mos.length) qismlar.push(`<div class="mk-grp">${roleLbl}</div>`, ...mos.map(chiz));
+          if (qolgan.length) qismlar.push(`<div class="mk-grp">Boshqa xodimlar</div>`, ...qolgan.map(chiz));
+          return qismlar.join("");
+        }
+        // Kim chiqardi (SMM)
+        const { team, others } = cwdPerformerGroups();
+        const row = (u, isAssignee) => {
+          const nom = cwdPersonName(u);
+          const sub = isAssignee ? "Rejada mas'ul" : cwdPersonSub(u);
+          if (!mkMatch(nom, sub)) return "";
+          return mkOptHtml(
+            cwd.performerId === u.username,
+            { username: u.username, name: nom, avatarUrl: u.avatarUrl || u.avatar_url, sub: escHtml(sub) },
+            `cwdPickValue('kim','${escArg(u.username)}')`,
+          );
+        };
+        const parts = [cwd.assignee ? row(cwd.assignee, true) : ""];
+        if (team.length) parts.push(`<div class="mk-grp">Loyiha jamoasi</div>`, ...team.map((u) => row(u, false)));
+        if (others.length) parts.push(`<div class="mk-grp">${isAdmin ? "Boshqa xodim" : "Men"}</div>`, ...others.map((u) => row(u, false)));
+        const bor = parts.join("").replace(/<div class="mk-grp">.*?<\/div>/g, "").trim();
+        if (!bor) return `<div class="mk-empty">Topilmadi</div>`;
+        return parts.join("");
+      }
+
+      // ── Ncoin miqdorlari ──────────────────────────────────────────
+      // Backenddagi hisob bilan bir xil (api.js, PATCH /api/checks).
+      // Ikki joyda turgani ideal emas, lekin foydalanuvchi tugmani
+      // bosishdan OLDIN kimga nima tushishini ko'rishi kerak; haqiqiy
+      // yozuvni baribir backend hisoblaydi.
+      const MK_COIN = {
+        post: { video: 1, montaj: 1, smm: 1 },
+        atmospheric: { video: 0.1, montaj: 0.1, smm: 0 },
+        info: { video: 0, montaj: 0, smm: 0.2 },
+      };
+      function mkKind() {
+        if (!cwd) return "post";
+        if (cwd.type === "k") return "post";
+        return cwd.storyKind === "atmospheric" ? "atmospheric" : "info";
+      }
+      function mkCoins() {
+        return MK_COIN[mkKind()];
+      }
+      function mkNum(n) {
+        return Number.isInteger(n) ? String(n) : String(n);
+      }
+
+      function mkAv(username, name, url, empty) {
+        if (empty) return `<span class="mk-av mk-av-empty">?</span>`;
+        return `<span class="mk-av" style="background:${personColor(username)}">${escHtml((name || "?").slice(0, 1).toUpperCase())}${avatarImg(url)}</span>`;
+      }
+      const MK_CHEV = `<span class="mk-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>`;
+
+      // Bitta ishtirokchi qatori: avatar, roli, ismi va unga tushadigan
+      // Ncoin. Tanlanmagan bo'lsa — chiziqli bo'sh doira va ogohlantiruvchi
+      // yulduzcha.
+      function mkRowHtml(o) {
+        const bor = !!o.name;
+        return `<button type="button" class="mk-row"${o.onclick ? ` onclick="${o.onclick}"` : " disabled"}>
+            ${mkAv(o.username, o.name, o.avatarUrl, !bor)}
+            <span class="mk-rtxt">
+              <span class="mk-rlbl">${escHtml(o.label)}${!bor && o.required ? "<i>*</i>" : ""}</span>
+              <span class="mk-rname${bor ? "" : " ph"}">${escHtml(bor ? o.name : o.placeholder)}${o.badge ? `<i class="mk-badge">${escHtml(o.badge)}</i>` : ""}</span>
+            </span>
+            ${o.coin > 0 ? `<span class="mk-coin">+${mkNum(o.coin)}</span>` : `<span class="mk-coin nil">—</span>`}
+            ${o.onclick ? MK_CHEV : ""}
+          </button>`;
+      }
+
+      // ── 02-ekran · Stories turi ───────────────────────────────────
+      // Tur birinchi so'raladi, chunki undan keyin forma ikki xil
+      // bo'ladi: atmosferalida syomka va montaj bor, gapirib
+      // beriladiganda yo'q.
+      const MK_KIND_ICO = {
+        atmospheric: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2.5"/><path d="m22 8-6 4 6 4Z"/></svg>`,
+        info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3.5"/></svg>`,
+      };
+      function mkKindCardHtml(kind) {
+        const on = (cwd.storyKind || "info") === kind;
+        const c = MK_COIN[kind];
+        const qatorlar =
+          kind === "atmospheric"
+            ? [["Video olgan", c.video], ["Montajchi", c.montaj], ["SMM — chiqaradi", c.smm]]
+            : [["SMM — tayyorlaydi va chiqaradi", c.smm]];
+        return `<button type="button" class="mk-kind${on ? " on" : ""}" onclick="mkPickKind('${kind}')">
+            <span class="mk-kind-top">
+              <span class="mk-kind-ico">${MK_KIND_ICO[kind]}</span>
+              <span class="mk-kind-txt">
+                <span class="mk-kind-t">${kind === "atmospheric" ? "Atmosferali" : "Gapirib beriladigan"}</span>
+                <span class="mk-kind-s">${kind === "atmospheric" ? "Syomka va montaj qilingan qisqa video" : "SMM o'zi tayyorlaydi, montaj va syomka yo'q"}</span>
+              </span>
+              <span class="mk-kind-tick">${on ? ICON.check : ""}</span>
+            </span>
+            <span class="mk-kind-coins">
+              ${qatorlar.map(([nom, son]) => `<span class="mk-kind-coin">${escHtml(nom)}<b class="${son ? "" : "nil"}">${son ? "+" + mkNum(son) : "—"}</b></span>`).join("")}
+            </span>
+          </button>`;
+      }
+      function mkPickKind(kind) {
+        if (!cwd) return;
+        cwd.storyKind = kind;
+        ntv3Haptic();
+        cwdRender();
+      }
+      function mkKindNext() {
+        if (!cwd) return;
+        cwd.step = "form";
+        cwdRender();
+      }
+      function mkKindBack() {
+        if (!cwd) return;
+        cwd.step = "kind";
+        cwdRender();
+      }
+
+      // ── Sana tugmalari ────────────────────────────────────────────
+      const MK_CAL_ICO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="17" rx="2.5"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg>`;
+      function mkDayIso(back) {
+        const t = todayDate();
+        return isoOf(new Date(t.getFullYear(), t.getMonth(), t.getDate() - back));
+      }
+      function mkDatesHtml() {
+        const bugun = mkDayIso(0);
+        const kecha = mkDayIso(1);
+        const boshqa = cwd.workDate !== bugun && cwd.workDate !== kecha;
+        return `<div class="mk-days">
+            <button type="button" class="mk-day${cwd.workDate === bugun ? " on" : ""}" onclick="mkSetDate('${bugun}')">Bugun, ${fmtDay(parseISO(bugun))}</button>
+            <button type="button" class="mk-day${cwd.workDate === kecha ? " on" : ""}" onclick="mkSetDate('${kecha}')">Kecha</button>
+            <button type="button" class="mk-day${boshqa ? " on" : ""}" onclick="openCwdPick('sana')">${MK_CAL_ICO}${boshqa ? escHtml(fmtDay(parseISO(cwd.workDate))) : "Sana"}</button>
+          </div>`;
+      }
+      function mkSetDate(iso) {
+        if (!cwd) return;
+        cwd.workDate = iso;
+        ntv3Haptic();
+        cwdRender();
+      }
+
+      // ── Almashtirish sababi — SMM qatorining ostida ───────────────
+      function mkSubHtml() {
+        const nomi = cwd.assignee ? cwdPersonName(cwd.assignee) : "rejadagi mas'ul";
+        const tanlangan = cwd.reason;
+        return `<div class="mk-sub">
+            <div class="mk-sub-t">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg>
+              ${escHtml(nomi)} o'rniga · ${tanlangan ? "sabab" : "sababini tanlang"}
+            </div>
+            <div class="mk-chips">
+              ${CWD_REASONS.map((r) => `<button type="button" class="mk-chip${tanlangan === r.key ? " on" : ""}" onclick="mkSetReason('${r.key}')">${escHtml(r.label)}</button>`).join("")}
+            </div>
+            ${tanlangan === "other" ? `<textarea class="mk-note" maxlength="200" placeholder="Qisqacha izoh" oninput="cwd.note=this.value;mkSyncSubmit()">${escHtml(cwd.note || "")}</textarea>` : ""}
+          </div>`;
+      }
+      function mkSetReason(key) {
+        if (!cwd) return;
+        cwd.reason = cwd.reason === key ? null : key;
+        if (cwd.reason !== "other") cwd.note = "";
+        ntv3Haptic();
+        cwdRender();
+      }
+
+      // ── Nima yetishmayapti ────────────────────────────────────────
+      // Tugma o'chiq bo'lsa, sababini aytib turadi — foydalanuvchi
+      // bosib ko'rib, keyin xato xabarini o'qishi shart emas.
+      function mkMissing() {
+        const pickers = cwdShowPickers();
+        const tanla = [];
+        const yoz = [];
+        if (pickers && !cwd.videographerUserId) tanla.push("video olgan");
+        if (pickers && !cwd.editorUserId) tanla.push("montajchi");
+        if (cwdIsSub() && !cwd.reason) tanla.push("almashtirish sababi");
+        if (cwdIsSub() && cwd.reason === "other" && !(cwd.note || "").trim()) yoz.push("izoh");
+        if (!cwd.workDate) tanla.push("sana");
+        return { tanla, yoz, bor: tanla.length + yoz.length };
+      }
+      // Tugma ustidagi matn: nimani TANLASH, nimani YOZISH kerakligi
+      // alohida aytiladi — «izoh — tanlang» noto'g'ri bo'lardi.
+      function mkMissingText() {
+        const m = mkMissing();
+        const qism = [];
+        if (m.tanla.length) qism.push(`${m.tanla.join(", ")} — tanlang`);
+        if (m.yoz.length) qism.push(`${m.yoz.join(", ")} — yozing`);
+        return qism.join(" · ");
+      }
+      function mkSummaryHtml() {
+        const c = mkCoins();
+        const olganlar = [];
+        if (cwdShowPickers()) {
+          if (cwd.videographerUserId && c.video) olganlar.push(c.video);
+          if (cwd.editorUserId && c.montaj) olganlar.push(c.montaj);
+        }
+        if (c.smm) olganlar.push(c.smm);
+        if (!olganlar.length) {
+          return `<div class="mk-sum"><span class="mk-sum-ico">N</span><span>Bu turda Ncoin berilmaydi</span></div>`;
+        }
+        const jami = olganlar.reduce((a, b) => a + b, 0);
+        const yax = Math.round(jami * 100) / 100;
+        return `<div class="mk-sum">
+            <span class="mk-sum-ico">N</span>
+            <span>${olganlar.length} kishiga jami <b>${mkNum(yax)} Ncoin</b> tushadi</span>
+          </div>`;
+      }
 
       // ── Asosiy sahifa ─────────────────────────────────────────────
       function cwdRender() {
         const host = document.getElementById("cwd-body");
+        const foot = document.getElementById("cwd-foot");
         if (!host || !cwd) return;
-        const isSub = cwdIsSub();
-        const pickers = cwdShowPickers();
-        const reason = CWD_REASONS.find((r) => r.key === cwd.reason);
-        const performer = cwdPerformerName();
-        const assigneeName = cwd.assignee ? cwdPersonName(cwd.assignee) : null;
-        const natija = isSub
-          ? `Ish ${escHtml(performer.split(" ")[0])} nomiga yoziladi.${assigneeName ? ` ${escHtml(assigneeName.split(" ")[0])} rejasida «o'rniga bajarildi» deb turadi.` : ""}`
-          : `Ish ${escHtml(performer.split(" ")[0])} rejasiga hisoblanadi.`;
-        const avatar = (() => {
-          const u =
-            cwd.performerId === cwd.assigneeUsername && cwd.assignee
-              ? cwd.assignee
-              : cwd.directory.find((x) => x.username === cwd.performerId);
-          if (!u) return "";
-          return `<span class="ntv3-avs"><span class="ntv3-av" style="background:${personColor(cwd.performerId)}">${escHtml((performer || "?").slice(0, 1).toUpperCase())}${avatarImg(u.avatarUrl || u.avatar_url)}</span></span>`;
-        })();
 
-        // Hammasi bitta kartada va mantiqiy tartibda: kim → nega →
-        // stories turi (montaj so'ralishini shu hal qiladi) → montaj →
-        // video → qaysi kuni. Bo'lim sarlavhalari qo'yilmadi: forma
-        // qisqa, "majburiy/qo'shimcha" deb ikkiga bo'lish faqat
-        // chalg'itardi — bu yerda deyarli hammasi majburiy.
-        const qoshimcha = [
+        // 02-ekran: stories turi. Faqat YANGI belgilashda — mavjud
+        // belgini tahrirlashda tur allaqachon ma'lum.
+        if (cwd.step === "kind") {
+          host.innerHTML = `
+            <div class="cwd-head">
+              <span class="cwd-chip">${escHtml(cwd.label)} ${cwd.num}</span>
+              <span class="cwd-sub">${escHtml(cwd.projectLabel)}</span>
+            </div>
+            <div style="font-size:19px;font-weight:700;color:var(--marker);margin:14px 0 4px">Stories ${cwd.num} — qanday stories?</div>
+            <div class="mk-hint" style="margin:0 0 16px">Tanlovga qarab keyingi qadamda kimlar so'ralishi o'zgaradi</div>
+            ${mkKindCardHtml("atmospheric")}
+            ${mkKindCardHtml("info")}`;
+          if (foot) foot.innerHTML = `<button type="button" class="ntv3-submit" onclick="mkKindNext()">Davom etish</button>`;
+          applyStaticIcons?.();
+          return;
+        }
+
+        const pickers = cwdShowPickers();
+        const isSub = cwdIsSub();
+        const c = mkCoins();
+        const smmName = cwdPerformerName();
+        const smmUser =
+          cwd.performerId === cwd.assigneeUsername && cwd.assignee
+            ? cwd.assignee
+            : cwd.directory.find((x) => x.username === cwd.performerId) || {};
+
+        const video = pickers
+          ? mkRowHtml({
+              label: "Video olgan",
+              name: cwdRoleName("mobilograf", cwd.videographerUserId),
+              username: cwdRoleUsername("mobilograf", cwd.videographerUserId),
+              avatarUrl: cwdRoleAvatar("mobilograf", cwd.videographerUserId),
+              placeholder: "Mobilografni tanlang",
+              required: true,
+              coin: c.video,
+              onclick: "openCwdPick('video')",
+            })
+          : "";
+        const montaj = pickers
+          ? mkRowHtml({
+              label: "Montaj qildi",
+              name: cwdRoleName("montajchi", cwd.editorUserId),
+              username: cwdRoleUsername("montajchi", cwd.editorUserId),
+              avatarUrl: cwdRoleAvatar("montajchi", cwd.editorUserId),
+              placeholder: "Montajchini tanlang",
+              required: true,
+              coin: c.montaj,
+              onclick: "openCwdPick('montaj')",
+            })
+          : "";
+        const smm = mkRowHtml({
+          label: pickers ? "Chiqardi (SMM)" : "SMM manager",
+          name: smmName,
+          username: cwd.performerId,
+          avatarUrl: smmUser.avatarUrl || smmUser.avatar_url,
+          placeholder: "Tanlang",
+          required: true,
+          badge: cwd.performerId === cwd.assigneeUsername && cwd.assignee ? "mas'ul" : "",
+          coin: c.smm,
+          onclick: "openCwdPick('kim')",
+        });
+
+        const turBlok =
           cwd.type === "s"
-            ? fieldRowHtml({
-                icon: "turi",
-                label: "Stories turi",
-                value: cwd.storyKind === "atmospheric" ? "Atmosferali video" : "Gapirib beriladigan",
-                onclick: "openCwdPick('turi')",
-              })
-            : "",
-          pickers
-            ? fieldRowHtml({
-                icon: "montaj",
-                label: "Montaj",
-                value: cwdRoleName("montajchi", cwd.editorUserId),
-                placeholder: "Tanlang",
-                required: true,
-                onclick: "openCwdPick('montaj')",
-              })
-            : "",
-          pickers
-            ? fieldRowHtml({
-                icon: "video",
-                label: "Video olgan",
-                value: cwdRoleName("mobilograf", cwd.videographerUserId),
-                placeholder: "Tanlang",
-                required: true,
-                onclick: "openCwdPick('video')",
-              })
-            : "",
-        ].filter(Boolean);
+            ? `<div class="mk-sec">Stories turi</div>
+               <div class="mk-card">
+                 <button type="button" class="mk-row" onclick="mkKindBack()">
+                   <span class="mk-av" style="background:var(--chip2);color:var(--brand)">${MK_KIND_ICO[mkKind() === "atmospheric" ? "atmospheric" : "info"]}</span>
+                   <span class="mk-rtxt"><span class="mk-rname">${mkKind() === "atmospheric" ? "Atmosferali" : "Gapirib beriladigan"}</span></span>
+                   <span class="mk-coin nil">O'zgartirish</span>${MK_CHEV}
+                 </button>
+               </div>`
+            : "";
 
         host.innerHTML = `
           <div class="cwd-head">
             <span class="cwd-chip">${escHtml(cwd.label)} ${cwd.num}</span>
             <span class="cwd-sub">${escHtml(cwd.projectLabel)}</span>
           </div>
-          <div class="ntv3-props" id="cwd-req">
-            ${fieldRowHtml({ icon: "kimga", label: "Kim bajardi", value: performer, placeholder: "Tanlang", required: true, prefix: avatar, onclick: "openCwdPick('kim')" })}
-            ${
-              isSub
-                ? fieldRowHtml({
-                    icon: "sabab",
-                    label: "Sabab",
-                    value: reason ? (reason.key === "other" && cwd.note ? cwd.note : reason.label) : "",
-                    placeholder: "Tanlang",
-                    required: true,
-                    onclick: "openCwdPick('sabab')",
-                  })
-                : ""
-            }
-            ${qoshimcha.join("")}
-            ${fieldRowHtml({ icon: "muddat", label: "Qaysi kuni", value: fmtDay(parseISO(cwd.workDate)), required: true, onclick: "openCwdPick('sana')" })}
+          ${turBlok}
+          <div class="mk-sec">${pickers ? "Kimlar ishladi" : "Kim tayyorladi"}</div>
+          <div class="mk-card">
+            ${video}${montaj}${smm}
+            ${isSub ? mkSubHtml() : ""}
           </div>
-          <div class="ntv3-err" id="cwd-req-err"></div>
-          ${
-            cwd.assignee
-              ? ""
-              : `<div class="ntv3-hint">Bu loyihada rejadagi mas'ul belgilanmagan — Ruxsatlar bo'limidan «SMM» roli beriladi.</div>`
-          }
-          <div class="cwd-note">
-            <span class="cwd-note-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 20c1-3.5 3.5-5.5 6.5-5.5s5.5 2 6.5 5.5"/><path d="M15.5 5.2a3.5 3.5 0 0 1 0 6.6M18 14.8c1.8.8 3 2.6 3.5 5.2"/></svg></span>
-            <span class="cwd-note-txt">${natija}</span>
-          </div>`;
+          ${!pickers ? `<div class="mk-hint">Bu turda montaj va video olgan so'ralmaydi</div>` : ""}
+          ${cwd.assignee ? "" : `<div class="mk-hint">Bu loyihada rejadagi mas'ul belgilanmagan — Ruxsatlar bo'limidan «SMM» roli beriladi.</div>`}
+          <div class="mk-sec">Qaysi kuni chiqdi</div>
+          ${mkDatesHtml()}
+          ${mkSummaryHtml()}`;
 
-        const foot = document.getElementById("cwd-foot");
         if (foot) {
-          foot.innerHTML = `<button type="button" class="ntv3-submit" id="cwd-save" onclick="cwdSave(this)">${cwd.already ? "Yangilash" : "Bajarildi deb belgilash"}</button>
+          const kerak = mkMissing();
+          const label = `${cwd.label} ${cwd.num} ni belgilash`;
+          foot.innerHTML = `
+            ${kerak.bor ? `<div class="mk-miss">${escHtml(mkMissingText())}</div>` : ""}
+            <button type="button" class="ntv3-submit" id="cwd-save"${kerak.bor ? " disabled" : ""} onclick="cwdSave(this)">${cwd.already ? "Yangilash" : escHtml(label)}</button>
             ${cwd.already ? `<button type="button" class="ntv3-submit ghost" style="margin-top:8px" onclick="cwdRemove()">Belgini olib tashlash</button>` : ""}`;
         }
         applyStaticIcons?.();
+      }
+      // Izoh yozilayotganda butun sahifani qayta chizmaymiz (fokus
+      // yo'qolardi) — faqat tugmaning holati yangilanadi.
+      function mkSyncSubmit() {
+        const btn = document.getElementById("cwd-save");
+        if (!btn || !cwd) return;
+        btn.disabled = mkMissing().bor > 0;
+        const miss = document.querySelector("#cwd-foot .mk-miss");
+        if (miss) miss.textContent = mkMissingText();
       }
 
       // ── Ichki tanlov sahifasi ─────────────────────────────────────
       function openCwdPick(key) {
         if (!cwd || document.getElementById("cwd-pick")) return;
+        mkQuery = "";
         if (key === "sana") {
           const d = parseISO(cwd.workDate);
           cwdCal = { y: d.getFullYear(), m: d.getMonth(), sel: cwd.workDate };
@@ -19843,7 +20501,7 @@
           <div class="ntv3-hdr">
             <button type="button" class="ntv3-hbtn cancel" onclick="closeCwdPick()">${ICON.chevronLeft}Orqaga</button>
             <div class="ntv3-title">${CWD_TITLES[key]}</div>
-            ${key === "sana" || key === "sabab" ? `<button type="button" class="ntv3-hbtn save" onclick="closeCwdPick()">Tayyor</button>` : `<div class="ntv3-hbtn" aria-hidden="true"></div>`}
+            ${key === "sana" ? `<button type="button" class="ntv3-hbtn save" onclick="closeCwdPick()">Tayyor</button>` : `<div class="ntv3-hbtn" aria-hidden="true"></div>`}
           </div>
           <div class="ntv3-pick-body" id="cwd-pick-body">${cwdPickBodyHtml(key)}</div>
         </div>`;
@@ -19852,6 +20510,11 @@
         pageBackStack.push(closeCwdPick);
         pageSyncBack();
         applyStaticIcons?.();
+        // Telefonda klaviatura o'zi ochilib ketmasligi uchun faqat
+        // kompyuterda fokusga olamiz.
+        if (window.matchMedia("(min-width: 860px)").matches) {
+          setTimeout(() => document.getElementById("mk-q")?.focus(), 30);
+        }
       }
       function closeCwdPick() {
         const ov = document.getElementById("cwd-pick");
@@ -19876,54 +20539,14 @@
         if (key === "sana") {
           return `<div id="cwd-cal">${cwdCalHtml()}</div>
             <div class="ntv3-quick">
-              <button type="button" class="ntv3-qchip" onclick="cwdPickDay('${isoOf(todayDate())}')">Bugun</button>
-              <button type="button" class="ntv3-qchip" onclick="cwdPickDay('${isoOf(new Date(todayDate().getFullYear(), todayDate().getMonth(), todayDate().getDate() - 1))}')">Kecha</button>
+              <button type="button" class="ntv3-qchip" onclick="cwdPickDay('${mkDayIso(0)}')">Bugun</button>
+              <button type="button" class="ntv3-qchip" onclick="cwdPickDay('${mkDayIso(1)}')">Kecha</button>
             </div>`;
         }
-        if (key === "turi") {
-          return [
-            cwdOptHtml(cwd.storyKind === "info", "", "Gapirib beriladigan", "Montaj va suratga olish so'ralmaydi", `cwdPickValue('turi','info')`),
-            cwdOptHtml(cwd.storyKind === "atmospheric", "", "Atmosferali video", "Montaj va video olgan xodim ham so'raladi", `cwdPickValue('turi','atmospheric')`),
-          ].join("");
-        }
-        if (key === "sabab") {
-          const list = CWD_REASONS.map((r) =>
-            cwdOptHtml(cwd.reason === r.key, "", r.label, "", `cwdPickValue('sabab','${r.key}')`),
-          ).join("");
-          const note =
-            cwd.reason === "other"
-              ? `<div class="ntv3-newtag" style="margin-top:12px"><input id="cwd-note-inp" maxlength="200" placeholder="Qisqacha izoh" value="${escHtml(cwd.note || "")}" oninput="cwd.note=this.value"/></div>`
-              : "";
-          return `<div class="ntv3-count">Rejadagi mas'ul o'rniga boshqa xodim ishlagan — sababi hisobotda ko'rinadi</div>${list}${note}`;
-        }
-        if (key === "montaj" || key === "video") {
-          const role = key === "montaj" ? "montajchi" : "mobilograf";
-          const cur = key === "montaj" ? cwd.editorUserId : cwd.videographerUserId;
-          const opts = cwdRoleOptions(role);
-          if (!opts.length) return `<div class="ntv3-empty">Xodim yo'q</div>`;
-          return opts
-            .map((o) =>
-              cwdOptHtml(cur === o.id, cwdAvHtml(o.username, o.name, o.avatarUrl), o.name, o.sub, `cwdPickValue('${key}','${escArg(o.id)}')`),
-            )
-            .join("");
-        }
-        // kim bajardi
-        const { team, others } = cwdPerformerGroups();
-        const row = (u, isAssignee) =>
-          cwdOptHtml(
-            cwd.performerId === u.username,
-            cwdAvHtml(u.username, cwdPersonName(u), u.avatarUrl || u.avatar_url),
-            cwdPersonName(u),
-            isAssignee ? "Rejada mas'ul" : cwdPersonSub(u),
-            `cwdPickValue('kim','${escArg(u.username)}')`,
-          );
-        const parts = [cwd.assignee ? row(cwd.assignee, true) : ""];
-        if (team.length) parts.push(`<div class="ntv3-sec">Loyiha jamoasi</div>`, ...team.map((u) => row(u, false)));
-        if (others.length) parts.push(`<div class="ntv3-sec">${isAdmin ? "Boshqa xodim" : "Men"}</div>`, ...others.map((u) => row(u, false)));
-        if (!cwd.assignee && !team.length && !others.length) {
-          parts.push(`<div class="ntv3-empty">Loyihaga hali hech kim biriktirilmagan.</div>`);
-        }
-        return parts.join("");
+        // Xodim tanlash: tepada qidiruv, ostida guruhlangan ro'yxat.
+        const ph = key === "montaj" ? "Montajchini qidirish" : key === "video" ? "Mobilografni qidirish" : "Ism bo'yicha qidirish";
+        return `${mkSearchHtml(ph)}<div id="mk-list">${mkOptsHtml(key)}</div>
+          ${key === "kim" && !isAdmin ? `<div class="mk-foot-note">Loyihadan tashqari xodimni faqat admin qo'ya oladi</div>` : ""}`;
       }
       function cwdPickValue(key, value) {
         if (!cwd) return;
@@ -19938,19 +20561,8 @@
           closeCwdPick();
           return;
         }
-        if (key === "turi") cwd.storyKind = value;
-        else if (key === "montaj") cwd.editorUserId = value;
+        if (key === "montaj") cwd.editorUserId = value;
         else if (key === "video") cwd.videographerUserId = value;
-        else if (key === "sabab") {
-          cwd.reason = cwd.reason === value ? null : value;
-          if (cwd.reason !== "other") cwd.note = "";
-          // "Boshqa" — izoh maydoni shu sahifaning o'zida ochiladi,
-          // shuning uchun sahifa yopilmaydi.
-          const body = document.getElementById("cwd-pick-body");
-          if (body) body.innerHTML = cwdPickBodyHtml("sabab");
-          ntv3Haptic();
-          return;
-        }
         ntv3Haptic();
         closeCwdPick();
       }
