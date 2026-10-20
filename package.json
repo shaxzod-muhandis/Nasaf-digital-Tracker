@@ -4,6 +4,7 @@
   "description": "Nasaf Digital — Loyiha Tracker",
   "scripts": {
     "dev": "vercel dev",
+    "env:check": "node scripts/env-check.js",
     "db:migrate": "node scripts/migrate.js",
     "db:seed": "node scripts/seed.js",
     "migrate:jsonbin": "node scripts/migrate-from-jsonbin.js",
