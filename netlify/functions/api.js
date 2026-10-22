@@ -574,7 +574,7 @@ app.get("/api/users", auth, async (req, res) => {
     const r = await db.query(
       `select username, full_name, role, is_active, access_status, access_granted_at, blocked_at,
               telegram_user_id, (telegram_chat_id is not null) as has_chat,
-              first_name, last_name, birth_date, phone, job_title, avatar_url, email
+              first_name, last_name, birth_date, phone, job_title, avatar_url, email, position
        from users order by (role = 'employee'), username`,
     );
     res.json({ users: r.rows });
@@ -721,6 +721,10 @@ app.patch("/api/users/:username", auth, async (req, res) => {
       // Kalendar taklifnomasi shu pochtaga ketadi — admin ham
       // to'g'rilay olishi kerak.
       email: "email",
+      // Lavozim — Ruxsatlarda xodim loyihaga qo'shilganda roli shu
+      // qiymatdan olinadi. `job_title` erkin matn bo'lgani uchun uning
+      // o'rnini bosa olmaydi.
+      position: "position",
     };
     for (const [bodyKey, column] of Object.entries(profileFieldMap)) {
       if (typeof req.body[bodyKey] === "undefined") continue;
@@ -733,6 +737,9 @@ app.patch("/api/users/:username", auth, async (req, res) => {
           return res.status(400).json({ error: "Email manzili noto'g'ri" });
         }
       }
+      if (bodyKey === "position" && v && !STAFF_POSITIONS.includes(v)) {
+        return res.status(400).json({ error: "Noto'g'ri lavozim" });
+      }
       values.push(v);
       sets.push(`${column} = $${values.length}`);
     }
@@ -740,7 +747,7 @@ app.patch("/api/users/:username", auth, async (req, res) => {
     values.push(uname);
     const r = await db.query(
       `update users set ${sets.join(", ")} where username = $${values.length}
-       returning username, full_name, role, is_active, first_name, last_name, birth_date, phone, job_title, email`,
+       returning username, full_name, role, is_active, first_name, last_name, birth_date, phone, job_title, email, position`,
       values,
     );
     if (!r.rows[0]) return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
@@ -814,6 +821,24 @@ const STAFF_POSITIONS = [
   "kopirayter",
   "boshqa",
 ];
+
+// Telegram xabarlarida ko'rsatiladigan nom. Frontenddagi
+// POSITION_LABELS bilan bir xil bo'lishi kerak.
+// Loyiha ranglari — 0025 migratsiyasidagi palitra bilan AYNAN bir xil
+// bo'lishi kerak, aks holda migratsiyadan keyin yaratilgan loyihalar
+// boshqa to'plamdan rang olib, ekran ola-chalpoq bo'lib qolardi.
+const PROJECT_COLORS = [
+  "#0284c7", "#0d9488", "#d97706", "#db2777", "#7c3aed", "#65a30d", "#4f46e5",
+];
+
+const POSITION_LABEL_UZ = {
+  montajchi: "Montajchi",
+  mobilograf: "Mobilograf",
+  smm: "SMM manager",
+  dizayner: "Dizayner",
+  kopirayter: "Kopirayter",
+  boshqa: "Boshqa",
+};
 
 // Ro'yxatni HAR QANDAY tasdiqlangan foydalanuvchi o'qiy oladi — chunki
 // oddiy xodim ham post belgilaganda modaldan tanlashi kerak.
@@ -1538,7 +1563,9 @@ app.put("/api/permissions", auth, async (req, res) => {
         for (const proj of pr.rows) {
           if (oldSet.has(proj.id)) continue; // allaqachon biriktirilgan — roli (bo'lsa) saqlanib qoladi
           await client.query(
-            `insert into permissions (user_id, project_id) values ($1,$2) on conflict do nothing`,
+            `insert into permissions (user_id, project_id, role)
+               values ($1, $2, coalesce((select position from users where id = $1), 'boshqa'))
+             on conflict do nothing`,
             [userId, proj.id],
           );
           if (uname !== req.user.username) {
@@ -1608,6 +1635,363 @@ app.patch("/api/permissions/role", auth, async (req, res) => {
     serverError(res, e, "PATCH /api/permissions/role");
   }
 });
+
+// ═════════════════════════════════════════════════════════════════════
+// RUXSATLAR TAXTASI (yangi ekran)
+// ═════════════════════════════════════════════════════════════════════
+// Eski `PUT /api/permissions` xodimning BUTUN ro'yxatini yuborardi va
+// server farqni hisoblardi. Yangi ekranda har amal bitta qatorga
+// tegadi, shuning uchun nuqtali endpointlar: qo'shish, rolni
+// o'zgartirish, chiqarish, SMM almashtirish, qaytarish.
+//
+// Eski endpoint o'chirilmadi — boshqa joyda ishlatilsa buzilmasin.
+//
+// Identifikatorlar: loyiha `slug`, xodim `username`. Butun ilovada
+// shunday, uuid frontendga umuman chiqmaydi.
+
+const PERM_ROLES = STAFF_POSITIONS; // montajchi, mobilograf, smm, ...
+
+async function permProjectId(slug) {
+  const r = await db.query(`select id from projects where slug = $1`, [slug]);
+  return r.rows[0]?.id || null;
+}
+async function permUserId(username) {
+  const r = await db.query(
+    `select id from users where username = $1 and is_active and role = 'employee'`,
+    [String(username || "").toLowerCase()],
+  );
+  return r.rows[0]?.id || null;
+}
+
+// ── GET /api/permissions/board — ekranning butun ma'lumoti ──────────
+// Bitta so'rov: loyihalar + jamoasi + xodimlar ro'yxati. Ekran ikki
+// ko'rinishda (Loyihalar / Xodimlar) bir xil ma'lumotni ishlatadi,
+// shuning uchun ularni ajratishdan foyda yo'q.
+app.get("/api/permissions/board", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const [projR, userR, permR] = await Promise.all([
+      db.query(
+        `select id, slug, label, color from projects
+          where is_active = true order by created_at, id`,
+      ),
+      db.query(
+        `select id, username, first_name, last_name, full_name, job_title, position, avatar_url
+           from users
+          where is_active and role = 'employee' and access_status <> 'removed'
+          order by coalesce(first_name, full_name, username)`,
+      ),
+      db.query(`select user_id, project_id, role from permissions`),
+    ]);
+
+    const userByPk = new Map(userR.rows.map((u) => [String(u.id), u]));
+    const projByPk = new Map(projR.rows.map((p) => [String(p.id), p]));
+
+    const members = {};
+    const countByUser = {};
+    permR.rows.forEach((row) => {
+      const u = userByPk.get(String(row.user_id));
+      const p = projByPk.get(String(row.project_id));
+      // Admin yoki o'chirilgan xodimning qatori taxtada ko'rsatilmaydi
+      // (ular bu ekranda boshqarilmaydi), lekin bazada qolaveradi.
+      if (!u || !p) return;
+      (members[p.slug] ||= []).push({ username: u.username, role: row.role });
+      countByUser[u.username] = (countByUser[u.username] || 0) + 1;
+    });
+
+    res.json({
+      projects: projR.rows.map((p) => ({
+        id: p.slug,
+        label: p.label,
+        color: p.color || "#0284c7",
+        members: members[p.slug] || [],
+      })),
+      users: userR.rows.map((u) => ({
+        username: u.username,
+        name: u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : u.full_name || u.username,
+        jobTitle: u.job_title || "",
+        position: u.position || "boshqa",
+        avatarUrl: u.avatar_url || null,
+        projectCount: countByUser[u.username] || 0,
+      })),
+      roles: PERM_ROLES,
+    });
+  } catch (e) {
+    serverError(res, e, "GET /api/permissions/board", req);
+  }
+});
+
+// Loyihadagi hozirgi SMM (bo'lsa) — konfliktni oldindan aniqlash uchun.
+async function permCurrentSmm(projectId) {
+  const r = await db.query(
+    `select u.username, u.first_name, u.last_name, u.full_name
+       from permissions p join users u on u.id = p.user_id
+      where p.project_id = $1 and p.role = 'smm' limit 1`,
+    [projectId],
+  );
+  const u = r.rows[0];
+  if (!u) return null;
+  return {
+    username: u.username,
+    name: u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : u.full_name || u.username,
+  };
+}
+
+// ── POST /api/permissions — bir yoki bir nechta xodim qo'shish ──────
+// `items`: [{ username, role }]. Rol berilmasa xodimning lavozimi
+// olinadi.
+//
+// SMM konflikti bo'lsa HECH NARSA saqlanmaydi (409) — yarmi qo'shilib,
+// yarmi qolib ketgan holat eng chalkash variant bo'lardi. Frontend
+// konfliktli odamni ajratib, qolganlarini qayta yuboradi.
+app.post("/api/permissions", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const slug = req.body.project_id;
+    const items = Array.isArray(req.body.items) ? req.body.items : [];
+    if (!slug || !items.length) return res.status(400).json({ error: "project_id va items kerak" });
+
+    const projectId = await permProjectId(slug);
+    if (!projectId) return res.status(404).json({ error: "Loyiha topilmadi" });
+
+    const hozirgiSmm = await permCurrentSmm(projectId);
+    const tayyor = [];
+    for (const it of items) {
+      const userId = await permUserId(it.username);
+      if (!userId) return res.status(404).json({ error: `@${it.username} topilmadi` });
+      const ur = await db.query(`select position from users where id = $1`, [userId]);
+      const role = it.role || ur.rows[0]?.position || "boshqa";
+      if (!PERM_ROLES.includes(role)) return res.status(400).json({ error: "Noto'g'ri rol" });
+      if (role === "smm" && hozirgiSmm && hozirgiSmm.username !== it.username) {
+        return res.status(409).json({
+          code: "SMM_EXISTS",
+          error: "Loyihada allaqachon SMM bor",
+          current: hozirgiSmm,
+          username: it.username,
+        });
+      }
+      tayyor.push({ userId, username: it.username, role });
+    }
+
+    const qoshilgan = [];
+    await db.withTransaction(async (client) => {
+      for (const t of tayyor) {
+        const r = await client.query(
+          `insert into permissions (user_id, project_id, role) values ($1,$2,$3)
+             on conflict (user_id, project_id) do update set role = excluded.role
+           returning (xmax = 0) as yangi`,
+          [t.userId, projectId, t.role],
+        );
+        if (r.rows[0]?.yangi) qoshilgan.push(t);
+      }
+    });
+
+    res.status(201).json({
+      ok: true,
+      added: qoshilgan.map((t) => ({ username: t.username, role: t.role })),
+    });
+  } catch (e) {
+    // Ikki admin bir vaqtda SMM qo'ysa — indeks ushlaydi.
+    if (e.code === "23505") {
+      return res.status(409).json({ code: "SMM_EXISTS", error: "Loyihada allaqachon SMM bor" });
+    }
+    serverError(res, e, "POST /api/permissions", req);
+  }
+});
+
+// ── PATCH /api/permissions — rolni o'zgartirish ─────────────────────
+app.patch("/api/permissions", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const { project_id: slug, username, role } = req.body;
+    if (!PERM_ROLES.includes(role)) return res.status(400).json({ error: "Noto'g'ri rol" });
+    const projectId = await permProjectId(slug);
+    if (!projectId) return res.status(404).json({ error: "Loyiha topilmadi" });
+    const userId = await permUserId(username);
+    if (!userId) return res.status(404).json({ error: "Xodim topilmadi" });
+
+    if (role === "smm") {
+      const hozirgi = await permCurrentSmm(projectId);
+      if (hozirgi && hozirgi.username !== String(username).toLowerCase()) {
+        return res.status(409).json({
+          code: "SMM_EXISTS", error: "Loyihada allaqachon SMM bor", current: hozirgi, username,
+        });
+      }
+    }
+
+    const r = await db.query(
+      `update permissions set role = $1 where user_id = $2 and project_id = $3 returning role`,
+      [role, userId, projectId],
+    );
+    if (!r.rows[0]) return res.status(404).json({ error: "Biriktirma topilmadi" });
+    res.json({ ok: true, role });
+  } catch (e) {
+    if (e.code === "23505") {
+      return res.status(409).json({ code: "SMM_EXISTS", error: "Loyihada allaqachon SMM bor" });
+    }
+    serverError(res, e, "PATCH /api/permissions", req);
+  }
+});
+
+// ── DELETE /api/permissions — loyihadan chiqarish ───────────────────
+// O'chgan qator ROLI bilan qaytariladi: "Qaytarish" aynan shu rolni
+// tiklaydi, aks holda xodim boshqa rol bilan qaytib qolardi.
+app.delete("/api/permissions", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const slug = req.query.project_id;
+    const username = req.query.username;
+    const projectId = await permProjectId(slug);
+    if (!projectId) return res.status(404).json({ error: "Loyiha topilmadi" });
+    const userId = await permUserId(username);
+    if (!userId) return res.status(404).json({ error: "Xodim topilmadi" });
+    const r = await db.query(
+      `delete from permissions where user_id = $1 and project_id = $2 returning role`,
+      [userId, projectId],
+    );
+    if (!r.rows[0]) return res.status(404).json({ error: "Biriktirma topilmadi" });
+    res.json({ ok: true, removed: { project_id: slug, username, role: r.rows[0].role } });
+  } catch (e) {
+    serverError(res, e, "DELETE /api/permissions", req);
+  }
+});
+
+// ── POST /api/permissions/swap-smm — SMM almashtirish ───────────────
+// Bitta tranzaksiyada: eski SMM loyihadan chiqadi, yangisi SMM bo'lib
+// qo'shiladi (yoki roli SMM ga o'zgaradi). Ikki alohida so'rov bilan
+// qilinsa, oraliqda loyiha SMM'siz qolardi va unique indeks tartibga
+// qarab xato berishi mumkin edi.
+app.post("/api/permissions/swap-smm", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const slug = req.body.project_id;
+    const yangiUsername = String(req.body.new_username || "").toLowerCase();
+    const projectId = await permProjectId(slug);
+    if (!projectId) return res.status(404).json({ error: "Loyiha topilmadi" });
+    const yangiId = await permUserId(yangiUsername);
+    if (!yangiId) return res.status(404).json({ error: "Xodim topilmadi" });
+
+    let natija;
+    await db.withTransaction(async (client) => {
+      const eskiR = await client.query(
+        `select p.user_id, u.username from permissions p join users u on u.id = p.user_id
+          where p.project_id = $1 and p.role = 'smm' limit 1`,
+        [projectId],
+      );
+      const eski = eskiR.rows[0];
+      // Eski SMM avval O'CHIRILADI — unique indeks ikkinchi SMM'ni
+      // bir lahzaga ham ko'tarmaydi.
+      if (eski) {
+        await client.query(`delete from permissions where user_id = $1 and project_id = $2`,
+          [eski.user_id, projectId]);
+      }
+      const oldingiR = await client.query(
+        `select role from permissions where user_id = $1 and project_id = $2`, [yangiId, projectId]);
+      await client.query(
+        `insert into permissions (user_id, project_id, role) values ($1,$2,'smm')
+           on conflict (user_id, project_id) do update set role = 'smm'`,
+        [yangiId, projectId],
+      );
+      natija = {
+        removed: eski ? { project_id: slug, username: eski.username, role: "smm" } : null,
+        set: { project_id: slug, username: yangiUsername, role: "smm" },
+        // Qaytarish uchun: yangi xodim avval loyihada bo'lganmi va
+        // qaysi rolda.
+        previous: oldingiR.rows[0] ? { username: yangiUsername, role: oldingiR.rows[0].role } : null,
+      };
+    });
+    res.json({ ok: true, ...natija });
+  } catch (e) {
+    serverError(res, e, "POST /api/permissions/swap-smm", req);
+  }
+});
+
+// ── POST /api/permissions/restore — "Qaytarish" ─────────────────────
+// Frontend oxirgi amalning TESKARISINI yuboradi. Idempotent: qayta
+// yuborilsa ham xato bermaydi, chunki tugma ikki marta bosilishi yoki
+// so'rov takrorlanishi mumkin.
+//
+// O'chirish AVVAL bajariladi: SMM qaytarilayotganda uning o'rnini
+// egallagan xodim avval chiqib ketishi kerak, aks holda unique indeks
+// to'sib qo'yardi.
+app.post("/api/permissions/restore", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const ochir = Array.isArray(req.body.delete) ? req.body.delete : [];
+    const qoy = Array.isArray(req.body.upsert) ? req.body.upsert : [];
+    await db.withTransaction(async (client) => {
+      for (const d of ochir) {
+        const pid = await permProjectId(d.project_id);
+        const uid = await permUserId(d.username);
+        if (!pid || !uid) continue;
+        await client.query(`delete from permissions where user_id = $1 and project_id = $2`, [uid, pid]);
+      }
+      for (const u of qoy) {
+        const pid = await permProjectId(u.project_id);
+        const uid = await permUserId(u.username);
+        if (!pid || !uid) continue;
+        const role = PERM_ROLES.includes(u.role) ? u.role : "boshqa";
+        await client.query(
+          `insert into permissions (user_id, project_id, role) values ($1,$2,$3)
+             on conflict (user_id, project_id) do update set role = excluded.role`,
+          [uid, pid, role],
+        );
+      }
+    });
+    res.json({ ok: true });
+  } catch (e) {
+    if (e.code === "23505") {
+      return res.status(409).json({ code: "SMM_EXISTS", error: "Loyihada allaqachon SMM bor" });
+    }
+    serverError(res, e, "POST /api/permissions/restore", req);
+  }
+});
+
+// ── POST /api/permissions/notify — kechiktirilgan Telegram xabari ───
+// TZ "xabar 7 soniya kechiktirib yuborilsin, shu vaqtda Qaytarish
+// bosilsa bekor bo'lsin" deydi. Serverda kutish mumkin emas: Vercel
+// funksiyasi javob bergach to'xtatiladi, ya'ni kutilgan xabar
+// umuman ketmay qolishi mumkin.
+//
+// Shuning uchun kutish FRONTENDDA: "Qaytarish" oynasi yopilgach
+// (hech kim bosmasa) shu endpoint chaqiriladi. Natija bir xil,
+// ishonchliligi esa yuqori.
+app.post("/api/permissions/notify", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const slug = req.body.project_id;
+    const items = Array.isArray(req.body.items) ? req.body.items : [];
+    const pr = await db.query(`select id, label from projects where slug = $1`, [slug]);
+    const project = pr.rows[0];
+    if (!project) return res.status(404).json({ error: "Loyiha topilmadi" });
+
+    const yuborildi = [];
+    for (const it of items) {
+      const uname = String(it.username || "").toLowerCase();
+      if (uname === req.user.username) continue; // o'ziga xabar yubormaydi
+      // Xabar faqat biriktirma HAQIQATAN turgan bo'lsa ketadi — shu
+      // oraliqda admin fikridan qaytgan bo'lishi mumkin.
+      const chk = await db.query(
+        `select p.role, u.id, u.telegram_chat_id from permissions p
+           join users u on u.id = p.user_id
+          where u.username = $1 and p.project_id = $2`,
+        [uname, project.id],
+      );
+      const row = chk.rows[0];
+      if (!row || !row.telegram_chat_id) continue;
+      await sendMsg(
+        db, row.telegram_chat_id,
+        `📁 <b>Sizga @${req.user.username} tomonidan «${project.label}» loyihasiga ruxsat berildi.</b>\nRolingiz: ${POSITION_LABEL_UZ[row.role] || row.role}`,
+        { replyMarkup: appOpenButton() },
+      );
+      yuborildi.push(uname);
+    }
+    res.json({ ok: true, sent: yuborildi });
+  } catch (e) {
+    serverError(res, e, "POST /api/permissions/notify", req);
+  }
+});
+
 
 app.post("/api/announcements", auth, async (req, res) => {
   if (!requireSuperAdmin(req, res)) return;
@@ -3037,10 +3421,17 @@ app.post("/api/projects", auth, async (req, res) => {
     const exists = await db.query(`select 1 from projects where slug = $1`, [slug]);
     if (exists.rows[0]) slug = `${slug}_${Date.now().toString(36)}`;
 
+    // Rang palitradan navbati bilan olinadi — Ruxsatlar ekranida har
+    // loyiha o'z rangida ko'rinadi. Mavjud loyihalar soniga qarab
+    // tanlanadi, ya'ni ketma-ket yaratilganlar bir xil bo'lib
+    // qolmaydi.
+    const cntR = await db.query(`select count(*)::int as n from projects`);
+    const color = PROJECT_COLORS[cntR.rows[0].n % PROJECT_COLORS.length];
+
     const r = await db.query(
-      `insert into projects (slug, label, anchor_date, posts_target, stories_target)
-       values ($1,$2,$3,$4,$5) returning *`,
-      [slug, String(label).trim(), anchorDate, parseInt(postsTarget), parseInt(storiesTarget)],
+      `insert into projects (slug, label, anchor_date, posts_target, stories_target, color)
+       values ($1,$2,$3,$4,$5,$6) returning *`,
+      [slug, String(label).trim(), anchorDate, parseInt(postsTarget), parseInt(storiesTarget), color],
     );
     const project = r.rows[0];
     const summary = await getProjectCycleSummary(db, project); // 1-davrni darhol yaratadi
@@ -3054,7 +3445,13 @@ app.post("/api/projects", auth, async (req, res) => {
     if (uniqueUsernames.length) {
       const ur = await db.query(`select id, username from users where lower(username) = any($1::text[])`, [uniqueUsernames]);
       for (const u of ur.rows) {
-        await db.query(`insert into permissions (user_id, project_id) values ($1,$2) on conflict do nothing`, [u.id, project.id]);
+        // `role` endi majburiy — xodimning lavozimi olinadi.
+        await db.query(
+          `insert into permissions (user_id, project_id, role)
+             values ($1, $2, coalesce((select position from users where id = $1), 'boshqa'))
+           on conflict do nothing`,
+          [u.id, project.id],
+        );
         assignedUsernames.push(u.username);
       }
       if (notifyTelegram !== false) {
