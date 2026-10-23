@@ -1332,6 +1332,250 @@
       .pf-savebar-actions .btn {
         height: 46px;
       }
+      /* ══ RUXSATLAR TAXTASI ═══════════════════════════════════════
+         Dizayn qiymatlari TZ dan, ranglar esa ilovaning o'z
+         o'zgaruvchilaridan olingan — aks holda qorong'i tema buzilardi
+         (TZ faqat yorug' holatni ko'rsatgan). Loyiha rangi hamma joyda
+         rgba bilan beriladi: `color-mix` eski WebView'da ishlamaydi. */
+      .rb-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 10px; }
+      .rb-tabs { display: flex; padding: 3px; border-radius: 11px; background: var(--chip2, var(--chip)); gap: 2px; }
+      .rb-tab {
+        height: 34px; padding: 0 18px; border: 0; border-radius: 8px; background: none;
+        font: inherit; font-size: 14px; color: var(--t3); cursor: pointer;
+      }
+      .rb-tab.on { background: var(--surf); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+      .rb-chips { display: flex; gap: 6px; }
+      .rb-chip {
+        height: 34px; padding: 0 12px; border-radius: 10px; border: 1px solid transparent;
+        background: var(--chip); font: inherit; font-size: 13px; font-weight: 600;
+        color: var(--t3); cursor: pointer;
+      }
+      .rb-chip.on { background: var(--brand); color: #fff; }
+      .rb-chip.warn { color: var(--red); background: var(--red-bg); }
+      .rb-chip.warn.on { background: var(--red); color: #fff; }
+      .rb-hint { font-size: 12.5px; line-height: 1.5; color: var(--t3); margin-bottom: 14px; }
+
+      .rb-cols { display: flex; gap: 20px; align-items: flex-start; }
+      .rb-grid {
+        flex: 1; min-width: 0; display: grid; gap: 14px;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      }
+      .rb-skel { height: 190px; border-radius: 14px; background: var(--chip); opacity: .6; }
+
+      .rb-card { border: 1px solid; border-radius: 14px; padding: 12px; position: relative; }
+      .rb-chd { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+      .rb-badge {
+        width: 28px; height: 28px; border-radius: 8px; flex: none; color: #fff;
+        font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+      }
+      .rb-badge.sm { width: 24px; height: 24px; border-radius: 7px; font-size: 11px; }
+      .rb-clabel {
+        flex: 1; min-width: 0; font-size: 15px; font-weight: 600; color: var(--ink);
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .rb-count { font-size: 12.5px; color: var(--t3); flex: none; }
+      .rb-tag {
+        font-size: 11px; font-weight: 600; color: var(--red); background: var(--red-bg);
+        border-radius: 7px; padding: 3px 7px; flex: none; white-space: nowrap;
+      }
+      .rb-tag.sm { font-size: 10.5px; padding: 2px 6px; }
+
+      .rb-rows { display: flex; flex-direction: column; }
+      .rb-row {
+        height: 36px; display: flex; align-items: center; gap: 8px; cursor: pointer;
+        border-radius: 9px; padding: 0 4px;
+      }
+      .rb-row:hover { background: rgba(255,255,255,.45); }
+      :root[data-theme="dark"] .rb-row:hover { background: rgba(255,255,255,.06); }
+      .rb-row.hit { background: #FFF4CC; }
+      :root[data-theme="dark"] .rb-row.hit { background: rgba(255,214,0,.18); }
+      .rb-av {
+        width: 26px; height: 26px; border-radius: 99px; flex: none; position: relative; overflow: hidden;
+        background: var(--chip); color: var(--t2); font-size: 10.5px; font-weight: 600;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .rb-av.big { width: 46px; height: 46px; font-size: 16px; }
+      .rb-rname {
+        flex: 1; min-width: 0; font-size: 13.5px; color: var(--ink);
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .rb-rrole { font-size: 12.5px; color: var(--t3); flex: none; }
+      .rb-x {
+        width: 26px; height: 26px; flex: none; border: 0; background: none; cursor: pointer;
+        color: var(--t4, var(--t3)); font-size: 18px; line-height: 1; border-radius: 7px;
+      }
+      .rb-x:hover { background: var(--red-bg); color: var(--red); }
+      .rb-empty {
+        border: 1px dashed var(--bd2); border-radius: 9px; padding: 9px 10px;
+        font-size: 12.5px; color: var(--t3); text-align: center; margin-top: 2px;
+      }
+      .rb-empty.warn { border-color: rgba(220,38,38,.45); color: var(--red); cursor: pointer; }
+      .rb-add {
+        margin-top: 10px; width: 100%; height: 32px; border: 0; background: none;
+        font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 9px; text-align: left;
+      }
+      .rb-add:hover { background: rgba(255,255,255,.5); }
+      :root[data-theme="dark"] .rb-add:hover { background: rgba(255,255,255,.06); }
+
+      /* Sudrash paytidagi halqa va matn */
+      .rb-drop {
+        position: absolute; inset: 0; border-radius: 14px; display: none;
+        align-items: center; justify-content: center; text-align: center; padding: 12px;
+        background: var(--surf); font-size: 13px; font-weight: 600; color: var(--ink);
+      }
+      .rb-card.over .rb-drop, .rb-card.deny .rb-drop { display: flex; }
+      .rb-card.over { outline: 2px solid currentColor; }
+      .rb-card.over .rb-drop { box-shadow: inset 0 0 0 2px var(--brand); }
+      .rb-card.deny .rb-drop { box-shadow: inset 0 0 0 2px var(--red); color: var(--red); }
+
+      /* O'ng panel — sudrash uchun. Tor ekranda sudrash ishlamaydi,
+         shuning uchun panel ham ko'rsatilmaydi. */
+      .rb-rail {
+        width: 250px; flex: none; position: sticky; top: 8px;
+        background: var(--surf); border: 1px solid var(--bd2); border-radius: 14px; padding: 12px;
+      }
+      .rb-rail-t { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+      .rb-rail-s { font-size: 11.5px; color: var(--t3); margin: 2px 0 10px; }
+      .rb-ru {
+        display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 4px;
+        border-radius: 9px; cursor: grab;
+      }
+      .rb-ru:hover { background: var(--chip); }
+      .rb-ru:active { cursor: grabbing; }
+      .rb-grip { color: var(--bd4, var(--t3)); font-size: 11px; letter-spacing: -3px; flex: none; opacity: .55; }
+      .rb-rutxt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+      .rb-runame {
+        font-size: 13px; font-weight: 500; color: var(--ink);
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .rb-rupos { font-size: 11.5px; color: var(--t3); }
+      .rb-rucount { font-size: 12.5px; color: var(--t3); flex: none; }
+      @media (max-width: 979px) {
+        .rb-rail { display: none; }
+        .rb-grid { grid-template-columns: 1fr; }
+      }
+
+      .rb-newemp { display: flex; gap: 8px; margin-top: 18px; max-width: 520px; }
+      .rb-newemp .f-input { flex: 1; min-width: 0; }
+      .rb-newemp .btn { width: auto; padding: 0 16px; flex: none; }
+
+      /* ── Rol menyusi ──────────────────────────────────────────── */
+      .rb-menu {
+        position: fixed; z-index: 120; min-width: 210px; max-width: calc(100vw - 20px);
+        background: var(--surf); border: 1px solid var(--bd2); border-radius: 14px;
+        box-shadow: 0 12px 32px rgba(0,0,0,.16); padding: 6px;
+      }
+      .rb-menu-h { padding: 8px 10px 10px; border-bottom: 1px solid var(--bd1); margin-bottom: 4px; }
+      .rb-menu-n { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+      .rb-menu-p { font-size: 12px; color: var(--t3); margin-top: 1px; }
+      .rb-mi {
+        width: 100%; height: 36px; display: flex; align-items: center; gap: 9px; padding: 0 10px;
+        border: 0; background: none; font: inherit; font-size: 13.5px; color: var(--ink);
+        cursor: pointer; border-radius: 9px; text-align: left;
+      }
+      .rb-mi:hover { background: var(--chip); }
+      .rb-mi.danger { color: var(--red); }
+      .rb-mi-l { flex: 1; min-width: 0; }
+      .rb-mi-n { font-size: 12px; color: var(--t3); flex: none; }
+      .rb-radio {
+        width: 15px; height: 15px; border-radius: 99px; border: 1.5px solid var(--bd4, var(--bd2));
+        flex: none; position: relative;
+      }
+      .rb-radio.on { border-color: var(--brand); }
+      .rb-radio.on::after {
+        content: ""; position: absolute; inset: 3px; border-radius: 99px; background: var(--brand);
+      }
+      .rb-menu-sep { height: 1px; background: var(--bd1); margin: 4px 0; }
+
+      /* ── Oynalar ──────────────────────────────────────────────── */
+      .rb-ov {
+        position: fixed; inset: 0; z-index: 130; background: rgba(14,23,38,.35);
+        display: flex; align-items: center; justify-content: center; padding: 16px;
+      }
+      .rb-dlg {
+        width: 100%; max-width: 440px; max-height: 86vh; overflow: auto;
+        background: var(--surf); border-radius: 20px; padding: 18px;
+      }
+      .rb-dlg-h { margin-bottom: 12px; }
+      .rb-dlg-t { font-size: 17px; font-weight: 700; color: var(--ink); }
+      .rb-dlg-s { font-size: 13px; color: var(--t3); margin-top: 2px; }
+      .rb-dlg-list { display: flex; flex-direction: column; gap: 2px; max-height: 46vh; overflow: auto; }
+      .rb-pick {
+        display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 11px; cursor: pointer;
+      }
+      .rb-pick:hover { background: var(--chip); }
+      .rb-pick input { width: 17px; height: 17px; flex: none; accent-color: var(--brand); }
+      .rb-pick-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+      .rb-pick-n { font-size: 13.5px; font-weight: 500; color: var(--ink); }
+      .rb-pick-s { font-size: 12px; color: var(--t3); }
+      .rb-dlg-f { margin-top: 14px; }
+      .rb-dlg-note { font-size: 12px; color: var(--t3); margin-bottom: 10px; }
+      .rb-dlg-btns { display: flex; gap: 8px; justify-content: flex-end; }
+      .rb-dlg-btns .btn { width: auto; padding: 0 16px; }
+      .rb-swap p { font-size: 13.5px; line-height: 1.55; color: var(--ink); }
+      .rb-swap-n { color: var(--t3) !important; font-size: 12.5px !important; margin-top: 8px; }
+
+      /* ── «Qaytarish» xabari ───────────────────────────────────── */
+      .rb-toast {
+        position: fixed; left: 50%; transform: translateX(-50%); z-index: 140;
+        bottom: calc(24px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
+        max-width: calc(100vw - 32px);
+        background: #0E1726; color: #fff; border-radius: 12px; padding: 11px 14px;
+        display: flex; align-items: center; gap: 14px; font-size: 13.5px;
+        box-shadow: 0 8px 24px rgba(0,0,0,.28);
+      }
+      .rb-toast span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .rb-toast button {
+        border: 0; background: none; font: inherit; font-size: 13.5px; font-weight: 600;
+        color: #7fb8e8; cursor: pointer; flex: none; padding: 0;
+      }
+
+      /* ── Xodimlar ko'rinishi ──────────────────────────────────── */
+      .rb-ucols { display: flex; gap: 20px; align-items: flex-start; }
+      .rb-ulist {
+        width: 280px; flex: none; background: var(--surf); border: 1px solid var(--bd2);
+        border-radius: 14px; padding: 8px;
+      }
+      .rb-ui {
+        display: flex; align-items: center; gap: 9px; height: 46px; padding: 0 8px;
+        border-radius: 10px; cursor: pointer; border-left: 3px solid transparent;
+      }
+      .rb-ui:hover { background: var(--chip); }
+      .rb-ui.on { background: var(--brand-bg, rgba(47,122,185,.1)); border-left-color: var(--brand); }
+      .rb-udet { flex: 1; min-width: 0; }
+      .rb-udet-h { display: flex; align-items: center; gap: 13px; margin-bottom: 14px; }
+      .rb-udet-n { font-size: 17px; font-weight: 700; color: var(--ink); }
+      .rb-udet-s { font-size: 13px; color: var(--t3); margin-top: 1px; }
+      .rb-upl { display: flex; flex-direction: column; gap: 6px; }
+      .rb-up {
+        display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 12px;
+        background: var(--surf); border: 1px solid var(--bd2); border-radius: 11px;
+      }
+      .rb-up-n {
+        flex: 1; min-width: 0; font-size: 13.5px; color: var(--ink);
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .rb-up-role {
+        height: 30px; padding: 0 10px; border: 1px solid var(--bd2); border-radius: 9px;
+        background: var(--surf2); font: inherit; font-size: 12.5px; color: var(--t2); cursor: pointer; flex: none;
+      }
+      .rb-up-role:hover { border-color: var(--bd4, var(--bd2)); }
+      .rb-upadd { margin-top: 18px; }
+      .rb-upchips { display: flex; flex-wrap: wrap; gap: 8px; }
+      .rb-upchip {
+        height: 34px; padding: 0 12px; border: 1px solid var(--bd2); border-radius: 10px;
+        background: var(--surf); font: inherit; font-size: 13px; color: var(--ink); cursor: pointer;
+        display: inline-flex; align-items: center; gap: 7px;
+      }
+      .rb-upchip:hover { border-color: var(--brand); }
+      .rb-upchip::before { content: "+"; color: var(--t3); }
+      .rb-upchip i { width: 9px; height: 9px; border-radius: 99px; display: block; }
+      @media (max-width: 979px) {
+        .rb-ucols { flex-direction: column; }
+        .rb-ulist { width: 100%; }
+        .rb-udet { width: 100%; }
+      }
+
       @media (min-width: 860px) {
         .pf-body {
           padding-bottom: 24px;
@@ -21812,7 +22056,7 @@
         const ph = {
           projects: "Loyiha qidirish",
           staff: "Xodim qidirish",
-          perms: "Xodim yoki loyiha",
+          perms: "Loyiha yoki xodim",
           admins: "Admin qidirish",
         };
         const s = document.getElementById("admin-search");
@@ -22518,245 +22762,738 @@
         c.innerHTML = `<div class="mobile-only">${mobileRows}</div><div class="desktop-only"><div class="pgrid">${desktopCards}</div></div>`;
       }
 
+      // ══ RUXSATLAR TAXTASI ════════════════════════════════════════
+      // Avval matritsa edi: qator — xodim, ustun — loyiha, katak —
+      // ruxsat. Loyiha ko'paygan sari u o'ngga cho'zilib ketardi va
+      // "bu loyihada kim ishlaydi" degan eng ko'p beriladigan savolga
+      // javob berish uchun butun qatorni ko'z bilan kuzatib chiqish
+      // kerak edi.
+      //
+      // Endi har loyiha — alohida karta, ichida jamoasi. Ruxsat va rol
+      // bitta qadamga birlashdi: xodim qo'shilganda roli ham birga
+      // yoziladi (lavozimidan olinadi).
+      let rbBoard = null;        // { projects, users, roles }
+      let rbView = "projects";   // "projects" | "users"
+      let rbFilter = "all";      // "all" | "problem"
+      let rbSel = null;          // Xodimlar ko'rinishidagi tanlangan xodim
+      let rbUndo = null;         // { revert, notify, timer, notifyTimer }
+      let rbDrag = null;         // sudralayotgan xodim username
+
+      const RB_PALETTE = ["#0284c7", "#0d9488", "#d97706", "#db2777", "#7c3aed", "#65a30d", "#4f46e5"];
+      // Rol tartibi — kartadagi a'zolar shu ketma-ketlikda chiqadi.
+      const RB_ROLE_ORDER = ["smm", "mobilograf", "montajchi", "dizayner", "kopirayter", "boshqa"];
+
+      // Loyiha rangini shaffoflik bilan beramiz: `color-mix` eski
+      // WebView'larda ishlamaydi, rgba esa hamma joyda ishlaydi va
+      // qorong'i temada ham to'g'ri chiqadi (fon ostidagi yuza ko'rinib
+      // turadi, oq rangga qotirilmaydi).
+      function rbRgba(hex, a) {
+        const h = String(hex || "#0284c7").replace("#", "");
+        const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
+        return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+      }
+      function rbUser(username) {
+        return (rbBoard?.users || []).find((u) => u.username === username) || null;
+      }
+      function rbProject(slug) {
+        return (rbBoard?.projects || []).find((p) => p.id === slug) || null;
+      }
+      // Kartada ism, rol va × bitta 36px qatorga sig'ishi kerak, ustun
+      // esa 250px. To'liq familiya bilan ism "Malika Rahi..." bo'lib
+      // kesilardi, ya'ni eng kerakli qism yo'qolardi. Shuning uchun
+      // hamma joyda qisqa shakl: "Malika R." — dizayn ham shunday.
+      function rbShort(name) {
+        const q = String(name || "").trim().split(/\s+/);
+        if (q.length < 2) return q[0] || "";
+        return `${q[0]} ${q[1][0].toUpperCase()}.`;
+      }
+      function rbName(username) {
+        const u = rbUser(username);
+        return u ? rbShort(u.name) : "@" + username;
+      }
+      function rbRoleLabel(role) {
+        return POSITION_LABELS[role] || role || "Boshqa";
+      }
+      // Kartadagi qator tor: "SMM manager" ism uchun joy qoldirmaydi.
+      // Menyu va oynalarda to'liq nom ishlatiladi.
+      const RB_ROLE_SHORT = { smm: "SMM" };
+      function rbRoleShort(role) {
+        return RB_ROLE_SHORT[role] || rbRoleLabel(role);
+      }
+      function rbSmmOf(p) {
+        return (p?.members || []).find((m) => m.role === "smm") || null;
+      }
+      function rbIsProblem(p) {
+        return !p.members.length || !rbSmmOf(p);
+      }
+      function rbInitials(name) {
+        const parts = String(name || "?").trim().split(/\s+/);
+        return ((parts[0] || "?")[0] + (parts[1] ? parts[1][0] : "")).toUpperCase();
+      }
+      function rbAvatarHtml(username, cls) {
+        const u = rbUser(username);
+        return `<span class="rb-av ${cls || ""}">${escHtml(rbInitials(u?.name || username))}${avatarImg(u?.avatarUrl)}</span>`;
+      }
+      function rbQ() {
+        return (document.getElementById("admin-search")?.value || "").toLowerCase().trim();
+      }
+
+      // ── Yuklash ──────────────────────────────────────────────────
       function renderAdminPermsTab(c) {
-        // Botga kirish huquqini berish — faqat Super Admin (TZ: "Faqat
-        // Super Admin userga access bera oladi").
-        c.innerHTML = `
-          <div id="perm-list"><div class="empty"><div class="empty-s">Yuklanmoqda…</div></div></div>
+        // Qidiruv maydoni har bosilganda renderAdminActiveTab()
+        // chaqiradi. Taxta allaqachon o'rnatilgan bo'lsa qayta
+        // yuklamaymiz — faqat chizamiz.
+        if (document.getElementById("rb-root") && rbBoard) return rbRender();
+        rbView = "projects";
+        rbFilter = "all";
+        rbSel = null;
+        // Yangi xodim qo'shish oqimi o'zgarmadi — faqat taxtaning
+        // ostiga ko'chdi. Avvalgidek faqat super adminda.
+        c.innerHTML = `<div id="rb-root">${rbSkeletonHtml()}</div>
           ${
             isSuperAdmin
-              ? `<div style="display:flex;gap:8px;margin-top:14px">
-                  <input class="f-input" id="new-emp-input" placeholder="@yangi_xodim_username" style="flex:1"/>
-                  <button class="btn btn-blue btn-sm" style="width:auto;padding:0 16px" onclick="addEmployee()">Qo'shish</button>
+              ? `<div class="rb-newemp">
+                  <input class="f-input" id="new-emp-input" placeholder="@yangi_xodim_username"/>
+                  <button class="btn btn-blue btn-sm" onclick="addEmployee()">Qo'shish</button>
                 </div>`
               : ""
           }`;
-        loadUsersAndRenderPermList();
+        rbLoad();
       }
-      async function loadUsersAndRenderPermList() {
-        const wrap = document.getElementById("perm-list");
-        if (!wrap) return;
-        try {
-          const [usersRes, rolesRes] = await Promise.all([
-            apiFetch("/api/users"),
-            apiFetch("/api/permissions/roles"),
-          ]);
-          if (!usersRes.ok)
-            throw new Error((await usersRes.json().catch(() => ({}))).error || "Xato");
-          const d = await usersRes.json();
-          allUsers = (d.users || []).filter(
-            (u) => u.role === "employee" && u.is_active,
-          );
-          permRoles = rolesRes.ok ? (await rolesRes.json()).roles || {} : {};
-          renderPermList();
-        } catch (e) {
-          wrap.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
-        }
+      function rbSkeletonHtml() {
+        return `<div class="rb-grid">${Array.from({ length: 6 })
+          .map(() => `<div class="rb-skel"></div>`)
+          .join("")}</div>`;
       }
-      // Loyihaga ruxsat berilgan xodimning shu loyihadagi rolini
-      // o'zgartiradi (SMM menejer/montajchi/mobilograf/...) — post/
-      // stories Ncoin taqsimoti shu rolga qarab ishlaydi.
-      async function setPermissionRole(username, projectSlug, role) {
-        const prevRole = permRoles[username]?.[projectSlug] || "";
-        (permRoles[username] ||= {})[projectSlug] = role || undefined;
+      async function rbLoad() {
         try {
-          const res = await apiFetch("/api/permissions/role", {
-            method: "PATCH",
-            body: JSON.stringify({ username, projectSlug, role: role || null }),
-          });
+          const res = await apiFetch("/api/permissions/board");
           if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Xato");
+          rbBoard = await res.json();
+          rbSyncGlobals();
+          rbRender();
         } catch (e) {
-          showToast("⚠ " + e.message);
-          if (prevRole) permRoles[username][projectSlug] = prevRole;
-          else delete permRoles[username][projectSlug];
-          renderPermList();
+          const root = document.getElementById("rb-root");
+          if (root) root.innerHTML = `<div class="empty"><div class="empty-t">Yuklanmadi</div><div class="empty-s">${escHtml(e.message)}</div>
+            <button class="btn btn-soft" style="width:auto;padding:0 16px;margin-top:12px" onclick="rbLoad()">Qayta urinish</button></div>`;
         }
       }
-      function permRoleSelectHtml(username, projectSlug) {
-        const current = permRoles[username]?.[projectSlug] || "";
-        const opts = Object.keys(POSITION_LABELS)
-          .map((k) => `<option value="${k}"${k === current ? " selected" : ""}>${POSITION_LABELS[k]}</option>`)
-          .join("");
-        return `<select class="perm-role-select" onclick="event.stopPropagation()" onchange="setPermissionRole('${escArg(username)}','${escArg(projectSlug)}',this.value)">
-          <option value=""${current ? "" : " selected"}>— rol yo'q —</option>
-          ${opts}
-        </select>`;
-      }
-      function renderPermList() {
-        const wrap = document.getElementById("perm-list");
-        if (!wrap) return;
-        const q = (document.getElementById("admin-search")?.value || "")
-          .toLowerCase()
-          .trim();
-        let html = `<div class="mobile-only">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">
-            <div class="sec-upper" style="margin:0">${allUsers.length} xodim · ${projects.length} loyiha</div>
-            <div style="font-weight:500;font-size:12px;color:var(--ink)">Guruhlash: xodim</div>
-          </div>`;
-        if (!allUsers.length) {
-          wrap.innerHTML =
-            html + `<div class="empty"><div class="empty-t">Xodimlar yo'q</div></div></div>`;
-          return;
-        }
-        allUsers.forEach((u) => {
-          const matchesUser = !q || u.username.toLowerCase().includes(q);
-          const assigned = perms[u.username] || [];
-          const rows = projects
-            .map((p) => {
-              const on = assigned.includes(p.id);
-              if (q && !matchesUser && !p.label.toLowerCase().includes(q) && !on)
-                return "";
-              return `<div class="toggle-row">
-                <div class="toggle-name">${escHtml(p.label)}</div>
-                ${on ? permRoleSelectHtml(u.username, p.id) : `<div class="toggle-hint">yopiq</div>`}
-                <button class="tglsw ${on ? "on" : ""}" onclick="togglePermission('${escArg(u.username)}','${escArg(p.id)}',this)"><div class="knob"></div></button>
-              </div>`;
-            })
-            .join("");
-          if (q && !matchesUser && !rows) return;
-          const displayName = u.first_name
-            ? `${u.first_name} ${u.last_name || ""}`.trim()
-            : `@${u.username}`;
-          html += `<div class="list-card" style="margin-bottom:10px">
-            <div class="grp-hdr">
-              <div class="avatar" style="background:${personColor(u.username)};color:#fff">${u.username.slice(0, 1).toUpperCase()}${avatarImg(u.avatar_url)}</div>
-              <div style="flex:1;min-width:0">
-                <div class="grp-name">${escHtml(displayName)}</div>
-                <div class="grp-sub ${assigned.length === 0 ? "warn" : ""}">${u.job_title ? escHtml(u.job_title) + " · " : ""}${assigned.length === 0 ? "loyiha biriktirilmagan" : `@${escHtml(u.username)}`}</div>
-              </div>
-              <div class="grp-count num">${assigned.length} loyiha</div>
-              <button class="icon-btn" aria-label="Xodimni tahrirlash" title="Xodimni tahrirlash" onclick="openUserEditSheet('${escArg(u.username)}')">${ICON.edit}</button>
-            </div>
-            ${rows || `<div style="padding:12px 15px;font-size:12.5px;color:var(--t3)">Loyiha yo'q</div>`}
-          </div>`;
+      // Ilovaning boshqa joylari (Loyihalar ro'yxati, Profil, Faollik)
+      // eski `perms`/`permRoles` xaritalariga tayanadi — taxta
+      // o'zgargan sari ularni ham yangilab turamiz, aks holda
+      // Ruxsatlardan chiqqach eski holat ko'rinib qolardi.
+      function rbSyncGlobals() {
+        if (!rbBoard) return;
+        perms = {};
+        permRoles = {};
+        rbBoard.projects.forEach((p) => {
+          p.members.forEach((m) => {
+            (perms[m.username] ||= []).push(p.id);
+            (permRoles[m.username] ||= {})[p.id] = m.role;
+          });
         });
-        html += `</div>`; // .mobile-only
-        wrap.innerHTML = html + buildPermsMatrixHtml();
       }
 
-      // ── RUXSATLAR MATRITSASI (faqat katta ekran) ────────────────────
-      // Backend binar (bor/yo'q) — dizaynerning "faqat ko'rish" oraliq
-      // holati backendda mavjud emas, shu sababli ataylab qo'shilmadi:
-      // faqat ✓ (to'liq huquq) / bo'sh (ruxsat yo'q).
-      function buildPermsMatrixHtml() {
-        if (!allUsers.length || !projects.length) return "";
+      // ── Chizish ──────────────────────────────────────────────────
+      function rbRender() {
+        const root = document.getElementById("rb-root");
+        if (!root || !rbBoard) return;
+        const saqlanganScroll = root.scrollTop;
+        root.innerHTML = rbBarHtml() + (rbView === "projects" ? rbProjectsHtml() : rbUsersHtml());
+        root.scrollTop = saqlanganScroll;
+      }
+      function rbBarHtml() {
+        const muammoli = rbBoard.projects.filter(rbIsProblem).length;
+        const tab = (key, label) =>
+          `<button type="button" class="rb-tab${rbView === key ? " on" : ""}" onclick="rbSetView('${key}')">${label}</button>`;
+        const chip = (key, label, n) =>
+          `<button type="button" class="rb-chip${rbFilter === key ? " on" : ""}${key === "problem" ? " warn" : ""}" onclick="rbSetFilter('${key}')">${label} · ${n}</button>`;
+        return `<div class="rb-bar">
+            <div class="rb-tabs">${tab("projects", "Loyihalar")}${tab("users", "Xodimlar")}</div>
+            ${
+              rbView === "projects"
+                ? `<div class="rb-chips">${chip("all", "Hammasi", rbBoard.projects.length)}${muammoli ? chip("problem", "Muammoli", muammoli) : ""}</div>`
+                : ""
+            }
+          </div>
+          <div class="rb-hint">Qo'shish: kartadagi «Qo'shish» yoki o'ng paneldan kartaga sudrang. Chiqarish: ism yonidagi ×. Rolni o'zgartirish: ismni bosing.</div>`;
+      }
+      function rbSetView(v) {
+        rbView = v;
+        rbSel = null;
+        rbRender();
+      }
+      function rbSetFilter(f) {
+        rbFilter = rbFilter === f && f === "problem" ? "all" : f;
+        rbRender();
+      }
 
-        const cols = projects.map((p) => `<th title="${escHtml(p.label)}">${escHtml(p.label)}</th>`).join("");
-        const rows = allUsers
-          .map((u) => {
-            const assigned = perms[u.username] || [];
-            const displayName = u.first_name
-              ? `${u.first_name} ${u.last_name || ""}`.trim()
-              : `@${u.username}`;
-            const cells = projects
-              .map((p) => {
-                const on = assigned.includes(p.id);
-                return `<td><div class="pmx-cell${on ? " on" : ""}" onclick="togglePermission('${escArg(u.username)}','${escArg(p.id)}',this)">${on ? permRoleSelectHtml(u.username, p.id) : ""}</div></td>`;
-              })
-              .join("");
-            return `<tr>
-              <td class="pmx-emp" style="cursor:pointer" onclick="openActivityStats('${escArg(u.username)}')" title="Faolligini ko'rish">
-                <div style="display:flex;align-items:center;gap:11px">
-                  <div class="avatar" style="width:30px;height:30px;border-radius:9px;font-size:11.5px;background:${personColor(u.username)};color:#fff">${u.username.slice(0, 1).toUpperCase()}</div>
-                  <div style="min-width:0">
-                    <div class="pmx-emp-name">${escHtml(displayName)}</div>
-                    ${u.job_title ? `<div class="pmx-emp-sub">${escHtml(u.job_title)}</div>` : ""}
-                  </div>
-                </div>
-              </td>
-              ${cells}
-              <td class="pmx-total${assigned.length === 0 ? " zero" : ""}">${assigned.length}</td>
-            </tr>`;
+      // ── Loyihalar ko'rinishi ─────────────────────────────────────
+      function rbProjectsHtml() {
+        const q = rbQ();
+        let list = rbBoard.projects;
+        if (rbFilter === "problem") list = list.filter(rbIsProblem);
+        if (q) {
+          list = list.filter(
+            (p) =>
+              p.label.toLowerCase().includes(q) ||
+              p.members.some((m) => rbName(m.username).toLowerCase().includes(q)),
+          );
+        }
+        if (!rbBoard.projects.length)
+          return `<div class="empty"><div class="empty-t">Faol loyiha yo'q</div></div>`;
+        if (!list.length)
+          return `<div class="empty"><div class="empty-t">Hech narsa topilmadi</div></div>`;
+        return `<div class="rb-cols">
+            <div class="rb-grid">${list.map(rbCardHtml).join("")}</div>
+            ${rbRailHtml()}
+          </div>`;
+      }
+      function rbCardHtml(p) {
+        const q = rbQ();
+        const smm = rbSmmOf(p);
+        const n = p.members.length;
+        const teg = !n
+          ? `<span class="rb-tag">Jamoa yo'q</span>`
+          : !smm
+            ? `<span class="rb-tag">SMM yo'q</span>`
+            : `<span class="rb-count">${n} kishi</span>`;
+        const tartib = [...p.members].sort(
+          (a, b) => RB_ROLE_ORDER.indexOf(a.role) - RB_ROLE_ORDER.indexOf(b.role),
+        );
+        const qatorlar = tartib
+          .map((m) => {
+            const mos = q && rbName(m.username).toLowerCase().includes(q);
+            return `<div class="rb-row${mos ? " hit" : ""}" onclick="rbOpenRoleMenu(event,'${escArg(p.id)}','${escArg(m.username)}')">
+                ${rbAvatarHtml(m.username)}
+                <span class="rb-rname">${escHtml(rbName(m.username))}</span>
+                <span class="rb-rrole">${escHtml(rbRoleShort(m.role))}</span>
+                <button type="button" class="rb-x" aria-label="Loyihadan chiqarish"
+                        onclick="event.stopPropagation();rbRemove('${escArg(p.id)}','${escArg(m.username)}')">&times;</button>
+              </div>`;
           })
           .join("");
-
-        const orphans = allUsers.filter((u) => (perms[u.username] || []).length === 0);
-        const debtProjects = projects.filter((p) => p.outstandingDebt);
-        const attentionCount = orphans.length + debtProjects.length;
-        const attentionHtml =
-          attentionCount
-            ? [
-                ...orphans.map(
-                  (u) => `<div class="rail-item warn">
-                    <div style="flex:1;min-width:0">
-                      <div class="r-name">${escHtml(u.first_name || u.username)} loyihasiz</div>
-                      <div class="r-sub">Hech qanday loyiha biriktirilmagan</div>
-                    </div>
-                    <button class="btn btn-blue btn-sm" style="width:auto;padding:0 12px" onclick="openUserEditSheet('${escArg(u.username)}')">Biriktirish</button>
-                  </div>`,
-                ),
-                ...debtProjects.map(
-                  (p) => `<div class="rail-item">
-                    <div style="flex:1;min-width:0">
-                      <div class="r-name">${escHtml(p.label)} qarzda</div>
-                      <div class="r-sub" style="color:var(--red)">${daysBetween(parseISO(p.outstandingDebt.periodEnd), todayDate())} kun</div>
-                    </div>
-                    <button class="btn btn-soft btn-sm" style="width:auto;padding:0 12px" onclick="openTracker('${escArg(p.id)}')">Ochish</button>
-                  </div>`,
-                ),
-              ].join("")
-            : `<div style="font-size:12px;color:var(--t3)">Hammasi tartibda</div>`;
-
-        return `
-          <div class="desktop-only">
-            <div class="dash-cols">
-              <div>
-                <div class="pmx-wrap">
-                  <table class="pmx">
-                    <thead><tr><th class="pmx-emp">Xodim</th>${cols}<th class="pmx-total">Jami</th></tr></thead>
-                    <tbody>${rows}</tbody>
-                  </table>
-                </div>
-                <div class="pmx-legend">
-                  <span><span class="pmx-legend-dot" style="background:var(--brand)"></span>to'liq huquq</span>
-                  <span><span class="pmx-legend-dot" style="background:var(--chip);border:1px solid var(--bd2)"></span>ruxsat yo'q</span>
-                </div>
-                <div class="f-hint">Katakcha ustiga bosib ruxsatni almashtiring · o'zgarish darhol saqlanadi</div>
-              </div>
-              <div>
-                <div class="rail-card">
-                  <div class="rail-title" style="display:flex;align-items:center;justify-content:space-between">E'tibor talab qiladi${attentionCount ? `<span class="rail-title-count">${attentionCount}</span>` : ""}</div>
-                  ${attentionHtml}
-                </div>
-              </div>
+        const bosh = !n
+          ? `<div class="rb-empty">Hech kim biriktirilmagan</div>`
+          : !smm
+            ? `<div class="rb-empty warn" onclick="rbOpenAdd('${escArg(p.id)}')">SMM biriktirilmagan</div>`
+            : "";
+        return `<div class="rb-card" data-slug="${escHtml(p.id)}"
+             style="background:${rbRgba(p.color, 0.09)};border-color:${rbRgba(p.color, 0.3)}"
+             ondragover="rbDragOver(event,'${escArg(p.id)}')" ondragleave="rbDragLeave(event)"
+             ondrop="rbDrop(event,'${escArg(p.id)}')">
+            <div class="rb-chd">
+              <span class="rb-badge" style="background:${escHtml(p.color)}">${escHtml((p.label || "?").slice(0, 1).toUpperCase())}</span>
+              <span class="rb-clabel">${escHtml(p.label)}</span>
+              ${teg}
             </div>
+            <div class="rb-rows">${qatorlar}${bosh}</div>
+            <button type="button" class="rb-add" style="color:${escHtml(p.color)}" onclick="rbOpenAdd('${escArg(p.id)}')">+ Qo'shish</button>
+            <div class="rb-drop"><span></span></div>
+          </div>`;
+      }
+      // O'ng panel — faqat keng ekranda. Sudrash telefonda ishlamaydi,
+      // shuning uchun u yerda panel ham ko'rsatilmaydi: qo'shish
+      // «Qo'shish» tugmasi orqali.
+      function rbRailHtml() {
+        const q = rbQ();
+        const list = [...rbBoard.users]
+          .filter((u) => !q || u.name.toLowerCase().includes(q))
+          .sort((a, b) => (a.projectCount === 0 ? -1 : 0) - (b.projectCount === 0 ? -1 : 0));
+        return `<div class="rb-rail">
+            <div class="rb-rail-t">Xodimlar</div>
+            <div class="rb-rail-s">Kartaga sudrab olib boring</div>
+            ${list
+              .map(
+                (u) => `<div class="rb-ru" draggable="true"
+                   ondragstart="rbDragStart(event,'${escArg(u.username)}')" ondragend="rbDragEnd(event)">
+                  <span class="rb-grip">&#8942;&#8942;</span>
+                  ${rbAvatarHtml(u.username)}
+                  <span class="rb-rutxt">
+                    <span class="rb-runame">${escHtml(rbShort(u.name))}</span>
+                    <span class="rb-rupos">${escHtml(rbRoleShort(u.position))}</span>
+                  </span>
+                  ${u.projectCount ? `<span class="rb-rucount">${u.projectCount}</span>` : `<span class="rb-tag sm">Loyihasiz</span>`}
+                </div>`,
+              )
+              .join("")}
           </div>`;
       }
 
-      // Toggle bosilishi bilan butun ruxsatlar xaritasi PUT qilinadi
-      // (backend shartnomasi o'zgarmadi — avvalgidek to'liq xarita kutadi).
-      async function togglePermission(username, projectId, btnEl) {
-        const list = perms[username] || (perms[username] = []);
-        const idx = list.indexOf(projectId);
-        const turningOn = idx === -1;
-        if (turningOn) list.push(projectId);
-        else {
-          list.splice(idx, 1);
-          // Ruxsat o'chirilsa — roli ham (backendda qator butunlay
-          // o'chgani uchun) yo'qoladi; mahalliy keshni ham tozalab
-          // qo'yamiz, aks holda keyinroq qayta yoqilganda eski rol
-          // vaqtincha (yangilanguncha) noto'g'ri ko'rinib turadi.
-          if (permRoles[username]) delete permRoles[username][projectId];
-        }
-        btnEl.classList.toggle("on", turningOn);
-        btnEl.textContent = turningOn ? "✓" : "";
+      // ── Sudrab qo'shish ──────────────────────────────────────────
+      function rbDragStart(e, username) {
+        rbDrag = username;
         try {
-          const res = await apiFetch("/api/permissions", {
-            method: "PUT",
-            body: JSON.stringify(perms),
-          });
-          if (!res.ok)
-            throw new Error((await res.json().catch(() => ({}))).error || "Xato");
-          renderPermList();
-        } catch (e) {
-          showToast("⚠ " + e.message);
-          const i2 = list.indexOf(projectId);
-          if (turningOn && i2 !== -1) list.splice(i2, 1);
-          else if (!turningOn) list.push(projectId);
-          btnEl.classList.toggle("on", !turningOn);
-          btnEl.textContent = !turningOn ? "✓" : "";
+          e.dataTransfer.setData("text/plain", username);
+          e.dataTransfer.effectAllowed = "copy";
+        } catch (err) {}
+      }
+      function rbDragEnd() {
+        rbDrag = null;
+        document.querySelectorAll(".rb-card.over, .rb-card.deny").forEach((el) => el.classList.remove("over", "deny"));
+      }
+      function rbDragOver(e, slug) {
+        if (!rbDrag) return;
+        e.preventDefault();
+        const p = rbProject(slug);
+        const bor = p?.members.some((m) => m.username === rbDrag);
+        const card = e.currentTarget;
+        card.classList.toggle("over", !bor);
+        card.classList.toggle("deny", !!bor);
+        const matn = card.querySelector(".rb-drop span");
+        if (matn) {
+          matn.textContent = bor
+            ? `${rbName(rbDrag)} allaqachon shu loyihada`
+            : `Qo'yib yuboring · ${rbRoleLabel(rbUser(rbDrag)?.position)} bo'lib qo'shiladi`;
         }
       }
+      function rbDragLeave(e) {
+        e.currentTarget.classList.remove("over", "deny");
+      }
+      async function rbDrop(e, slug) {
+        e.preventDefault();
+        const username = rbDrag;
+        rbDragEnd();
+        if (!username) return;
+        const p = rbProject(slug);
+        if (!p) return;
+        if (p.members.some((m) => m.username === username)) {
+          rbToast(`${rbName(username)} allaqachon shu loyihada`);
+          return;
+        }
+        await rbAdd(slug, [username]);
+      }
+
+      // ── Amallar ──────────────────────────────────────────────────
+      // Hammasi optimistik: ekran darhol o'zgaradi, so'rov keyin
+      // ketadi. Xato bo'lsa taxta serverdan qayta yuklanadi — bu
+      // "qo'lda orqaga qaytarish"dan ishonchliroq, chunki shu orada
+      // boshqa admin ham o'zgartirgan bo'lishi mumkin.
+      async function rbSend(path, opts, xabar) {
+        try {
+          const res = await apiFetch(path, opts);
+          const d = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            const e = new Error(d.error || "Saqlanmadi. Qayta urinib ko'ring");
+            e.code = d.code;
+            e.data = d;
+            throw e;
+          }
+          return d;
+        } catch (e) {
+          if (!e.code) showToast("⚠ " + (e.message || "Saqlanmadi. Qayta urinib ko'ring"));
+          await rbLoad();
+          throw e;
+        }
+      }
+
+      async function rbAdd(slug, usernames, rollar) {
+        const p = rbProject(slug);
+        if (!p) return;
+        const smm = rbSmmOf(p);
+        const items = usernames.map((u) => ({
+          username: u,
+          role: (rollar && rollar[u]) || rbUser(u)?.position || "boshqa",
+        }));
+        // SMM konflikti — alohida ajratiladi: qolganlari qo'shiladi,
+        // konfliktlisi uchun almashtirish oynasi ochiladi.
+        const ziddiyat = smm ? items.find((it) => it.role === "smm" && it.username !== smm.username) : null;
+        const toza = items.filter((it) => it !== ziddiyat);
+
+        if (toza.length) {
+          toza.forEach((it) => p.members.push({ username: it.username, role: it.role }));
+          rbSyncGlobals();
+          rbRender();
+          try {
+            await rbSend("/api/permissions", {
+              method: "POST",
+              body: JSON.stringify({ project_id: slug, items: toza }),
+            });
+          } catch (e) {
+            return;
+          }
+          const nom = toza.length === 1 ? `${rbName(toza[0].username)} qo'shildi` : `${toza.length} kishi qo'shildi`;
+          rbToast(
+            `${nom} · ${p.label}`,
+            { delete: toza.map((it) => ({ project_id: slug, username: it.username })) },
+            { project_id: slug, items: toza.map((it) => ({ username: it.username })) },
+          );
+        }
+        if (ziddiyat) rbOpenSwap(slug, ziddiyat.username);
+      }
+
+      async function rbRemove(slug, username) {
+        const p = rbProject(slug);
+        if (!p) return;
+        const i = p.members.findIndex((m) => m.username === username);
+        if (i === -1) return;
+        const eskiRol = p.members[i].role;
+        p.members.splice(i, 1);
+        rbSyncGlobals();
+        rbRender();
+        try {
+          await rbSend(
+            `/api/permissions?project_id=${encodeURIComponent(slug)}&username=${encodeURIComponent(username)}`,
+            { method: "DELETE" },
+          );
+        } catch (e) {
+          return;
+        }
+        // Qaytarishda AVVALGI ROL bilan tiklanadi — aks holda xodim
+        // "boshqa" bo'lib qaytib qolardi.
+        rbToast(`${rbName(username)} olib tashlandi · ${p.label}`, {
+          upsert: [{ project_id: slug, username, role: eskiRol }],
+        });
+      }
+
+      async function rbSetRole(slug, username, role) {
+        const p = rbProject(slug);
+        const m = p?.members.find((x) => x.username === username);
+        if (!m || m.role === role) return rbCloseMenu();
+        const smm = rbSmmOf(p);
+        if (role === "smm" && smm && smm.username !== username) {
+          rbCloseMenu();
+          return rbOpenSwap(slug, username);
+        }
+        const eski = m.role;
+        m.role = role;
+        rbSyncGlobals();
+        rbCloseMenu();
+        rbRender();
+        try {
+          await rbSend("/api/permissions", {
+            method: "PATCH",
+            body: JSON.stringify({ project_id: slug, username, role }),
+          });
+        } catch (e) {
+          return;
+        }
+        rbToast(`${rbName(username)} endi ${rbRoleLabel(role)} · ${p.label}`, {
+          upsert: [{ project_id: slug, username, role: eski }],
+        });
+      }
+
+      async function rbDoSwap(slug, yangiUsername, btn) {
+        const p = rbProject(slug);
+        if (!p) return;
+        const eskiSmm = rbSmmOf(p);
+        const oldingi = p.members.find((m) => m.username === yangiUsername) || null;
+        const oldingiRol = oldingi ? oldingi.role : null;
+        setBtnLoading(btn, true, "Almashtirilmoqda…");
+        let d;
+        try {
+          d = await rbSend("/api/permissions/swap-smm", {
+            method: "POST",
+            body: JSON.stringify({ project_id: slug, new_username: yangiUsername }),
+          });
+        } catch (e) {
+          rbCloseModal();
+          return;
+        }
+        // Mahalliy holat: eski SMM chiqadi, yangisi SMM bo'ladi.
+        if (eskiSmm) p.members = p.members.filter((m) => m.username !== eskiSmm.username);
+        const bor = p.members.find((m) => m.username === yangiUsername);
+        if (bor) bor.role = "smm";
+        else p.members.push({ username: yangiUsername, role: "smm" });
+        rbSyncGlobals();
+        rbCloseModal();
+        rbRender();
+
+        const revert = { upsert: [], delete: [] };
+        if (eskiSmm) revert.upsert.push({ project_id: slug, username: eskiSmm.username, role: "smm" });
+        if (oldingiRol) revert.upsert.push({ project_id: slug, username: yangiUsername, role: oldingiRol });
+        else revert.delete.push({ project_id: slug, username: yangiUsername });
+        rbToast(
+          `SMM almashtirildi · ${p.label}`,
+          revert,
+          oldingiRol ? null : { project_id: slug, items: [{ username: yangiUsername }] },
+        );
+      }
+
+      // ── «Qaytarish» xabari ───────────────────────────────────────
+      // Telegram xabari shu oyna yopilgandan KEYIN yuboriladi: admin
+      // fikridan qaytsa, xodimga behuda xabar bormaydi. Serverda
+      // kutish mumkin emas (funksiya javobdan keyin to'xtatiladi),
+      // shuning uchun kutish shu yerda.
+      const RB_UNDO_MS = 6000;
+      function rbToast(matn, revert, notify) {
+        rbClearUndo();
+        const el = document.createElement("div");
+        el.className = "rb-toast";
+        el.id = "rb-toast";
+        el.innerHTML = `<span>${escHtml(matn)}</span>${revert ? `<button type="button" onclick="rbUndoNow()">Qaytarish</button>` : ""}`;
+        document.body.appendChild(el);
+        rbUndo = { revert, notify };
+        rbUndo.timer = setTimeout(() => {
+          el.remove();
+          if (rbUndo?.notify) rbFireNotify(rbUndo.notify);
+          rbUndo = null;
+        }, RB_UNDO_MS);
+      }
+      function rbClearUndo() {
+        if (rbUndo?.timer) clearTimeout(rbUndo.timer);
+        // Oldingi amalning xabari hali yuborilmagan bo'lsa — endi
+        // yuboriladi: yangi amal eskisining "qaytarish" imkoniyatini
+        // tugatadi, lekin uni bekor qilmaydi.
+        if (rbUndo?.notify) rbFireNotify(rbUndo.notify);
+        rbUndo = null;
+        document.getElementById("rb-toast")?.remove();
+      }
+      function rbFireNotify(n) {
+        apiFetch("/api/permissions/notify", { method: "POST", body: JSON.stringify(n) }).catch(() => {});
+      }
+      async function rbUndoNow() {
+        const u = rbUndo;
+        if (!u) return;
+        if (u.timer) clearTimeout(u.timer);
+        rbUndo = null; // xabar yuborilmaydi
+        document.getElementById("rb-toast")?.remove();
+        try {
+          await apiFetch("/api/permissions/restore", {
+            method: "POST",
+            body: JSON.stringify({ upsert: u.revert.upsert || [], delete: u.revert.delete || [] }),
+          });
+        } catch (e) {
+          showToast("⚠ Qaytarib bo'lmadi");
+        }
+        await rbLoad();
+      }
+
+      // ── Rol menyusi ──────────────────────────────────────────────
+      function rbCloseMenu() {
+        document.getElementById("rb-menu")?.remove();
+        document.removeEventListener("keydown", rbMenuEsc, true);
+      }
+      function rbMenuEsc(e) {
+        if (e.key === "Escape") {
+          e.stopPropagation();
+          rbCloseMenu();
+        }
+      }
+      function rbOpenRoleMenu(ev, slug, username) {
+        ev.stopPropagation();
+        rbCloseMenu();
+        const p = rbProject(slug);
+        const m = p?.members.find((x) => x.username === username);
+        if (!m) return;
+        const smm = rbSmmOf(p);
+        const el = document.createElement("div");
+        el.className = "rb-menu";
+        el.id = "rb-menu";
+        el.innerHTML = `
+          <div class="rb-menu-h">
+            <div class="rb-menu-n">${escHtml(rbName(username))}</div>
+            <div class="rb-menu-p">${escHtml(p.label)}</div>
+          </div>
+          ${RB_ROLE_ORDER.filter((r) => r !== "boshqa" || m.role === "boshqa")
+            .map(
+              (r) => `<button type="button" class="rb-mi" onclick="rbSetRole('${escArg(slug)}','${escArg(username)}','${r}')">
+                <span class="rb-radio${m.role === r ? " on" : ""}"></span>
+                <span class="rb-mi-l">${escHtml(rbRoleLabel(r))}</span>
+                ${r === "smm" && smm && smm.username !== username ? `<span class="rb-mi-n">${escHtml(rbName(smm.username))}</span>` : ""}
+              </button>`,
+            )
+            .join("")}
+          <div class="rb-menu-sep"></div>
+          <button type="button" class="rb-mi danger" onclick="rbCloseMenu();rbRemove('${escArg(slug)}','${escArg(username)}')">Loyihadan olish</button>`;
+        document.body.appendChild(el);
+
+        // Ekran chetidan chiqib ketmasin — telefonda menyu kengligi
+        // ekranga yaqin bo'ladi.
+        const r = ev.currentTarget.getBoundingClientRect();
+        const w = el.offsetWidth;
+        const h = el.offsetHeight;
+        let x = Math.min(r.left, window.innerWidth - w - 10);
+        let y = r.bottom + 6;
+        if (y + h > window.innerHeight - 10) y = Math.max(10, r.top - h - 6);
+        el.style.left = Math.max(10, x) + "px";
+        el.style.top = y + "px";
+        setTimeout(() => document.addEventListener("click", rbCloseMenu, { once: true }), 0);
+        document.addEventListener("keydown", rbMenuEsc, true);
+      }
+
+      // ── Oynalar ──────────────────────────────────────────────────
+      function rbCloseModal() {
+        document.getElementById("rb-modal")?.remove();
+        const i = pageBackStack.indexOf(rbCloseModal);
+        if (i !== -1) pageBackStack.splice(i, 1);
+        pageSyncBack();
+      }
+      function rbModal(inner) {
+        rbCloseModal();
+        const ov = document.createElement("div");
+        ov.className = "rb-ov";
+        ov.id = "rb-modal";
+        ov.onclick = (e) => {
+          if (e.target === ov) rbCloseModal();
+        };
+        ov.innerHTML = `<div class="rb-dlg">${inner}</div>`;
+        document.body.appendChild(ov);
+        pageBackStack.push(rbCloseModal);
+        pageSyncBack();
+      }
+
+      // 4.1 — Xodim qo'shish
+      function rbOpenAdd(slug) {
+        const p = rbProject(slug);
+        if (!p) return;
+        const smm = rbSmmOf(p);
+        const bor = new Set(p.members.map((m) => m.username));
+        // Loyihasi kam xodim tepada — odatda aynan ular qo'shiladi.
+        const list = rbBoard.users
+          .filter((u) => !bor.has(u.username))
+          .sort((a, b) => a.projectCount - b.projectCount);
+        if (!list.length) {
+          showToast("Qo'shiladigan xodim qolmadi");
+          return;
+        }
+        rbModal(`
+          <div class="rb-dlg-h">
+            <div class="rb-dlg-t">Xodim qo'shish</div>
+            <div class="rb-dlg-s">${escHtml(p.label)}</div>
+          </div>
+          <div class="rb-dlg-list">
+            ${list
+              .map((u) => {
+                const almash = u.position === "smm" && smm;
+                const ost = `${rbRoleLabel(u.position)} · ${u.projectCount ? `${u.projectCount} loyiha` : "loyihasiz"}${almash ? " · SMM almashtiriladi" : ""}`;
+                return `<label class="rb-pick">
+                    <input type="checkbox" value="${escHtml(u.username)}" onchange="rbAddPicked()"/>
+                    ${rbAvatarHtml(u.username)}
+                    <span class="rb-pick-t">
+                      <span class="rb-pick-n">${escHtml(rbShort(u.name))}</span>
+                      <span class="rb-pick-s">${escHtml(ost)}</span>
+                    </span>
+                  </label>`;
+              })
+              .join("")}
+          </div>
+          <div class="rb-dlg-f">
+            <div class="rb-dlg-note">Rol lavozimiga qarab qo'yiladi, keyin o'zgartirish mumkin.</div>
+            <div class="rb-dlg-btns">
+              <button type="button" class="btn btn-soft" onclick="rbCloseModal()">Bekor qilish</button>
+              <button type="button" class="btn btn-blue" id="rb-add-btn" disabled onclick="rbAddConfirm('${escArg(slug)}',this)">Xodim tanlang</button>
+            </div>
+          </div>`);
+      }
+      function rbAddSelected() {
+        return [...document.querySelectorAll("#rb-modal .rb-pick input:checked")].map((i) => i.value);
+      }
+      function rbAddPicked() {
+        const n = rbAddSelected().length;
+        const b = document.getElementById("rb-add-btn");
+        if (!b) return;
+        b.disabled = !n;
+        b.textContent = n ? `${n} kishini qo'shish` : "Xodim tanlang";
+      }
+      async function rbAddConfirm(slug, btn) {
+        const tanlangan = rbAddSelected();
+        if (!tanlangan.length) return;
+        setBtnLoading(btn, true, "Qo'shilmoqda…");
+        rbCloseModal();
+        await rbAdd(slug, tanlangan);
+      }
+
+      // 4.5 — SMM almashtirish
+      function rbOpenSwap(slug, yangiUsername) {
+        const p = rbProject(slug);
+        const smm = rbSmmOf(p);
+        if (!p || !smm) return rbAdd(slug, [yangiUsername], { [yangiUsername]: "smm" });
+        rbModal(`
+          <div class="rb-dlg-h">
+            <div class="rb-dlg-t">SMM almashtirilsinmi?</div>
+          </div>
+          <div class="rb-swap">
+            <p><b>${escHtml(p.label)}</b> loyihasida SMM — <b>${escHtml(rbName(smm.username))}</b>
+               Uning o'rniga <b>${escHtml(rbName(yangiUsername))}</b> qo'yiladi,
+               ${escHtml(rbName(smm.username))} loyihadan chiqadi.</p>
+            <p class="rb-swap-n">Eski ishlar Tabelda ${escHtml(rbName(smm.username))} nomida qoladi.</p>
+          </div>
+          <div class="rb-dlg-f">
+            <div class="rb-dlg-btns">
+              <button type="button" class="btn btn-soft" onclick="rbCloseModal()">Bekor qilish</button>
+              <button type="button" class="btn btn-blue" onclick="rbDoSwap('${escArg(slug)}','${escArg(yangiUsername)}',this)">Almashtirish</button>
+            </div>
+          </div>`);
+      }
+
+      // ── Xodimlar ko'rinishi ──────────────────────────────────────
+      // Teskari savol: "bu xodim qayerda ishlaydi". Ma'lumot bir xil,
+      // faqat boshqa tomondan ko'rsatiladi.
+      function rbUsersHtml() {
+        const q = rbQ();
+        const list = rbBoard.users
+          .filter((u) => !q || u.name.toLowerCase().includes(q))
+          .sort((a, b) => (a.projectCount === 0 ? -1 : 0) - (b.projectCount === 0 ? -1 : 0));
+        if (!list.length) return `<div class="empty"><div class="empty-t">Hech narsa topilmadi</div></div>`;
+        if (!rbSel || !list.some((u) => u.username === rbSel)) rbSel = list[0].username;
+        return `<div class="rb-ucols">
+            <div class="rb-ulist">
+              ${list
+                .map(
+                  (u) => `<div class="rb-ui${u.username === rbSel ? " on" : ""}" onclick="rbSelectUser('${escArg(u.username)}')">
+                    ${rbAvatarHtml(u.username)}
+                    <span class="rb-rutxt">
+                      <span class="rb-runame">${escHtml(rbShort(u.name))}</span>
+                      <span class="rb-rupos">${escHtml(rbRoleShort(u.position))}</span>
+                    </span>
+                    ${u.projectCount ? `<span class="rb-rucount">${u.projectCount}</span>` : `<span class="rb-tag sm">Loyihasiz</span>`}
+                  </div>`,
+                )
+                .join("")}
+            </div>
+            ${rbUserDetailHtml()}
+          </div>`;
+      }
+      function rbSelectUser(username) {
+        rbSel = username;
+        rbRender();
+      }
+      function rbUserDetailHtml() {
+        const u = rbUser(rbSel);
+        if (!u) return `<div></div>`;
+        const uniki = rbBoard.projects.filter((p) => p.members.some((m) => m.username === u.username));
+        const qolgan = rbBoard.projects.filter((p) => !p.members.some((m) => m.username === u.username));
+        return `<div class="rb-udet">
+            <div class="rb-udet-h">
+              ${rbAvatarHtml(u.username, "big")}
+              <div style="min-width:0">
+                <div class="rb-udet-n">${escHtml(rbShort(u.name))}</div>
+                <div class="rb-udet-s">${escHtml(rbRoleLabel(u.position))} · ${uniki.length} loyiha</div>
+              </div>
+            </div>
+            ${
+              uniki.length
+                ? `<div class="rb-upl">${uniki
+                    .map((p) => {
+                      const m = p.members.find((x) => x.username === u.username);
+                      return `<div class="rb-up">
+                          <span class="rb-badge sm" style="background:${escHtml(p.color)}">${escHtml((p.label || "?").slice(0, 1).toUpperCase())}</span>
+                          <span class="rb-up-n">${escHtml(p.label)}</span>
+                          <button type="button" class="rb-up-role" onclick="rbOpenRoleMenu(event,'${escArg(p.id)}','${escArg(u.username)}')">${escHtml(rbRoleLabel(m.role))}</button>
+                          <button type="button" class="rb-x" aria-label="Loyihadan chiqarish" onclick="rbRemove('${escArg(p.id)}','${escArg(u.username)}')">&times;</button>
+                        </div>`;
+                    })
+                    .join("")}</div>`
+                : `<div class="rb-empty" style="margin-top:12px">Hech qanday loyiha biriktirilmagan</div>`
+            }
+            ${
+              qolgan.length
+                ? `<div class="rb-upadd">
+                    <div class="sec-upper" style="margin:0 0 8px">Loyiha qo'shish</div>
+                    <div class="rb-upchips">${qolgan
+                      .map(
+                        (p) => `<button type="button" class="rb-upchip" onclick="rbAdd('${escArg(p.id)}',['${escArg(u.username)}'])">
+                          <i style="background:${escHtml(p.color)}"></i>${escHtml(p.label)}
+                        </button>`,
+                      )
+                      .join("")}</div>
+                  </div>`
+                : ""
+            }
+          </div>`;
+      }
+
       async function addEmployee() {
         const inp = document.getElementById("new-emp-input");
         if (!inp) return;
@@ -22774,7 +23511,7 @@
           if (!res.ok) throw new Error(d.error || "Xato");
           inp.value = "";
           showToast(`✅ @${username} qo'shildi`);
-          await loadUsersAndRenderPermList();
+          await rbLoad();
         } catch (e) {
           showToast("⚠ " + e.message);
         }
@@ -22829,6 +23566,15 @@
                    value="${escHtml(u.email || "")}" placeholder="ism@gmail.com"/>
             <div class="f-hint" style="margin-top:6px">Kalendar rejalari shu pochtaga taklifnoma bo'lib boradi.</div>
           </div>
+          <div class="f-group">
+            <label class="f-label">Lavozimi (rol)</label>
+            <select class="f-input" id="ue-position">
+              ${Object.keys(POSITION_LABELS)
+                .map((k) => `<option value="${k}"${(u.position || "boshqa") === k ? " selected" : ""}>${POSITION_LABELS[k]}</option>`)
+                .join("")}
+            </select>
+            <div class="f-hint" style="margin-top:6px">Ruxsatlarda loyihaga qo'shilganda roli shu yerdan olinadi.</div>
+          </div>
           <div class="f-group"><label class="f-label">Tug'ilgan sana</label>${renderDateFieldHtml("ue-birth", u.birth_date ? String(u.birth_date).slice(0, 10) : "", "Sana tanlang")}</div>
           <button class="btn btn-blue" id="ue-save-btn" onclick="saveUserEdit('${escArg(username)}')" style="margin-bottom:18px">Saqlash</button>
           ${
@@ -22842,7 +23588,7 @@
       // yuklaydi, shuning uchun aynan qaysi biri hozir ochiqligini
       // tekshirib, o'shani yangilaymiz.
       async function refreshUsersView() {
-        if (document.getElementById("perm-list")) await loadUsersAndRenderPermList();
+        if (document.getElementById("rb-root")) await rbLoad();
         else if (document.getElementById("staff-tg-list")) await loadAndRenderTelegramStaff("");
       }
       // Botga kirish holatini o'zgartirish — faqat Super Admin (backend
@@ -22870,6 +23616,7 @@
           phone: document.getElementById("ue-phone")?.value.trim(),
           jobTitle: document.getElementById("ue-job")?.value.trim(),
           email: document.getElementById("ue-email")?.value.trim() || null,
+          position: document.getElementById("ue-position")?.value || undefined,
           birthDate: document.getElementById("ue-birth")?.value || null,
         };
         if (btn) {
