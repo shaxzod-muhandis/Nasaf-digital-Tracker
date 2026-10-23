@@ -824,12 +824,23 @@ const STAFF_POSITIONS = [
 
 // Telegram xabarlarida ko'rsatiladigan nom. Frontenddagi
 // POSITION_LABELS bilan bir xil bo'lishi kerak.
-// Loyiha ranglari — 0025 migratsiyasidagi palitra bilan AYNAN bir xil
+// Loyiha ranglari — 0026 migratsiyasidagi palitra bilan AYNAN bir xil
 // bo'lishi kerak, aks holda migratsiyadan keyin yaratilgan loyihalar
 // boshqa to'plamdan rang olib, ekran ola-chalpoq bo'lib qolardi.
 const PROJECT_COLORS = [
-  "#0284c7", "#0d9488", "#d97706", "#db2777", "#7c3aed", "#65a30d", "#4f46e5",
+  "#0284c7", "#0d9488", "#d97706", "#db2777", "#7c3aed", "#65a30d",
+  "#4f46e5", "#c2410c", "#0891b2", "#9333ea", "#15803d", "#475569",
 ];
+
+// Yangi loyihaga rang: FAOL loyihalarda hali ishlatilmagan birinchi
+// rang. Oddiy "loyihalar soni % palitra" usuli arxivdagi loyihalarni
+// ham sanab, ekranda ko'rinadigan ikki loyihani bir xil rangga
+// tushirib qo'yardi.
+async function pickProjectColor() {
+  const r = await db.query(`select color from projects where is_active and color is not null`);
+  const band = new Set(r.rows.map((x) => x.color));
+  return PROJECT_COLORS.find((c) => !band.has(c)) || PROJECT_COLORS[band.size % PROJECT_COLORS.length];
+}
 
 const POSITION_LABEL_UZ = {
   montajchi: "Montajchi",
@@ -3421,12 +3432,8 @@ app.post("/api/projects", auth, async (req, res) => {
     const exists = await db.query(`select 1 from projects where slug = $1`, [slug]);
     if (exists.rows[0]) slug = `${slug}_${Date.now().toString(36)}`;
 
-    // Rang palitradan navbati bilan olinadi — Ruxsatlar ekranida har
-    // loyiha o'z rangida ko'rinadi. Mavjud loyihalar soniga qarab
-    // tanlanadi, ya'ni ketma-ket yaratilganlar bir xil bo'lib
-    // qolmaydi.
-    const cntR = await db.query(`select count(*)::int as n from projects`);
-    const color = PROJECT_COLORS[cntR.rows[0].n % PROJECT_COLORS.length];
+    // Ruxsatlar ekranida har loyiha o'z rangida ko'rinadi.
+    const color = await pickProjectColor();
 
     const r = await db.query(
       `insert into projects (slug, label, anchor_date, posts_target, stories_target, color)

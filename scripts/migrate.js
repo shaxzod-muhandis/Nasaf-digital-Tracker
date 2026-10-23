@@ -46,6 +46,15 @@ async function main() {
     connectionString,
     ssl: process.env.DATABASE_SSL === "false" ? false : { rejectUnauthorized: false },
   });
+  // Migratsiyaning `raise notice` xabarlari — masalan "bu xodimning
+  // SMM roli olib tashlandi" — ushlanmasa pg ularni JIM tashlab
+  // yuboradi. Natijada migratsiya ma'lumotni o'zgartirgani haqida
+  // ogohlantirsa ham, ekranda hech narsa ko'rinmasdi.
+  client.on("notice", (n) => {
+    const m = (n && n.message) || "";
+    if (m) console.log(`  ℹ️  ${m}`);
+  });
+
   await client.connect();
   console.log("✅ Bazaga ulandi.");
 
