@@ -1674,9 +1674,11 @@ async function permProjectId(slug) {
   const r = await db.query(`select id from projects where slug = $1`, [slug]);
   return r.rows[0]?.id || null;
 }
+// Admin ham loyihaga biriktirilishi mumkin — `role = 'employee'`
+// sharti ataylab yo'q. Sabab `board` izohida.
 async function permUserId(username) {
   const r = await db.query(
-    `select id from users where username = $1 and is_active and role = 'employee'`,
+    `select id from users where username = $1 and is_active and access_status <> 'removed'`,
     [String(username || "").toLowerCase()],
   );
   return r.rows[0]?.id || null;
@@ -1694,11 +1696,18 @@ app.get("/api/permissions/board", auth, async (req, res) => {
         `select id, slug, label, color from projects
           where is_active = true order by created_at, id`,
       ),
+      // Adminlar ham kiradi. Ularga ruxsat kerak emas (baribir hamma
+      // loyihani ko'radi), lekin ROL kerak: loyihaning SMM'i — o'sha
+      // loyihaning mas'uli, ya'ni Tabelda "rejani kim bajarishi kerak
+      // edi" degan savolning javobi, va Ncoin ham shu bo'yicha
+      // taqsimlanadi. Admin ham qaysidir loyihada SMM bo'lishi mumkin,
+      // avval buni interfeysdan ifodalab bo'lmasdi.
       db.query(
-        `select id, username, first_name, last_name, full_name, job_title, position, avatar_url
+        `select id, username, first_name, last_name, full_name, job_title, position, avatar_url,
+                (role <> 'employee') as is_admin
            from users
-          where is_active and role = 'employee' and access_status <> 'removed'
-          order by coalesce(first_name, full_name, username)`,
+          where is_active and access_status <> 'removed'
+          order by (role <> 'employee'), coalesce(first_name, full_name, username)`,
       ),
       db.query(`select user_id, project_id, role from permissions`),
     ]);
@@ -1731,6 +1740,7 @@ app.get("/api/permissions/board", auth, async (req, res) => {
         jobTitle: u.job_title || "",
         position: u.position || "boshqa",
         avatarUrl: u.avatar_url || null,
+        isAdmin: !!u.is_admin,
         projectCount: countByUser[u.username] || 0,
       })),
       roles: PERM_ROLES,

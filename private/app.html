@@ -1514,6 +1514,12 @@
       }
       .rb-rupos { font-size: 11.5px; color: var(--t3); }
       .rb-rucount { font-size: 12.5px; color: var(--t3); flex: none; }
+      /* Admin loyihasiz bo'lishi normal holat — qizil ogohlantirish
+         emas, xolis belgi. */
+      .rb-admin {
+        font-size: 10.5px; font-weight: 600; color: var(--t3); background: var(--chip);
+        border-radius: 6px; padding: 2px 6px; flex: none; white-space: nowrap;
+      }
       @media (max-width: 979px) {
         .rb-rail { display: none; }
         .rb-grid { grid-template-columns: 1fr; }
@@ -22935,6 +22941,27 @@
         const u = rbUser(username);
         return `<span class="rb-av ${cls || ""}">${escHtml(rbInitials(u?.name || username))}${avatarImg(u?.avatarUrl)}</span>`;
       }
+      // Saralash: loyihasiz XODIM tepada (aynan u e'tibor talab
+      // qiladi), adminlar esa oxirida. Admin har loyihada bo'lishi
+      // shart emas, shuning uchun uning "0 loyiha"si ogohlantirish
+      // emas — ro'yxat boshiga chiqarilsa shovqin bo'lardi.
+      function rbSortUsers(list) {
+        return [...list].sort((a, b) => {
+          if (!!a.isAdmin !== !!b.isAdmin) return a.isAdmin ? 1 : -1;
+          const ay = !a.isAdmin && a.projectCount === 0;
+          const by = !b.isAdmin && b.projectCount === 0;
+          if (ay !== by) return ay ? -1 : 1;
+          return 0;
+        });
+      }
+      // O'ng tomondagi belgi: loyihalar soni, yoki admin uchun teg,
+      // yoki loyihasiz xodim uchun qizil ogohlantirish.
+      function rbUserTagHtml(u) {
+        if (u.projectCount) return `<span class="rb-rucount">${u.projectCount}</span>`;
+        if (u.isAdmin) return `<span class="rb-admin">Admin</span>`;
+        return `<span class="rb-tag sm">Loyihasiz</span>`;
+      }
+
       function rbQ() {
         return (document.getElementById("admin-search")?.value || "").toLowerCase().trim();
       }
@@ -23098,9 +23125,9 @@
       // «Qo'shish» tugmasi orqali.
       function rbRailHtml() {
         const q = rbQ();
-        const list = [...rbBoard.users]
-          .filter((u) => !q || u.name.toLowerCase().includes(q))
-          .sort((a, b) => (a.projectCount === 0 ? -1 : 0) - (b.projectCount === 0 ? -1 : 0));
+        const list = rbSortUsers(
+          rbBoard.users.filter((u) => !q || u.name.toLowerCase().includes(q)),
+        );
         return `<div class="rb-rail">
             <div class="rb-rail-t">Xodimlar</div>
             <div class="rb-rail-s">Kartaga sudrab olib boring</div>
@@ -23112,9 +23139,9 @@
                   ${rbAvatarHtml(u.username)}
                   <span class="rb-rutxt">
                     <span class="rb-runame">${escHtml(rbShort(u.name))}</span>
-                    <span class="rb-rupos">${escHtml(rbRoleShort(u.position))}</span>
+                    <span class="rb-rupos">${escHtml(u.isAdmin ? "Admin" : rbRoleShort(u.position))}</span>
                   </span>
-                  ${u.projectCount ? `<span class="rb-rucount">${u.projectCount}</span>` : `<span class="rb-tag sm">Loyihasiz</span>`}
+                  ${rbUserTagHtml(u)}
                 </div>`,
               )
               .join("")}
@@ -23441,9 +23468,7 @@
         const smm = rbSmmOf(p);
         const bor = new Set(p.members.map((m) => m.username));
         // Loyihasi kam xodim tepada — odatda aynan ular qo'shiladi.
-        const list = rbBoard.users
-          .filter((u) => !bor.has(u.username))
-          .sort((a, b) => a.projectCount - b.projectCount);
+        const list = rbSortUsers(rbBoard.users.filter((u) => !bor.has(u.username)));
         if (!list.length) {
           showToast("Qo'shiladigan xodim qolmadi");
           return;
@@ -23457,7 +23482,7 @@
             ${list
               .map((u) => {
                 const almash = u.position === "smm" && smm;
-                const ost = `${rbRoleLabel(u.position)} · ${u.projectCount ? `${u.projectCount} loyiha` : "loyihasiz"}${almash ? " · SMM almashtiriladi" : ""}`;
+                const ost = `${u.isAdmin ? "Admin" : rbRoleLabel(u.position)} · ${u.projectCount ? `${u.projectCount} loyiha` : u.isAdmin ? "biriktirilmagan" : "loyihasiz"}${almash ? " · SMM almashtiriladi" : ""}`;
                 return `<label class="rb-pick">
                     <input type="checkbox" value="${escHtml(u.username)}" onchange="rbAddPicked()"/>
                     ${rbAvatarHtml(u.username)}
@@ -23523,9 +23548,9 @@
       // faqat boshqa tomondan ko'rsatiladi.
       function rbUsersHtml() {
         const q = rbQ();
-        const list = rbBoard.users
-          .filter((u) => !q || u.name.toLowerCase().includes(q))
-          .sort((a, b) => (a.projectCount === 0 ? -1 : 0) - (b.projectCount === 0 ? -1 : 0));
+        const list = rbSortUsers(
+          rbBoard.users.filter((u) => !q || u.name.toLowerCase().includes(q)),
+        );
         if (!list.length) return `<div class="empty"><div class="empty-t">Hech narsa topilmadi</div></div>`;
         if (!rbSel || !list.some((u) => u.username === rbSel)) rbSel = list[0].username;
         return `<div class="rb-ucols">
@@ -23536,9 +23561,9 @@
                     ${rbAvatarHtml(u.username)}
                     <span class="rb-rutxt">
                       <span class="rb-runame">${escHtml(rbShort(u.name))}</span>
-                      <span class="rb-rupos">${escHtml(rbRoleShort(u.position))}</span>
+                      <span class="rb-rupos">${escHtml(u.isAdmin ? "Admin" : rbRoleShort(u.position))}</span>
                     </span>
-                    ${u.projectCount ? `<span class="rb-rucount">${u.projectCount}</span>` : `<span class="rb-tag sm">Loyihasiz</span>`}
+                    ${rbUserTagHtml(u)}
                   </div>`,
                 )
                 .join("")}
@@ -23560,7 +23585,7 @@
               ${rbAvatarHtml(u.username, "big")}
               <div style="min-width:0">
                 <div class="rb-udet-n">${escHtml(rbShort(u.name))}</div>
-                <div class="rb-udet-s">${escHtml(rbRoleLabel(u.position))} · ${uniki.length} loyiha</div>
+                <div class="rb-udet-s">${escHtml(u.isAdmin ? "Admin" : rbRoleLabel(u.position))} · ${uniki.length} loyiha</div>
               </div>
             </div>
             ${
