@@ -169,11 +169,19 @@ function sendAppHtml(res) {
   try {
     if (_appHtmlCache === null) loadAppHtml();
     res.setHeader("Content-Type", "text/html; charset=utf-8");
-    // "no-cache" — brauzer nusxani saqlaydi, lekin har safar
-    // "o'zgardimi?" deb so'raydi. O'zgarmagan bo'lsa ETag orqali 304
-    // qaytadi va 119 KB qayta yuklanmaydi. Avvalgi "no-store" esa
-    // saqlashni butunlay taqiqlab, har ochilishda to'liq yuklatardi.
-    res.setHeader("Cache-Control", "no-cache");
+    // Ikki qatlam:
+    //   max-age=0  — brauzer har safar "o'zgardimi?" deb so'raydi va
+    //     o'zgarmagan bo'lsa ETag orqali 304 oladi (1 MB qayta
+    //     yuklanmaydi).
+    //   s-maxage   — javob Vercel'ning CHEKKA (edge) keshida yotadi.
+    //     Shusiz har ochilish, hatto 304 ham, funksiyagacha borib
+    //     kelardi: o'lchanganda bu ~1 soniya edi, chunki funksiya
+    //     foydalanuvchidan juda uzoqda ishlardi. Endi javob eng yaqin
+    //     chekka nuqtadan keladi.
+    // Yangi deploy chekka keshni avtomatik tozalaydi; "Yangi versiya"
+    // tugmasi esa manzilga ?v=... qo'shib keshni chetlab o'tadi, ya'ni
+    // eski nusxada tiqilib qolish mumkin emas.
+    res.setHeader("Cache-Control", "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800");
     res.send(_appHtmlCache);
   } catch (e) {
     res.status(500).json({ error: "App topilmadi", detail: e.message });

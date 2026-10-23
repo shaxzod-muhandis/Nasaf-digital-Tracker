@@ -27,10 +27,26 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Shrift jadvali ilovaning birinchi chizilishini KUTDIRMAYDI.
+         Oldin oddiy `rel="stylesheet"` edi va brauzer u kelmaguncha
+         hech narsa chizmasdi — o'lchanganda bu ~240 ms edi. `media`
+         hiylasi bilan jadval fonda yuklanadi, kelgach qo'llanadi.
+         Matn shu orada tizim shriftida ko'rinib turadi — `display=swap`
+         bilan baribir shunday bo'lardi, shunchaki kechroq.
+         300 og'irligi olib tashlandi: u butun ilovada bir joyda
+         ishlatilardi. -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Onest:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Onest:wght@400;500;600;700&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all';this.onload=null"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Onest:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
     <style>
       *,
       *::before,
@@ -1332,6 +1348,54 @@
       .pf-savebar-actions .btn {
         height: 46px;
       }
+      /* ── Kalendar: yuklanish belgisi ──────────────────────────────
+         Bo'sh to'r "reja yo'q" degan noto'g'ri taassurot berardi.
+         Skelet to'rning o'z shaklida, shuning uchun ma'lumot kelganda
+         sahifa sakramaydi. */
+      .kal-ld {
+        /* `width: 100%` ataylab: flex ustunda cho'zilish kross o'qda
+           ishlaydi, lekin bu yerda konteyner kontentga qarab
+           qisqarib qolardi (bloklar hali o'lchamsiz). */
+        width: 100%; flex: 1; min-height: 0; display: flex; gap: 1px;
+        padding: 10px 8px; overflow: hidden; box-sizing: border-box;
+      }
+      .kal-ld-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+      .kal-ld-blk {
+        border-radius: 8px; background: var(--chip2, var(--chip));
+        animation: kal-ld-puls 1.3s ease-in-out infinite;
+      }
+      .kal-ld.oy {
+        width: 100%; display: grid; grid-template-columns: repeat(7, 1fr);
+        gap: 1px; padding: 1px; box-sizing: border-box;
+      }
+      .kal-ld.oy .kal-ld-cell {
+        min-height: 72px; background: var(--chip2, var(--chip));
+        animation: kal-ld-puls 1.3s ease-in-out infinite;
+      }
+      @keyframes kal-ld-puls { 0%, 100% { opacity: .7; } 50% { opacity: 1; } }
+
+      /* Qayta yuklashda (‹ › bosilganda) to'r joyida qoladi — tepada
+         faqat ingichka chiziq yuguradi. */
+      .kal-bar {
+        position: absolute; top: 0; left: 0; right: 0; height: 2px;
+        overflow: hidden; z-index: 5; background: transparent;
+      }
+      .kal-bar::after {
+        content: ""; position: absolute; inset: 0; width: 40%;
+        background: var(--brand); border-radius: 2px;
+        animation: kal-yugur 1.1s ease-in-out infinite;
+      }
+      @keyframes kal-yugur {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(350%); }
+      }
+      /* Chiziq `kal-main` ichida joylashadi */
+      .kal-main { position: relative; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .kal-ld-blk, .kal-ld.oy .kal-ld-cell, .kal-bar::after { animation: none; }
+      }
+
       /* ══ RUXSATLAR TAXTASI ═══════════════════════════════════════
          Dizayn qiymatlari TZ dan, ranglar esa ilovaning o'z
          o'zgaruvchilaridan olingan — aks holda qorong'i tema buzilardi
@@ -3113,7 +3177,9 @@
         border-radius: 17px;
         background: var(--brand);
         color: #fff;
-        font-weight: 300;
+        /* 300 emas: butun ilovada shu yagona joyda ishlatilardi va
+           uning uchun alohida shrift fayli yuklanardi. */
+        font-weight: 400;
         font-size: 26px;
         display: flex;
         align-items: center;
@@ -11235,13 +11301,6 @@
       }
       .kal-empty div { font-size: 13.5px; color: var(--v3-t3); }
       .kal-empty button { pointer-events: auto; }
-      .kal-skel {
-        position: absolute;
-        border-radius: 7px;
-        background: var(--chip2);
-        animation: kal-pulse 1.3s ease-in-out infinite;
-      }
-      @keyframes kal-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
 
       /* ── Telefon ─────────────────────────────────────────────────── */
       @media (max-width: 859px) {
@@ -12840,13 +12899,23 @@
           if (d.version && d.version !== APP_VERSION) showNewVersionBanner();
         } catch (e) {}
       }
+      // Oddiy `location.reload()` chekka keshdagi AYNI nusxani qayta
+      // olib kelishi mumkin — banner yana chiqib, tugma ishlamayotgandek
+      // tuyulardi. Manzilga bir martalik `?v=` qo'shilsa, so'rov kesh
+      // yonidan o'tadi va albatta yangi nusxa keladi.
+      function reloadFresh() {
+        const u = new URL(location.href);
+        u.searchParams.set("v", Date.now().toString(36));
+        location.replace(u.toString());
+      }
+
       function showNewVersionBanner() {
         if (versionBannerShown) return;
         versionBannerShown = true;
         const el = document.createElement("div");
         el.className = "new-version";
         el.innerHTML = `<span class="new-version-t">Yangi versiya chiqdi</span>
-          <button type="button" class="new-version-btn" onclick="location.reload()">Yangilash</button>
+          <button type="button" class="new-version-btn" onclick="reloadFresh()">Yangilash</button>
           <button type="button" class="new-version-x" aria-label="Yopish" onclick="this.parentElement.remove()">×</button>`;
         document.body.appendChild(el);
       }
@@ -17714,8 +17783,10 @@
         if (mobil && kal.view === "hafta" && !opts.view && !url.view) kal.view = "kun";
         kalWriteUrl();
         kalRender();
-        await kalLoadUsers();
-        await kalLoad();
+        // Ikkalasi bir-biriga bog'liq emas: ro'yxatlar (xodim, loyiha)
+        // va rejalar alohida so'rovlar. Ketma-ket kutilganda kalendar
+        // ikki marta borib-kelish vaqtini yig'ardi — endi bir vaqtda.
+        await Promise.all([kalLoadUsers(), kalLoad()]);
       }
       function closeCalendar() { showTab("today"); }
 
@@ -17851,6 +17922,29 @@
       function kalUser(id) { return kal.users.find((u) => String(u.id) === String(id)); }
 
       // ── Umumiy chizish ────────────────────────────────────────────
+      // Kutish paytida to'rning o'zi shaklida kulrang skelet: sahifa
+      // sakramaydi va "nimadir kelyapti" degani darhol ko'rinadi.
+      function kalSkeletonHtml(mobil) {
+        const ustun = kal.view === "kun" ? 1 : kal.view === "hafta" ? 7 : 7;
+        const qator = kal.view === "oy" ? 6 : 1;
+        if (kal.view === "oy") {
+          return `<div class="kal-ld oy">${Array.from({ length: ustun * qator })
+            .map(() => `<div class="kal-ld-cell"></div>`)
+            .join("")}</div>`;
+        }
+        return `<div class="kal-ld">
+            ${Array.from({ length: ustun })
+              .map(
+                (_, i) => `<div class="kal-ld-col">
+                  ${Array.from({ length: 3 })
+                    .map((__, j) => `<div class="kal-ld-blk" style="margin-top:${12 + ((i + j) % 4) * 26}px;height:${34 + ((i * 3 + j) % 3) * 18}px"></div>`)
+                    .join("")}
+                </div>`,
+              )
+              .join("")}
+          </div>`;
+      }
+
       function kalRender() {
         const host = document.getElementById("screen-kalendar");
         if (!host || !kal) return;
@@ -17862,13 +17956,20 @@
         const eski = document.getElementById("kal-body");
         const eskiScroll = eski ? eski.scrollTop : null;
 
+        // Yuklanish ikki xil ko'rinadi:
+        //   birinchi ochilish (hali hech narsa yo'q) — skelet, chunki
+        //     bo'sh to'r "reja yo'q" degan noto'g'ri taassurot berardi;
+        //   ‹ › bosilgan (to'r allaqachon turibdi) — tepada ingichka
+        //     chiziq, chunki butun to'rni almashtirish ko'zni urardi.
+        const birinchiYuk = kal.loading && !kal.items.length;
         host.innerHTML = `
           <div class="kal-wrap">
             ${mobil ? "" : `<div class="kal-side">${kalSideHtml()}</div>`}
             <div class="kal-main">
+              ${kal.loading && !birinchiYuk ? `<div class="kal-bar"></div>` : ""}
               ${kalTopHtml(mobil)}
               ${mobil ? kalStripHtml() + kalChipsHtml() : ""}
-              ${kal.view === "oy" ? kalMonthHtml() : kalGridHtml()}
+              ${birinchiYuk ? kalSkeletonHtml(mobil) : kal.view === "oy" ? kalMonthHtml() : kalGridHtml()}
             </div>
           </div>
           ${mobil ? `<button class="kal-fab" onclick="kalOpenForm({})" aria-label="Yangi reja">+</button>` : ""}`;
