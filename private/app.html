@@ -1398,6 +1398,14 @@
 
       /* Kontent rejasiz loyihaning tafsilot paneli — progress, davr
          va post/stories kataklari o'rniga qisqa ma'lumot. */
+      /* Xodimlar bo'limi sarlavhasi — chapda nom, o'ngda eksport. */
+      .staff-hdr {
+        display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px;
+      }
+      .staff-hdr .staff-export {
+        width: auto; height: 34px; padding: 0 14px; margin: 0 0 0 auto;
+        font-size: 12.5px; display: inline-flex; align-items: center; gap: 7px;
+      }
       .pv-dot { width: 9px; height: 9px; border-radius: 99px; flex: none; margin-right: 10px; }
       .pd-noplan { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
       .pd-noplan-row { display: flex; align-items: baseline; gap: 12px; }
@@ -22428,6 +22436,32 @@
       // to'ldirgan userlar shu yerda o'zi paydo bo'ladi, admin qo'lda
       // qayta kiritmaydi; (2) Boshqa xodimlar — Telegram'siz ishlab
       // chiqarish jamoasi (montajchi/mobilograf/...), hali ham qo'lda.
+      // Xodimlar ro'yxatini Excelga chiqarish. Fayl serverda tuziladi
+      // (Tabel eksporti bilan bir xil kutubxona), bu yerda esa faqat
+      // saqlanadi — telefon raqami va tug'ilgan sana bor, shuning
+      // uchun endpoint ham faqat adminga ochiq.
+      async function exportStaffXlsx(btn) {
+        setBtnLoading(btn, true, "Tayyorlanmoqda…");
+        try {
+          const r = await apiFetch("/api/users/export.xlsx");
+          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
+          const blob = await r.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `xodimlar-${isoOf(todayDate())}.xlsx`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 2000);
+          showToast("✅ Yuklandi");
+        } catch (e) {
+          showToast("⚠ " + e.message);
+        } finally {
+          setBtnLoading(btn, false);
+        }
+      }
+
       function renderStaffTab(c) {
         const q = (document.getElementById("admin-search")?.value || "")
           .toLowerCase()
@@ -22468,7 +22502,10 @@
         }
 
         c.innerHTML = `
-          <div class="sec-upper">Telegram xodimlar · avtomatik</div>
+          <div class="staff-hdr">
+            <div class="sec-upper" style="margin:0">Telegram xodimlar · avtomatik</div>
+            <button type="button" class="btn btn-soft staff-export" onclick="exportStaffXlsx(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Excelga yuklash</button>
+          </div>
           <div id="staff-tg-list" class="list-card" style="margin-bottom:20px">
             <div style="padding:16px 14px;font-size:12.5px;color:var(--t3)">Yuklanmoqda…</div>
           </div>

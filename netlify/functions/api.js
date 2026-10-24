@@ -591,6 +591,99 @@ app.get("/api/users", auth, async (req, res) => {
   }
 });
 
+// ── GET /api/users/export.xlsx — xodimlar ro'yxati Excelda ──────────
+// Ikki varaq, Xodimlar ekranidagi ikki bo'lim bilan bir xil:
+// Telegram orqali kirganlar va qo'lda kiritilgan ishlab chiqarish
+// jamoasi. Uchinchi ustun sifatida har kimning loyihalari ham
+// qo'shiladi — ro'yxatni ochgan odam odatda aynan shuni qidiradi.
+//
+// Ro'yxatda telefon raqami va tug'ilgan sana bor, shuning uchun
+// faqat admin. Tabel eksporti bilan bir xil yo'l: fayl to'g'ridan-
+// to'g'ri javobda qaytadi, frontend uni saqlaydi.
+app.get("/api/users/export.xlsx", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const S = XLSX_STYLE;
+    const [usersR, staffR, permR] = await Promise.all([
+      db.query(
+        `select username, full_name, first_name, last_name, role, is_active, access_status,
+                phone, job_title, position, email, birth_date
+           from users order by (role = 'employee'), coalesce(first_name, full_name, username)`,
+      ),
+      db.query(`select full_name, position, is_active from staff order by position, lower(full_name)`),
+      db.query(
+        `select u.username, p.role, pr.label
+           from permissions p join users u on u.id = p.user_id join projects pr on pr.id = p.project_id
+          where pr.is_active order by pr.label`,
+      ),
+    ]);
+
+    const loyihalar = {};
+    permR.rows.forEach((x) => {
+      (loyihalar[x.username] ||= []).push(`${x.label} (${POSITION_LABEL_UZ[x.role] || x.role})`);
+    });
+
+    const ROL = { super_admin: "Super admin", admin: "Admin", employee: "Xodim" };
+    const HOLAT = { active: "Faol", blocked: "Bloklangan", removed: "Chiqarilgan" };
+    const hdr = (t) => ({ v: t, s: S.HEADER });
+    // `pg` `date` ustunini Date OBYEKTI qilib qaytaradi, shuning uchun
+    // `String(d).slice(0,10)` "Sun Oct 01" beradi. Mahalliy qismlardan
+    // yig'amiz: `toISOString()` esa vaqt mintaqasiga qarab kunni bir
+    // kunga surib yuborishi mumkin.
+    const sana = (d) => {
+      if (!d) return "";
+      if (!(d instanceof Date)) return String(d).slice(0, 10);
+      const p = (n) => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+    };
+
+    const varaq1 = {
+      name: "Telegram xodimlar",
+      widths: [24, 18, 20, 18, 28, 20, 13, 13, 14, 44],
+      rows: [
+        ["Ism familiya", "Username", "Lavozim (matn)", "Lavozim (rol)", "Email", "Telefon",
+         "Tizimdagi roli", "Holat", "Tug'ilgan sana", "Loyihalari"].map(hdr),
+        ...usersR.rows.map((u) => {
+          const holat = HOLAT[u.access_status] || (u.is_active ? "Faol" : "Bloklangan");
+          return [
+            u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : u.full_name || u.username,
+            "@" + u.username,
+            u.job_title || "",
+            POSITION_LABEL_UZ[u.position] || "",
+            u.email || "",
+            u.phone || "",
+            ROL[u.role] || u.role,
+            // Faol bo'lmagan xodim ro'yxatda ko'zga tashlanib tursin.
+            holat === "Faol" ? holat : { v: holat, s: S.MISSING },
+            sana(u.birth_date),
+            (loyihalar[u.username] || []).join(", "),
+          ];
+        }),
+      ],
+    };
+
+    const varaq2 = {
+      name: "Boshqa xodimlar",
+      widths: [26, 18, 12],
+      rows: [
+        ["Ism familiya", "Lavozim", "Holat"].map(hdr),
+        ...staffR.rows.map((x) => [
+          x.full_name,
+          POSITION_LABEL_UZ[x.position] || x.position,
+          x.is_active ? "Faol" : { v: "Nofaol", s: S.MISSING },
+        ]),
+      ],
+    };
+
+    const buf = buildXlsx([varaq1, varaq2]);
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename="xodimlar-${todayTashkent()}.xlsx"`);
+    res.send(buf);
+  } catch (e) {
+    serverError(res, e, "GET /api/users/export.xlsx");
+  }
+});
+
 // Qisqa xodimlar ro'yxati — istalgan autentifikatsiyadan o'tgan
 // foydalanuvchi ko'ra oladi (masalan vazifa yaratishda "Kim bajaradi"
 // tanlovi uchun). Yuqoridagi to'liq /api/users'dan farqli, shaxsiy
