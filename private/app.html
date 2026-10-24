@@ -17528,9 +17528,33 @@
               sub: "Hech bir loyihaga tegishli emas",
               onclick: "ntfPickProject('')",
             });
-        if (!mos.length && q) return `<div class="ntf-empty">Loyiha topilmadi</div>`;
+        // Donaga (bir martalik) ishlaydigan mijoz ro'yxatda
+        // bo'lmaydi. Uning uchun Vazifalardan chiqib, Loyihalar
+        // bo'limida loyiha yaratib, keyin qaytib kelish kerak edi —
+        // endi shu yerda, yozilgan nomdan to'g'ridan-to'g'ri
+        // yaratiladi. Loyiha kontent rejasiz bo'ladi.
+        const aniqMos = projects.some(
+          (p) => String(p.label || "").trim().toLowerCase() === q,
+        );
+        const yarat =
+          q && !aniqMos && isAdmin
+            ? ntfPickRow({
+                on: false,
+                tile: `<span class="ntf-tile" style="background:var(--chip2);color:var(--v3-t2)">+</span>`,
+                name: `«${ntfSheetState.q.trim()}» loyihasini yaratish`,
+                sub: "Kontent rejasiz · keyin Ruxsatlardan jamoa belgilanadi",
+                // Bu tanlov emas, amal — belgilash katakchasi
+                // "tanlanmagan" degan noto'g'ri taassurot berardi.
+                noCheck: true,
+                onclick: `ntfCreateProject(this)`,
+              })
+            : "";
+        if (!mos.length && q) {
+          return yarat || `<div class="ntf-empty">Loyiha topilmadi</div>`;
+        }
         return (
           umumiy +
+          yarat +
           mos
             .map((p) => {
               const v = p.slug || p.id;
@@ -17538,7 +17562,10 @@
               const mas = projOwnerLabel(p);
               return ntfPickRow({
                 on: ntf.projectSlug === v,
-                tile: `<span class="ntf-tile" style="background:${personColor(v)}">${escHtml(String(p.label || "?").slice(0, 1).toUpperCase())}</span>`,
+                // Loyihaning O'Z rangi — Ruxsatlar va Vazifalar
+                // doskasidagi bilan bir xil. Avval bu yerda
+                // `personColor()` ishlatilib, boshqa rang chiqardi.
+                tile: `<span class="ntf-tile" style="background:${escHtml(p.color || personColor(v))}">${escHtml(String(p.label || "?").slice(0, 1).toUpperCase())}</span>`,
                 name: p.label,
                 // Mas'ul belgilanmagan loyihada "—" yozib o'tirishdan
                 // ko'ra uni butunlay tashlab ketgan ma'qul.
@@ -17549,6 +17576,44 @@
             })
             .join("")
         );
+      }
+
+      // Pikerdan loyiha yaratish. Nom qidiruv maydonidan olinadi.
+      async function ntfCreateProject(btn) {
+        const nom = (ntfSheetState?.q || "").trim();
+        if (!nom || ntfSheetState.saving) return;
+        ntfSheetState.saving = true;
+        if (btn) {
+          btn.disabled = true;
+          const n = btn.querySelector(".ntf-prow-n");
+          if (n) n.textContent = "Yaratilmoqda…";
+        }
+        try {
+          const res = await apiFetch("/api/projects", {
+            method: "POST",
+            body: JSON.stringify({
+              label: nom,
+              hasPlan: false,
+              assigneeUsernames: [],
+              notifyTelegram: false,
+            }),
+          });
+          const d = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(d.error || "Yaratib bo'lmadi");
+          // Ro'yxatni serverdan qayta olamiz: rang va boshqa
+          // maydonlar o'sha yerda hisoblanadi.
+          await loadProjects();
+          ntfPickProject(d.project?.id || slugifyLocal(nom));
+          showToast(`✅ ${nom} yaratildi`);
+        } catch (e) {
+          ntfSheetState.saving = false;
+          showToast("⚠ " + e.message);
+          ntfSyncSheet();
+        }
+      }
+      // Faqat zaxira uchun: server qaytargan slug kelmasa.
+      function slugifyLocal(v) {
+        return String(v).toLowerCase().trim().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
       }
       // Teg: o'z rangidagi katak + nom + nechta vazifada ishlatilgani
       function ntfTagUseCount(id) {
@@ -17582,7 +17647,7 @@
             <span class="ntf-prow-n">${escHtml(o.name)}</span>
             ${o.sub ? `<span class="ntf-prow-s">${o.subRaw ? o.sub : escHtml(o.sub)}</span>` : ""}
           </span>
-          <span class="ntf-cb${o.on ? " on" : ""}">${o.on ? "✓" : ""}</span>
+          ${o.noCheck ? "" : `<span class="ntf-cb${o.on ? " on" : ""}">${o.on ? "✓" : ""}</span>`}
         </button>`;
       }
       function ntfPickProject(v) {
