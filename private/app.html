@@ -3785,6 +3785,18 @@
         gap: 7px;
         flex-wrap: wrap;
       }
+      /* Loyiha rangi nuqtasi — doska kartasida ham, mobil qatorda
+         ham bir xil. Chap chiziq uzoqdan guruhlab ko'rsatadi, nuqta
+         esa nomni rangga bog'laydi. */
+      .proj-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 99px;
+        display: inline-block;
+        flex: none;
+        margin-right: 5px;
+        vertical-align: 1px;
+      }
       .tm-row-proj {
         font-size: 11.5px;
         color: var(--v3-t4);
@@ -10053,6 +10065,10 @@
           background: var(--surf);
           border-radius: 12px;
           padding: 11px 12px;
+          /* Chap chiziq — loyiha rangi. Rangsiz vazifada ham joyi
+             band turadi, aks holda kartalar bir-biriga nisbatan
+             3px siljib ko'rinardi. */
+          border-left: 3px solid transparent;
           /* Ushlab ko'chirsa bo'lishini kursorning o'zi aytib turadi */
           cursor: grab;
           display: flex;
@@ -14904,6 +14920,18 @@
         const c = tagColor(tag.name);
         return `<span class="tag-chip" style="background:${c.bg};color:${c.ink}">${escHtml(tag.name)}</span>`;
       }
+      // Loyiha rangi — Ruxsatlar ekranida qo'yilgan o'sha rang.
+      // Topilmasa (xodimga shu loyiha ko'rinmasa yoki vazifa umumiy
+      // bo'lsa) `null` qaytadi va karta xolis holida qoladi.
+      function projColor(slug) {
+        if (!slug) return null;
+        return projects.find((p) => p.id === slug)?.color || null;
+      }
+      function projDotHtml(slug) {
+        const c = projColor(slug);
+        return c ? `<i class="proj-dot" style="background:${escHtml(c)}"></i>` : "";
+      }
+
       function tbCardHtml(t) {
         const muted = ["done", "failed", "cancelled"].includes(t.status);
         const due = tbDueInfo(t);
@@ -14913,7 +14941,8 @@
             : "";
         const pill = tbTagPillHtml(t);
         const metaRow = pill || check ? `<div class="tb-card-meta">${pill}${check}</div>` : "";
-        return `<div class="tb-card${muted ? " muted" : ""}" data-task="${escArg(t.id)}" onclick="openTaskActions('${escArg(t.id)}')">
+        const rang = projColor(t.projectSlug);
+        return `<div class="tb-card${muted ? " muted" : ""}"${rang ? ` style="border-left-color:${escHtml(rang)}"` : ""} data-task="${escArg(t.id)}" onclick="openTaskActions('${escArg(t.id)}')">
           <div class="tb-card-top">
             ${tbPriBarsHtml(t.priority)}
             <span class="tb-ref">${tbRef(t.id)}</span>
@@ -14923,7 +14952,7 @@
           ${metaRow}
           <div class="tb-card-foot">
             <span class="tb-due ${due.cls}">${escHtml(due.text)}</span>
-            <span class="tb-proj">${escHtml(t.projectLabel || "Umumiy")}</span>
+            <span class="tb-proj">${projDotHtml(t.projectSlug)}${escHtml(t.projectLabel || "Umumiy")}</span>
           </div>
         </div>`;
       }
@@ -14973,7 +15002,7 @@
         const rows = [{ v: "", label: "Hammasi" }, ...options]
           .map(
             (o) =>
-              `<button type="button" class="btn ${o.v === cur ? "btn-blue" : "btn-soft"}" style="margin-bottom:8px;justify-content:flex-start;padding:0 14px" onclick="setTaskFilterValue('${key}','${escArg(o.v)}')">${escHtml(o.label)}</button>`,
+              `<button type="button" class="btn ${o.v === cur ? "btn-blue" : "btn-soft"}" style="margin-bottom:8px;justify-content:flex-start;padding:0 14px" onclick="setTaskFilterValue('${key}','${escArg(o.v)}')">${key === "project" ? projDotHtml(o.v) : ""}${escHtml(o.label)}</button>`,
           )
           .join("");
         body.innerHTML = rows;
@@ -15074,7 +15103,7 @@
             <div class="tm-row-title">${escHtml(t.title)}</div>
             <div class="tm-row-meta">
               ${pill}
-              <span class="tm-row-proj">${escHtml(t.projectLabel || "Umumiy")}</span>
+              <span class="tm-row-proj">${projDotHtml(t.projectSlug)}${escHtml(t.projectLabel || "Umumiy")}</span>
             </div>
           </div>
           <div class="tm-row-right">

@@ -3358,6 +3358,9 @@ app.get("/api/projects", auth, async (req, res) => {
       return {
         id: project.slug,
         label: project.label,
+        // Vazifalar doskasi va Ruxsatlar bir xil rangdan foydalanadi —
+        // xodim bir ekranda o'rgangan rangni ikkinchisida ham taniydi.
+        color: project.color || null,
         k: summary.cycle.posts_target,
         s: summary.cycle.stories_target,
         doneK: summary.doneK,
