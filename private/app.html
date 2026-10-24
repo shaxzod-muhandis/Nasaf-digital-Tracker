@@ -1396,6 +1396,19 @@
         .kal-ld-blk, .kal-ld.oy .kal-ld-cell, .kal-bar::after { animation: none; }
       }
 
+      /* Kontent rejasiz loyihaning tafsilot paneli — progress, davr
+         va post/stories kataklari o'rniga qisqa ma'lumot. */
+      .pv-dot { width: 9px; height: 9px; border-radius: 99px; flex: none; margin-right: 10px; }
+      .pd-noplan { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+      .pd-noplan-row { display: flex; align-items: baseline; gap: 12px; }
+      .pd-noplan-l { font-size: 12.5px; color: var(--v3-t3); width: 86px; flex: none; }
+      .pd-noplan-v { font-size: 14px; font-weight: 600; color: var(--ink); min-width: 0; }
+      .pd-noplan-v i { font-style: normal; font-weight: 500; color: var(--v3-t3); }
+      .pd-noplan-note {
+        font-size: 12.5px; line-height: 1.55; color: var(--v3-t3);
+        border-top: 1px solid var(--bd1); padding-top: 12px;
+      }
+
       /* ══ RUXSATLAR TAXTASI ═══════════════════════════════════════
          Dizayn qiymatlari TZ dan, ranglar esa ilovaning o'z
          o'zgaruvchilaridan olingan — aks holda qorong'i tema buzilardi
@@ -13770,7 +13783,9 @@
         let totalTasks = 0,
           weightedElapsed = 0,
           doneAll = 0;
-        projects.forEach((p) => {
+        // Rejasiz loyihada davr sanalari yo'q — `projElapsedFrac` NaN
+        // qaytarib, "reja NaN%" bo'lib chiqardi.
+        planProjects().forEach((p) => {
           const tot = p.k + p.s;
           totalTasks += tot;
           doneAll += p.doneK + p.doneS;
@@ -13810,6 +13825,15 @@
           if (el) el.innerHTML = html;
         });
       }
+      // Bugun paneli kontent rejasi bo'yicha hisoblaydi: bajarilish
+      // foizi, "ortda", qarz, muddat. Rejasiz loyihada bu
+      // tushunchalarning birortasi ham yo'q — u yerga qo'shilsa
+      // "0%", "0/0" va "NaN kun" bo'lib, barcha o'rtachalarni pastga
+      // tortib yuborardi. Loyihalar ekranida esa u ko'rinadi.
+      function planProjects() {
+        return projects.filter((p) => p.hasPlan !== false);
+      }
+
       function renderToday() {
         const body = document.getElementById("today-body");
         const today = todayDate();
@@ -13818,7 +13842,7 @@
         const npBtn = document.getElementById("today-new-project-btn");
         if (npBtn) npBtn.style.display = isAdmin ? "flex" : "none";
 
-        if (projects.length === 0) {
+        if (planProjects().length === 0) {
           body.innerHTML = `<div class="empty">
             <div class="empty-ico">▤</div>
             <div class="empty-t">Tracker yo'q</div>
@@ -13914,7 +13938,7 @@
         </div>`;
 
         // Qarz ogohlantirishi
-        const debts = projects.filter((p) => p.outstandingDebt);
+        const debts = planProjects().filter((p) => p.outstandingDebt);
         let debtHtml = "";
         if (debts.length) {
           const d0 = debts[0];
@@ -13979,7 +14003,7 @@
 
         // Mening loyihalarim — bajarilish foizi bo'yicha kattadan
         // kichikka (desktopdagi jadval bilan bir xil tartib).
-        const projRows = [...projects]
+        const projRows = [...planProjects()]
           .sort((a, b) => projPct(b) - projPct(a))
           .map((p) => {
             const st = projStatus(p);
@@ -14006,7 +14030,7 @@
           <div class="sec-hdr">
             <div class="sec-hdr-t">Mening loyihalarim</div>
             <div style="flex:1"></div>
-            <div class="sec-hdr-n">${projects.length}</div>
+            <div class="sec-hdr-n">${planProjects().length}</div>
           </div>
           <div class="v3-card">${projRows}</div>
         </div>`;
@@ -14044,8 +14068,8 @@
         renderToday();
       }
       function buildTodayDesktopHtml(t) {
-        const behindCount = projects.filter((p) => projStatus(p) === "behind").length;
-        const debtCount = projects.filter((p) => p.outstandingDebt).length;
+        const behindCount = planProjects().filter((p) => projStatus(p) === "behind").length;
+        const debtCount = planProjects().filter((p) => p.outstandingDebt).length;
 
         const stats = `<div class="d2-stats">
           <div class="d2-stat">
@@ -14069,7 +14093,7 @@
         // Jadval — filtr va qidiruv
         const q = (document.getElementById("today-search")?.value || "").toLowerCase().trim();
         const problem = (p) => p.outstandingDebt || projStatus(p) === "behind";
-        let list = dashProjFilter === "problem" ? projects.filter(problem) : projects;
+        let list = dashProjFilter === "problem" ? planProjects().filter(problem) : planProjects();
         if (q) {
           list = list.filter(
             (p) =>
@@ -14105,12 +14129,12 @@
               .join("")
           : `<div style="padding:22px 18px;font-size:13px;color:var(--t3);border-top:1px solid var(--bd2)">Mos loyiha topilmadi</div>`;
 
-        const problemCount = projects.filter(problem).length;
+        const problemCount = planProjects().filter(problem).length;
         const table = `<div class="d2-tbl">
           <div class="d2-tbl-hdr">
             <div class="d2-tbl-t">Loyihalar</div>
             <div class="d2-seg">
-              <button class="${dashProjFilter === "problem" ? "" : "on"}" onclick="setDashFilter('all')">Hammasi ${projects.length}</button>
+              <button class="${dashProjFilter === "problem" ? "" : "on"}" onclick="setDashFilter('all')">Hammasi ${planProjects().length}</button>
               <button class="${dashProjFilter === "problem" ? "on" : ""}" onclick="setDashFilter('problem')">Muammoli ${problemCount}</button>
             </div>
           </div>
@@ -14248,8 +14272,11 @@
         }
 
         const today = todayDate();
-        const overdue = sortByDebt(list.filter((p) => p.outstandingDebt));
-        const active = list.filter((p) => !p.outstandingDebt);
+        // Rejasiz loyihalar alohida: ularda muddat ham, foiz ham yo'q.
+        const noPlan = list.filter((p) => p.hasPlan === false);
+        const planned = list.filter((p) => p.hasPlan !== false);
+        const overdue = sortByDebt(planned.filter((p) => p.outstandingDebt));
+        const active = planned.filter((p) => !p.outstandingDebt);
         let html = `<div class="mobile-only">`;
         if (overdue.length) {
           html += `<div class="sec-upper">Muddati o'tgan · ${overdue.length}</div><div class="list-card" style="margin-bottom:20px">`;
@@ -14291,6 +14318,21 @@
                 </div>
               </div>`;
             })
+            .join("");
+          html += `</div>`;
+        }
+        if (noPlan.length) {
+          html += `<div class="sec-upper" style="margin-top:20px">Kontent rejasiz · ${noPlan.length}</div><div class="list-card">`;
+          html += noPlan
+            .map(
+              (p) => `<div class="pv-row" onclick="setPdeskProject('${escArg(p.id)}')">
+                ${p.color ? `<span class="pv-dot" style="background:${escHtml(p.color)}"></span>` : ""}
+                <div style="flex:1;min-width:0">
+                  <div class="r-name">${escHtml(p.label)}</div>
+                  <div class="r-sub">${escHtml(projOwnerLabel(p))}</div>
+                </div>
+              </div>`,
+            )
             .join("");
           html += `</div>`;
         }
@@ -14414,6 +14456,43 @@
       }
 
       function pdDetailHtml(p) {
+        // Rejasiz loyihada davr, foiz va post/stories kataklari yo'q.
+        // Avval bu yerda `pdPeriodText` null sanaga urinib, butun
+        // ekranni yiqitardi.
+        if (p.hasPlan === false) {
+          const jamoa = (p.assignees || []).map((a) => a.name || a.username).filter(Boolean);
+          const vazifalar = tasksList.filter((t) => t.projectSlug === p.id);
+          const ochiq = vazifalar.filter((t) => taskBoardColumn(t) !== "done" && taskBoardColumn(t) !== "archive");
+          return `
+            <div class="pd-head">
+              <div class="pd-logo"${p.color ? ` style="background:${escHtml(p.color)}"` : ""}>${escHtml((p.label || "?").slice(0, 1).toUpperCase())}</div>
+              <div style="flex:1;min-width:0">
+                <div class="pd-name">${escHtml(p.label)}</div>
+                <div class="pd-sub">Kontent rejasiz loyiha</div>
+              </div>
+              ${pdTeamHtml(p)}
+              ${
+                isAdmin
+                  ? `<button type="button" class="pd-btn" onclick="openProjectEditSheet('${escArg(p.id)}')">${ICON.edit}Tahrirlash</button>`
+                  : ""
+              }
+            </div>
+            <div class="pd-card pd-noplan">
+              <div class="pd-noplan-row">
+                <span class="pd-noplan-l">Vazifalar</span>
+                <span class="pd-noplan-v">${ochiq.length} ochiq<i> / ${vazifalar.length}</i></span>
+              </div>
+              <div class="pd-noplan-row">
+                <span class="pd-noplan-l">Jamoa</span>
+                <span class="pd-noplan-v">${jamoa.length ? escHtml(jamoa.join(", ")) : "<i>biriktirilmagan</i>"}</span>
+              </div>
+              <div class="pd-noplan-note">
+                Bu loyihada oylik post/stories rejasi yo'q, shuning uchun bajarilish
+                foizi va qarz hisobi yuritilmaydi. Jamoa Ruxsatlar bo'limidan
+                belgilanadi, ishlar esa Vazifalar orqali olib boriladi.
+              </div>
+            </div>`;
+        }
         const st = projStatus(p);
         const pc = projPct(p);
         const done = p.doneK + p.doneS;
@@ -14500,12 +14579,30 @@
         let sel = list.find((p) => p.id === pdeskId) || list[0] || null;
         if (sel) pdeskId = sel.id;
 
+        // Rejasiz loyihalar holat bo'yicha saralanmaydi: ularda
+        // foiz ham, muddat ham yo'q, ya'ni "ortda" bo'la olmaydi.
+        const rejali = list.filter((p) => p.hasPlan !== false);
+        const rejasiz = list.filter((p) => p.hasPlan === false);
         const needsAttention = sortByDebt(
-          list.filter((p) => ["debt", "behind", "mid"].includes(projStatus(p))),
+          rejali.filter((p) => ["debt", "behind", "mid"].includes(projStatus(p))),
         );
-        const doingWell = list.filter((p) => !["debt", "behind", "mid"].includes(projStatus(p)));
+        const doingWell = rejali.filter((p) => !["debt", "behind", "mid"].includes(projStatus(p)));
 
         const itemHtml = (p) => {
+          // Rejasiz loyiha: progress o'rniga faqat nomi va jamoasi.
+          // Avval bu yerda "0% · Ortda · NaN kun" chiqardi.
+          if (p.hasPlan === false) {
+            return `<div class="pd-item${p.id === pdeskId ? " on" : ""}" onclick="setPdeskProject('${escArg(p.id)}')">
+              <div class="pd-item-top">
+                <div class="pd-item-name">${escHtml(p.label)}</div>
+              </div>
+              <div class="pd-item-meta" style="margin-top:6px">
+                ${p.color ? `<span class="pd-item-dot" style="background:${escHtml(p.color)}"></span>` : ""}
+                <span class="pd-item-st" style="color:var(--v3-t3)">Rejasiz</span>
+                <span class="pd-item-own">· ${escHtml(projOwnerLabel(p))}</span>
+              </div>
+            </div>`;
+          }
           const st = projStatus(p);
           const d = projDaysInfo(p);
           return `<div class="pd-item${p.id === pdeskId ? " on" : ""}" onclick="setPdeskProject('${escArg(p.id)}')">
@@ -14529,6 +14626,9 @@
             : "") +
           (doingWell.length
             ? `<div class="pd-sec">Yaxshi ketmoqda</div>${doingWell.map(itemHtml).join("")}`
+            : "") +
+          (rejasiz.length
+            ? `<div class="pd-sec">Kontent rejasiz</div>${rejasiz.map(itemHtml).join("")}`
             : "") +
           (list.length ? "" : `<div style="padding:18px 14px;font-size:13px;color:var(--v3-t3)">Hech narsa topilmadi</div>`);
 
@@ -21660,6 +21760,11 @@
         const t = todayDate();
         return {
           label: "",
+          // Kontent rejasi — har loyihada ham bo'lavermaydi. Faqat
+          // video yoki faqat dizayn qiladigan doimiy mijozlar uchun
+          // o'chiriladi: unda davr ham, post/stories katagi ham
+          // ochilmaydi va loyiha bajarilish foiziga kirmaydi.
+          hasPlan: true,
           startMode: "today", // "today" | "month1" | "custom"
           anchor: isoOf(t),
           k: 10,
@@ -21695,7 +21800,7 @@
               <div class="np-ov-icon">+</div>
               <div style="flex:1;min-width:0">
                 <div class="np-ov-title">Yangi loyiha</div>
-                <div class="np-ov-sub">Oylik kontent rejasi avtomatik yaratiladi</div>
+                <div class="np-ov-sub" id="np-ov-sub">Oylik kontent rejasi avtomatik yaratiladi</div>
               </div>
               <button class="sheet-close" onclick="requestCloseNewProject()">×</button>
             </div>
@@ -21747,6 +21852,16 @@
       function npCurrentMonthLabel() {
         const t = todayDate();
         return `1-${MONTHS[t.getMonth()].toLowerCase()}`;
+      }
+      function npSetHasPlan(v) {
+        npState.hasPlan = v;
+        const sub = document.getElementById("np-ov-sub");
+        if (sub) {
+          sub.textContent = v
+            ? "Oylik kontent rejasi avtomatik yaratiladi"
+            : "Kontent rejasi yo'q — faqat jamoa va vazifalar";
+        }
+        renderNewProjectForm();
       }
       function npSetStartMode(mode) {
         npState.startMode = mode;
@@ -22000,6 +22115,20 @@
 
       // ── Preview (o'ng ustun) — real vaqtda hisoblanadi, hardcode yo'q ─
       function npBuildPreviewHtml() {
+        // Rejasiz loyihada ko'rsatadigan davr ham, hajm ham yo'q —
+        // oldindan ko'rish o'rniga nima bo'lishini qisqa aytamiz.
+        if (!npState.hasPlan) {
+          return `<div class="preview-card">
+              <div class="preview-upper">Yaratiladi</div>
+              <div class="preview-title">Kontent rejasiz loyiha</div>
+              <div class="np2-check-list" style="margin-top:12px">
+                <div class="np2-check-row"><div class="np2-check-ico">✓</div><div class="np2-check-txt">Loyihalar ro'yxatida va Ruxsatlarda ko'rinadi</div></div>
+                <div class="np2-check-row"><div class="np2-check-ico">✓</div><div class="np2-check-txt">Vazifa biriktirish va filtrlash ishlaydi</div></div>
+                <div class="np2-check-row"><div class="np2-check-ico">✓</div><div class="np2-check-txt">O'z rangini oladi</div></div>
+                <div class="np2-check-row"><div class="np2-check-ico" style="background:var(--chip);color:var(--t3)">—</div><div class="np2-check-txt" style="color:var(--t3)">Post/stories katagi va qarz hisobi yo'q</div></div>
+              </div>
+            </div>`;
+        }
         const total = npState.k + npState.s;
         const anchor = parseISO(npState.anchor);
         const end = parseISO(npPeriodEnd(npState.anchor));
@@ -22045,14 +22174,14 @@
       function npBuildFooterHtml() {
         const total = npState.k + npState.s;
         return `
-          <button type="button" class="np2-btn-outline" onclick="npOpenSaveTemplate()">Shablon sifatida saqlash</button>
+          ${npState.hasPlan ? `<button type="button" class="np2-btn-outline" onclick="npOpenSaveTemplate()">Shablon sifatida saqlash</button>` : ""}
           <div style="flex:1"></div>
           <div class="np2-notify-toggle">
             <button type="button" class="tglsw brand ${npState.notify ? "on" : ""}" onclick="npToggleNotify()"><div class="knob"></div></button>
             <div class="lbl">Mas'ulga Telegramda xabar</div>
           </div>
           <button type="button" class="np2-btn-outline" onclick="requestCloseNewProject()">Bekor</button>
-          <button type="button" class="np2-btn-primary" id="np-create-btn" ${npState.saving ? "disabled" : ""} onclick="submitNewProject()">${npState.saving ? "Yaratilmoqda…" : `Yaratish · ${total} vazifa`}</button>`;
+          <button type="button" class="np2-btn-primary" id="np-create-btn" ${npState.saving ? "disabled" : ""} onclick="submitNewProject()">${npState.saving ? "Yaratilmoqda…" : npState.hasPlan ? `Yaratish · ${total} vazifa` : "Yaratish"}</button>`;
       }
       function renderNewProjectForm() {
         const anchor = parseISO(npState.anchor);
@@ -22063,6 +22192,23 @@
               <input class="np2-name-input ${npState.labelErr ? "err" : ""}" placeholder="Masalan: Coffee House" value="${escHtml(npState.label)}" oninput="npState.label=this.value; npState.labelErr=false; this.classList.remove('err'); document.getElementById('np-footer').innerHTML=npBuildFooterHtml()"/>
               ${npState.labelErr ? `<div class="np2-err-msg">Loyiha nomini kiriting</div>` : ""}
 
+              <div class="np2-sec">
+                <div class="np2-label">Loyiha turi</div>
+                <div class="np2-chiprow">
+                  <button type="button" class="np2-chip ${npState.hasPlan ? "on" : ""}" onclick="npSetHasPlan(true)">Kontent rejasi bilan</button>
+                  <button type="button" class="np2-chip ${!npState.hasPlan ? "on" : ""}" onclick="npSetHasPlan(false)">Rejasiz</button>
+                </div>
+                <div class="np2-sub-hint" style="display:block;margin-top:7px">${
+                  npState.hasPlan
+                    ? "Oylik post/stories rejasi va hisob davri bo'ladi."
+                    : "Davr va post/stories katagi ochilmaydi, bajarilish foiziga kirmaydi. Jamoa, mas'ul, rang va vazifalar odatdagidek."
+                }</div>
+              </div>
+
+              ${
+                !npState.hasPlan
+                  ? ""
+                  : `
               <div class="np2-sec">
                 <div class="np2-label">Hisob davri <span class="np2-sub-hint">boshlangan kundan keyingi oyning shu kunigacha</span></div>
                 <div class="np2-chiprow">
@@ -22116,7 +22262,8 @@
                     </div>
                   </div>
                 </div>
-              </div>
+              </div>`
+              }
 
               ${npBuildAssigneesHtml()}
             </div>
@@ -22141,9 +22288,10 @@
             method: "POST",
             body: JSON.stringify({
               label,
+              hasPlan: npState.hasPlan,
               anchorDate: npState.anchor,
-              postsTarget: npState.k,
-              storiesTarget: npState.s,
+              postsTarget: npState.hasPlan ? npState.k : 0,
+              storiesTarget: npState.hasPlan ? npState.s : 0,
               assigneeUsernames: npState.assignees,
               notifyTelegram: npState.notify,
             }),

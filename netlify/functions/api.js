@@ -3304,6 +3304,26 @@ app.get("/api/projects", auth, async (req, res) => {
     // parallel qayta ishlash xavfsiz. Ilgari sakkizta loyiha ketma-ket
     // ishlanardi va har biri bir necha so'rov yuborardi.
     const builtProjects = await mapWithLimit(projectsR.rows, 3, async (project) => {
+      // Kontent rejasi yo'q loyiha: davr umuman yo'q, shuning uchun
+      // `getProjectCycleSummary` CHAQIRILMAYDI — u birinchi davrni
+      // o'zi yaratib qo'yardi va loyiha darhol "reja bajarilmagan"
+      // holatiga tushardi. Frontend kutadigan maydonlar nol bilan
+      // to'ldiriladi, `hasPlan: false` esa uni ajratib turadi.
+      if (!project.has_plan) {
+        return {
+          id: project.slug,
+          label: project.label,
+          color: project.color || null,
+          hasPlan: false,
+          k: 0, s: 0, doneK: 0, doneS: 0,
+          checks: {}, checkDetails: {},
+          cycleId: null, cycleIndex: null,
+          periodStart: null, periodEnd: null,
+          anchorDate: project.anchor_date,
+          outstandingDebt: null,
+          assignees: assigneesByProject[project.id] || [],
+        };
+      }
       const summary = await getProjectCycleSummary(db, project);
       const checksR = await db.query(
         `select c.type, c.seq_number, c.work_date, c.editor_id, c.videographer_id,
@@ -3361,6 +3381,7 @@ app.get("/api/projects", auth, async (req, res) => {
         // Vazifalar doskasi va Ruxsatlar bir xil rangdan foydalanadi —
         // xodim bir ekranda o'rgangan rangni ikkinchisida ham taniydi.
         color: project.color || null,
+        hasPlan: true,
         k: summary.cycle.posts_target,
         s: summary.cycle.stories_target,
         doneK: summary.doneK,
@@ -3442,10 +3463,17 @@ app.post("/api/projects", auth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
     const { label, anchorDate, postsTarget, storiesTarget, assigneeUsernames, notifyTelegram } = req.body;
-    if (!label || !anchorDate || postsTarget == null || storiesTarget == null) {
+    // `hasPlan: false` — kontent rejasi yo'q loyiha (faqat video,
+    // faqat dizayn va h.k.). Unda post/stories maqsadlari ham, davr
+    // ham bo'lmaydi; `anchor_date` ustuni NOT NULL bo'lgani uchun
+    // bugungi sana yoziladi, lekin hech qayerda ishlatilmaydi.
+    const hasPlan = req.body.hasPlan !== false;
+    if (!label) return res.status(400).json({ error: "label majburiy" });
+    if (hasPlan && (!anchorDate || postsTarget == null || storiesTarget == null)) {
       return res.status(400).json({ error: "label, anchorDate, postsTarget, storiesTarget majburiy" });
     }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(anchorDate)) {
+    const anchor = hasPlan ? anchorDate : anchorDate || todayTashkent();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(anchor)) {
       return res.status(400).json({ error: "anchorDate format: YYYY-MM-DD" });
     }
     let slug = slugify(label);
@@ -3457,12 +3485,22 @@ app.post("/api/projects", auth, async (req, res) => {
     const color = await pickProjectColor();
 
     const r = await db.query(
-      `insert into projects (slug, label, anchor_date, posts_target, stories_target, color)
-       values ($1,$2,$3,$4,$5,$6) returning *`,
-      [slug, String(label).trim(), anchorDate, parseInt(postsTarget), parseInt(storiesTarget), color],
+      `insert into projects (slug, label, anchor_date, posts_target, stories_target, color, has_plan)
+       values ($1,$2,$3,$4,$5,$6,$7) returning *`,
+      [
+        slug,
+        String(label).trim(),
+        anchor,
+        hasPlan ? parseInt(postsTarget) : 0,
+        hasPlan ? parseInt(storiesTarget) : 0,
+        color,
+        hasPlan,
+      ],
     );
     const project = r.rows[0];
-    const summary = await getProjectCycleSummary(db, project); // 1-davrni darhol yaratadi
+    // Rejasiz loyihada davr ochilmaydi — `getProjectCycleSummary`
+    // chaqirilsa u birinchi davrni O'ZI yaratib qo'yardi.
+    const summary = hasPlan ? await getProjectCycleSummary(db, project) : null;
 
     // "Mas'ul" — tanlangan xodim(lar)ga shu loyihaga darhol ruxsat
     // beriladi (alohida "responsible person" ustuni yo'q — mavjud
@@ -3496,12 +3534,13 @@ app.post("/api/projects", auth, async (req, res) => {
       project: {
         id: project.slug,
         label: project.label,
-        k: summary.cycle.posts_target,
-        s: summary.cycle.stories_target,
+        hasPlan,
+        k: summary ? summary.cycle.posts_target : 0,
+        s: summary ? summary.cycle.stories_target : 0,
         anchorDate: project.anchor_date,
-        cycleId: summary.cycle.id,
-        periodStart: summary.cycle.period_start,
-        periodEnd: summary.cycle.period_end,
+        cycleId: summary ? summary.cycle.id : null,
+        periodStart: summary ? summary.cycle.period_start : null,
+        periodEnd: summary ? summary.cycle.period_end : null,
         assignedUsernames,
       },
     });
@@ -3531,7 +3570,8 @@ app.put("/api/projects/:slug", auth, async (req, res) => {
       project.id,
     ]);
 
-    const applyNow = applyToCurrentCycle !== false; // standart: joriy davrga ham qo'llanadi
+    // Rejasiz loyihada joriy davr yo'q va ochilmasligi ham kerak.
+    const applyNow = applyToCurrentCycle !== false && project.has_plan;
     if (applyNow) {
       const { cycle } = await ensureCurrentCycle(db, project);
       await db.query(`update project_cycles set posts_target = $1, stories_target = $2 where id = $3`, [
@@ -3741,6 +3781,11 @@ app.patch("/api/checks", auth, async (req, res) => {
       if (!permR.rows[0]) {
         return res.status(403).json({ error: `"${project.label}" uchun ruxsat yo'q`, code: "NO_PROJECT_PERMISSION" });
       }
+    }
+
+    // Rejasiz loyihada post/stories katagi umuman yo'q.
+    if (!project.has_plan) {
+      return res.status(400).json({ error: `"${project.label}" loyihasida kontent rejasi yo'q` });
     }
 
     let cycle;
@@ -5438,7 +5483,10 @@ app.post("/api/cycles/rollover", async (req, res) => {
   const access = await resolveCronOrAdminCaller(req);
   if (!access.ok) return res.status(access.status).json({ error: access.error });
   try {
-    const projR = await db.query(`select * from projects where is_active = true`);
+    // Rejasiz loyihada davr tushunchasi yo'q — `ensureCurrentCycle`
+    // chaqirilsa u birinchi davrni yaratib, loyihani darhol
+    // "bajarilmagan reja" holatiga tushirardi.
+    const projR = await db.query(`select * from projects where is_active = true and has_plan`);
     const events = [];
     for (const project of projR.rows) {
       const { cycle, closedNow } = await ensureCurrentCycle(db, project);
@@ -5478,7 +5526,7 @@ app.post("/api/reminder/run", async (req, res) => {
     const perUser = {}; // username -> { chatId, stats: [] }
 
     if (isMonday) {
-      const projR = await db.query(`select * from projects where is_active = true`);
+      const projR = await db.query(`select * from projects where is_active = true and has_plan`);
       const allUsersR = await db.query(
         `select id, username, role, telegram_chat_id from users where telegram_chat_id is not null and is_active`,
       );
