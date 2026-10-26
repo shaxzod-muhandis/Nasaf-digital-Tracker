@@ -15086,6 +15086,17 @@
         const c = projColor(slug);
         return c ? `<i class="proj-dot" style="background:${escHtml(c)}"></i>` : "";
       }
+      // Vazifa kartasidagi nuqta — chap chiziq bilan BIR XIL rangda,
+      // ya'ni teg rangida. Ikki xil rang bitta kartada "nima nimani
+      // bildiryapti" degan savolni tug'dirardi.
+      //
+      // Loyiha ranglari Loyihalar, Ruxsatlar va loyiha filtrida
+      // qoladi — u yerda ro'yxatning o'zi loyihalardan iborat.
+      function taskDotHtml(t) {
+        const teg = (t.tags || [])[0];
+        if (!teg) return "";
+        return `<i class="proj-dot" style="background:${tagColor(teg.name).ink}"></i>`;
+      }
 
       function tbCardHtml(t) {
         const muted = ["done", "failed", "cancelled"].includes(t.status);
@@ -15112,7 +15123,7 @@
           ${metaRow}
           <div class="tb-card-foot">
             <span class="tb-due ${due.cls}">${escHtml(due.text)}</span>
-            <span class="tb-proj">${projDotHtml(t.projectSlug)}${escHtml(t.projectLabel || "Umumiy")}</span>
+            <span class="tb-proj">${taskDotHtml(t)}${escHtml(t.projectLabel || "Umumiy")}</span>
           </div>
         </div>`;
       }
@@ -15263,7 +15274,7 @@
             <div class="tm-row-title">${escHtml(t.title)}</div>
             <div class="tm-row-meta">
               ${pill}
-              <span class="tm-row-proj">${projDotHtml(t.projectSlug)}${escHtml(t.projectLabel || "Umumiy")}</span>
+              <span class="tm-row-proj">${taskDotHtml(t)}${escHtml(t.projectLabel || "Umumiy")}</span>
             </div>
           </div>
           <div class="tm-row-right">
