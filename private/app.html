@@ -151,6 +151,9 @@
         --pink: #92345f;
         --pink-bg: #faecf3;
         --green: #16a34a;
+        /* Teg rangi sifatida ishlatiladi (Post) — qolgan teg
+           ranglarida `-bg` juftligi bor edi, yashilda yo'q edi. */
+        --green-bg: #e9f7ee;
         --red-tint: #fffbfb;
         /* Faollik heatmap — bitta ko'k rangning 5 pog'onasi (dizayner
            TZ'i, 3.3-band): 0 = harakat yo'q, 4 = eng yuqori. Boshqa
@@ -257,6 +260,7 @@
         --pink: #e39cbe;
         --pink-bg: rgba(146, 52, 95, 0.22);
         --green: #34d066;
+        --green-bg: rgba(22, 163, 74, 0.22);
         --red-tint: rgba(240, 85, 74, 0.08);
         --act-lvl-0: #2b313d;
         --act-lvl-1: #2a3f52;
@@ -10507,7 +10511,7 @@
           display: flex;
           align-items: flex-end;
           height: 52px;
-          margin: 14px 0 6px;
+          margin: 8px 0 6px;
         }
         .wk-bar-col {
           flex: 1;
@@ -10524,10 +10528,20 @@
         .wk-bar-col:active {
           background: var(--surf2);
         }
+        /* Haftada ikkita ustuncha: post va stories. */
+        .wk-pair {
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+          gap: 3px;
+          width: 100%;
+          height: 100%;
+        }
         .wk-bar-track {
           position: relative;
-          width: 60%;
-          min-width: 10px;
+          flex: 1;
+          min-width: 6px;
+          max-width: 13px;
           border-radius: 4px;
           background: var(--chip3);
           overflow: visible;
@@ -10541,12 +10555,28 @@
           background: var(--brand);
           opacity: 0.45;
         }
+        /* Stories boshqa tusda — Belgilash ekranidagi bilan bir xil,
+           shunda "binafsha = stories" bir marta o'rganiladi. */
+        .wk-bar-track.s .wk-bar-fill { background: var(--purple); }
         .wk-bar-col.active .wk-bar-fill {
           opacity: 1;
         }
-        .wk-bar-col.active .wk-bar-track {
-          box-shadow: 0 0 0 2px var(--brand);
+        /* Tanlangan hafta ustunchalarni halqaga olmaydi — ikkita
+           ustunda bu shovqin bo'lardi. Ustunning o'zi ajralib turadi. */
+        .wk-bar-col.active {
+          background: var(--surf2);
         }
+        .wk-leg {
+          display: flex;
+          gap: 14px;
+          font-size: 10.5px;
+          color: var(--t3);
+          margin-top: 12px;
+        }
+        .wk-leg span { display: inline-flex; align-items: center; gap: 5px; }
+        .wk-leg i { width: 8px; height: 8px; border-radius: 3px; display: block; }
+        .wk-leg i.k { background: var(--brand); }
+        .wk-leg i.s { background: var(--purple); }
         .wk-bar-lbl {
           font-size: 9.5px;
           color: var(--t3);
@@ -14745,20 +14775,37 @@
       // qat'iy biriktirilgan, boshqa (yangi qo'shilgan) nomlar esa shu
       // palitraga deterministik hash orqali tushadi. Rang hech qayerda
       // saqlanmaydi — har doim shu yerda hisoblanadi.
+      // Oxirgisi — KULRANG, u faqat zaxira. Teg rangi endi vazifa
+      // kartasining chap chizig'i ham bo'lgani uchun kulrang chiziq
+      // "rangi yo'q" degan taassurot berardi.
       const TAG_PALETTE = [
         { bg: "var(--amber-bg)", ink: "var(--amber-ink)" },
         { bg: "var(--teal-bg)", ink: "var(--teal)" },
         { bg: "var(--tagblue-bg)", ink: "var(--tagblue)" },
         { bg: "var(--purple-bg)", ink: "var(--purple)" },
         { bg: "var(--pink-bg)", ink: "var(--pink)" },
+        { bg: "var(--green-bg)", ink: "var(--green)" },
         { bg: "var(--chip)", ink: "var(--t5)" },
       ];
-      const TAG_COLOR_BY_NAME = { Syomka: 0, Reels: 1, Post: 2, Stories: 3, Dizayn: 4, Matn: 5 };
+      // Eng ko'p ishlatiladigan teglar ATAYLAB biriktirilgan: xeshga
+      // qoldirilganda "Montaj" (98 vazifa) kulrangga tushib qolgandi,
+      // ya'ni doskadagi har ikkinchi kartaning chizig'i ko'rinmasdi.
+      const TAG_COLOR_BY_NAME = {
+        Montaj: 2,
+        Dizayn: 4,
+        Reels: 1,
+        Syomka: 0,
+        Stories: 3,
+        Post: 5,
+        Matn: 6,
+      };
       function tagColor(name) {
         if (name in TAG_COLOR_BY_NAME) return TAG_PALETTE[TAG_COLOR_BY_NAME[name]];
         let h = 0;
         for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
-        return TAG_PALETTE[h % TAG_PALETTE.length];
+        // Zaxira ranglar orasida kulrang yo'q — yangi teg ham
+        // ko'rinadigan rang oladi.
+        return TAG_PALETTE[h % (TAG_PALETTE.length - 1)];
       }
       // Xodimlar yuklamasi — faqat OCHIQ (hali yopilmagan) vazifalar
       // bo'yicha, shu ro'yxatdagi (allaqachon rolga qarab scope qilingan)
@@ -15049,8 +15096,13 @@
             : "";
         const pill = tbTagPillHtml(t);
         const metaRow = pill || check ? `<div class="tb-card-meta">${pill}${check}</div>` : "";
-        const rang = projColor(t.projectSlug);
-        return `<div class="tb-card${muted ? " muted" : ""}"${rang ? ` style="border-left-color:${escHtml(rang)}"` : ""} data-task="${escArg(t.id)}" onclick="openTaskActions('${escArg(t.id)}')">
+        // Chap chiziq — TEG rangi: doskada "bu qanday ish" degan savol
+        // "bu qaysi mijoz" dan ko'ra tez-tez beriladi, chunki ustunlar
+        // allaqachon holat bo'yicha ajratilgan. Loyiha rangi yo'qolmadi
+        // — u pastdagi nom yonidagi nuqtada qoladi.
+        const teg = (t.tags || [])[0];
+        const rang = teg ? tagColor(teg.name).ink : null;
+        return `<div class="tb-card${muted ? " muted" : ""}"${rang ? ` style="border-left-color:${rang}"` : ""} data-task="${escArg(t.id)}" onclick="openTaskActions('${escArg(t.id)}')">
           <div class="tb-card-top">
             ${tbPriBarsHtml(t.priority)}
             <span class="tb-ref">${tbRef(t.id)}</span>
@@ -20635,37 +20687,53 @@
         // hisobning o'zida aniqlanadi, shunda ikki joyda ikki xil
         // chiqib qolmaydi.
         const { rows: weekly, current: defaultWeek } = computeWeeklyProgress(p);
-        const volumes = weekly.map((r) => Math.max(r.plannedK + r.plannedS, r.doneK + r.doneS));
-        const maxVolume = Math.max(1, ...volumes);
+        // Post va stories ALOHIDA ustunchalar. Avval ikkisi qo'shilib
+        // bitta ustun bo'lardi: postlar bajarilib, stories qolib
+        // ketgan hafta ham "yarmi bajarilgan" bo'lib ko'rinardi va
+        // qaysi biri ortda qolgani bilinmasdi.
+        //
+        // O'lchov ikkalasi uchun BITTA — shundagina ustunchalarni
+        // bir-biri bilan taqqoslash mumkin.
+        const maxVolume = Math.max(
+          1,
+          ...weekly.flatMap((r) => [Math.max(r.plannedK, r.doneK), Math.max(r.plannedS, r.doneS)]),
+        );
+        const ustun = (reja, bajarilgan, cls) => {
+          const h = Math.max(6, Math.round((Math.max(reja, bajarilgan) / maxVolume) * 52));
+          const pct = reja > 0 ? Math.min(100, Math.round((bajarilgan / reja) * 100)) : bajarilgan > 0 ? 100 : 0;
+          return `<div class="wk-bar-track ${cls}" style="height:${h}px" title="${bajarilgan}/${reja}">
+              <div class="wk-bar-fill" style="height:${pct}%"></div>
+            </div>`;
+        };
 
         const barsHtml = weekly
-          .map((r, w) => {
-            const planned = r.plannedK + r.plannedS;
-            const done = r.doneK + r.doneS;
-            const fillPct = planned > 0 ? Math.min(100, Math.round((done / planned) * 100)) : done > 0 ? 100 : 0;
-            const trackH = Math.max(10, Math.round((volumes[w] / maxVolume) * 52));
-            return `<div class="wk-bar-col${w === defaultWeek ? " active" : ""}" onclick="showWeekDetail(this,'${escArg(p.id)}',${w})">
-              <div class="wk-bar-track" style="height:${trackH}px">
-                <div class="wk-bar-fill" style="height:${fillPct}%"></div>
-              </div>
+          .map(
+            (r, w) => `<div class="wk-bar-col${w === defaultWeek ? " active" : ""}" onclick="showWeekDetail(this,'${escArg(p.id)}',${w})">
+              <div class="wk-pair">${ustun(r.plannedK, r.doneK, "k")}${ustun(r.plannedS, r.doneS, "s")}</div>
               <div class="wk-bar-lbl">${w + 1}-h</div>
-            </div>`;
-          })
+            </div>`,
+          )
           .join("");
 
-        return `<div class="wk-bars">${barsHtml}</div>
+        return `<div class="wk-leg"><span><i class="k"></i>Post</span><span><i class="s"></i>Stories</span></div>
+          <div class="wk-bars">${barsHtml}</div>
           <div class="wk-detail" id="wk-detail">${weekDetailHtml(weekly[defaultWeek], defaultWeek)}</div>`;
       }
       function weekDetailHtml(r, w) {
         // Reja tekis taqsimotdan farq qilsa — nega farq qilayotgani
         // aytiladi, aks holda son "o'z-o'zidan o'zgargandek" ko'rinadi.
-        const kochgan = r.plannedK + r.plannedS - (r.idealK + r.idealS);
-        const izoh =
-          kochgan > 0
-            ? `<div class="wk-detail-note late">Oldingi haftalardan ${kochgan} ta ish ko'chdi</div>`
-            : kochgan < 0
-              ? `<div class="wk-detail-note">Oldindan bajarilgani uchun ${-kochgan} ta kam</div>`
-              : "";
+        // Ko'chish ham tur bo'yicha ajratiladi: "6 ta ish ko'chdi"
+        // degani qaysi birini quvib yetish kerakligini aytmaydi.
+        const kochK = r.plannedK - r.idealK;
+        const kochS = r.plannedS - r.idealS;
+        const qism = (n, nom) => (n > 0 ? `${n} ${nom}` : "");
+        const ortdi = [qism(kochK, "post"), qism(kochS, "stories")].filter(Boolean).join(" + ");
+        const kamaydi = [qism(-kochK, "post"), qism(-kochS, "stories")].filter(Boolean).join(" + ");
+        const izoh = ortdi
+          ? `<div class="wk-detail-note late">Oldingi haftalardan ko'chdi: ${ortdi}</div>`
+          : kamaydi
+            ? `<div class="wk-detail-note">Oldindan bajarilgani uchun kam: ${kamaydi}</div>`
+            : "";
         return `<div class="wk-detail-title">${w + 1}-hafta</div>
           <div class="mini-stat-row">
             <div class="mini-stat"><div class="mini-stat-val">${r.doneK}/${r.plannedK}</div><div class="mini-stat-lbl">Post</div></div>
