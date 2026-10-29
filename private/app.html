@@ -1421,6 +1421,245 @@
         border-top: 1px solid var(--bd1); padding-top: 12px;
       }
 
+      /* ══ TABEL ═══════════════════════════════════════════════════
+         TZ 8-bo'limidagi qiymatlar. Semantik ranglar (ko'k, to'q
+         sariq, qizil, yashil) aniq hex bilan — ular ikkala temada
+         ham bir xil ma'noni bildiradi. Yuza va matn esa ilovaning
+         o'zgaruvchilaridan, aks holda qorong'i tema buzilardi. */
+      .tb2-head { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px 16px; margin-bottom: 16px; }
+      .tb2-head-main { flex: 1 1 320px; min-width: 0; }
+      .tb2-h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
+      .tb2-h2 { font-size: 14px; line-height: 1.5; color: var(--t2); margin-top: 2px; }
+      .tb2-month {
+        display: flex; align-items: center; gap: 4px; height: 40px; padding: 0 6px;
+        background: var(--surf); border: 1px solid var(--bd2); border-radius: 12px; flex: none;
+      }
+      .tb2-month b { font-size: 14px; font-weight: 600; color: var(--ink); padding: 0 8px; min-width: 104px; text-align: center; }
+      .tb2-month button {
+        width: 28px; height: 28px; border: 0; border-radius: 8px; background: none;
+        font: inherit; font-size: 17px; color: var(--t2); cursor: pointer;
+      }
+      .tb2-month button:hover:not(:disabled) { background: var(--chip); }
+      .tb2-month button:disabled { opacity: .3; cursor: default; }
+      .tb2-excel {
+        height: 40px; padding: 0 16px; border: 0; border-radius: 12px; flex: none;
+        background: #0E1726; color: #fff; font: inherit; font-size: 13.5px; font-weight: 600;
+        cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+      }
+      .tb2-excel:hover { filter: brightness(1.15); }
+
+      /* ── Xulosa kartalari ─────────────────────────────────────── */
+      .tb2-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+      .tb2-card { background: var(--surf); border: 1px solid var(--bd2); border-radius: 14px; padding: 14px 16px; }
+      .tb2-card.sub { background: #FDF0DF; border-color: rgba(217,119,6,.25); }
+      :root[data-theme="dark"] .tb2-card.sub { background: rgba(217,119,6,.16); }
+      .tb2-card-l { font-size: 12px; font-weight: 600; color: var(--t3); display: flex; align-items: center; gap: 6px; }
+      .tb2-card.sub .tb2-card-l { color: #92400e; }
+      :root[data-theme="dark"] .tb2-card.sub .tb2-card-l { color: #f0a836; }
+      .tb2-card-n { font-size: 30px; font-weight: 700; line-height: 1.15; color: var(--ink); margin-top: 4px; }
+      .tb2-card-n i { font-style: normal; font-size: 17px; font-weight: 600; color: var(--t3); }
+      .tb2-card-n.bad { color: #b91c1c; }
+      :root[data-theme="dark"] .tb2-card-n.bad { color: #f0554a; }
+      .tb2-card-s { font-size: 12px; color: var(--t3); margin-top: 3px; }
+      .tb2-swap { font-size: 13px; }
+
+      /* ── Boshqaruv ────────────────────────────────────────────── */
+      .tb2-ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 10px; }
+      .tb2-seg { display: flex; padding: 3px; border-radius: 11px; background: var(--chip2, var(--chip)); gap: 2px; }
+      .tb2-seg.wide { width: 100%; margin-bottom: 8px; }
+      .tb2-seg.wide .tb2-seg-b { flex: 1; padding: 0 8px; }
+      .tb2-seg-b {
+        height: 34px; padding: 0 16px; border: 0; border-radius: 8px; background: none;
+        font: inherit; font-size: 13.5px; color: var(--t3); cursor: pointer; white-space: nowrap;
+      }
+      .tb2-seg-b.on { background: var(--surf); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(14,23,38,.12); }
+      .tb2-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+      .tb2-chip {
+        height: 34px; padding: 0 12px; border: 1px solid var(--bd2); border-radius: 10px;
+        background: var(--surf); font: inherit; font-size: 13px; font-weight: 500;
+        color: var(--t2); cursor: pointer; white-space: nowrap;
+      }
+      .tb2-chip.on { background: #0E1726; border-color: #0E1726; color: #fff; font-weight: 600; }
+      .tb2-leg { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--t3); margin-bottom: 14px; }
+      .tb2-leg-i { display: inline-flex; align-items: center; gap: 6px; }
+      .tb2-leg-i i { width: 14px; height: 6px; border-radius: 99px; display: block; }
+      .tb2-leg-i i.self { background: #2f7ab9; }
+      .tb2-leg-i i.sub { background: #d97706; }
+      .tb2-leg-i i.over { background: #dc2626; }
+      .tb2-leg-i i.up { background: #E3E6EA; }
+      .tb2-leg-i i.unk { background: repeating-linear-gradient(135deg, #9AA1AC 0 2px, #D5D9DF 2px 4px); }
+
+      /* ── Jadval ───────────────────────────────────────────────── */
+      .tb2-grid { background: var(--surf); border: 1px solid var(--bd2); border-radius: 16px; overflow: hidden; }
+      .tb2-ghead, .tb2-row {
+        display: grid; grid-template-columns: minmax(170px, 1fr) repeat(3, minmax(0, 1.25fr)); gap: 10px;
+        padding: 10px 14px; align-items: center;
+      }
+      .tb2-ghead { background: var(--surf2); border-bottom: 1px solid var(--bd1); font-size: 12px; color: var(--t3); }
+      .tb2-ghead b { display: block; font-size: 14px; font-weight: 600; color: var(--ink); }
+      .tb2-ghead span { display: block; font-size: 11.5px; color: var(--t3); margin-top: 1px; }
+      .tb2-row + .tb2-row { border-top: 1px solid var(--bd1); }
+      .tb2-proj { display: flex; align-items: center; gap: 9px; min-width: 0; }
+      .tb2-proj i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+      .tb2-proj span { font-size: 14px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .tb2-nomatch { padding: 12px 14px; font-size: 12.5px; color: var(--t3); border-bottom: 1px solid var(--bd1); }
+
+      .tb2-cell {
+        border: 1px solid var(--bd2); border-radius: 12px; padding: 9px 11px;
+        background: var(--surf); cursor: pointer; transition: border-color .12s, opacity .12s;
+      }
+      .tb2-cell:hover { border-color: var(--bd4, var(--bd2)); }
+      /* Filtr kataklarni yashirmaydi — xiralashtiradi, shunda jadval
+         tuzilmasi va loyihalar taqqoslash imkoni saqlanadi. */
+      .tb2-cell.dim, .tb2-mcard.dim { opacity: .32; }
+      .tb2-cell-top { display: flex; align-items: center; gap: 7px; }
+      .tb2-av {
+        border-radius: 99px; background: #E9EDF2; color: #374151; flex: none;
+        display: inline-flex; align-items: center; justify-content: center; font-weight: 600;
+      }
+      :root[data-theme="dark"] .tb2-av { background: var(--chip); color: var(--t2); }
+      .tb2-av.none { width: 22px; height: 22px; font-size: 10px; }
+      .tb2-cell-n { flex: 1; min-width: 0; font-size: 13px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .tb2-cell-n.none { color: var(--t3); }
+      .tb2-cell-num { font-size: 14px; font-weight: 700; color: var(--ink); flex: none; }
+      .tb2-cell-num i { font-style: normal; font-weight: 500; color: var(--t3); }
+
+      .tb2-bar { height: 6px; border-radius: 99px; background: #E3E6EA; overflow: hidden; display: flex; margin: 8px 0 7px; }
+      :root[data-theme="dark"] .tb2-bar { background: var(--chip2, var(--chip)); }
+      .tb2-bar i { display: block; height: 100%; }
+      .tb2-bar i.self { background: #2f7ab9; }
+      .tb2-bar i.sub { background: #d97706; }
+      .tb2-bar i.over { background: #dc2626; }
+      .tb2-bar i.unk { background: repeating-linear-gradient(135deg, #9AA1AC 0 2px, #D5D9DF 2px 4px); }
+
+      .tb2-cell-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+      .tb2-st { font-size: 12px; color: var(--t3); }
+      .tb2-st.bad { color: #b91c1c; font-weight: 600; }
+      :root[data-theme="dark"] .tb2-st.bad { color: #f0554a; }
+      .tb2-st.good { color: #15803d; }
+      :root[data-theme="dark"] .tb2-st.good { color: #34d066; }
+      /* Zamena belgisi hech qachon qisqarmaydi — joy yetmasa holat
+         matni keyingi qatorga tushadi. */
+      .tb2-sub-b {
+        display: inline-flex; align-items: center; gap: 5px; flex: none; white-space: nowrap;
+        background: #FDF0DF; color: #92400e; border-radius: 8px; padding: 3px 8px;
+        font-size: 12px; font-weight: 600;
+      }
+      :root[data-theme="dark"] .tb2-sub-b { background: rgba(217,119,6,.18); color: #f0a836; }
+
+      /* ── Telefon ──────────────────────────────────────────────── */
+      .tb2-mrule { font-size: 12px; color: var(--t3); margin-bottom: 10px; }
+      .tb2-mcard {
+        background: var(--surf); border: 1px solid var(--bd2); border-radius: 14px;
+        padding: 12px 14px; margin-bottom: 8px; cursor: pointer;
+      }
+      .tb2-mcard-top { display: flex; align-items: center; gap: 9px; }
+      .tb2-mcard-top i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+      .tb2-mcard-n { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .tb2-mcard-who { font-size: 12.5px; color: var(--t2); }
+
+      /* ── Zamenalar ro'yxati ───────────────────────────────────── */
+      .tb2-slist { background: var(--surf); border: 1px solid var(--bd2); border-radius: 16px; overflow: hidden; }
+      .tb2-srow { display: flex; align-items: center; gap: 14px; padding: 12px 16px; }
+      .tb2-srow + .tb2-srow { border-top: 1px solid var(--bd1); }
+      .tb2-sdate { width: 44px; flex: none; text-align: center; }
+      .tb2-sdate b { display: block; font-size: 16px; font-weight: 700; color: var(--ink); line-height: 1.1; }
+      .tb2-sdate span { display: block; font-size: 11px; color: var(--t3); }
+      .tb2-sbody { flex: 1; min-width: 0; }
+      .tb2-sproj { display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600; color: var(--ink); }
+      .tb2-sproj i { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+      .tb2-smeta { font-size: 12px; color: var(--t3); margin-top: 1px; }
+      .tb2-sswap { display: flex; align-items: center; gap: 8px; flex: none; }
+      .tb2-was { font-size: 12.5px; color: var(--t3); text-decoration: line-through; }
+      .tb2-arr { color: var(--t4, var(--t3)); font-size: 12px; }
+      .tb2-did {
+        font-size: 12.5px; font-weight: 600; color: #92400e; background: #FDF0DF;
+        border-radius: 8px; padding: 3px 9px; white-space: nowrap;
+      }
+      :root[data-theme="dark"] .tb2-did { background: rgba(217,119,6,.18); color: #f0a836; }
+      .tb2-rtag {
+        font-size: 11.5px; color: var(--t3); background: var(--chip); border-radius: 7px;
+        padding: 3px 8px; flex: none; white-space: nowrap;
+      }
+
+      /* ── Xodimlar ─────────────────────────────────────────────── */
+      .tb2-xnote { font-size: 12.5px; color: var(--t3); margin-bottom: 10px; }
+      .tb2-xlist { background: var(--surf); border: 1px solid var(--bd2); border-radius: 16px; overflow: hidden; }
+      .tb2-xrow { display: flex; align-items: center; gap: 12px; padding: 12px 16px; flex-wrap: wrap; }
+      .tb2-xrow + .tb2-xrow { border-top: 1px solid var(--bd1); }
+      .tb2-xwho { flex: 1 1 150px; min-width: 0; }
+      .tb2-xname { font-size: 14px; font-weight: 600; color: var(--ink); }
+      .tb2-xrole { font-size: 12px; color: var(--t3); }
+      .tb2-xcol, .tb2-xpay { text-align: right; flex: none; min-width: 64px; }
+      .tb2-xlbl { display: block; font-size: 11px; color: var(--t3); }
+      .tb2-xcol b { font-size: 15px; font-weight: 600; color: var(--ink); }
+      .tb2-xcol b.blue { color: #2f7ab9; }
+      .tb2-xcol b.muted { color: var(--t3); font-weight: 500; }
+      .tb2-xcol b.amber { color: #d97706; font-weight: 700; }
+      .tb2-xpay b { font-size: 20px; font-weight: 700; color: var(--ink); }
+      .tb2-xpay b i { font-style: normal; font-size: 12px; font-weight: 500; color: var(--t3); }
+
+      /* ── O'ng panel ───────────────────────────────────────────── */
+      .tb2-ov { position: fixed; inset: 0; z-index: 130; background: rgba(14,23,38,.32); display: flex; justify-content: flex-end; }
+      .tb2-panel { width: 440px; max-width: 100%; background: var(--surf); display: flex; flex-direction: column; }
+      .tb2-panel-h { display: flex; align-items: center; gap: 10px; padding: 16px 18px; border-bottom: 1px solid var(--bd1); flex: none; }
+      .tb2-panel-h > i { width: 12px; height: 12px; border-radius: 4px; flex: none; }
+      .tb2-panel-t { font-size: 19px; font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .tb2-panel-s { font-size: 12.5px; color: var(--t3); margin-top: 1px; }
+      .tb2-x { width: 32px; height: 32px; border: 0; border-radius: 9px; background: var(--chip); font-size: 19px; color: var(--t2); cursor: pointer; flex: none; }
+      .tb2-panel-b { flex: 1; min-height: 0; overflow: auto; padding: 16px 18px 28px; }
+      .tb2-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+      .tb2-tile { background: var(--chip); border-radius: 11px; padding: 9px 10px; }
+      .tb2-tile span { display: block; font-size: 11px; color: var(--t3); }
+      .tb2-tile b { display: block; font-size: 19px; font-weight: 700; color: var(--ink); margin-top: 1px; }
+      .tb2-tile.self { background: #EAF2F9; } .tb2-tile.self b { color: #1d4b73; }
+      .tb2-tile.sub { background: #FDF0DF; } .tb2-tile.sub b { color: #92400e; }
+      .tb2-tile.bad b { color: #b91c1c; }
+      :root[data-theme="dark"] .tb2-tile.self { background: rgba(47,122,185,.2); }
+      :root[data-theme="dark"] .tb2-tile.self b { color: #6db3ea; }
+      :root[data-theme="dark"] .tb2-tile.sub { background: rgba(217,119,6,.18); }
+      :root[data-theme="dark"] .tb2-tile.sub b { color: #f0a836; }
+      :root[data-theme="dark"] .tb2-tile.bad b { color: #f0554a; }
+      .tb2-pace { font-size: 12.5px; line-height: 1.55; color: var(--t2); margin-top: 14px; }
+      .tb2-pace b.bad { color: #b91c1c; }
+      .tb2-sec { margin-top: 20px; }
+      .tb2-sec-t { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--t3); margin-bottom: 8px; }
+      .tb2-sec-s { font-size: 12.5px; line-height: 1.5; color: var(--t3); margin-bottom: 8px; }
+      .tb2-plist { display: flex; flex-direction: column; gap: 6px; }
+      .tb2-prow { display: flex; align-items: center; gap: 10px; background: var(--surf2); border-radius: 10px; padding: 8px 11px; }
+      .tb2-pdate { font-size: 12px; color: var(--t3); flex: none; min-width: 48px; }
+      .tb2-pwho { flex: 1; min-width: 0; }
+      .tb2-pwho b { display: block; font-size: 13.5px; font-weight: 600; color: #92400e; }
+      :root[data-theme="dark"] .tb2-pwho b { color: #f0a836; }
+      .tb2-pwho span { display: block; font-size: 11.5px; color: var(--t3); }
+      .tb2-chipwrap { display: flex; flex-wrap: wrap; gap: 6px; }
+      .tb2-ichip { font-size: 12px; border-radius: 8px; padding: 4px 9px; }
+      .tb2-ichip.self { background: #EAF2F9; color: #1d4b73; }
+      .tb2-ichip.sub { background: #FDF0DF; color: #92400e; }
+      .tb2-ichip.over { background: #FDECEC; color: #b91c1c; font-weight: 600; }
+      .tb2-ichip.up { background: var(--surf); border: 1px dashed var(--bd2); color: var(--t3); }
+      .tb2-ichip.unk { background: repeating-linear-gradient(135deg, rgba(154,161,172,.3) 0 2px, rgba(213,217,223,.3) 2px 4px); color: var(--t2); }
+      :root[data-theme="dark"] .tb2-ichip.self { background: rgba(47,122,185,.2); color: #6db3ea; }
+      :root[data-theme="dark"] .tb2-ichip.sub { background: rgba(217,119,6,.18); color: #f0a836; }
+      :root[data-theme="dark"] .tb2-ichip.over { background: rgba(220,38,38,.18); color: #f0554a; }
+
+      /* ── Skelet ───────────────────────────────────────────────── */
+      .tb2-sk { background: var(--chip); border-radius: 12px; animation: tb2-puls 1.3s ease-in-out infinite; }
+      .tb2-sk-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+      .tb2-sk-card { height: 92px; }
+      .tb2-sk-bar { height: 40px; margin-bottom: 14px; }
+      .tb2-sk-row { height: 74px; margin-bottom: 8px; }
+      @keyframes tb2-puls { 0%, 100% { opacity: .55; } 50% { opacity: .9; } }
+      @media (prefers-reduced-motion: reduce) { .tb2-sk { animation: none; } }
+
+      @media (max-width: 819px) {
+        .tb2-grid { display: none; }
+        .tb2-h1 { font-size: 23px; }
+        .tb2-panel { width: 100%; }
+        .tb2-xcol, .tb2-xpay { min-width: 56px; }
+      }
+      @media (min-width: 820px) { .tb2-mob { display: none; } }
+
       /* ══ RUXSATLAR TAXTASI ═══════════════════════════════════════
          Dizayn qiymatlari TZ dan, ranglar esa ilovaning o'z
          o'zgaruvchilaridan olingan — aks holda qorong'i tema buzilardi
@@ -5346,29 +5585,7 @@
 
       /* ── TABEL (TZ 10a–10d) ─────────────────────────────────────────── */
       /* ══ TABEL — MATRITSA (qator = loyiha, ustun = rol) ══════════ */
-      .tbx-head {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-        margin-bottom: 16px;
-      }
       /* Ichki `style` media-query'ni bosib ketardi — kenglik klassda. */
-      .tbx-head-main {
-        flex: 1;
-        min-width: 0;
-      }
-      .tbx-h1 {
-        font-size: 18px;
-        font-weight: 600;
-        letter-spacing: -0.015em;
-        color: var(--ink);
-      }
-      .tbx-h2 {
-        font-size: 12.5px;
-        color: var(--v3-t2);
-        margin-top: 2px;
-      }
       /* ── BARMOQ UCHUN BOSISH MAYDONI ─────────────────────────────
          Bu boshqaruvlar ro'yxat zichligi uchun ataylab past (24–29px),
          lekin barmoq uchun shuncha joy kam. Ko'rinmas maydon ularni
@@ -5377,7 +5594,6 @@
       .tb-seg-btn,
       .chip-btn,
       .sec-hdr-a,
-      .tbx-chipbtn,
       .ntf-qbtn,
       .ntf-seg-b,
       .ntf-pill,
@@ -5387,7 +5603,6 @@
       .tb-seg-btn::after,
       .chip-btn::after,
       .sec-hdr-a::after,
-      .tbx-chipbtn::after,
       .ntf-qbtn::after,
       .ntf-seg-b::after,
       .ntf-pill::after,
@@ -5603,713 +5818,6 @@
         }
       }
 
-      /* ── Oy xulosasi ──────────────────────────────────────────── */
-      .tbx-sum {
-        background: var(--surf);
-        border: 1px solid var(--bd2);
-        border-radius: 14px;
-        padding: 16px 18px;
-        margin-bottom: 14px;
-      }
-      .tbx-sum-h {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--v3-t2);
-        margin-bottom: 12px;
-      }
-      .tbx-sum-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 10px;
-      }
-      .tbx-sum-card {
-        min-width: 0;
-      }
-      .tbx-sum-card + .tbx-sum-card {
-        padding-left: 14px;
-        border-left: 1px solid var(--bd1);
-      }
-      .tbx-sum-l {
-        font-size: 11.5px;
-        font-weight: 600;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        color: var(--v3-t3);
-      }
-      .tbx-sum-v {
-        display: flex;
-        align-items: baseline;
-        gap: 6px;
-        margin-top: 4px;
-      }
-      .tbx-sum-n {
-        font-size: 24px;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        font-variant-numeric: tabular-nums;
-        color: var(--ink);
-      }
-      .tbx-sum-n.bad {
-        color: var(--st-debt);
-      }
-      .tbx-sum-n.good {
-        color: var(--st-ahead);
-      }
-      .tbx-sum-n.warn {
-        color: var(--st-behind);
-      }
-      .tbx-sum-u {
-        font-size: 12.5px;
-        font-weight: 600;
-        color: var(--v3-t2);
-      }
-      .tbx-sum-note {
-        font-size: 11.5px;
-        color: var(--v3-t2);
-        margin-top: 3px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .tbx-sum-note.up {
-        color: var(--st-ahead);
-        font-weight: 600;
-      }
-      .tbx-sum-note.down {
-        color: var(--st-debt);
-        font-weight: 600;
-      }
-      .tbx-sum-bar {
-        height: 6px;
-        border-radius: 99px;
-        background: var(--track);
-        overflow: hidden;
-        margin: 14px 0 12px;
-      }
-      .tbx-sum-bar i {
-        display: block;
-        height: 100%;
-        border-radius: 99px;
-        background: var(--brand);
-      }
-      .tbx-sum-worst {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-        font-size: 12.5px;
-      }
-      .tbx-sum-worst-l {
-        color: var(--v3-t2);
-      }
-      .tbx-sum-worst-i {
-        padding: 3px 9px;
-        border-radius: 99px;
-        background: var(--st-debt-bg);
-        color: var(--st-debt);
-        font-weight: 500;
-        white-space: nowrap;
-      }
-      .tbx-sum-worst-i b {
-        font-weight: 700;
-      }
-
-      .tbx-bar {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-bottom: 12px;
-      }
-      .tbx-chips {
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-      }
-      .tbx-chipbtn {
-        height: 32px;
-        padding: 0 12px;
-        border-radius: 99px;
-        background: var(--surf);
-        border: 1px solid var(--cwd-chipbd);
-        color: var(--t5);
-        font-family: inherit;
-        font-size: 13px;
-        font-weight: 500;
-        white-space: nowrap;
-        cursor: pointer;
-      }
-      .tbx-chipbtn.on {
-        background: var(--inkfill);
-        border-color: var(--inkfill);
-        color: #fff;
-      }
-      .tbx-legend {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        flex-wrap: wrap;
-      }
-      .tbx-legend span {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-        font-weight: 500;
-        color: var(--v3-t2);
-        white-space: nowrap;
-      }
-      .tbx-legend i {
-        width: 14px;
-        height: 14px;
-        border-radius: 4px;
-        flex: none;
-      }
-      .tbx-legend i.own {
-        background: var(--surf);
-        border: 1px solid var(--cwd-chipbd);
-      }
-      .tbx-legend i.sub {
-        background: var(--st-behind-bg);
-        border: 1px solid rgba(217, 119, 6, 0.5);
-      }
-      .tbx-legend i.missing {
-        background: var(--st-debt-bg);
-        border: 1px solid rgba(220, 38, 38, 0.45);
-      }
-
-      .tbx-table {
-        background: var(--surf);
-        border: 1px solid var(--bd2);
-        border-radius: 14px;
-        overflow: hidden;
-      }
-      .tbx-grid {
-        display: grid;
-        gap: 10px;
-        padding: 10px 16px;
-        align-items: center;
-        min-width: 0;
-      }
-      .tbx-thead {
-        background: var(--tbl-hdr-bg);
-        border-bottom: 1px solid var(--bd2);
-      }
-      .tbx-thead > div {
-        font-size: 11.5px;
-        font-weight: 600;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        color: var(--v3-t2);
-        white-space: nowrap;
-      }
-      .tbx-row {
-        border-bottom: 1px solid var(--bd2);
-      }
-      .tbx-row:last-child {
-        border-bottom: none;
-      }
-      .tbx-row.open {
-        background: var(--st-onplan-bg);
-      }
-      .tbx-proj {
-        min-width: 0;
-      }
-      .tbx-proj-n {
-        font-size: 14.5px;
-        font-weight: 600;
-        color: var(--ink);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .tbx-proj-s {
-        font-size: 12px;
-        color: var(--v3-t2);
-        margin-top: 2px;
-      }
-      .tbx-badge {
-        height: 24px;
-        padding: 0 8px;
-        border-radius: 7px;
-        font-size: 11.5px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        white-space: nowrap;
-      }
-      .tbx-badge.missing {
-        background: var(--st-debt-bg);
-        color: var(--st-debt);
-      }
-      .tbx-badge.sub {
-        background: var(--st-behind-bg);
-        color: var(--st-behind);
-      }
-      .tbx-badge.unrec {
-        background: var(--chip);
-        color: var(--v3-t2);
-      }
-      .tbx-badge.own {
-        background: var(--st-ahead-bg);
-        color: var(--st-ahead);
-      }
-      .tbx-badge.own i {
-        width: 6px;
-        height: 6px;
-        border-radius: 99px;
-        background: var(--st-ahead-dot);
-      }
-
-      /* ── Katak ─────────────────────────────────────────────────── */
-      .tbx-cell {
-        border-radius: 11px;
-        background: var(--surf);
-        border: 1px solid var(--bd2);
-        padding: 8px 10px;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        min-width: 0;
-      }
-      .tbx-cell.sub {
-        background: var(--st-behind-bg);
-        border-color: rgba(217, 119, 6, 0.35);
-      }
-      .tbx-cell.missing {
-        background: var(--st-debt-bg);
-        border-color: var(--red-bd);
-      }
-      .tbx-cell.clickable {
-        cursor: pointer;
-      }
-      .tbx-cell.open {
-        border: 2px solid var(--brand);
-        box-shadow: 0 0 0 4px rgba(47, 122, 185, 0.15);
-        padding: 7px 9px;
-      }
-      .tbx-cell.empty {
-        border-style: dashed;
-        align-items: center;
-        justify-content: center;
-        min-height: 58px;
-      }
-      .tbx-empty {
-        font-size: 12px;
-        font-weight: 500;
-        color: var(--v3-t3);
-      }
-      .tbx-top {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        min-width: 0;
-      }
-      .tbx-av {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-weight: 600;
-        flex: none;
-        position: relative;
-        overflow: hidden;
-      }
-      .tbx-name {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--ink);
-        flex: 1;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .tbx-num {
-        font-size: 12.5px;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-        color: var(--t5);
-        white-space: nowrap;
-      }
-      .tbx-num.ok {
-        color: var(--st-ahead);
-      }
-      .tbx-num.bad {
-        color: var(--t5);
-      }
-      .tbx-note {
-        font-size: 11.5px;
-        font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .tbx-note.good {
-        color: var(--st-ahead);
-      }
-      .tbx-note.bad {
-        color: var(--st-debt);
-      }
-      .tbx-note.warn {
-        color: var(--v3-t2);
-      }
-      .tbx-sub {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        min-width: 0;
-      }
-      .tbx-sub-name {
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--ink);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        min-width: 0;
-        flex: 1;
-      }
-      .tbx-sub-n {
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--st-behind);
-        white-space: nowrap;
-        flex: none;
-      }
-      .tbx-chev {
-        display: flex;
-        color: var(--st-behind);
-        transition: transform 0.15s;
-        flex: none;
-      }
-      .tbx-chev svg {
-        width: 14px;
-        height: 14px;
-      }
-      .tbx-chev.open {
-        color: var(--brand);
-        transform: rotate(90deg);
-      }
-
-      /* ── Ochilgan katak paneli ─────────────────────────────────── */
-      .tbx-detail {
-        margin: 0 16px 14px;
-        background: var(--surf);
-        border: 1.5px solid rgba(47, 122, 185, 0.35);
-        border-radius: 14px;
-        padding: 16px 18px;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 400px;
-        gap: 28px;
-      }
-      .tbx-dhead {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-      /* Ichki `style` atributi media-query'dagi qoidani bosib ketardi,
-         shuning uchun kenglik klass orqali beriladi. */
-      .tbx-dhead-main {
-        flex: 1;
-        min-width: 0;
-      }
-      .tbx-dtitle {
-        font-size: 15.5px;
-        font-weight: 700;
-        color: var(--ink);
-      }
-      .tbx-dsub {
-        font-size: 12.5px;
-        color: var(--v3-t2);
-        margin-top: 1px;
-      }
-      .tbx-chip {
-        height: 26px;
-        padding: 0 8px;
-        border-radius: 7px;
-        background: var(--chip2);
-        color: var(--ink);
-        font-size: 12px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        white-space: nowrap;
-        flex: none;
-      }
-      .tbx-chip.sub {
-        background: var(--st-behind-bg);
-        color: var(--st-behind);
-      }
-      .tbx-close {
-        width: 32px;
-        height: 32px;
-        border-radius: 9px;
-        background: var(--chip2);
-        border: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--v3-t2);
-        cursor: pointer;
-        flex: none;
-      }
-      .tbx-close svg {
-        width: 16px;
-        height: 16px;
-      }
-      .tbx-dhint {
-        font-size: 12.5px;
-        color: var(--v3-t2);
-        margin: 16px 0 10px;
-      }
-      .tbx-squares {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px 8px;
-      }
-      .tbx-sq-wrap {
-        width: 40px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-      }
-      .tbx-sq {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-size: 12.5px;
-        font-weight: 700;
-      }
-      .tbx-sq.sub {
-        font-size: 14px;
-        box-shadow:
-          0 0 0 2px var(--surf),
-          0 0 0 4px var(--st-behind-dot);
-      }
-      .tbx-sq.none {
-        background: var(--chip2);
-        color: var(--v3-t3);
-      }
-      .tbx-sq-lbl {
-        font-size: 10.5px;
-        font-weight: 500;
-        font-variant-numeric: tabular-nums;
-        color: var(--v3-t2);
-        white-space: nowrap;
-      }
-      .tbx-sq-lbl.sub {
-        color: var(--st-behind);
-      }
-      .tbx-dlegend {
-        display: flex;
-        gap: 16px;
-        flex-wrap: wrap;
-        margin-top: 14px;
-      }
-      .tbx-dlegend span {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-        font-weight: 500;
-        color: var(--v3-t2);
-        white-space: nowrap;
-      }
-      .tbx-dlegend i {
-        width: 13px;
-        height: 13px;
-        border-radius: 4px;
-        flex: none;
-      }
-      .tbx-dlegend i.sub {
-        box-shadow:
-          0 0 0 1.5px var(--surf),
-          0 0 0 3px var(--st-behind-dot);
-      }
-      .tbx-dside-t {
-        font-size: 14px;
-        font-weight: 700;
-        color: var(--ink);
-        margin-bottom: 4px;
-      }
-      .tbx-srow {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 0;
-        border-top: 1px solid var(--bd2);
-        min-width: 0;
-      }
-      .tbx-sdate {
-        width: 92px;
-        flex: none;
-      }
-      .tbx-sdate-d {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--ink);
-        white-space: nowrap;
-      }
-      .tbx-sdate-w {
-        font-size: 11.5px;
-        color: var(--v3-t2);
-        white-space: nowrap;
-      }
-      .tbx-tag {
-        height: 24px;
-        padding: 0 8px;
-        border-radius: 7px;
-        background: #e3f4f1;
-        color: var(--cell-sub);
-        font-size: 11.5px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        white-space: nowrap;
-        flex: none;
-      }
-      .tbx-sname {
-        font-size: 13px;
-        font-weight: 700;
-        color: var(--ink);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        min-width: 0;
-      }
-      .tbx-reason {
-        height: 22px;
-        padding: 0 8px;
-        border-radius: 7px;
-        background: var(--chip2);
-        color: var(--t5);
-        font-size: 11px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        white-space: nowrap;
-        flex: none;
-      }
-      .tbx-sfoot {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-top: 10px;
-        padding: 10px 12px;
-        border-radius: 10px;
-        background: var(--st-behind-bg);
-      }
-      .tbx-sfoot-t {
-        font-size: 13px;
-        font-weight: 700;
-        color: var(--ink);
-      }
-      .tbx-sfoot-s {
-        font-size: 12px;
-        color: var(--t5);
-        margin-top: 1px;
-      }
-
-      /* ── Tor ekran: matritsa sig'maydi, qatorlar ustma-ust ───────
-         Ustun sarlavhasi har katak ustida takrorlanadi, aks holda
-         qaysi rol ekani ko'rinmay qolardi. */
-      @media (max-width: 859px) {
-        /* Element ikkala klassni ham olib yuradi (.tbx-grid.tbx-thead),
-           shuning uchun yashirish qoidasi aniqroq bo'lishi kerak — aks
-           holda pastdagi `.tbx-grid { display: block }` uni ochib
-           yuborardi. */
-        .tbx-grid.tbx-thead {
-          display: none;
-        }
-        .tbx-grid {
-          display: block;
-          padding: 12px 14px;
-        }
-        .tbx-proj {
-          margin-bottom: 10px;
-        }
-        .tbx-cell {
-          margin-top: 8px;
-        }
-        .tbx-cell::before {
-          content: attr(data-role);
-          font-size: 10.5px;
-          font-weight: 600;
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
-          color: var(--v3-t3);
-        }
-        .tbx-detail {
-          grid-template-columns: minmax(0, 1fr);
-          gap: 18px;
-          padding: 14px;
-          margin: 0 14px 14px;
-        }
-        /* Sarlavha qatori tor ekranda to'rtta narsani (avatar, nom,
-           ikki chip, yopish) bitta qatorga sig'dira olmaydi — ism
-           ustun bo'lib qisqarib ketardi. Yopish tugmasi burchakda
-           qoladi, chiplar pastki qatorga tushadi. */
-        .tbx-dhead {
-          gap: 8px;
-          position: relative;
-          padding-right: 40px;
-        }
-        .tbx-dhead-main {
-          flex: 1 0 calc(100% - 46px);
-        }
-        .tbx-close {
-          position: absolute;
-          right: 0;
-          top: 0;
-        }
-        .tbx-srow {
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-        .tbx-legend {
-          display: none;
-        }
-        /* To'rtta ko'rsatkich 375px da yonma-yon sig'maydi — ikkitadan. */
-        .tbx-sum-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 14px 10px;
-        }
-        .tbx-sum-card + .tbx-sum-card {
-          padding-left: 0;
-          border-left: none;
-        }
-        .tbx-sum-card:nth-child(even) {
-          padding-left: 12px;
-          border-left: 1px solid var(--bd1);
-        }
-        .tbx-sum {
-          padding: 14px;
-        }
-        /* Sarlavha oy tanlagich bilan yonma-yon sig'maydi — tor
-           ustunga siqilib ketmasligi uchun o'z qatorini oladi. */
-        .tbx-head-main {
-          flex: 1 0 100%;
-        }
-        /* Izoh qisqarib ketmasin — "o'tgan oy 64%" kabi ma'lumot
-           kartaning o'zida qolishi kerak. */
-        .tbx-sum-note {
-          white-space: normal;
-        }
-        .tbx-h2 {
-          font-size: 12px;
-        }
-        .tbx-squares {
-          gap: 8px 6px;
-        }
-      }
 
       .tbl-month {
         display: flex;
@@ -22814,368 +22322,552 @@
         );
       }
 
-      // ── TABEL (TZ 10a–10d) ────────────────────────────────────────
-      // ── TABEL — MATRITSA ──────────────────────────────────────────
-      // Bitta savolga javob beradi: har loyihada har rol bo'yicha ishni
-      // kim qildi va hammasi joyidami. Qator — loyiha, ustun — rol.
-      // Katak rangi holatni aytadi; sariq katak bosilsa, kim o'rniga
-      // qilgani ochiladi.
-      let tbx = null; // /api/tabel/matrix javobi
-      let tbxFilter = "all"; // all | sub | missing | own
-      let tbxOpen = null; // ochilgan katak: `${slug}:${role}`
+      // ══ TABEL ════════════════════════════════════════════════════
+      // Tabel — hisobot emas, TO'LOV HUJJATI. Oylik hisoblanayotganda
+      // ish haqi ishni HAQIQATDA bajargan xodimga yoziladi, rejada
+      // kim turganiga emas. Shuning uchun ekranning bosh qahramoni —
+      // zamena (to'q sariq), qizil esa faqat kechikkan ish uchun.
+      //
+      // Server xom birliklarni beradi, hisob shu yerda. Sabab: bir xil
+      // sonlar to'rt joyda ko'rsatiladi (xulosa kartalari, katak,
+      // filtr chiplari, o'ng panel) va ular bitta formuladan chiqishi
+      // shart — aks holda ular sekin-asta bir-biridan uzoqlashadi.
+      let tb2 = null;            // /api/tabel javobi
+      let tb2Month = null;       // "2026-10"
+      let tb2View = "jadval";    // jadval | zamena | xodim
+      let tb2Filter = "all";     // all | sub | over | unk
+      let tb2Reason = "all";     // Zamenalar ko'rinishidagi sabab chipi
+      let tb2Role = "smm";       // telefon: ko'rsatilayotgan rol
+      let tb2Open = null;        // ochilgan katak: "slug:role"
+      let tb2Err = null;
 
-      const TBX_STATE = {
-        own: { label: "O'zi bajardi", cls: "own" },
-        sub: { label: "Zamena bor", cls: "sub" },
-        missing: { label: "Qilinmagan", cls: "missing" },
-        unrecorded: { label: "Kim qilgani yozilmagan", cls: "unrec" },
-      };
+      const TB2_REASONS = { sick: "Kasallik", vacation: "Ta'til", urgent: "Shoshilinch", other: "Boshqa" };
 
-      // Oy hali tugamagan bo'lsa bajarilmagan ish "qilinmadi" emas —
-      // uning navbati hali kelmagan. O'tgan oyda esa bu haqiqatan
-      // bajarilmagan ish.
-      function tbxMonthOver() {
-        return (tbx?.month || worklogMonth) < isoOf(todayDate()).slice(0, 7);
+      function tb2DaysInMonth(m) {
+        const [y, mm] = String(m).split("-").map(Number);
+        return new Date(y, mm, 0).getDate();
       }
-      function tbxMissingLabel(n) {
-        return tbxMonthOver() ? `✕ ${n} ta qilinmadi` : `${n} ta qoldi`;
-      }
-      function tbxInitial(name) {
-        return String(name || "?").trim().slice(0, 1).toUpperCase();
-      }
-      function tbxAvatar(p, size) {
-        const s = size || 24;
-        const st = `width:${s}px;height:${s}px;border-radius:${Math.round(s / 3)}px;font-size:${Math.round(s * 0.42)}px`;
-        return `<span class="tbx-av" style="${st};background:${personColor(p?.username || p?.name || "?")}">${escHtml(tbxInitial(p?.name))}${avatarImg(p?.avatarUrl)}</span>`;
+      // Oy yopilgan bo'lsa "bugun" o'rniga oyning oxirgi kuni olinadi.
+      function tb2Elapsed() {
+        if (!tb2) return 0;
+        if (tb2.closed) return tb2DaysInMonth(tb2.month);
+        return Number(String(tb2.today).slice(8, 10)) || 1;
       }
 
+      // ── Katak hisobi (TZ 2.4) ────────────────────────────────────
+      // `unknown` BAJARILGAN hisoblanadi (ish bor, faqat ijrochisi
+      // yozilmagan), lekin hech kimning "o'zi"siga qo'shilmaydi.
+      function tb2Calc(cell) {
+        const it = cell.items || [];
+        const n = (st) => it.filter((x) => x.status === st).length;
+        const plan = it.length;
+        const self = n("self"), subs = n("sub"), unk = n("unknown"), open = n("open");
+        const done = self + subs + unk;
+        const expected = Math.floor((plan * tb2Elapsed()) / tb2DaysInMonth(tb2.month));
+        // Oy yopilgan bo'lsa bajarilmagan ishning hammasi kechikkan.
+        // Ochiq oyda esa faqat bugungi kunga qarab kutilgani —
+        // navbati kelmagan ish ayb emas.
+        const over = tb2.closed ? open : Math.max(0, Math.min(open, expected - done));
+        return { plan, self, subs, unk, open, done, expected, over, up: open - over };
+      }
+      function tb2Cells() {
+        return (tb2?.cells || []).map((c) => ({ ...c, m: tb2Calc(c) }));
+      }
+      function tb2Totals() {
+        const z = { plan: 0, self: 0, subs: 0, unk: 0, open: 0, done: 0, over: 0, up: 0 };
+        tb2Cells().forEach((c) => Object.keys(z).forEach((k) => (z[k] += c.m[k])));
+        return z;
+      }
+      function tb2User(username) {
+        return (tb2?.employees || []).find((u) => u.username === username) || null;
+      }
+      function tb2Name(username) {
+        return tb2User(username)?.name || (username ? "@" + username : "—");
+      }
+      function tb2Proj(id) {
+        return (tb2?.projects || []).find((p) => p.id === id) || null;
+      }
+      function tb2RoleLabel(key) {
+        return (tb2?.roles || []).find((r) => r.key === key)?.label || key;
+      }
+      // Barcha zamenalar — tekis ro'yxat (Zamenalar ko'rinishi va
+      // xulosa kartasi uchun).
+      function tb2Subs() {
+        const out = [];
+        (tb2?.cells || []).forEach((c) => {
+          c.items.forEach((it) => {
+            if (it.status !== "sub") return;
+            out.push({ ...it, project: c.project, role: c.role });
+          });
+        });
+        // Yangi -> eski; bir kunda loyiha tartibi saqlanadi.
+        const tartib = (tb2?.projects || []).map((p) => p.id);
+        return out.sort(
+          (a, b) =>
+            String(b.date || "").localeCompare(String(a.date || "")) ||
+            tartib.indexOf(a.project) - tartib.indexOf(b.project),
+        );
+      }
+      function tb2Avatar(username, size) {
+        const u = tb2User(username);
+        const s = size || 22;
+        return `<span class="tb2-av" style="width:${s}px;height:${s}px;font-size:${Math.round(s * 0.42)}px">${escHtml(u ? u.initials : "?")}</span>`;
+      }
+
+      // ── Yuklash ──────────────────────────────────────────────────
       async function renderWorklogTab(c) {
-        if (!worklogMonth) worklogMonth = isoOf(todayDate()).slice(0, 7);
-        if (!tbx) {
-          c.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
-          try {
-            const r = await apiFetch(`/api/tabel/matrix?month=${worklogMonth}`);
-            if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
-            tbx = await r.json();
-          } catch (e) {
-            c.innerHTML = `<div class="empty"><div class="empty-t">Tabel yuklanmadi</div><div class="empty-s">${escHtml(e.message)}</div>
-              <button class="btn btn-soft" style="width:auto;padding:0 16px;margin-top:12px" onclick="tbxReload()">Qayta urinish</button></div>`;
-            return;
-          }
+        if (!tb2Month) tb2Month = isoOf(todayDate()).slice(0, 7);
+        // Qidiruv maydoni bu tabda yashirin, shuning uchun qayta
+        // chizish faqat o'z holatimiz o'zgarganda bo'ladi.
+        if (tb2 && tb2.month === tb2Month) return tb2Render(c);
+        c.innerHTML = `<div id="tb2-root">${tb2SkeletonHtml()}</div>`;
+        await tb2Load();
+      }
+      async function tb2Load() {
+        tb2Err = null;
+        try {
+          const r = await apiFetch(`/api/tabel?month=${tb2Month}`);
+          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Yuklab bo'lmadi");
+          tb2 = await r.json();
+          tb2Open = null;
+        } catch (e) {
+          tb2 = null;
+          tb2Err = e.message;
         }
-        tbxRender(c);
+        tb2Render(document.getElementById("admin-body"));
       }
-      function tbxReload() {
-        tbx = null;
-        tbxOpen = null;
-        renderWorklogTab(document.getElementById("admin-body"));
+      function tb2SkeletonHtml() {
+        return `<div class="tb2-sk-cards">${Array.from({ length: 4 }).map(() => `<div class="tb2-sk tb2-sk-card"></div>`).join("")}</div>
+          <div class="tb2-sk tb2-sk-bar"></div>
+          ${Array.from({ length: 7 }).map(() => `<div class="tb2-sk tb2-sk-row"></div>`).join("")}`;
       }
-      function tbxShiftMonth(delta) {
-        const [y, m] = worklogMonth.split("-").map(Number);
-        const d = new Date(Date.UTC(y, m - 1 + delta, 1));
-        worklogMonth = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
-        tbxReload();
+      function tb2ShiftMonth(d) {
+        const [y, m] = tb2Month.split("-").map(Number);
+        const t = new Date(y, m - 1 + d, 1);
+        const next = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}`;
+        // Kelajakdagi oy ma'nosiz — tugma ham o'chiq.
+        if (next > isoOf(todayDate()).slice(0, 7)) return;
+        tb2Month = next;
+        tb2Filter = "all";
+        tb2Reason = "all";
+        tb2Open = null;
+        tb2 = null;
+        const c = document.getElementById("admin-body");
+        if (c) c.innerHTML = `<div id="tb2-root">${tb2SkeletonHtml()}</div>`;
+        tb2Load();
       }
-      function tbxSetFilter(f) {
-        tbxFilter = f;
-        tbxOpen = null;
-        tbxRender(document.getElementById("admin-body"));
-      }
-      // Katakni ochish/yopish. Ochilgan panel qatordan keyin chiziladi,
-      // shuning uchun bitta vaqtda bittasi ochiq turadi — ikkitasi
-      // ochilsa jadval uzilib ketardi.
-      function tbxToggleCell(slug, role) {
-        const key = `${slug}:${role}`;
-        tbxOpen = tbxOpen === key ? null : key;
-        tbxRender(document.getElementById("admin-body"));
-      }
-      function tbxCloseCell() {
-        tbxOpen = null;
-        tbxRender(document.getElementById("admin-body"));
-      }
-      function tbxFiltered() {
-        const list = tbx?.projects || [];
-        if (tbxFilter === "sub") return list.filter((p) => p.substituted > 0);
-        if (tbxFilter === "missing") return list.filter((p) => p.missing > 0);
-        if (tbxFilter === "own") return list.filter((p) => p.state === "own");
-        return list;
-      }
+      function tb2SetView(v) { tb2View = v; tb2Open = null; tb2Render(); }
+      function tb2SetFilter(f) { tb2Filter = f; tb2Render(); }
+      function tb2SetReason(r) { tb2Reason = r; tb2Render(); }
+      function tb2SetRole(r) { tb2Role = r; tb2Render(); }
 
-      // Katak — rejadagi xodim, bajarilgan/reja soni va holat satri.
-      function tbxCellHtml(p, roleKey, cell) {
-        // `data-role` — tor ekranda ustun sarlavhasi yo'q, shuning uchun
-        // rol nomi katakning o'zida (CSS ::before) ko'rsatiladi.
-        const roleLabel = (tbx.roles.find((r) => r.key === roleKey) || {}).label || roleKey;
-        const attr = ` data-role="${escHtml(roleLabel)}"`;
-        if (!cell) {
-          return `<div class="tbx-cell empty"${attr}><span class="tbx-empty">Biriktirilmagan</span></div>`;
+      // ── Chizish ──────────────────────────────────────────────────
+      function tb2Render(c) {
+        const root = document.getElementById("tb2-root") || c?.querySelector("#tb2-root");
+        const host = root || c;
+        if (!host) return;
+        if (tb2Err) {
+          host.innerHTML = `<div id="tb2-root"><div class="empty"><div class="empty-t">Yuklab bo'lmadi</div>
+            <div class="empty-s">${escHtml(tb2Err)}</div>
+            <button class="btn btn-soft" style="width:auto;padding:0 16px;margin-top:12px" onclick="tb2Load()">Qayta urinish</button></div></div>`;
+          return;
         }
-        const open = tbxOpen === `${p.slug}:${roleKey}`;
-        const clickable = cell.subs.length > 0;
-        const numCls = cell.missing > 0 ? "bad" : cell.done >= cell.plan ? "ok" : "";
-        // Katakda bir vaqtda bir nechta holat bo'lishi mumkin: ishning
-        // bir qismini boshqa odam qilgan VA bir qismi umuman
-        // bajarilmagan. Faqat bittasini ko'rsatish jadvalni yolg'on
-        // qilardi, shuning uchun hammasi ketma-ket yoziladi.
-        const foots = [];
-        if (cell.subs.length) {
-          const s0 = cell.subs[0];
-          const more = cell.subs.length > 1 ? ` +${cell.subs.length - 1}` : "";
-          foots.push(`<div class="tbx-sub">
-            ${tbxAvatar(s0, 18)}
-            <span class="tbx-sub-name">${escHtml(s0.name)}${more}</span>
-            <span class="tbx-sub-n">${cell.substituted} ta</span>
-            <span class="tbx-chev${open ? " open" : ""}">${ICON.chevronRight}</span>
-          </div>`);
-        }
-        if (cell.missing > 0) {
-          foots.push(`<div class="tbx-note bad">${tbxMissingLabel(cell.missing)}</div>`);
-        }
-        if (cell.unrecorded > 0) {
-          foots.push(`<div class="tbx-note warn">${cell.unrecorded} ta kim qilgani yozilmagan</div>`);
-        }
-        if (!foots.length) foots.push(`<div class="tbx-note good">✓ O'zi bajardi</div>`);
-        const foot = foots.join("");
-        const cls = ["tbx-cell", TBX_STATE[cell.state].cls];
-        if (open) cls.push("open");
-        if (clickable) cls.push("clickable");
-        return `<div class="${cls.join(" ")}"${attr}${clickable ? ` onclick="tbxToggleCell('${escArg(p.slug)}','${roleKey}')"` : ""}>
-          <div class="tbx-top">
-            ${tbxAvatar(cell.planned, 24)}
-            <span class="tbx-name">${escHtml(cell.planned ? cell.planned.name : "Biriktirilmagan")}</span>
-            <span class="tbx-num ${numCls}">${cell.done}/${cell.plan}</span>
+        if (!tb2) { host.innerHTML = `<div id="tb2-root">${tb2SkeletonHtml()}</div>`; return; }
+        host.innerHTML = `<div id="tb2-root">
+            ${tb2HeadHtml()}
+            ${tb2CardsHtml()}
+            ${tb2ControlsHtml()}
+            ${tb2ViewHtml()}
           </div>
-          ${foot}
-        </div>`;
+          ${tb2Open ? tb2PanelHtml() : ""}`;
       }
 
-      // Ochilgan katak — har bir ish alohida katakcha bo'lib, rangi kim
-      // qilganini aytadi; o'ngda zamenalar ro'yxati.
-      function tbxDetailHtml(p, roleKey, cell) {
-        const roleLabel = (tbx.roles.find((r) => r.key === roleKey) || {}).label || roleKey;
-        const [y, mm] = tbx.month.split("-").map(Number);
-        const plannedColor = personColor(cell.planned?.username || cell.planned?.name || "?");
-        const itemLabel = (it) => `${it.type === "k" ? "Post" : "Stories"} ${it.seq}`;
-
-        const cells = cell.items
-          .map((it) => {
-            const c = it.doer ? personColor(it.doer.username || it.doer.name) : null;
-            const d = it.workDate ? parseISO(String(it.workDate).slice(0, 10)) : null;
-            const dayLbl = d ? `${d.getDate()}-${WD[(d.getDay() + 6) % 7]}` : "—";
-            if (!it.doer) {
-              return `<div class="tbx-sq-wrap"><div class="tbx-sq none" title="${escHtml(itemLabel(it))} — kim qilgani yozilmagan">?</div><div class="tbx-sq-lbl">${dayLbl}</div></div>`;
-            }
-            return `<div class="tbx-sq-wrap">
-              <div class="tbx-sq${it.isSub ? " sub" : ""}" style="background:${c}" title="${escHtml(itemLabel(it))} — ${escHtml(it.doer.name)}">${escHtml(it.isSub ? tbxInitial(it.doer.name) : String(it.seq))}</div>
-              <div class="tbx-sq-lbl${it.isSub ? " sub" : ""}">${dayLbl}</div>
-            </div>`;
-          })
-          .join("");
-
-        const subRows = cell.subs
-          .flatMap((s) =>
-            s.items.map((it) => {
-              const d = it.workDate ? parseISO(String(it.workDate).slice(0, 10)) : null;
-              return `<div class="tbx-srow">
-                <div class="tbx-sdate">
-                  <div class="tbx-sdate-d">${d ? fmtDay(d) : "—"}</div>
-                  <div class="tbx-sdate-w">${d ? WEEKDAYS_FULL[(d.getDay() + 6) % 7] : ""}</div>
-                </div>
-                <span class="tbx-tag">${escHtml(itemLabel(it))}</span>
-                <div style="flex:1"></div>
-                ${tbxAvatar(s, 24)}
-                <span class="tbx-sname">${escHtml(s.name)}</span>
-                ${it.reasonLabel ? `<span class="tbx-reason">${escHtml(it.reasonLabel)}</span>` : ""}
-              </div>`;
-            }),
-          )
-          .join("");
-
-        const subTotals = cell.subs
-          .map(
-            (s) => `<div class="tbx-sfoot">
-              ${tbxAvatar(s, 26)}
-              <div style="flex:1;min-width:0">
-                <div class="tbx-sfoot-t">${escHtml(s.name)} — ${s.count} ta</div>
-                <div class="tbx-sfoot-s">${s.jobTitle ? `Asosiy roli: ${escHtml(s.jobTitle)} · ` : ""}bu ishlar unga «qo'shimcha»</div>
-              </div>
-            </div>`,
-          )
-          .join("");
-
-        return `<div class="tbx-detail">
-          <div class="tbx-dmain">
-            <div class="tbx-dhead">
-              ${tbxAvatar(cell.planned, 36)}
-              <div class="tbx-dhead-main">
-                <div class="tbx-dtitle">${escHtml(cell.planned ? cell.planned.name : "Biriktirilmagan")} · ${escHtml(roleLabel)}</div>
-                <div class="tbx-dsub">${escHtml(p.label)} · ${MONTHS[mm - 1]} ${y} · ${cell.plan} ta ish</div>
-              </div>
-              <span class="tbx-chip">O'zi ${cell.own}</span>
-              <span class="tbx-chip sub">Zamena ${cell.substituted}</span>
-              <button type="button" class="tbx-close" aria-label="Yopish" title="Yopish" onclick="event.stopPropagation();tbxCloseCell()">${ICON.close}</button>
+      function tb2HeadHtml() {
+        const [y, m] = tb2.month.split("-").map(Number);
+        const kelasi = tb2.month >= isoOf(todayDate()).slice(0, 7);
+        return `<div class="tb2-head">
+            <div class="tb2-head-main">
+              <div class="tb2-h1">Tabel</div>
+              <div class="tb2-h2">Kim biriktirilgan ishni qildi va kim kimning o'rniga ishladi</div>
             </div>
-            <div class="tbx-dhint">Har katak — bitta ish. Rang — kim qilgani.</div>
-            <div class="tbx-squares">${cells || `<div class="tbx-empty">Bu oyda bajarilgan ish yo'q</div>`}</div>
-            <div class="tbx-dlegend">
-              <span><i style="background:${plannedColor}"></i>${escHtml(cell.planned ? cell.planned.name.split(" ")[0] : "Rejada")} o'zi</span>
-              ${cell.subs.map((s) => `<span><i class="sub" style="background:${personColor(s.username || s.name)}"></i>${escHtml(s.name.split(" ")[0])} (zamena)</span>`).join("")}
+            <div class="tb2-month">
+              <button type="button" onclick="tb2ShiftMonth(-1)" aria-label="Oldingi oy">&lsaquo;</button>
+              <b>${MONTHS[m - 1]} ${y}</b>
+              <button type="button" onclick="tb2ShiftMonth(1)" aria-label="Keyingi oy"${kelasi ? " disabled" : ""}>&rsaquo;</button>
+            </div>
+            <button type="button" class="tb2-excel" onclick="tb2Export(this)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Excel
+            </button>
+          </div>`;
+      }
+
+      function tb2CardsHtml() {
+        const t = tb2Totals();
+        const kun = tb2Elapsed();
+        const [, m] = tb2.month.split("-").map(Number);
+        return `<div class="tb2-cards">
+            <div class="tb2-card sub">
+              <div class="tb2-card-l"><span class="tb2-swap">&#8644;</span>Zamena</div>
+              <div class="tb2-card-n">${t.subs}</div>
+              <div class="tb2-card-s">ishni boshqa xodim bajardi</div>
+            </div>
+            <div class="tb2-card">
+              <div class="tb2-card-l">Bajarildi</div>
+              <div class="tb2-card-n">${t.done}<i> / ${t.plan}</i></div>
+              <div class="tb2-card-s">${tb2.closed ? `${t.plan - t.done} ta qilinmadi` : `${t.up + t.over} ta qoldi`}</div>
+            </div>
+            <div class="tb2-card">
+              <div class="tb2-card-l">${tb2.closed ? "Qilinmadi" : "Kechikkan"}</div>
+              <div class="tb2-card-n bad">${t.over}</div>
+              <div class="tb2-card-s">${tb2.closed ? "oy yopildi" : `${kun}-${MONTHS[m - 1].toLowerCase()}gacha bo'lishi kerak edi`}</div>
+            </div>
+            <div class="tb2-card">
+              <div class="tb2-card-l">Kim qilgani yozilmagan</div>
+              <div class="tb2-card-n">${t.unk}</div>
+              <div class="tb2-card-s">bajarilgan, ijrochi tanlanmagan</div>
+            </div>
+          </div>`;
+      }
+
+      function tb2ControlsHtml() {
+        const cells = tb2Cells();
+        const subs = tb2Subs().length;
+        const seg = (k, lbl) =>
+          `<button type="button" class="tb2-seg-b${tb2View === k ? " on" : ""}" onclick="tb2SetView('${k}')">${lbl}</button>`;
+        if (tb2View !== "jadval") {
+          return `<div class="tb2-ctl"><div class="tb2-seg">${seg("jadval", "Jadval")}${seg("zamena", `Zamenalar &middot; ${subs}`)}${seg("xodim", "Xodimlar")}</div></div>`;
+        }
+        const chip = (k, lbl, n) =>
+          `<button type="button" class="tb2-chip${tb2Filter === k ? " on" : ""}" onclick="tb2SetFilter('${k}')">${lbl}${n === null ? "" : ` &middot; ${n}`}</button>`;
+        const leg = (cls, lbl) => `<span class="tb2-leg-i"><i class="${cls}"></i>${lbl}</span>`;
+        return `<div class="tb2-ctl">
+            <div class="tb2-seg">${seg("jadval", "Jadval")}${seg("zamena", `Zamenalar &middot; ${subs}`)}${seg("xodim", "Xodimlar")}</div>
+            <div class="tb2-chips">
+              ${chip("all", "Hammasi", null)}
+              ${chip("sub", "Zamena bor", cells.filter((c) => c.m.subs > 0).length)}
+              ${chip("over", tb2.closed ? "Qilinmagan" : "Kechikkan", cells.filter((c) => c.m.over > 0).length)}
+              ${chip("unk", "Kim yozilmagan", cells.filter((c) => c.m.unk > 0).length)}
             </div>
           </div>
-          <div class="tbx-dside">
-            <div class="tbx-dside-t">${escHtml(cell.planned ? cell.planned.name.split(" ")[0] : "Rejadagi xodim")} o'rniga kim qildi</div>
-            ${subRows || `<div class="tbx-empty" style="padding:10px 0">Zamena yo'q</div>`}
-            ${subTotals}
-          </div>
-        </div>`;
+          <div class="tb2-leg">
+            ${leg("self", "O'zi bajardi")}${leg("sub", "Zamena")}${leg("unk", "Kim qilgani yozilmagan")}
+            ${leg("over", tb2.closed ? "Qilinmadi" : "Kechikkan")}${tb2.closed ? "" : leg("up", "Navbati kelmagan")}
+          </div>`;
       }
 
-      // Oy xulosasi — Tabel ochilganda birinchi ko'rinadigan narsa:
-      // oy qanday o'tdi. Tafsilot (qaysi loyihada kim nima qildi)
-      // pastdagi jadvalda qoladi.
-      function tbxSummaryHtml() {
-        const s = tbx.summary;
-        if (!s) return "";
-        const over = tbxMonthOver();
-        const [, mm] = tbx.month.split("-").map(Number);
-
-        // O'tgan oy bilan solishtirish faqat oy tugagach ma'noli —
-        // oyning uchinchi kunida "80 punktga tushdi" deyish yolg'on
-        // bo'lardi, chunki oyning qolgan qismi hali oldinda.
-        let delta = "";
-        if (!over) {
-          delta = `<div class="tbx-sum-note">oy hali davom etmoqda</div>`;
-        } else if (s.deltaPct !== null && s.deltaPct !== 0) {
-          const up = s.deltaPct > 0;
-          delta = `<div class="tbx-sum-note ${up ? "up" : "down"}">${up ? "▲" : "▼"} ${Math.abs(s.deltaPct)} punkt · o'tgan oy ${s.prevDonePct}%</div>`;
-        } else if (s.deltaPct === 0) {
-          delta = `<div class="tbx-sum-note">o'tgan oy bilan bir xil</div>`;
-        }
-
-        const card = (label, value, unit, extra, cls) => `<div class="tbx-sum-card">
-          <div class="tbx-sum-l">${label}</div>
-          <div class="tbx-sum-v"><span class="tbx-sum-n${cls ? " " + cls : ""}">${value}</span>${unit ? `<span class="tbx-sum-u">${unit}</span>` : ""}</div>
-          ${extra || ""}
-        </div>`;
-
-        const worst = s.worst.length
-          ? `<div class="tbx-sum-worst">
-               <span class="tbx-sum-worst-l">${over ? "Eng ko'p bajarilmagani" : "Eng ko'p qolgani"}:</span>
-               ${s.worst.map((w) => `<span class="tbx-sum-worst-i">${escHtml(w.label)} <b>${w.missing}</b></span>`).join("")}
-             </div>`
-          : `<div class="tbx-sum-worst"><span class="tbx-sum-worst-l">Hamma loyihada reja bajarilgan ✓</span></div>`;
-
-        return `<div class="tbx-sum">
-          <div class="tbx-sum-h">${MONTHS[mm - 1]} qanday o'tdi</div>
-          <div class="tbx-sum-grid">
-            ${card("Reja", s.planned, "ish")}
-            ${card("Bajarildi", s.done, `${s.donePct}%`, delta)}
-            ${card(over ? "Bajarilmadi" : "Qoldi", s.missing, "ish", "", s.missing ? "bad" : "good")}
-            ${card("Zamena", s.substituted, "ish", s.unrecorded ? `<div class="tbx-sum-note">${s.unrecorded} ta bajaruvchi yozilmagan</div>` : "", s.substituted ? "warn" : "")}
-          </div>
-          <div class="tbx-sum-bar"><i style="width:${Math.min(100, s.donePct)}%"></i></div>
-          ${worst}
-        </div>`;
+      // ── Ko'rinish tanlovi ────────────────────────────────────────
+      function tb2ViewHtml() {
+        if (!tb2.projects.length) return `<div class="empty"><div class="empty-t">Bu oyda faol loyiha yo'q</div></div>`;
+        if (tb2View === "zamena") return tb2SubsHtml();
+        if (tb2View === "xodim") return tb2StaffHtml();
+        return tb2GridHtml() + tb2MobileHtml();
       }
 
-      function tbxRender(c) {
-        if (!c || !tbx) return;
-        const [y, mm] = worklogMonth.split("-").map(Number);
-        const list = tbxFiltered();
-        const t = tbx.totals;
+      // Filtr kataklarni YASHIRMAYDI — xiralashtiradi. Jadval
+      // tuzilmasi buzilsa, loyihalarni taqqoslab bo'lmay qolardi.
+      function tb2Match(m) {
+        if (tb2Filter === "sub") return m.subs > 0;
+        if (tb2Filter === "over") return m.over > 0;
+        if (tb2Filter === "unk") return m.unk > 0;
+        return true;
+      }
+      function tb2CellOf(slug, role) {
+        return tb2Cells().find((c) => c.project === slug && c.role === role) || null;
+      }
 
-        const head = `<div class="tbx-head">
-          <div class="tbx-head-main">
-            <div class="tbx-h1">Tabel</div>
-            <div class="tbx-h2">Har loyihada kim qaysi rolda · sariq katakni bosing — kim zamena qilgani ochiladi</div>
-          </div>
-          <div class="tbl-month">
-            <button onclick="tbxShiftMonth(-1)">‹</button>
-            <b>${MONTHS[mm - 1]} ${y}</b>
-            <button onclick="tbxShiftMonth(1)">›</button>
-          </div>
-          <button type="button" class="btn btn-soft" style="width:auto;height:38px;padding:0 16px;margin:0" onclick="tbxExport(this)">Eksport</button>
-        </div>`;
+      // Holat chizig'i: self -> sub -> unk -> over, qolgani fon.
+      function tb2BarHtml(m) {
+        const w = (n) => (m.plan ? (n / m.plan) * 100 : 0);
+        const seg = (n, cls) => (n > 0 ? `<i class="${cls}" style="width:${w(n)}%"></i>` : "");
+        return `<div class="tb2-bar">${seg(m.self, "self")}${seg(m.subs, "sub")}${seg(m.unk, "unk")}${seg(m.over, "over")}</div>`;
+      }
+      // Bitta holat matni, ustuvorlik tartibida (TZ 2.5).
+      function tb2StateHtml(m) {
+        if (m.over > 0) return `<span class="tb2-st bad">${m.over} ${tb2.closed ? "qilinmadi" : "kechikdi"}</span>`;
+        if (m.up > 0) return `<span class="tb2-st">${m.up} qoldi</span>`;
+        return `<span class="tb2-st good">To'liq bajarildi</span>`;
+      }
+      // Zamena belgisi — hech qachon qisqarmaydi (TZ 2.7).
+      function tb2SubBadge(cell) {
+        if (!cell.m.subs) return "";
+        const kimlar = [...new Set(cell.items.filter((i) => i.status === "sub").map((i) => i.performer))];
+        const matn = kimlar.length === 1 ? `${tb2Name(kimlar[0])} &middot; ${cell.m.subs}` : `${kimlar.length} kishi &middot; ${cell.m.subs}`;
+        return `<span class="tb2-sub-b"><span class="tb2-swap">&#8644;</span>${matn}</span>`;
+      }
 
-        const chips = [
-          ["all", "Hammasi", t.projects],
-          ["sub", "Zamena bor", t.withSub],
-          ["missing", tbxMonthOver() ? "Qilinmagan bor" : "Qolgani bor", t.withMissing],
-          ["own", "Hammasi o'zi", t.allOwn],
-        ]
-          .map(
-            ([k, lbl, n]) =>
-              `<button type="button" class="tbx-chipbtn${tbxFilter === k ? " on" : ""}" onclick="tbxSetFilter('${k}')">${lbl} ${n}</button>`,
-          )
-          .join("");
+      function tb2CellHtml(cell) {
+        const m = cell.m;
+        const xira = tb2Match(m) ? "" : " dim";
+        const ism = cell.assigned ? tb2Name(cell.assigned) : "Biriktirilmagan";
+        return `<div class="tb2-cell${xira}" onclick="tb2OpenCell('${escArg(cell.project)}','${cell.role}')">
+            <div class="tb2-cell-top">
+              ${cell.assigned ? tb2Avatar(cell.assigned, 22) : `<span class="tb2-av none">?</span>`}
+              <span class="tb2-cell-n${cell.assigned ? "" : " none"}">${escHtml(ism)}</span>
+              <span class="tb2-cell-num">${m.done}<i>/${m.plan}</i></span>
+            </div>
+            ${tb2BarHtml(m)}
+            <div class="tb2-cell-foot">${tb2SubBadge(cell)}${tb2StateHtml(m)}</div>
+          </div>`;
+      }
 
-        const legend = `<div class="tbx-legend">
-          <span><i class="own"></i>O'zi bajardi</span>
-          <span><i class="sub"></i>Zamena bor — bosing</span>
-          <span><i class="missing"></i>${tbxMonthOver() ? "Qilinmagan" : "Hali qolgan"}</span>
-        </div>`;
-
-        const cols = tbx.roles;
-        const gridStyle = `grid-template-columns:minmax(0,0.85fr) repeat(${cols.length},minmax(0,1fr))`;
-
-        const rows = list
+      function tb2GridHtml() {
+        const rows = tb2.projects
           .map((p) => {
-            const openRole = tbxOpen && tbxOpen.startsWith(`${p.slug}:`) ? tbxOpen.split(":").slice(1).join(":") : null;
-            const openCell = openRole ? p.roles[openRole] : null;
-            const badge =
-              p.missing > 0
-                ? `<span class="tbx-badge ${tbxMonthOver() ? "missing" : "unrec"}">${tbxMonthOver() ? `${p.missing} ta qilinmadi` : `${p.missing} ta qoldi`}</span>`
-                : p.substituted > 0
-                  ? `<span class="tbx-badge sub">${p.substituted} ta zamena</span>`
-                  : p.unrecorded > 0
-                    ? `<span class="tbx-badge unrec">${p.unrecorded} ta yozilmagan</span>`
-                    : `<span class="tbx-badge own"><i></i>Hammasi o'zi</span>`;
-            return `<div class="tbx-row${openCell ? " open" : ""}">
-              <div class="tbx-grid" style="${gridStyle}">
-                <div class="tbx-proj">
-                  <div class="tbx-proj-n">${escHtml(p.label)}</div>
-                  <div class="tbx-proj-s">${p.staffCount} xodim</div>
-                  <div style="margin-top:8px">${badge}</div>
+            const kataklar = tb2.roles
+              .map((r) => {
+                const cell = tb2CellOf(p.id, r.key);
+                return cell ? tb2CellHtml(cell) : `<div class="tb2-cell dim"></div>`;
+              })
+              .join("");
+            return `<div class="tb2-row">
+                <div class="tb2-proj">
+                  <i style="background:${escHtml(p.color || "#9AA1AC")}"></i>
+                  <span>${escHtml(p.name)}</span>
                 </div>
-                ${cols.map((r) => tbxCellHtml(p, r.key, p.roles[r.key])).join("")}
-              </div>
-              ${openCell ? tbxDetailHtml(p, openRole, openCell) : ""}
-            </div>`;
+                ${kataklar}
+              </div>`;
           })
           .join("");
-
-        const table = `<div class="tbx-table">
-          <div class="tbx-grid tbx-thead" style="${gridStyle}">
-            <div>Loyiha</div>
-            ${cols.map((r) => `<div>${escHtml(r.label)}</div>`).join("")}
-          </div>
-          ${rows || `<div class="empty" style="padding:28px"><div class="empty-s">Bu filtrga mos loyiha yo'q</div></div>`}
-        </div>`;
-
-        c.innerHTML = `${head}
-          ${tbxSummaryHtml()}
-          <div class="tbx-bar">
-            <div class="tbx-chips">${chips}</div>
-            <div style="flex:1"></div>
-            ${legend}
-          </div>
-          ${table}`;
-        applyStaticIcons?.();
+        const mos = tb2Cells().some((c) => tb2Match(c.m));
+        return `<div class="tb2-grid">
+            ${mos ? "" : `<div class="tb2-nomatch">Mos katak yo'q</div>`}
+            <div class="tb2-ghead">
+              <div>Loyiha</div>
+              ${tb2.roles.map((r) => `<div><b>${escHtml(r.label)}</b><span>${escHtml(r.rule)}</span></div>`).join("")}
+            </div>
+            ${rows}
+          </div>`;
       }
 
-      // Excel fayli — oy bo'yicha uchta varaq (matritsa, zamenalar,
-      // xodimlar). `window.open` ishlamaydi: so'rovga auth sarlavhasi
-      // kerak, shuning uchun blob orqali yuklanadi.
-      async function tbxExport(btn) {
+      // Telefonda uchta ustun sig'maydi — rol almashtirgichi va
+      // loyihalar ro'yxati.
+      function tb2MobileHtml() {
+        const rol = tb2.roles.find((r) => r.key === tb2Role) || tb2.roles[0];
+        const seg = tb2.roles
+          .map((r) => `<button type="button" class="tb2-seg-b${r.key === tb2Role ? " on" : ""}" onclick="tb2SetRole('${r.key}')">${escHtml(r.label)}</button>`)
+          .join("");
+        const kartalar = tb2.projects
+          .map((p) => {
+            const cell = tb2CellOf(p.id, rol.key);
+            if (!cell) return "";
+            const m = cell.m;
+            return `<div class="tb2-mcard${tb2Match(m) ? "" : " dim"}" onclick="tb2OpenCell('${escArg(p.id)}','${rol.key}')">
+                <div class="tb2-mcard-top">
+                  <i style="background:${escHtml(p.color || "#9AA1AC")}"></i>
+                  <span class="tb2-mcard-n">${escHtml(p.name)}</span>
+                  <span class="tb2-cell-num">${m.done}<i>/${m.plan}</i></span>
+                </div>
+                ${tb2BarHtml(m)}
+                <div class="tb2-cell-foot">
+                  <span class="tb2-mcard-who">${escHtml(cell.assigned ? tb2Name(cell.assigned) : "Biriktirilmagan")}</span>
+                  ${tb2SubBadge(cell)}${tb2StateHtml(m)}
+                </div>
+              </div>`;
+          })
+          .join("");
+        return `<div class="tb2-mob">
+            <div class="tb2-seg wide">${seg}</div>
+            <div class="tb2-mrule">${escHtml(rol.rule)}</div>
+            ${kartalar}
+          </div>`;
+      }
+
+      // ── «Zamenalar» ko'rinishi ───────────────────────────────────
+      function tb2SubsHtml() {
+        const hammasi = tb2Subs();
+        const sanoq = (k) => hammasi.filter((s) => (s.reason || "other") === k).length;
+        const chip = (k, lbl, n) =>
+          `<button type="button" class="tb2-chip${tb2Reason === k ? " on" : ""}" onclick="tb2SetReason('${k}')">${lbl} &middot; ${n}</button>`;
+        const chips = `<div class="tb2-chips" style="margin-bottom:12px">
+            ${chip("all", "Hammasi", hammasi.length)}
+            ${Object.keys(TB2_REASONS).map((k) => chip(k, TB2_REASONS[k], sanoq(k))).join("")}
+          </div>`;
+        const list = tb2Reason === "all" ? hammasi : hammasi.filter((s) => (s.reason || "other") === tb2Reason);
+        if (!hammasi.length) return `<div class="empty"><div class="empty-t">Bu oyda zamena yo'q</div></div>`;
+        const qatorlar = list
+          .map((s) => {
+            const p = tb2Proj(s.project);
+            const d = s.date ? parseISO(s.date) : null;
+            return `<div class="tb2-srow">
+                <div class="tb2-sdate">
+                  <b>${d ? d.getDate() : "—"}</b>
+                  <span>${d ? MONTHS[d.getMonth()].toLowerCase() : ""}</span>
+                </div>
+                <div class="tb2-sbody">
+                  <div class="tb2-sproj"><i style="background:${escHtml(p?.color || "#9AA1AC")}"></i>${escHtml(p?.name || s.project)}</div>
+                  <div class="tb2-smeta">${escHtml(s.label)} &middot; ${escHtml(tb2RoleLabel(s.role))}</div>
+                </div>
+                <div class="tb2-sswap">
+                  <span class="tb2-was">${escHtml(tb2Name(s.assigned))}</span>
+                  <span class="tb2-arr">&rarr;</span>
+                  <span class="tb2-did">${escHtml(tb2Name(s.performer))}</span>
+                </div>
+                <span class="tb2-rtag">${escHtml(TB2_REASONS[s.reason] || "Boshqa")}</span>
+              </div>`;
+          })
+          .join("");
+        return chips + `<div class="tb2-slist">${qatorlar || `<div class="tb2-nomatch">Mos zamena yo'q</div>`}</div>`;
+      }
+
+      // ── «Xodimlar» ko'rinishi ────────────────────────────────────
+      // To'lanadigan ish = o'zi bajardi + o'rniga qilgani.
+      // `unknown` hech kimga yozilmaydi — ijrochisi noma'lum.
+      function tb2StaffRows() {
+        const map = new Map();
+        const touch = (username, role) => {
+          if (!username) return null;
+          if (!map.has(username)) {
+            map.set(username, { username, role, plan: 0, self: 0, handed: 0, extra: 0 });
+          }
+          const r = map.get(username);
+          if (role && !r.role) r.role = role;
+          return r;
+        };
+        tb2Cells().forEach((c) => {
+          const e = touch(c.assigned, c.role);
+          if (e) {
+            e.plan += c.m.plan;
+            e.self += c.m.self;
+            e.handed += c.m.subs;
+          }
+          c.items.forEach((it) => {
+            if (it.status !== "sub") return;
+            const se = touch(it.performer, null);
+            if (se) se.extra++;
+          });
+        });
+        return [...map.values()]
+          .map((r) => ({ ...r, pay: r.self + r.extra }))
+          .sort((a, b) => b.pay - a.pay || b.plan - a.plan || tb2Name(a.username).localeCompare(tb2Name(b.username)));
+      }
+      function tb2StaffHtml() {
+        const rows = tb2StaffRows();
+        if (!rows.length) return `<div class="empty"><div class="empty-t">Xodim topilmadi</div></div>`;
+        const col = (lbl, val, cls) =>
+          `<div class="tb2-xcol"><span class="tb2-xlbl">${lbl}</span><b class="${cls || ""}">${val}</b></div>`;
+        return `<div class="tb2-xnote">To'lanadigan ish = o'zi bajardi + o'rniga qilgani. Boshqa xodim bajargan ish rejadagi xodimga yozilmaydi.</div>
+          <div class="tb2-xlist">${rows
+            .map(
+              (r) => `<div class="tb2-xrow">
+                ${tb2Avatar(r.username, 34)}
+                <div class="tb2-xwho">
+                  <div class="tb2-xname">${escHtml(tb2Name(r.username))}</div>
+                  <div class="tb2-xrole">${escHtml(tb2RoleLabel(r.role) || "")}</div>
+                </div>
+                ${col("Reja", r.plan, "")}
+                ${col("O'zi", r.self, "blue")}
+                ${col("Boshqa qildi", r.handed, "muted")}
+                ${col("O'rniga qildi", r.extra, "amber")}
+                <div class="tb2-xpay"><span class="tb2-xlbl">To'lanadi</span><b>${r.pay}<i> ish</i></b></div>
+              </div>`,
+            )
+            .join("")}</div>`;
+      }
+
+      // ── Katak tafsiloti (o'ng panel) ─────────────────────────────
+      function tb2OpenCell(slug, role) {
+        tb2Open = `${slug}:${role}`;
+        tb2Render();
+        document.addEventListener("keydown", tb2PanelEsc, true);
+      }
+      function tb2ClosePanel() {
+        tb2Open = null;
+        document.removeEventListener("keydown", tb2PanelEsc, true);
+        tb2Render();
+      }
+      function tb2PanelEsc(e) {
+        if (e.key === "Escape") { e.stopPropagation(); tb2ClosePanel(); }
+      }
+      function tb2PanelHtml() {
+        const [slug, role] = tb2Open.split(":");
+        const cell = tb2CellOf(slug, role);
+        if (!cell) return "";
+        const p = tb2Proj(slug);
+        const m = cell.m;
+        const [, mm] = tb2.month.split("-").map(Number);
+        const oy = MONTHS[mm - 1].toLowerCase();
+        const kunQisqa = (d) => (d ? `${parseISO(d).getDate()}-${oy.slice(0, 3)}` : "—");
+
+        const plitka = (lbl, val, cls) =>
+          `<div class="tb2-tile ${cls || ""}"><span>${lbl}</span><b>${val}</b></div>`;
+
+        // Sur'at — faqat ochiq oyda ma'noga ega.
+        const surat = tb2.closed
+          ? ""
+          : `<div class="tb2-pace">${tb2Elapsed()}-${oy}gacha reja bo'yicha <b>${m.expected}</b> ta bo'lishi kerak edi,
+               <b>${m.done}</b> ta bajarilgan &mdash; ${m.over > 0 ? `<b class="bad">${m.over} ta kechikdi</b>` : "kechikish yo'q"}.</div>`;
+
+        const zamenalar = cell.items.filter((i) => i.status === "sub")
+          .sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
+        const yozilmagan = cell.items.filter((i) => i.status === "unknown");
+        const ozi = cell.items.filter((i) => i.status === "self");
+        const ochiq = cell.items.filter((i) => i.status === "open").sort((a, b) => a.seq - b.seq || a.type.localeCompare(b.type));
+
+        const bolim = (title, inner) => (inner ? `<div class="tb2-sec"><div class="tb2-sec-t">${title}</div>${inner}</div>` : "");
+
+        const zamenaHtml = zamenalar.length
+          ? `<div class="tb2-plist">${zamenalar
+              .map((it) => `<div class="tb2-prow">
+                  <span class="tb2-pdate">${kunQisqa(it.date)}</span>
+                  <div class="tb2-pwho"><b>${escHtml(tb2Name(it.performer))}</b><span>${escHtml(it.label)}</span></div>
+                  <span class="tb2-rtag">${escHtml(TB2_REASONS[it.reason] || "Boshqa")}</span>
+                </div>`).join("")}</div>`
+          : "";
+
+        const unkHtml = yozilmagan.length
+          ? `<div class="tb2-sec-s">Ish bajarilgan, lekin belgilashda ${escHtml(role === "mobilograf" ? "mobilograf" : "montajor")} tanlanmagan.
+               Rejadagi xodimga ham, boshqasiga ham hisoblanmaydi.</div>
+             <div class="tb2-chipwrap">${yozilmagan
+               .map((it) => `<span class="tb2-ichip unk">${escHtml(it.label)}${it.date ? ` &middot; ${kunQisqa(it.date)}` : ""}</span>`).join("")}</div>`
+          : "";
+
+        const oziHtml = ozi.length
+          ? `<div class="tb2-chipwrap">${ozi.map((it) => `<span class="tb2-ichip self">${escHtml(it.label)}</span>`).join("")}</div>`
+          : "";
+
+        const ochiqHtml = ochiq.length
+          ? `<div class="tb2-chipwrap">${ochiq
+              .map((it, i) => `<span class="tb2-ichip ${i < m.over ? "over" : "up"}">${escHtml(it.label)}</span>`).join("")}</div>`
+          : "";
+
+        return `<div class="tb2-ov" onclick="if(event.target===this)tb2ClosePanel()">
+            <div class="tb2-panel">
+              <div class="tb2-panel-h">
+                <i style="background:${escHtml(p?.color || "#9AA1AC")}"></i>
+                <div style="flex:1;min-width:0">
+                  <div class="tb2-panel-t">${escHtml(p?.name || slug)}</div>
+                  <div class="tb2-panel-s">${escHtml(tb2RoleLabel(role))} &middot; rejada ${escHtml(cell.assigned ? tb2Name(cell.assigned) : "biriktirilmagan")}</div>
+                </div>
+                <button type="button" class="tb2-x" onclick="tb2ClosePanel()" aria-label="Yopish">&times;</button>
+              </div>
+              <div class="tb2-panel-b">
+                <div class="tb2-tiles">
+                  ${plitka("Reja", m.plan, "")}
+                  ${plitka("O'zi", m.self, "self")}
+                  ${plitka("Zamena", m.subs, "sub")}
+                  ${plitka(tb2.closed ? "Qilinmadi" : "Qoldi", m.open, m.over > 0 ? "bad" : "")}
+                </div>
+                ${surat}
+                ${bolim("Zamenalar", zamenaHtml)}
+                ${bolim("Kim qilgani yozilmagan", unkHtml)}
+                ${bolim(`${escHtml(cell.assigned ? tb2Name(cell.assigned) : "Rejadagi xodim")} o'zi bajardi`, oziHtml)}
+                ${bolim(tb2.closed ? "Qilinmagan" : "Bajarilmagan", ochiqHtml)}
+              </div>
+            </div>
+          </div>`;
+      }
+
+      // ── Excel ────────────────────────────────────────────────────
+      async function tb2Export(btn) {
         setBtnLoading(btn, true, "Tayyorlanmoqda…");
         try {
-          const r = await apiFetch(`/api/tabel/export.xlsx?month=${worklogMonth}`);
+          const r = await apiFetch(`/api/tabel/export.xlsx?month=${tb2Month}`);
           if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
           const blob = await r.blob();
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
-          a.download = `tabel-${worklogMonth}.xlsx`;
+          a.download = `Tabel_${tb2Month}.xlsx`;
           document.body.appendChild(a);
           a.click();
           a.remove();
