@@ -1111,272 +1111,28 @@ const TABEL_CYCLES_SQL = `
 `;
 
 // ═══════════════════════════════════════════════════════════════════════
-// TABEL — MATRITSA KO'RINISHI (qator = loyiha, ustun = rol)
+// TABEL — ROLLAR
 //
-// Eski "Xodimlar / Loyihalar" ikki ko'rinishi juda ko'p raqam
-// ko'rsatardi va bir qarashda tushunarsiz edi. Bu yerda bitta savolga
-// javob beriladi: HAR LOYIHADA HAR ROL BO'YICHA ishni kim qildi va
-// hammasi joyidami.
-//
-// Rollar bo'yicha hisob bir xil emas, chunki baza ularni boshqacha
-// yozadi:
-//   • SMM      — reja davr maqsadi (post+stories), bajaruvchi
+// Reja har rol uchun boshqacha hisoblanadi, chunki baza ularni
+// boshqacha yozadi:
+//   • SMM      — barcha post va stories; bajaruvchi
 //                `checks.performer_id`, mas'ul `checks.assignee_id`.
-//   • Mobilograf/Montajor — bu ishlar faqat POST va "atmosferali"
-//                stories'da bo'ladi (gapirib beriladigan stories'da
-//                syomka ham, montaj ham yo'q). Shuning uchun reja —
+//   • Mobilograf/Montajor — syomka ham, montaj ham faqat POST va
+//                "atmosferali" stories'da bo'ladi (gapirib beriladigan
+//                stories'da bu ishlar yo'q). Shuning uchun reja —
 //                shunday ishlar soni, bajarilgan — maydoni to'ldirilgani.
 // Dizayner ataylab yo'q: u post/stories'ga umuman bog'lanmagan,
 // vazifalar orqali ishlaydi.
+//
+// Ro'yxat bitta: `rule` ekranda rol tanlanganda ko'rsatiladi, shuning
+// uchun qoida ta'rif bilan bir joyda turadi.
 // ═══════════════════════════════════════════════════════════════════════
 const TABEL_ROLES = [
-  { key: "smm", label: "SMM manager" },
-  { key: "mobilograf", label: "Mobilograf" },
-  { key: "montajchi", label: "Montajor" },
+  { key: "smm", label: "SMM manager", rule: "Reja: post + barcha stories" },
+  { key: "mobilograf", label: "Mobilograf", rule: "Reja: post + atmosferali stories" },
+  { key: "montajchi", label: "Montajor", rule: "Reja: post + atmosferali stories" },
 ];
-
-async function buildTabelMatrix(month) {
-  const cyclesR = await db.query(TABEL_CYCLES_SQL, [month]);
-  const cycles = cyclesR.rows;
-  const cycleIds = cycles.map((c) => c.cycle_id);
-  const projectIds = [...new Set(cycles.map((c) => String(c.project_id)))];
-
-  const usersR = await db.query(
-    `select id, username, first_name, last_name, full_name, avatar_url, job_title
-       from users where access_status is distinct from 'removed'`,
-  );
-  const userById = new Map(usersR.rows.map((u) => [String(u.id), u]));
-  const person = (id) => {
-    const u = userById.get(String(id));
-    if (!u) return null;
-    const name = [u.first_name, u.last_name].filter(Boolean).join(" ").trim() || u.full_name || u.username;
-    return { userId: String(u.id), username: u.username, name, avatarUrl: u.avatar_url || null, jobTitle: u.job_title || null };
-  };
-
-  // Loyihadagi rollar — kim qaysi rolda rejalashtirilgan.
-  const permsR = projectIds.length
-    ? await db.query(
-        `select project_id, user_id, role from permissions where project_id = any($1::uuid[])`,
-        [projectIds],
-      )
-    : { rows: [] };
-  const plannedBy = new Map(); // `${projectId}:${role}` -> userId
-  const staffCount = new Map(); // projectId -> son
-  permsR.rows.forEach((r) => {
-    const pid = String(r.project_id);
-    staffCount.set(pid, (staffCount.get(pid) || 0) + 1);
-    if (r.role) plannedBy.set(`${pid}:${r.role}`, String(r.user_id));
-  });
-
-  const checksR = cycleIds.length
-    ? await db.query(
-        `select cycle_id, type, seq_number, story_kind, work_date,
-                assignee_id, performer_id, substitution_reason,
-                editor_user_id, videographer_user_id
-           from checks where cycle_id = any($1::uuid[])
-          order by work_date nulls last, seq_number`,
-        [cycleIds],
-      )
-    : { rows: [] };
-  const byCycle = new Map();
-  checksR.rows.forEach((ch) => {
-    const k = String(ch.cycle_id);
-    if (!byCycle.has(k)) byCycle.set(k, []);
-    byCycle.get(k).push(ch);
-  });
-
-  // Bitta rol katagi: kim rejada, nechtadan nechtasi bajarilgan,
-  // kim o'rniga qilgan.
-  function buildCell(role, cyc, checks) {
-    const pid = String(cyc.project_id);
-    const plannedId =
-      role === "smm" ? (cyc.assignee_id && String(cyc.assignee_id)) || plannedBy.get(`${pid}:smm`) : plannedBy.get(`${pid}:${role}`);
-    const planned = plannedId ? person(plannedId) : null;
-
-    // Shu rol talab qiladigan ishlar va ularning bajaruvchisi.
-    let items = [];
-    if (role === "smm") {
-      items = checks.map((ch) => ({ ch, doerId: ch.performer_id && String(ch.performer_id) }));
-    } else {
-      const field = role === "mobilograf" ? "videographer_user_id" : "editor_user_id";
-      items = checks
-        .filter((ch) => ch.type === "k" || ch.story_kind === "atmospheric")
-        .map((ch) => ({ ch, doerId: ch[field] && String(ch[field]) }));
-    }
-
-    // REJA. SMM uchun — davr maqsadi (bajarilmaganlar ham kiradi).
-    // Syomka/montaj uchun — shu rol talab qilingan ishlar; bajarilmagan
-    // postlar ham keyin syomka talab qiladi, shuning uchun ular
-    // qo'shiladi.
-    const target = (cyc.posts_target || 0) + (cyc.stories_target || 0);
-    const donePosts = checks.filter((ch) => ch.type === "k").length;
-    const undonePosts = Math.max(0, (cyc.posts_target || 0) - donePosts);
-    const plan = role === "smm" ? target : items.length + undonePosts;
-
-    const filled = items.filter((it) => it.doerId);
-    const done = filled.length;
-    const own = plannedId ? filled.filter((it) => it.doerId === plannedId).length : 0;
-
-    // IKKI XIL KAMCHILIKNI ARALASHTIRMASLIK KERAK:
-    //   • `missing` — ish umuman bajarilmagan;
-    //   • `unrecorded` — ish bajarilgan, lekin kim qilgani yozilmagan
-    //     (belgilash oynasida montajchi/mobilograf tanlanmay qolgan).
-    // Ikkalasini "qilinmadi" deb bitta songa qo'shish jadvalni yolg'on
-    // qilardi: bajarilgan ish bajarilmagan bo'lib ko'rinardi.
-    const missing = role === "smm" ? Math.max(0, plan - checks.length) : undonePosts;
-    const unrecorded = role === "smm" ? 0 : items.length - filled.length;
-
-    // Kim o'rniga qilgan — eng ko'p qilgandan boshlab.
-    const subMap = new Map();
-    filled.forEach((it) => {
-      if (!plannedId || it.doerId === plannedId) return;
-      if (!subMap.has(it.doerId)) subMap.set(it.doerId, { ...person(it.doerId), count: 0, items: [] });
-      const e = subMap.get(it.doerId);
-      e.count++;
-      e.items.push({
-        type: it.ch.type,
-        seq: it.ch.seq_number,
-        workDate: it.ch.work_date,
-        reason: it.ch.substitution_reason || null,
-        reasonLabel: it.ch.substitution_reason ? TABEL_REASONS[it.ch.substitution_reason] : null,
-      });
-    });
-    const subs = [...subMap.values()].sort((a, b) => b.count - a.count);
-    const substituted = subs.reduce((n, s) => n + s.count, 0);
-
-    if (!planned && !done) return null;
-
-    // Holat muhimlik tartibida: bajarilmagan ish — eng kuchli signal,
-    // keyin zamena, keyin yozilmagan bajaruvchi, qolgani — "o'zi qildi".
-    const state =
-      missing > 0 ? "missing" : substituted > 0 ? "sub" : unrecorded > 0 ? "unrecorded" : "own";
-
-    return {
-      role,
-      planned,
-      plan,
-      done,
-      own,
-      substituted,
-      missing,
-      unrecorded,
-      state,
-      subs,
-      // Har bir ish — kengaytirilgan panel uchun (kim qilgani bilan).
-      items: items.map((it) => ({
-        type: it.ch.type,
-        seq: it.ch.seq_number,
-        workDate: it.ch.work_date,
-        doer: it.doerId ? person(it.doerId) : null,
-        isSub: !!(plannedId && it.doerId && it.doerId !== plannedId),
-        reasonLabel: it.ch.substitution_reason ? TABEL_REASONS[it.ch.substitution_reason] : null,
-      })),
-    };
-  }
-
-  const projects = cycles
-    .map((cyc) => {
-      const checks = byCycle.get(String(cyc.cycle_id)) || [];
-      const roles = {};
-      TABEL_ROLES.forEach((r) => {
-        roles[r.key] = buildCell(r.key, cyc, checks);
-      });
-      const cells = Object.values(roles).filter(Boolean);
-      const missing = cells.reduce((n, c) => n + c.missing, 0);
-      const substituted = cells.reduce((n, c) => n + c.substituted, 0);
-      const unrecorded = cells.reduce((n, c) => n + c.unrecorded, 0);
-      return {
-        slug: cyc.project_slug,
-        label: cyc.project_label,
-        cycleId: String(cyc.cycle_id),
-        staffCount: staffCount.get(String(cyc.project_id)) || 0,
-        roles,
-        missing,
-        substituted,
-        unrecorded,
-        // Loyiha yorlig'i — eng muhim muammo birinchi.
-        state:
-          missing > 0 ? "missing" : substituted > 0 ? "sub" : unrecorded > 0 ? "unrecorded" : "own",
-      };
-    })
-    // Muammosi borlar tepada: avval qilinmaganlar, keyin zamenalar.
-    .sort(
-      (a, b) =>
-        b.missing - a.missing || b.substituted - a.substituted || a.label.localeCompare(b.label),
-    );
-
-  const totals = {
-    projects: projects.length,
-    withSub: projects.filter((p) => p.substituted > 0).length,
-    withMissing: projects.filter((p) => p.missing > 0).length,
-    withUnrecorded: projects.filter((p) => p.unrecorded > 0).length,
-    allOwn: projects.filter((p) => p.state === "own").length,
-  };
-
-  // ── OY XULOSASI — "oy qanday o'tdi" ────────────────────────────────
-  // Ish birligi — bitta post yoki stories. Rollar bo'yicha qo'shib
-  // bo'lmaydi: bitta post uchta rolda uchta marta sanalardi, shuning
-  // uchun reja/bajarilgan davr maqsadi va `checks` soni bo'yicha
-  // olinadi. Zamena esa boshqa o'lcham — u hamma rollar bo'yicha
-  // yig'iladi, chunki har bir rolda alohida sodir bo'ladi.
-  const planned = cycles.reduce((n, c) => n + (c.posts_target || 0) + (c.stories_target || 0), 0);
-  const done = checksR.rows.length;
-  const substituted = projects.reduce((n, p) => n + p.substituted, 0);
-  const unrecorded = projects.reduce((n, p) => n + p.unrecorded, 0);
-
-  // O'tgan oy bilan solishtirish — "yaxshilandimi yoki yomonlashdimi"
-  // degan savolga javob. Bitta yengil so'rov, butun matritsani qayta
-  // qurmasdan.
-  const prev = (() => {
-    const [y, m] = month.split("-").map(Number);
-    const d = new Date(Date.UTC(y, m - 2, 1));
-    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
-  })();
-  const prevR = await db.query(
-    `select coalesce(sum(pc.posts_target + pc.stories_target), 0)::int as planned,
-            (select count(*) from checks c
-               join project_cycles pc2 on pc2.id = c.cycle_id
-              where to_char(pc2.period_start, 'YYYY-MM') = $1)::int as done
-       from project_cycles pc
-      where to_char(pc.period_start, 'YYYY-MM') = $1`,
-    [prev],
-  );
-  const prevPlanned = prevR.rows[0]?.planned || 0;
-  const prevDone = prevR.rows[0]?.done || 0;
-  const prevPct = prevPlanned ? Math.round((prevDone / prevPlanned) * 100) : null;
-  const donePct = planned ? Math.round((done / planned) * 100) : 0;
-
-  const summary = {
-    planned,
-    done,
-    missing: Math.max(0, planned - done),
-    donePct,
-    substituted,
-    unrecorded,
-    prevMonth: prev,
-    prevDonePct: prevPct,
-    deltaPct: prevPct === null ? null : donePct - prevPct,
-    // Eng ko'p ish qolgan uchta loyiha — "muammo qayerda" degan
-    // savolga darhol javob.
-    worst: projects
-      .filter((p) => p.missing > 0)
-      .slice(0, 3)
-      .map((p) => ({ label: p.label, slug: p.slug, missing: p.missing })),
-  };
-
-  return { month, roles: TABEL_ROLES, totals, summary, projects };
-}
-
-app.get("/api/tabel/matrix", auth, async (req, res) => {
-  if (!requireAdmin(req, res)) return;
-  const month = tabelMonthGuard(req, res);
-  if (!month) return;
-  try {
-    res.json(await buildTabelMatrix(month));
-  } catch (e) {
-    serverError(res, e, "GET /api/tabel/matrix");
-  }
-});
+const TABEL_ROLE_KEYS = TABEL_ROLES.map((r) => r.key);
 
 // ── Tabel eksporti ──────────────────────────────────────────────────
 // Raqamlar ekrandagi bilan AYNAN bir xil bo'lishi shart, shuning
@@ -1517,157 +1273,152 @@ app.get("/api/tabel/export.xlsx", auth, async (req, res) => {
 // ═════════════════════════════════════════════════════════════════════
 // TABEL (yangi) — XOM MA'LUMOT
 // ═════════════════════════════════════════════════════════════════════
-// Eski `/api/tabel/matrix` hisob-kitobni serverda qilardi. Yangi
-// ekranda bir xil sonlar to'rt joyda ko'rsatiladi (xulosa kartalari,
+// Ekranda bir xil sonlar to'rt joyda ko'rsatiladi (xulosa kartalari,
 // katak, filtr chiplari, o'ng panel) va ularning hammasi bitta
-// formulalar to'plamidan chiqishi kerak. Shuning uchun server endi
-// faqat XOM birliklarni beradi, hisob esa frontendda bir joyda
-// turadi — eski endpoint o'z o'rnida qoladi.
+// formulalar to'plamidan chiqishi kerak. Shuning uchun server hisob
+// qilmaydi — faqat XOM birliklarni beradi, hisob esa frontendda
+// (`tb2Calc`) va eksportda (`tabelCalc`) bir xil formula bo'yicha
+// yuritiladi.
 //
 // Identifikatorlar: loyiha `slug`, xodim `username` — butun ilovada
 // shunday.
-const TABEL2_ROLES = ["smm", "mobilograf", "montajchi"];
 
 async function buildTabelRaw(month) {
   const today = todayTashkent();
 
-    const cyclesR = await db.query(TABEL_CYCLES_SQL, [month]);
-    const cycles = cyclesR.rows;
-    const cycleIds = cycles.map((c) => c.cycle_id);
-    const projectIds = [...new Set(cycles.map((c) => String(c.project_id)))];
+  const cyclesR = await db.query(TABEL_CYCLES_SQL, [month]);
+  const cycles = cyclesR.rows;
+  const cycleIds = cycles.map((c) => c.cycle_id);
+  const projectIds = [...new Set(cycles.map((c) => String(c.project_id)))];
 
-    const [usersR, permsR, checksR, projR] = await Promise.all([
-      db.query(
-        `select id, username, first_name, last_name, full_name, position
-           from users where access_status is distinct from 'removed'`,
-      ),
-      projectIds.length
-        ? db.query(
-            `select project_id, user_id, role from permissions
-              where project_id = any($1::uuid[]) and role = any($2::text[])`,
-            [projectIds, TABEL2_ROLES],
-          )
-        : { rows: [] },
-      cycleIds.length
-        ? db.query(
-            `select cycle_id, type, seq_number, work_date, story_kind,
-                    performer_id, assignee_id, substitution_reason, substitution_note,
-                    videographer_user_id, mobilograf_assigned_id, mobilograf_reason, mobilograf_reason_note,
-                    editor_user_id, montajchi_assigned_id, montajchi_reason, montajchi_reason_note
-               from checks where cycle_id = any($1::uuid[])`,
-            [cycleIds],
-          )
-        : { rows: [] },
-      projectIds.length
-        ? db.query(`select id, slug, label, color from projects where id = any($1::uuid[])`, [projectIds])
-        : { rows: [] },
-    ]);
+  const [usersR, permsR, checksR, projR] = await Promise.all([
+    db.query(
+      `select id, username, first_name, last_name, full_name, position
+         from users where access_status is distinct from 'removed'`,
+    ),
+    projectIds.length
+      ? db.query(
+          `select project_id, user_id, role from permissions
+            where project_id = any($1::uuid[]) and role = any($2::text[])`,
+          [projectIds, TABEL_ROLE_KEYS],
+        )
+      : { rows: [] },
+    cycleIds.length
+      ? db.query(
+          `select cycle_id, type, seq_number, work_date, story_kind,
+                  performer_id, assignee_id, substitution_reason, substitution_note,
+                  videographer_user_id, mobilograf_assigned_id, mobilograf_reason, mobilograf_reason_note,
+                  editor_user_id, montajchi_assigned_id, montajchi_reason, montajchi_reason_note
+             from checks where cycle_id = any($1::uuid[])`,
+          [cycleIds],
+        )
+      : { rows: [] },
+    projectIds.length
+      ? db.query(`select id, slug, label, color from projects where id = any($1::uuid[])`, [projectIds])
+      : { rows: [] },
+  ]);
 
-    const userById = new Map(usersR.rows.map((u) => [String(u.id), u]));
-    const uname = (id) => userById.get(String(id))?.username || null;
-    const projById = new Map(projR.rows.map((p) => [String(p.id), p]));
+  const userById = new Map(usersR.rows.map((u) => [String(u.id), u]));
+  const uname = (id) => userById.get(String(id))?.username || null;
+  const projById = new Map(projR.rows.map((p) => [String(p.id), p]));
 
-    // Katakdagi "rejadagi xodim" — BUGUNGI holat (TZ 2.2). Birlikning
-    // o'z muhri esa alohida: pastda `assignedOf` bilan solishtiriladi.
-    const permBy = new Map();
-    permsR.rows.forEach((r) => {
-      const k = `${r.project_id}:${r.role}`;
-      if (!permBy.has(k)) permBy.set(k, String(r.user_id));
-    });
+  // Katakdagi "rejadagi xodim" — BUGUNGI holat (TZ 2.2). Birlikning
+  // o'z muhri esa alohida: pastda `assignedOf` bilan solishtiriladi.
+  const permBy = new Map();
+  permsR.rows.forEach((r) => {
+    const k = `${r.project_id}:${r.role}`;
+    if (!permBy.has(k)) permBy.set(k, String(r.user_id));
+  });
 
-    const byCycle = new Map();
-    checksR.rows.forEach((ch) => {
-      if (!byCycle.has(String(ch.cycle_id))) byCycle.set(String(ch.cycle_id), []);
-      byCycle.get(String(ch.cycle_id)).push(ch);
-    });
+  const byCycle = new Map();
+  checksR.rows.forEach((ch) => {
+    if (!byCycle.has(String(ch.cycle_id))) byCycle.set(String(ch.cycle_id), []);
+    byCycle.get(String(ch.cycle_id)).push(ch);
+  });
 
-    // Rolga qarab: kim bajargan, kim rejada edi (MUHR), nega almashgan.
-    const rolMaydoni = {
-      smm: (ch) => ({ doer: ch.performer_id, assigned: ch.assignee_id,
-                      reason: ch.substitution_reason, note: ch.substitution_note }),
-      mobilograf: (ch) => ({ doer: ch.videographer_user_id, assigned: ch.mobilograf_assigned_id,
-                             reason: ch.mobilograf_reason, note: ch.mobilograf_reason_note }),
-      montajchi: (ch) => ({ doer: ch.editor_user_id, assigned: ch.montajchi_assigned_id,
-                            reason: ch.montajchi_reason, note: ch.montajchi_reason_note }),
-    };
+  // Rolga qarab: kim bajargan, kim rejada edi (MUHR), nega almashgan.
+  const rolMaydoni = {
+    smm: (ch) => ({ doer: ch.performer_id, assigned: ch.assignee_id,
+                    reason: ch.substitution_reason, note: ch.substitution_note }),
+    mobilograf: (ch) => ({ doer: ch.videographer_user_id, assigned: ch.mobilograf_assigned_id,
+                           reason: ch.mobilograf_reason, note: ch.mobilograf_reason_note }),
+    montajchi: (ch) => ({ doer: ch.editor_user_id, assigned: ch.montajchi_assigned_id,
+                          reason: ch.montajchi_reason, note: ch.montajchi_reason_note }),
+  };
 
-    const cells = [];
-    cycles.forEach((cyc) => {
-      const pid = String(cyc.project_id);
-      const proj = projById.get(pid);
-      if (!proj) return;
-      const marked = byCycle.get(String(cyc.cycle_id)) || [];
-      const markedBy = new Map(marked.map((ch) => [`${ch.type}-${ch.seq_number}`, ch]));
+  const cells = [];
+  cycles.forEach((cyc) => {
+    const pid = String(cyc.project_id);
+    const proj = projById.get(pid);
+    if (!proj) return;
+    const marked = byCycle.get(String(cyc.cycle_id)) || [];
+    const markedBy = new Map(marked.map((ch) => [`${ch.type}-${ch.seq_number}`, ch]));
 
-      TABEL2_ROLES.forEach((role) => {
-        const items = [];
-        const push = (type, seq) => {
-          const ch = markedBy.get(`${type}-${seq}`);
-          const label = `${type === "k" ? "Post" : "Stories"} ${seq}`;
-          if (!ch) {
-            items.push({ label, type, seq, status: "open" });
-            return;
-          }
-          // Mobilograf va montajchi gapirib beriladigan storiesda
-          // umuman ishtirok etmaydi — bunday birlik ularning
-          // rejasiga kirmaydi.
-          if (role !== "smm" && type === "s" && ch.story_kind !== "atmospheric") return;
-          const f = rolMaydoni[role](ch);
-          const doer = f.doer ? String(f.doer) : null;
-          const asg = f.assigned ? String(f.assigned) : null;
-          const status = !doer ? (role === "smm" ? "open" : "unknown") : asg && doer !== asg ? "sub" : "self";
-          items.push({
-            label, type, seq, status,
-            performer: doer ? uname(doer) : null,
-            assigned: asg ? uname(asg) : null,
-            date: ch.work_date ? isoDate(ch.work_date) : null,
-            reason: status === "sub" ? f.reason || null : null,
-            note: status === "sub" ? f.note || null : null,
-          });
-        };
-
-        for (let i = 1; i <= (cyc.posts_target || 0); i++) push("k", i);
-        for (let i = 1; i <= (cyc.stories_target || 0); i++) {
-          // Belgilanmagan stories qaysi turda bo'lishi noma'lum,
-          // shuning uchun u faqat SMM rejasiga kiradi.
-          if (role !== "smm" && !markedBy.has(`s-${i}`)) continue;
-          push("s", i);
+    TABEL_ROLE_KEYS.forEach((role) => {
+      const items = [];
+      const push = (type, seq) => {
+        const ch = markedBy.get(`${type}-${seq}`);
+        const label = `${type === "k" ? "Post" : "Stories"} ${seq}`;
+        if (!ch) {
+          items.push({ label, type, seq, status: "open" });
+          return;
         }
-
-        cells.push({
-          project: proj.slug,
-          role,
-          assigned: uname(permBy.get(`${pid}:${role}`)) || null,
-          items,
+        // Mobilograf va montajchi gapirib beriladigan storiesda
+        // umuman ishtirok etmaydi — bunday birlik ularning
+        // rejasiga kirmaydi.
+        if (role !== "smm" && type === "s" && ch.story_kind !== "atmospheric") return;
+        const f = rolMaydoni[role](ch);
+        const doer = f.doer ? String(f.doer) : null;
+        const asg = f.assigned ? String(f.assigned) : null;
+        const status = !doer ? (role === "smm" ? "open" : "unknown") : asg && doer !== asg ? "sub" : "self";
+        items.push({
+          label, type, seq, status,
+          performer: doer ? uname(doer) : null,
+          assigned: asg ? uname(asg) : null,
+          date: ch.work_date ? isoDate(ch.work_date) : null,
+          reason: status === "sub" ? f.reason || null : null,
+          note: status === "sub" ? f.note || null : null,
         });
+      };
+
+      for (let i = 1; i <= (cyc.posts_target || 0); i++) push("k", i);
+      for (let i = 1; i <= (cyc.stories_target || 0); i++) {
+        // Belgilanmagan stories qaysi turda bo'lishi noma'lum,
+        // shuning uchun u faqat SMM rejasiga kiradi.
+        if (role !== "smm" && !markedBy.has(`s-${i}`)) continue;
+        push("s", i);
+      }
+
+      cells.push({
+        project: proj.slug,
+        role,
+        assigned: uname(permBy.get(`${pid}:${role}`)) || null,
+        items,
       });
     });
+  });
 
-    const person = (u) => {
-      const name = [u.first_name, u.last_name].filter(Boolean).join(" ").trim() || u.full_name || u.username;
-      const parts = name.split(/\s+/);
-      return {
-        username: u.username,
-        name: parts.length > 1 ? `${parts[0]} ${parts[1][0].toUpperCase()}.` : name,
-        fullName: name,
-        initials: ((parts[0] || "?")[0] + (parts[1] ? parts[1][0] : "")).toUpperCase(),
-        position: u.position || "boshqa",
-      };
-    };
-
+  const person = (u) => {
+    const name = [u.first_name, u.last_name].filter(Boolean).join(" ").trim() || u.full_name || u.username;
+    const parts = name.split(/\s+/);
     return {
-      month,
-      today,
-      closed: month < today.slice(0, 7),
-      projects: projR.rows.map((p) => ({ id: p.slug, name: p.label, color: p.color || null })),
-      employees: usersR.rows.map(person),
-      roles: [
-        { key: "smm", label: "SMM manager", rule: "Reja: post + barcha stories" },
-        { key: "mobilograf", label: "Mobilograf", rule: "Reja: post + atmosferali stories" },
-        { key: "montajchi", label: "Montajor", rule: "Reja: post + atmosferali stories" },
-      ],
-      cells,
+      username: u.username,
+      name: parts.length > 1 ? `${parts[0]} ${parts[1][0].toUpperCase()}.` : name,
+      fullName: name,
+      initials: ((parts[0] || "?")[0] + (parts[1] ? parts[1][0] : "")).toUpperCase(),
+      position: u.position || "boshqa",
     };
+  };
+
+  return {
+    month,
+    today,
+    closed: month < today.slice(0, 7),
+    projects: projR.rows.map((p) => ({ id: p.slug, name: p.label, color: p.color || null })),
+    employees: usersR.rows.map(person),
+    roles: TABEL_ROLES,
+    cells,
+  };
 }
 
 app.get("/api/tabel", auth, async (req, res) => {
