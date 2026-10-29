@@ -3323,6 +3323,8 @@ app.get("/api/projects", auth, async (req, res) => {
         `select c.type, c.seq_number, c.work_date, c.editor_id, c.videographer_id,
                 c.editor_user_id, c.videographer_user_id, c.story_kind,
                 c.assignee_id, c.performer_id, c.substitution_reason, c.substitution_note,
+                c.mobilograf_assigned_id, c.mobilograf_reason, c.mobilograf_reason_note,
+                c.montajchi_assigned_id, c.montajchi_reason, c.montajchi_reason_note,
                 c.done_at, c.marked_by,
                 coalesce(nullif(trim(concat(mb.first_name, ' ', mb.last_name)), ''), mb.full_name, mb.username) as marked_by_name,
                 e.full_name as editor_name, v.full_name as videographer_name,
@@ -3364,6 +3366,15 @@ app.get("/api/projects", auth, async (req, res) => {
           performerUsername: c.performer_username,
           substitutionReason: c.substitution_reason,
           substitutionNote: c.substitution_note,
+          // Mobilograf/montajor uchun ham xuddi shunday: belgilash
+          // paytidagi rejadagi xodim va almashtirish sababi. Forma
+          // qayta ochilganda shu qiymatlar o'rnida turadi.
+          mobilografAssignedId: c.mobilograf_assigned_id,
+          mobilografReason: c.mobilograf_reason,
+          mobilografNote: c.mobilograf_reason_note,
+          montajchiAssignedId: c.montajchi_assigned_id,
+          montajchiReason: c.montajchi_reason,
+          montajchiNote: c.montajchi_reason_note,
           // Kim va qachon belgiladi — tafsilot ekranidagi audit qatori
           markedByName: c.marked_by_name,
           doneAt: c.done_at,
@@ -3741,14 +3752,29 @@ app.patch("/api/checks", auth, async (req, res) => {
       if (!pr.rows[0]) return res.status(404).json({ error: "Bajaruvchi topilmadi" });
       performerIdRaw = pr.rows[0].id;
     }
-    const substitutionReason = req.body.substitutionReason || null;
-    const substitutionNote = (req.body.substitutionNote || "").trim() || null;
-    if (substitutionReason && !["sick", "vacation", "urgent", "other"].includes(substitutionReason)) {
-      return res.status(400).json({ error: "Noto'g'ri sabab" });
+    // Almashtirish sababi har rol uchun alohida keladi: bir ishda
+    // SMM o'zi chiqargan, lekin videoni boshqa mobilograf olgan
+    // bo'lishi mumkin — sabablari ham boshqa.
+    const SABAB_KALITLARI = ["sick", "vacation", "urgent", "other"];
+    function sababOlish(reasonKey, noteKey) {
+      const reason = req.body[reasonKey] || null;
+      const note = (req.body[noteKey] || "").trim() || null;
+      if (reason && !SABAB_KALITLARI.includes(reason)) {
+        return { xato: "Noto'g'ri sabab" };
+      }
+      if (note && note.length > 200) {
+        return { xato: "Izoh 200 belgidan oshmasligi kerak" };
+      }
+      return { reason, note };
     }
-    if (substitutionNote && substitutionNote.length > 200) {
-      return res.status(400).json({ error: "Izoh 200 belgidan oshmasligi kerak" });
+    const smmSabab = sababOlish("substitutionReason", "substitutionNote");
+    const mobSabab = sababOlish("mobilografReason", "mobilografNote");
+    const monSabab = sababOlish("montajchiReason", "montajchiNote");
+    for (const x of [smmSabab, mobSabab, monSabab]) {
+      if (x.xato) return res.status(400).json({ error: x.xato });
     }
+    const substitutionReason = smmSabab.reason;
+    const substitutionNote = smmSabab.note;
     // storyKind faqat stories (type='s') uchun ma'noli — "info"
     // (gapirib beriladigan, standart) yoki "atmospheric" (atmosferali).
     const storyKind = type === "s" ? req.body.storyKind || "info" : null;
@@ -3822,6 +3848,15 @@ app.patch("/api/checks", auth, async (req, res) => {
     const montajchiAssignedId = rolMuhri.montajchi || null;
     const performerId = performerIdRaw || req.user.id;
     const isSubstitution = !!assigneeId && String(performerId) !== String(assigneeId);
+    // Mobilograf/montajor zamenasi — maydonda ko'rsatilgan xodim
+    // muhrlangan rejadagi xodimdan farq qilsa. Maydon bo'sh bo'lsa
+    // zamena ham yo'q (bu "kim qilgani yozilmagan" holati).
+    const isMobSub =
+      !!mobilografAssignedId && !!videographerUserId &&
+      String(videographerUserId) !== String(mobilografAssignedId);
+    const isMonSub =
+      !!montajchiAssignedId && !!editorUserId &&
+      String(editorUserId) !== String(montajchiAssignedId);
 
     if (checked) {
       // Bajaruvchi — o'zi yoki SHU LOYIHAGA biriktirilgan xodim.
@@ -3853,6 +3888,21 @@ app.patch("/api/checks", auth, async (req, res) => {
       }
       if (substitutionReason === "other" && !substitutionNote) {
         return res.status(422).json({ error: "«Boshqa» uchun izoh yozing" });
+      }
+      // Mobilograf/montajor uchun ham xuddi shu talab: tabelda
+      // "nega almashgan" ustuni sabab yozilmasa bo'sh qoladi va
+      // oylik hisobida savol tug'diradi.
+      if (isMobSub && !mobSabab.reason) {
+        return res.status(422).json({ error: "Mobilograf almashgan — sababini tanlang" });
+      }
+      if (mobSabab.reason === "other" && !mobSabab.note) {
+        return res.status(422).json({ error: "Mobilograf uchun «Boshqa» — izoh yozing" });
+      }
+      if (isMonSub && !monSabab.reason) {
+        return res.status(422).json({ error: "Montajor almashgan — sababini tanlang" });
+      }
+      if (monSabab.reason === "other" && !monSabab.note) {
+        return res.status(422).json({ error: "Montajor uchun «Boshqa» — izoh yozing" });
       }
       // TZ'da "yopilgan oy faqat o'qish uchun" deyilgan, lekin bu
       // yerda ataylab qilingan mavjud imkoniyat bor: yopilgan davrga
@@ -3942,8 +3992,10 @@ app.patch("/api/checks", auth, async (req, res) => {
       const insR = await db.query(
         `insert into checks (cycle_id, type, seq_number, done_by, editor_id, videographer_id, work_date, editor_user_id, videographer_user_id, story_kind,
                              assignee_id, performer_id, substitution_reason, substitution_note, marked_by,
-                             mobilograf_assigned_id, montajchi_assigned_id)
-         values ($1,$2,$3,$4,$5,$6, coalesce($7::date, $8::date), $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+                             mobilograf_assigned_id, montajchi_assigned_id,
+                             mobilograf_reason, mobilograf_reason_note,
+                             montajchi_reason, montajchi_reason_note)
+         values ($1,$2,$3,$4,$5,$6, coalesce($7::date, $8::date), $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
          on conflict (cycle_id, type, seq_number) do update
            set editor_id           = excluded.editor_id,
                videographer_id     = excluded.videographer_id,
@@ -3958,7 +4010,11 @@ app.patch("/api/checks", auth, async (req, res) => {
                substitution_note   = excluded.substitution_note,
                marked_by           = excluded.marked_by,
                mobilograf_assigned_id = excluded.mobilograf_assigned_id,
-               montajchi_assigned_id  = excluded.montajchi_assigned_id
+               montajchi_assigned_id  = excluded.montajchi_assigned_id,
+               mobilograf_reason      = excluded.mobilograf_reason,
+               mobilograf_reason_note = excluded.mobilograf_reason_note,
+               montajchi_reason       = excluded.montajchi_reason,
+               montajchi_reason_note  = excluded.montajchi_reason_note
          returning (xmax = 0) as inserted`,
         [
           cycle.id,
@@ -3982,6 +4038,10 @@ app.patch("/api/checks", auth, async (req, res) => {
           req.user.id,
           mobilografAssignedId,
           montajchiAssignedId,
+          isMobSub ? mobSabab.reason : null,
+          isMobSub && mobSabab.reason === "other" ? mobSabab.note : null,
+          isMonSub ? monSabab.reason : null,
+          isMonSub && monSabab.reason === "other" ? monSabab.note : null,
         ],
       );
       stateChanged = !!insR.rows[0]?.inserted;

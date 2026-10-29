@@ -13153,8 +13153,7 @@
         await loadProjects();
         histState.loaded = false;
         worklog = null;
-        tabelData = null; // Tabel qayta yuklansin
-        tabelEmp = null;
+        tb2 = null; // Tabel keshini bo'shatamiz — qayta yuklansin
         refreshAllViews();
         return data;
       }
@@ -20428,6 +20427,19 @@
       function cwdIsSub() {
         return !!cwd.assigneeUsername && cwd.performerId !== cwd.assigneeUsername;
       }
+      // Mobilograf/montajor zamenasi — maydonda ko'rsatilgan xodim
+      // rejadagisidan farq qilsa. Backend ham xuddi shunday hisoblaydi.
+      function cwdRoleAssigned(role) {
+        return role === "mobilograf" ? cwd.mobAssignedId : cwd.monAssignedId;
+      }
+      function cwdRoleCurrent(role) {
+        return role === "mobilograf" ? cwd.videographerUserId : cwd.editorUserId;
+      }
+      function cwdRoleIsSub(role) {
+        const asg = cwdRoleAssigned(role);
+        const cur = cwdRoleCurrent(role);
+        return !!asg && !!cur && String(cur) !== String(asg);
+      }
       // Montaj/video tanlovi faqat postda va "atmosferali" storiesda
       // so'raladi — gapirib beriladigan storiesda montaj ham, suratga
       // olish ham bo'lmaydi.
@@ -20446,6 +20458,13 @@
         const workDate = info.workDate ? String(info.workDate).slice(0, 10) : isoOf(todayDate());
         // Rejadagi mas'ul — loyihaning SMM roli berilgan xodimi.
         const assignee = (p.assignees || []).find((a) => a.role === "smm") || null;
+        // Mobilograf va montajor uchun ham rejadagi xodim kerak.
+        // Ish allaqachon belgilangan bo'lsa — o'sha paytda MUHRLANGAN
+        // xodim (keyin rol almashgan bo'lsa ham eski yozuv o'zgarmaydi),
+        // yangi belgilashda — hozirgi biriktirilgan xodim.
+        const rolAsg = (role) => (p.assignees || []).find((a) => a.role === role) || null;
+        const mobAsg = rolAsg("mobilograf");
+        const monAsg = rolAsg("montajchi");
         cwd = {
           slug,
           type,
@@ -20459,6 +20478,12 @@
           performerId: info.performerUsername || (assignee ? assignee.username : currentUser),
           reason: info.substitutionReason || null,
           note: info.substitutionNote || "",
+          mobAssignedId: info.mobilografAssignedId || (mobAsg ? mobAsg.userId : null),
+          monAssignedId: info.montajchiAssignedId || (monAsg ? monAsg.userId : null),
+          mobReason: info.mobilografReason || null,
+          mobNote: info.mobilografNote || "",
+          monReason: info.montajchiReason || null,
+          monNote: info.montajchiNote || "",
           // Loyihaga biriktirilgan xodimlar (montajchi, mobilograf,
           // dizayner...) — ishni amalda ular ham bajaradi, shuning uchun
           // "Kim bajardi?" ro'yxatida o'zlarini tanlay olishlari kerak.
@@ -20807,25 +20832,40 @@
         cwdRender();
       }
 
-      // ── Almashtirish sababi — SMM qatorining ostida ───────────────
-      function mkSubHtml() {
-        const nomi = cwd.assignee ? cwdPersonName(cwd.assignee) : "rejadagi mas'ul";
-        const tanlangan = cwd.reason;
+      // ── Almashtirish sababi — tegishli qatorning ostida ───────────
+      // Uch rol uchun bitta blok: bir ishda SMM o'zi chiqargan, lekin
+      // videoni boshqa mobilograf olgan bo'lishi mumkin — sabablari
+      // ham alohida so'raladi, chunki tabelda alohida ko'rsatiladi.
+      const MK_SUB_MAYDON = {
+        smm: { reason: "reason", note: "note" },
+        mobilograf: { reason: "mobReason", note: "mobNote" },
+        montajchi: { reason: "monReason", note: "monNote" },
+      };
+      function mkSubHtml(role) {
+        const f = MK_SUB_MAYDON[role];
+        const nomi =
+          role === "smm"
+            ? cwd.assignee
+              ? cwdPersonName(cwd.assignee)
+              : "rejadagi mas'ul"
+            : cwdRoleName(role, cwdRoleAssigned(role)) || "rejadagi xodim";
+        const tanlangan = cwd[f.reason];
         return `<div class="mk-sub">
             <div class="mk-sub-t">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg>
               ${escHtml(nomi)} o'rniga · ${tanlangan ? "sabab" : "sababini tanlang"}
             </div>
             <div class="mk-chips">
-              ${CWD_REASONS.map((r) => `<button type="button" class="mk-chip${tanlangan === r.key ? " on" : ""}" onclick="mkSetReason('${r.key}')">${escHtml(r.label)}</button>`).join("")}
+              ${CWD_REASONS.map((r) => `<button type="button" class="mk-chip${tanlangan === r.key ? " on" : ""}" onclick="mkSetReason('${r.key}','${role}')">${escHtml(r.label)}</button>`).join("")}
             </div>
-            ${tanlangan === "other" ? `<textarea class="mk-note" maxlength="200" placeholder="Qisqacha izoh" oninput="cwd.note=this.value;mkSyncSubmit()">${escHtml(cwd.note || "")}</textarea>` : ""}
+            ${tanlangan === "other" ? `<textarea class="mk-note" maxlength="200" placeholder="Qisqacha izoh" oninput="cwd.${f.note}=this.value;mkSyncSubmit()">${escHtml(cwd[f.note] || "")}</textarea>` : ""}
           </div>`;
       }
-      function mkSetReason(key) {
+      function mkSetReason(key, role) {
         if (!cwd) return;
-        cwd.reason = cwd.reason === key ? null : key;
-        if (cwd.reason !== "other") cwd.note = "";
+        const f = MK_SUB_MAYDON[role || "smm"];
+        cwd[f.reason] = cwd[f.reason] === key ? null : key;
+        if (cwd[f.reason] !== "other") cwd[f.note] = "";
         ntv3Haptic();
         cwdRender();
       }
@@ -20839,8 +20879,19 @@
         const yoz = [];
         if (pickers && !cwd.videographerUserId) tanla.push("video olgan");
         if (pickers && !cwd.editorUserId) tanla.push("montajchi");
-        if (cwdIsSub() && !cwd.reason) tanla.push("almashtirish sababi");
+        // Montaj/video ham so'ralsa uch sabab yonma-yon turadi —
+        // o'shanda "almashtirish sababi" qaysi roldan ekani bilinmaydi.
+        if (cwdIsSub() && !cwd.reason) tanla.push(pickers ? "SMM sababi" : "almashtirish sababi");
         if (cwdIsSub() && cwd.reason === "other" && !(cwd.note || "").trim()) yoz.push("izoh");
+        // Mobilograf/montajor almashgan bo'lsa ularning sababi ham
+        // majburiy — tabelda alohida ustun bo'lib ko'rsatiladi.
+        [["mobilograf", "mobReason", "mobNote", "mobilograf sababi", "mobilograf izohi"],
+         ["montajchi", "monReason", "monNote", "montajchi sababi", "montajchi izohi"]]
+          .forEach(([role, rk, nk, sNom, iNom]) => {
+            if (!pickers || !cwdRoleIsSub(role)) return;
+            if (!cwd[rk]) tanla.push(sNom);
+            else if (cwd[rk] === "other" && !(cwd[nk] || "").trim()) yoz.push(iNom);
+          });
         if (!cwd.workDate) tanla.push("sana");
         return { tanla, yoz, bor: tanla.length + yoz.length };
       }
@@ -20985,8 +21036,20 @@
       function mkDetailHtml() {
         const info = cwd.info || {};
         const list = mkPeople(true).filter((p) => p.name);
-        const sabab = CWD_REASONS.find((r) => r.key === info.substitutionReason);
         const asgName = cwd.assignee ? cwdPersonName(cwd.assignee) : "";
+        // Zamena qatorlari: har rol uchun alohida, chunki bir ishda
+        // ikki-uch rol bo'yicha almashish bo'lishi mumkin.
+        const zamenalar = [
+          ["smm", asgName || "mas'ul", info.substitutionReason, info.substitutionNote],
+          ["mobilograf", cwdRoleName("mobilograf", info.mobilografAssignedId), info.mobilografReason, info.mobilografNote],
+          ["montajchi", cwdRoleName("montajchi", info.montajchiAssignedId), info.montajchiReason, info.montajchiNote],
+        ]
+          .map(([role, nomi, reason, note]) => {
+            const r = CWD_REASONS.find((x) => x.key === reason);
+            if (!r) return null;
+            return { nomi: nomi || "rejadagi xodim", matn: r.key === "other" && note ? note : r.label };
+          })
+          .filter(Boolean);
         const kun = parseISO(cwd.workDate);
         const belgiladi = info.markedByName
           ? `Belgiladi: ${info.markedByName}${info.doneAt ? ` · ${fmtDay(new Date(info.doneAt))}, ${fmtTime(new Date(info.doneAt))}` : ""}`
@@ -21009,14 +21072,14 @@
                 </div>`,
               )
               .join("")}
-            ${
-              sabab
-                ? `<div class="mk-sub"><div class="mk-sub-t" style="margin:0">
+            ${zamenalar
+              .map(
+                (z) => `<div class="mk-sub"><div class="mk-sub-t" style="margin:0">
                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg>
-                     ${escHtml(asgName || "mas'ul")} o'rniga · ${escHtml(sabab.key === "other" && info.substitutionNote ? info.substitutionNote : sabab.label)}
-                   </div></div>`
-                : ""
-            }
+                     ${escHtml(z.nomi)} o'rniga · ${escHtml(z.matn)}
+                   </div></div>`,
+              )
+              .join("")}
           </div>
           ${belgiladi ? `<div class="mk-audit">${escHtml(belgiladi)}</div>` : ""}`;
       }
@@ -21130,6 +21193,8 @@
 
         const pickers = cwdShowPickers();
         const isSub = cwdIsSub();
+        const mobSub = pickers && cwdRoleIsSub("mobilograf");
+        const monSub = pickers && cwdRoleIsSub("montajchi");
         const c = mkCoins();
         const smmName = cwdPerformerName();
         const smmUser =
@@ -21193,8 +21258,9 @@
           ${turBlok}
           <div class="mk-sec">${pickers ? "Kimlar ishladi" : "Kim tayyorladi"}</div>
           <div class="mk-card">
-            ${video}${montaj}${smm}
-            ${isSub ? mkSubHtml() : ""}
+            ${video}${mobSub ? mkSubHtml("mobilograf") : ""}
+            ${montaj}${monSub ? mkSubHtml("montajchi") : ""}
+            ${smm}${isSub ? mkSubHtml("smm") : ""}
           </div>
           ${!pickers ? `<div class="mk-hint">Bu turda montaj va video olgan so'ralmaydi</div>` : ""}
           ${cwd.assignee ? "" : `<div class="mk-hint">Bu loyihada rejadagi mas'ul belgilanmagan — Ruxsatlar bo'limidan «SMM» roli beriladi.</div>`}
@@ -21302,6 +21368,14 @@
         }
         if (key === "montaj") cwd.editorUserId = value;
         else if (key === "video") cwd.videographerUserId = value;
+        // Rejadagi xodimning o'ziga qaytarilsa sabab keraksiz —
+        // SMM qatorida ham xuddi shunday.
+        const role = key === "montaj" ? "montajchi" : "mobilograf";
+        if (!cwdRoleIsSub(role)) {
+          const f = MK_SUB_MAYDON[role];
+          cwd[f.reason] = null;
+          cwd[f.note] = "";
+        }
         ntv3Haptic();
         closeCwdPick();
       }
@@ -21372,6 +21446,16 @@
         }
         if (pickers && !cwd.editorUserId) return cwdShowErr("«Montaj» — montaj qilgan xodimni tanlang.");
         if (pickers && !cwd.videographerUserId) return cwdShowErr("«Video olgan» — videoni olgan xodimni tanlang.");
+        const mobSub = pickers && cwdRoleIsSub("mobilograf");
+        const monSub = pickers && cwdRoleIsSub("montajchi");
+        if (mobSub && !cwd.mobReason) return cwdShowErr("«Video olgan» — rejadagi mobilograf o'rniga boshqa xodim ishlagan, sababini tanlang.");
+        if (mobSub && cwd.mobReason === "other" && !(cwd.mobNote || "").trim()) {
+          return cwdShowErr("Mobilograf sababi «Boshqa» — qisqacha izoh yozing.");
+        }
+        if (monSub && !cwd.monReason) return cwdShowErr("«Montaj qildi» — rejadagi montajor o'rniga boshqa xodim ishlagan, sababini tanlang.");
+        if (monSub && cwd.monReason === "other" && !(cwd.monNote || "").trim()) {
+          return cwdShowErr("Montajor sababi «Boshqa» — qisqacha izoh yozing.");
+        }
         if (!cwd.workDate) return cwdShowErr("«Qaysi kuni» — sanani tanlang.");
         setBtnLoading(btn, true, "Saqlanmoqda…");
         try {
@@ -21386,6 +21470,10 @@
             performerUsername: cwd.performerId,
             substitutionReason: isSub ? cwd.reason : null,
             substitutionNote: isSub && cwd.reason === "other" ? cwd.note : null,
+            mobilografReason: mobSub ? cwd.mobReason : null,
+            mobilografNote: mobSub && cwd.mobReason === "other" ? cwd.mobNote : null,
+            montajchiReason: monSub ? cwd.monReason : null,
+            montajchiNote: monSub && cwd.monReason === "other" ? cwd.monNote : null,
           });
           if (!cwd) return;
           // Tahrirlashda natija ekrani ortiqcha — faqat yangi
