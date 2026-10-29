@@ -1378,158 +1378,136 @@ app.get("/api/tabel/matrix", auth, async (req, res) => {
   }
 });
 
+// ── Tabel eksporti ──────────────────────────────────────────────────
+// Raqamlar ekrandagi bilan AYNAN bir xil bo'lishi shart, shuning
+// uchun ikkalasi ham `buildTabelRaw` dan va bir xil formulalardan
+// (TZ 2.4) foydalanadi. Hisobni ikki joyda yozish — ular sekin-asta
+// bir-biridan uzoqlashishining eng ishonchli yo'li.
+function tabelCalc(items, closed, elapsed, daysInMonth) {
+  const n = (st) => items.filter((x) => x.status === st).length;
+  const plan = items.length;
+  const self = n("self"), subs = n("sub"), unk = n("unknown"), open = n("open");
+  const done = self + subs + unk;
+  const expected = Math.floor((plan * elapsed) / daysInMonth);
+  const over = closed ? open : Math.max(0, Math.min(open, expected - done));
+  return { plan, self, subs, unk, open, done, expected, over, up: open - over };
+}
+
 app.get("/api/tabel/export.xlsx", auth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const month = tabelMonthGuard(req, res);
   if (!month) return;
   try {
-    const m = await buildTabelMatrix(month);
+    if (month > todayTashkent().slice(0, 7)) {
+      return res.status(400).json({ error: "Kelajakdagi oy tanlab bo'lmaydi" });
+    }
+    const raw = await buildTabelRaw(month);
     const S = XLSX_STYLE;
-    const styleOf = (state) =>
-      state === "missing" ? S.MISSING : state === "sub" ? S.SUB : state === "own" ? S.OWN : S.PLAIN;
-    const itemLabel = (it) => `${it.type === "k" ? "Post" : "Stories"} #${it.seq}`;
+    const hdr = (t) => ({ v: t, s: S.HEADER });
 
-    // ── 1-varaq: oy xulosasi + matritsa ──────────────────────────────
-    // Fayl ko'pincha rahbariyatga ko'rsatish uchun ochiladi, shuning
-    // uchun birinchi ko'rinadigan narsa — oy qanday o'tgani.
-    const sm = m.summary;
-    const monthOver = month < new Date().toISOString().slice(0, 7);
-    const summaryRows = [
-      [{ v: `Tabel — ${month}`, s: S.BOLD }],
-      [
-        { v: "Reja", s: S.HEADER },
-        { v: "Bajarildi", s: S.HEADER },
-        { v: "Bajarilgani %", s: S.HEADER },
-        { v: monthOver ? "Bajarilmadi" : "Qoldi", s: S.HEADER },
-        { v: "Zamena", s: S.HEADER },
-        { v: "Bajaruvchi yozilmagan", s: S.HEADER },
-      ],
-      [
-        sm.planned,
-        sm.done,
-        `${sm.donePct}%`,
-        { v: sm.missing, s: sm.missing ? S.MISSING : S.OWN },
-        { v: sm.substituted, s: sm.substituted ? S.SUB : S.PLAIN },
-        sm.unrecorded,
-      ],
-      sm.prevDonePct !== null && monthOver
-        ? [{ v: `O'tgan oy (${sm.prevMonth}): ${sm.prevDonePct}% · farq ${sm.deltaPct > 0 ? "+" : ""}${sm.deltaPct} punkt` }]
-        : [{ v: monthOver ? "" : "Oy hali davom etmoqda" }],
-      [],
+    const [yy, mm] = month.split("-").map(Number);
+    const daysInMonth = new Date(yy, mm, 0).getDate();
+    const elapsed = raw.closed ? daysInMonth : Number(String(raw.today).slice(8, 10)) || 1;
+
+    const projName = (id) => raw.projects.find((p) => p.id === id)?.name || id;
+    const roleName = (k) => raw.roles.find((r) => r.key === k)?.label || k;
+    const empName = (u) => raw.employees.find((e) => e.username === u)?.name || (u ? "@" + u : "");
+    const REASONS = { sick: "Kasallik", vacation: "Ta'til", urgent: "Shoshilinch", other: "Boshqa" };
+    const kechikLbl = raw.closed ? "Qilinmadi" : "Kechikkan";
+
+    // ── 1-varaq: Jadval ──────────────────────────────────────────
+    const jadval = [
+      ["Loyiha", "Rol", "Rejadagi xodim", "Reja", "O'zi", "Zamena", "Kim yozilmagan",
+       "Bajarildi", kechikLbl, "Qoldi", "Zamena qilganlar"].map(hdr),
     ];
-
-    const header = [{ v: "Loyiha", s: S.HEADER }, { v: "Xodim", s: S.HEADER }];
-    m.roles.forEach((r) => {
-      header.push({ v: r.label, s: S.HEADER }, { v: "Bajarildi", s: S.HEADER }, { v: "Holat", s: S.HEADER });
-    });
-    const matrixRows = [...summaryRows, header];
-    m.projects.forEach((p) => {
-      const row = [p.label, p.staffCount];
-      m.roles.forEach((r) => {
-        const c = p.roles[r.key];
-        if (!c) {
-          row.push("—", "", "");
-          return;
-        }
-        const st = styleOf(c.state);
-        const note =
-          c.missing > 0
-            ? `${c.missing} ta qilinmadi`
-            : c.substituted > 0
-              ? `Zamena: ${c.subs.map((x) => `${x.name} (${x.count})`).join(", ")}`
-              : c.unrecorded > 0
-                ? `${c.unrecorded} ta kim qilgani yozilmagan`
-                : "O'zi bajardi";
-        row.push(
-          { v: c.planned ? c.planned.name : "Biriktirilmagan", s: st },
-          { v: `${c.done}/${c.plan}`, s: st },
-          { v: note, s: st },
-        );
+    raw.cells.forEach((c) => {
+      const m = tabelCalc(c.items, raw.closed, elapsed, daysInMonth);
+      const kim = {};
+      c.items.forEach((it) => {
+        if (it.status !== "sub") return;
+        kim[it.performer] = (kim[it.performer] || 0) + 1;
       });
-      matrixRows.push(row);
+      jadval.push([
+        projName(c.project),
+        roleName(c.role),
+        c.assigned ? empName(c.assigned) : "Biriktirilmagan",
+        m.plan, m.self, m.subs, m.unk, m.done,
+        m.over > 0 ? { v: m.over, s: S.MISSING } : 0,
+        m.up,
+        Object.entries(kim).map(([u, n]) => `${empName(u)} x${n}`).join(", "),
+      ]);
     });
 
-    // ── 2-varaq: zamenalar ───────────────────────────────────────────
-    const subRows = [
-      [
-        { v: "Sana", s: S.HEADER },
-        { v: "Loyiha", s: S.HEADER },
-        { v: "Rol", s: S.HEADER },
-        { v: "Ish", s: S.HEADER },
-        { v: "Rejada kim edi", s: S.HEADER },
-        { v: "Kim bajardi", s: S.HEADER },
-        { v: "Sabab", s: S.HEADER },
-      ],
+    // ── 2-varaq: Zamenalar ───────────────────────────────────────
+    const zamena = [
+      ["Sana", "Loyiha", "Ish", "Rol", "Rejadagi xodim", "Bajargan xodim", "Sabab", "Izoh"].map(hdr),
     ];
-    m.projects.forEach((p) => {
-      m.roles.forEach((r) => {
-        const c = p.roles[r.key];
-        if (!c) return;
-        c.items
-          .filter((it) => it.isSub)
-          .forEach((it) => {
-            subRows.push([
-              it.workDate ? String(it.workDate).slice(0, 10) : "",
-              p.label,
-              r.label,
-              itemLabel(it),
-              c.planned ? c.planned.name : "—",
-              { v: it.doer ? it.doer.name : "—", s: S.SUB },
-              it.reasonLabel || "",
-            ]);
-          });
-      });
-    });
+    const tartib = raw.projects.map((p) => p.id);
+    const subs = [];
+    raw.cells.forEach((c) =>
+      c.items.forEach((it) => {
+        if (it.status === "sub") subs.push({ ...it, project: c.project, role: c.role });
+      }),
+    );
+    subs
+      .sort(
+        (a, b) =>
+          String(b.date || "").localeCompare(String(a.date || "")) ||
+          tartib.indexOf(a.project) - tartib.indexOf(b.project),
+      )
+      .forEach((s) =>
+        zamena.push([
+          s.date || "",
+          projName(s.project),
+          s.label,
+          roleName(s.role),
+          empName(s.assigned),
+          { v: empName(s.performer), s: S.OWN },
+          REASONS[s.reason] || "Boshqa",
+          s.note || "",
+        ]),
+      );
 
-    // ── 3-varaq: xodimlar yig'indisi ─────────────────────────────────
-    // Har bir xodim: rejada nechta ish bor edi, nechtasini o'zi qildi,
-    // nechtasini boshqa odam qildi, nechtasi boshqaning o'rniga.
+    // ── 3-varaq: Xodimlar ────────────────────────────────────────
+    // To'lanadi = O'zi + O'rniga qildi. `unknown` hech kimga
+    // yozilmaydi — ijrochisi noma'lum.
     const emp = new Map();
-    const touch = (person) => {
-      if (!person) return null;
-      if (!emp.has(person.userId)) {
-        emp.set(person.userId, { name: person.name, jobTitle: person.jobTitle || "", plan: 0, own: 0, handedOver: 0, extra: 0 });
-      }
-      return emp.get(person.userId);
+    const touch = (u, role) => {
+      if (!u) return null;
+      if (!emp.has(u)) emp.set(u, { u, role, plan: 0, self: 0, handed: 0, extra: 0 });
+      const e = emp.get(u);
+      if (role && !e.role) e.role = role;
+      return e;
     };
-    m.projects.forEach((p) => {
-      m.roles.forEach((r) => {
-        const c = p.roles[r.key];
-        if (!c) return;
-        const e = touch(c.planned);
-        if (e) {
-          e.plan += c.plan;
-          e.own += c.own;
-          e.handedOver += c.substituted;
-        }
-        c.subs.forEach((sb) => {
-          const se = touch(sb);
-          if (se) se.extra += sb.count;
-        });
+    raw.cells.forEach((c) => {
+      const m = tabelCalc(c.items, raw.closed, elapsed, daysInMonth);
+      const e = touch(c.assigned, c.role);
+      if (e) { e.plan += m.plan; e.self += m.self; e.handed += m.subs; }
+      c.items.forEach((it) => {
+        if (it.status !== "sub") return;
+        const se = touch(it.performer, null);
+        if (se) se.extra++;
       });
     });
-    const empRows = [
-      [
-        { v: "Xodim", s: S.HEADER },
-        { v: "Lavozim", s: S.HEADER },
-        { v: "Reja", s: S.HEADER },
-        { v: "O'zi bajardi", s: S.HEADER },
-        { v: "Boshqa bajardi", s: S.HEADER },
-        { v: "Qo'shimcha (o'rniga)", s: S.HEADER },
-      ],
+    const xodim = [
+      ["Xodim", "Rol", "Reja", "O'zi", "Boshqa qildi", "O'rniga qildi", "To'lanadi"].map(hdr),
       ...[...emp.values()]
-        .sort((a, b) => b.plan - a.plan || b.own - a.own || a.name.localeCompare(b.name))
-        .map((e) => [e.name, e.jobTitle, e.plan, e.own, e.handedOver, e.extra]),
+        .map((e) => ({ ...e, pay: e.self + e.extra }))
+        .sort((a, b) => b.pay - a.pay || b.plan - a.plan)
+        .map((e) => [
+          empName(e.u), roleName(e.role), e.plan, e.self, e.handed,
+          e.extra > 0 ? { v: e.extra, s: S.SUB } : 0,
+          { v: e.pay, s: S.BOLD },
+        ]),
     ];
 
     const buf = buildXlsx([
-      { name: `Tabel ${month}`, widths: [24, 8, 22, 11, 30, 22, 11, 30, 22, 11, 30], rows: matrixRows },
-      { name: "Zamenalar", widths: [12, 22, 14, 14, 22, 22, 14], rows: subRows },
-      { name: "Xodimlar", widths: [24, 20, 8, 13, 15, 19], rows: empRows },
+      { name: `Jadval ${month}`, widths: [24, 15, 20, 8, 8, 9, 15, 11, 12, 8, 34], rows: jadval },
+      { name: "Zamenalar", widths: [12, 24, 14, 15, 20, 20, 13, 26], rows: zamena },
+      { name: "Xodimlar", widths: [22, 15, 8, 8, 13, 14, 11], rows: xodim },
     ]);
-
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename="tabel-${month}.xlsx"`);
+    res.setHeader("Content-Disposition", `attachment; filename="Tabel_${month}.xlsx"`);
     res.send(buf);
   } catch (e) {
     serverError(res, e, "GET /api/tabel/export.xlsx");
@@ -1550,16 +1528,8 @@ app.get("/api/tabel/export.xlsx", auth, async (req, res) => {
 // shunday.
 const TABEL2_ROLES = ["smm", "mobilograf", "montajchi"];
 
-app.get("/api/tabel", auth, async (req, res) => {
-  if (!requireAdmin(req, res)) return;
-  const month = tabelMonthGuard(req, res);
-  if (!month) return;
-  try {
-    const today = todayTashkent();
-    // Kelajak oyi — ma'nosiz so'rov (TZ 6.1).
-    if (month > today.slice(0, 7)) {
-      return res.status(400).json({ error: "Kelajakdagi oy tanlab bo'lmaydi" });
-    }
+async function buildTabelRaw(month) {
+  const today = todayTashkent();
 
     const cyclesR = await db.query(TABEL_CYCLES_SQL, [month]);
     const cycles = cyclesR.rows;
@@ -1685,7 +1655,7 @@ app.get("/api/tabel", auth, async (req, res) => {
       };
     };
 
-    res.json({
+    return {
       month,
       today,
       closed: month < today.slice(0, 7),
@@ -1697,7 +1667,18 @@ app.get("/api/tabel", auth, async (req, res) => {
         { key: "montajchi", label: "Montajor", rule: "Reja: post + atmosferali stories" },
       ],
       cells,
-    });
+    };
+}
+
+app.get("/api/tabel", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const month = tabelMonthGuard(req, res);
+  if (!month) return;
+  try {
+    if (month > todayTashkent().slice(0, 7)) {
+      return res.status(400).json({ error: "Kelajakdagi oy tanlab bo'lmaydi" });
+    }
+    res.json(await buildTabelRaw(month));
   } catch (e) {
     serverError(res, e, "GET /api/tabel", req);
   }
