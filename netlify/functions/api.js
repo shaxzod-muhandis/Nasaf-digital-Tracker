@@ -626,16 +626,7 @@ app.get("/api/users/export.xlsx", auth, async (req, res) => {
     const ROL = { super_admin: "Super admin", admin: "Admin", employee: "Xodim" };
     const HOLAT = { active: "Faol", blocked: "Bloklangan", removed: "Chiqarilgan" };
     const hdr = (t) => ({ v: t, s: S.HEADER });
-    // `pg` `date` ustunini Date OBYEKTI qilib qaytaradi, shuning uchun
-    // `String(d).slice(0,10)` "Sun Oct 01" beradi. Mahalliy qismlardan
-    // yig'amiz: `toISOString()` esa vaqt mintaqasiga qarab kunni bir
-    // kunga surib yuborishi mumkin.
-    const sana = (d) => {
-      if (!d) return "";
-      if (!(d instanceof Date)) return String(d).slice(0, 10);
-      const p = (n) => String(n).padStart(2, "0");
-      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-    };
+    const sana = (d) => isoDate(d) || "";
 
     const varaq1 = {
       name: "Telegram xodimlar",
@@ -928,6 +919,17 @@ const STAFF_POSITIONS = [
 // Loyiha ranglari — 0026 migratsiyasidagi palitra bilan AYNAN bir xil
 // bo'lishi kerak, aks holda migratsiyadan keyin yaratilgan loyihalar
 // boshqa to'plamdan rang olib, ekran ola-chalpoq bo'lib qolardi.
+// `pg` `date` ustunini Date OBYEKTI qilib qaytaradi, shuning uchun
+// `String(d).slice(0,10)` "Sun Oct 01" beradi. Mahalliy qismlardan
+// yig'iladi: `toISOString()` vaqt mintaqasiga qarab kunni bir kunga
+// surib yuborishi mumkin.
+function isoDate(d) {
+  if (!d) return null;
+  if (!(d instanceof Date)) return String(d).slice(0, 10);
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 const PROJECT_COLORS = [
   "#0284c7", "#0d9488", "#d97706", "#db2777", "#7c3aed", "#65a30d",
   "#4f46e5", "#c2410c", "#0891b2", "#9333ea", "#15803d", "#475569",
@@ -1531,6 +1533,173 @@ app.get("/api/tabel/export.xlsx", auth, async (req, res) => {
     res.send(buf);
   } catch (e) {
     serverError(res, e, "GET /api/tabel/export.xlsx");
+  }
+});
+
+// ═════════════════════════════════════════════════════════════════════
+// TABEL (yangi) — XOM MA'LUMOT
+// ═════════════════════════════════════════════════════════════════════
+// Eski `/api/tabel/matrix` hisob-kitobni serverda qilardi. Yangi
+// ekranda bir xil sonlar to'rt joyda ko'rsatiladi (xulosa kartalari,
+// katak, filtr chiplari, o'ng panel) va ularning hammasi bitta
+// formulalar to'plamidan chiqishi kerak. Shuning uchun server endi
+// faqat XOM birliklarni beradi, hisob esa frontendda bir joyda
+// turadi — eski endpoint o'z o'rnida qoladi.
+//
+// Identifikatorlar: loyiha `slug`, xodim `username` — butun ilovada
+// shunday.
+const TABEL2_ROLES = ["smm", "mobilograf", "montajchi"];
+
+app.get("/api/tabel", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const month = tabelMonthGuard(req, res);
+  if (!month) return;
+  try {
+    const today = todayTashkent();
+    // Kelajak oyi — ma'nosiz so'rov (TZ 6.1).
+    if (month > today.slice(0, 7)) {
+      return res.status(400).json({ error: "Kelajakdagi oy tanlab bo'lmaydi" });
+    }
+
+    const cyclesR = await db.query(TABEL_CYCLES_SQL, [month]);
+    const cycles = cyclesR.rows;
+    const cycleIds = cycles.map((c) => c.cycle_id);
+    const projectIds = [...new Set(cycles.map((c) => String(c.project_id)))];
+
+    const [usersR, permsR, checksR, projR] = await Promise.all([
+      db.query(
+        `select id, username, first_name, last_name, full_name, position
+           from users where access_status is distinct from 'removed'`,
+      ),
+      projectIds.length
+        ? db.query(
+            `select project_id, user_id, role from permissions
+              where project_id = any($1::uuid[]) and role = any($2::text[])`,
+            [projectIds, TABEL2_ROLES],
+          )
+        : { rows: [] },
+      cycleIds.length
+        ? db.query(
+            `select cycle_id, type, seq_number, work_date, story_kind,
+                    performer_id, assignee_id, substitution_reason, substitution_note,
+                    videographer_user_id, mobilograf_assigned_id, mobilograf_reason, mobilograf_reason_note,
+                    editor_user_id, montajchi_assigned_id, montajchi_reason, montajchi_reason_note
+               from checks where cycle_id = any($1::uuid[])`,
+            [cycleIds],
+          )
+        : { rows: [] },
+      projectIds.length
+        ? db.query(`select id, slug, label, color from projects where id = any($1::uuid[])`, [projectIds])
+        : { rows: [] },
+    ]);
+
+    const userById = new Map(usersR.rows.map((u) => [String(u.id), u]));
+    const uname = (id) => userById.get(String(id))?.username || null;
+    const projById = new Map(projR.rows.map((p) => [String(p.id), p]));
+
+    // Katakdagi "rejadagi xodim" — BUGUNGI holat (TZ 2.2). Birlikning
+    // o'z muhri esa alohida: pastda `assignedOf` bilan solishtiriladi.
+    const permBy = new Map();
+    permsR.rows.forEach((r) => {
+      const k = `${r.project_id}:${r.role}`;
+      if (!permBy.has(k)) permBy.set(k, String(r.user_id));
+    });
+
+    const byCycle = new Map();
+    checksR.rows.forEach((ch) => {
+      if (!byCycle.has(String(ch.cycle_id))) byCycle.set(String(ch.cycle_id), []);
+      byCycle.get(String(ch.cycle_id)).push(ch);
+    });
+
+    // Rolga qarab: kim bajargan, kim rejada edi (MUHR), nega almashgan.
+    const rolMaydoni = {
+      smm: (ch) => ({ doer: ch.performer_id, assigned: ch.assignee_id,
+                      reason: ch.substitution_reason, note: ch.substitution_note }),
+      mobilograf: (ch) => ({ doer: ch.videographer_user_id, assigned: ch.mobilograf_assigned_id,
+                             reason: ch.mobilograf_reason, note: ch.mobilograf_reason_note }),
+      montajchi: (ch) => ({ doer: ch.editor_user_id, assigned: ch.montajchi_assigned_id,
+                            reason: ch.montajchi_reason, note: ch.montajchi_reason_note }),
+    };
+
+    const cells = [];
+    cycles.forEach((cyc) => {
+      const pid = String(cyc.project_id);
+      const proj = projById.get(pid);
+      if (!proj) return;
+      const marked = byCycle.get(String(cyc.cycle_id)) || [];
+      const markedBy = new Map(marked.map((ch) => [`${ch.type}-${ch.seq_number}`, ch]));
+
+      TABEL2_ROLES.forEach((role) => {
+        const items = [];
+        const push = (type, seq) => {
+          const ch = markedBy.get(`${type}-${seq}`);
+          const label = `${type === "k" ? "Post" : "Stories"} ${seq}`;
+          if (!ch) {
+            items.push({ label, type, seq, status: "open" });
+            return;
+          }
+          // Mobilograf va montajchi gapirib beriladigan storiesda
+          // umuman ishtirok etmaydi — bunday birlik ularning
+          // rejasiga kirmaydi.
+          if (role !== "smm" && type === "s" && ch.story_kind !== "atmospheric") return;
+          const f = rolMaydoni[role](ch);
+          const doer = f.doer ? String(f.doer) : null;
+          const asg = f.assigned ? String(f.assigned) : null;
+          const status = !doer ? (role === "smm" ? "open" : "unknown") : asg && doer !== asg ? "sub" : "self";
+          items.push({
+            label, type, seq, status,
+            performer: doer ? uname(doer) : null,
+            assigned: asg ? uname(asg) : null,
+            date: ch.work_date ? isoDate(ch.work_date) : null,
+            reason: status === "sub" ? f.reason || null : null,
+            note: status === "sub" ? f.note || null : null,
+          });
+        };
+
+        for (let i = 1; i <= (cyc.posts_target || 0); i++) push("k", i);
+        for (let i = 1; i <= (cyc.stories_target || 0); i++) {
+          // Belgilanmagan stories qaysi turda bo'lishi noma'lum,
+          // shuning uchun u faqat SMM rejasiga kiradi.
+          if (role !== "smm" && !markedBy.has(`s-${i}`)) continue;
+          push("s", i);
+        }
+
+        cells.push({
+          project: proj.slug,
+          role,
+          assigned: uname(permBy.get(`${pid}:${role}`)) || null,
+          items,
+        });
+      });
+    });
+
+    const person = (u) => {
+      const name = [u.first_name, u.last_name].filter(Boolean).join(" ").trim() || u.full_name || u.username;
+      const parts = name.split(/\s+/);
+      return {
+        username: u.username,
+        name: parts.length > 1 ? `${parts[0]} ${parts[1][0].toUpperCase()}.` : name,
+        fullName: name,
+        initials: ((parts[0] || "?")[0] + (parts[1] ? parts[1][0] : "")).toUpperCase(),
+        position: u.position || "boshqa",
+      };
+    };
+
+    res.json({
+      month,
+      today,
+      closed: month < today.slice(0, 7),
+      projects: projR.rows.map((p) => ({ id: p.slug, name: p.label, color: p.color || null })),
+      employees: usersR.rows.map(person),
+      roles: [
+        { key: "smm", label: "SMM manager", rule: "Reja: post + barcha stories" },
+        { key: "mobilograf", label: "Mobilograf", rule: "Reja: post + atmosferali stories" },
+        { key: "montajchi", label: "Montajor", rule: "Reja: post + atmosferali stories" },
+      ],
+      cells,
+    });
+  } catch (e) {
+    serverError(res, e, "GET /api/tabel", req);
   }
 });
 
@@ -3904,10 +4073,21 @@ app.patch("/api/checks", auth, async (req, res) => {
     // holat, yozuvga snapshot qilinadi: keyin rol almashsa ham eski
     // ishlar eski mas'ulda qoladi).
     const asgR = await db.query(
-      `select user_id from permissions where project_id = $1 and role = 'smm' limit 1`,
+      `select role, user_id from permissions
+        where project_id = $1 and role in ('smm','mobilograf','montajchi')`,
       [project.id],
     );
-    const assigneeId = asgR.rows[0]?.user_id || null;
+    const rolMuhri = {};
+    asgR.rows.forEach((r) => {
+      if (!rolMuhri[r.role]) rolMuhri[r.role] = r.user_id;
+    });
+    const assigneeId = rolMuhri.smm || null;
+    // Mobilograf va montajchi uchun ham xuddi shunday muhr. Avval
+    // faqat SMM muhrlanardi va qolgan ikki rol bo'yicha zamena
+    // "hozirgi ruxsatlar" bilan solishtirib topilardi — ya'ni rol
+    // almashgach o'tgan oylarning hisobi ham o'zgarib ketardi.
+    const mobilografAssignedId = rolMuhri.mobilograf || null;
+    const montajchiAssignedId = rolMuhri.montajchi || null;
     const performerId = performerIdRaw || req.user.id;
     const isSubstitution = !!assigneeId && String(performerId) !== String(assigneeId);
 
@@ -4029,8 +4209,9 @@ app.patch("/api/checks", auth, async (req, res) => {
 
       const insR = await db.query(
         `insert into checks (cycle_id, type, seq_number, done_by, editor_id, videographer_id, work_date, editor_user_id, videographer_user_id, story_kind,
-                             assignee_id, performer_id, substitution_reason, substitution_note, marked_by)
-         values ($1,$2,$3,$4,$5,$6, coalesce($7::date, $8::date), $9, $10, $11, $12, $13, $14, $15, $16)
+                             assignee_id, performer_id, substitution_reason, substitution_note, marked_by,
+                             mobilograf_assigned_id, montajchi_assigned_id)
+         values ($1,$2,$3,$4,$5,$6, coalesce($7::date, $8::date), $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
          on conflict (cycle_id, type, seq_number) do update
            set editor_id           = excluded.editor_id,
                videographer_id     = excluded.videographer_id,
@@ -4043,7 +4224,9 @@ app.patch("/api/checks", auth, async (req, res) => {
                performer_id        = excluded.performer_id,
                substitution_reason = excluded.substitution_reason,
                substitution_note   = excluded.substitution_note,
-               marked_by           = excluded.marked_by
+               marked_by           = excluded.marked_by,
+               mobilograf_assigned_id = excluded.mobilograf_assigned_id,
+               montajchi_assigned_id  = excluded.montajchi_assigned_id
          returning (xmax = 0) as inserted`,
         [
           cycle.id,
@@ -4065,6 +4248,8 @@ app.patch("/api/checks", auth, async (req, res) => {
           isSubstitution ? substitutionReason : null,
           isSubstitution ? substitutionNote : null,
           req.user.id,
+          mobilografAssignedId,
+          montajchiAssignedId,
         ],
       );
       stateChanged = !!insR.rows[0]?.inserted;
