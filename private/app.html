@@ -22313,27 +22313,40 @@
       // (Tabel eksporti bilan bir xil kutubxona), bu yerda esa faqat
       // saqlanadi — telefon raqami va tug'ilgan sana bor, shuning
       // uchun endpoint ham faqat adminga ochiq.
-      async function exportStaffXlsx(btn) {
+      // ── Excel yuklab olish ───────────────────────────────────────
+      // Telegram'ning ichki oynasi `blob:` orqali fayl saqlashni
+      // bloklaydi — tugma bosiladi, hech narsa bo'lmaydi. Shuning uchun
+      // serverdan qisqa muddatli imzolangan havola olinadi va fayl
+      // TASHQI brauzerda ochiladi. Oddiy brauzerda (Telegramsiz) eski
+      // usul qoladi.
+      async function excelYuklash(kind, query, btn) {
         setBtnLoading(btn, true, "Tayyorlanmoqda…");
         try {
-          const r = await apiFetch("/api/users/export.xlsx");
-          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
-          const blob = await r.blob();
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `xodimlar-${isoOf(todayDate())}.xlsx`;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 2000);
-          showToast("✅ Yuklandi");
+          const r = await apiFetch(`/api/export-link/${kind}${query || ""}`, { method: "POST" });
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(d.error || "Xato");
+          const t = tg();
+          if (t?.downloadFile) {
+            // Bot API 8.0+: Telegram o'z oynasida saqlashni taklif qiladi.
+            t.downloadFile({ url: d.url, file_name: d.fileName });
+            showToast("Yuklab olish oynasi ochildi");
+          } else if (t?.openLink) {
+            t.openLink(d.url, { try_instant_view: false });
+            showToast("Brauzerda ochildi — fayl shu yerda saqlanadi");
+          } else {
+            window.open(d.url, "_blank");
+          }
         } catch (e) {
           showToast("⚠ " + e.message);
         } finally {
           setBtnLoading(btn, false);
         }
       }
+
+      function exportStaffXlsx(btn) {
+        return excelYuklash("users", "", btn);
+      }
+
 
       function renderStaffTab(c) {
         const q = (document.getElementById("admin-search")?.value || "")
@@ -23139,26 +23152,8 @@
       }
 
       // ── Excel ────────────────────────────────────────────────────
-      async function tb2Export(btn) {
-        setBtnLoading(btn, true, "Tayyorlanmoqda…");
-        try {
-          const r = await apiFetch(`/api/tabel/export.xlsx?month=${tb2Month}`);
-          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
-          const blob = await r.blob();
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `Tabel_${tb2Month}.xlsx`;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 2000);
-          showToast("✅ Yuklandi");
-        } catch (e) {
-          showToast("⚠ " + e.message);
-        } finally {
-          setBtnLoading(btn, false);
-        }
+      function tb2Export(btn) {
+        return excelYuklash("tabel", `?month=${tb2Month}`, btn);
       }
 
       // ── BOSHQARUV · MIJOZ FIKRI ──────────────────────────────────

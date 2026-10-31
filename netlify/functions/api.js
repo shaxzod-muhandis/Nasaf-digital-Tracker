@@ -621,7 +621,33 @@ app.get("/api/users", auth, async (req, res) => {
 // Ro'yxatda telefon raqami va tug'ilgan sana bor, shuning uchun
 // faqat admin. Tabel eksporti bilan bir xil yo'l: fayl to'g'ridan-
 // to'g'ri javobda qaytadi, frontend uni saqlaydi.
-app.get("/api/users/export.xlsx", auth, async (req, res) => {
+// `dlAuth` — sarlavha o'rniga manzildagi token bilan ham kiritadi
+// (tashqi brauzer sarlavha yubora olmaydi, yuqoridagi izohga qarang).
+function dlAuth(kind) {
+  return async (req, res, next) => {
+    if (!req.query.t) return auth(req, res, next);
+    const p = dlVerify(req.query.t, kind);
+    if (!p) return res.status(403).send("Havola eskirgan — ilovadan qayta yuklab oling.");
+    // Rolni tokendan EMAS, bazadan olamiz: token 5 daqiqa yashaydi,
+    // shu orada xodim roldan chiqarilgan bo'lishi mumkin.
+    try {
+      const r = await db.query(
+        `select id, username, role, is_active, access_status from users where id = $1`,
+        [p.u],
+      );
+      const u = r.rows[0];
+      if (!u || !u.is_active || u.access_status !== "active") {
+        return res.status(403).send("Ruxsat yo'q.");
+      }
+      req.user = u;
+      next();
+    } catch (e) {
+      serverError(res, e, "dlAuth");
+    }
+  };
+}
+
+app.get("/api/users/export.xlsx", dlAuth("users"), async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
     const S = XLSX_STYLE;
@@ -1170,7 +1196,7 @@ function tabelCalc(items, closed, elapsed, daysInMonth) {
   return { plan, self, subs, unk, open, done, expected, over, up: open - over };
 }
 
-app.get("/api/tabel/export.xlsx", auth, async (req, res) => {
+app.get("/api/tabel/export.xlsx", dlAuth("tabel"), async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const month = tabelMonthGuard(req, res);
   if (!month) return;
@@ -3493,6 +3519,70 @@ app.get("/api/projects/:slug/cycles", auth, async (req, res) => {
   } catch (e) {
     serverError(res, e, "GET /api/projects/:slug/cycles");
   }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// FAYL YUKLAB OLISH — qisqa muddatli imzolangan havola
+//
+// Telegram'ning ichki oynasi `blob:` orqali fayl saqlashni bloklaydi:
+// tugma bosiladi, hech narsa bo'lmaydi. Yagona ishonchli yo'l — faylni
+// TASHQI brauzerda ochish. Lekin tashqi brauzer `X-Telegram-Init-Data`
+// sarlavhasini yubora olmaydi, shuning uchun manzilning o'zida qisqa
+// muddatli ruxsat kerak.
+//
+// Token bazada saqlanmaydi — u BOT_TOKEN bilan imzolangan va ichida
+// kim, nimani va qachongacha ochishi mumkinligi yozilgan. Ya'ni yangi
+// jadval ham, tozalab turadigan cron ham kerak emas.
+const DL_UMRI = 5 * 60 * 1000; // 5 daqiqa — havola ulashib yuborilsa ham tezda o'ladi
+
+function dlSign(payload) {
+  const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const sig = crypto
+    .createHmac("sha256", process.env.BOT_TOKEN || "")
+    .update(body)
+    .digest("base64url");
+  return `${body}.${sig}`;
+}
+// Token to'g'ri bo'lsa foydalanuvchi ma'lumotini, aks holda null qaytaradi.
+function dlVerify(token, kind) {
+  const [body, sig] = String(token || "").split(".");
+  if (!body || !sig) return null;
+  const kutilgan = crypto
+    .createHmac("sha256", process.env.BOT_TOKEN || "")
+    .update(body)
+    .digest("base64url");
+  // Uzunligi boshqa bo'lsa `timingSafeEqual` otib yuboradi.
+  if (sig.length !== kutilgan.length) return null;
+  if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(kutilgan))) return null;
+  let p;
+  try { p = JSON.parse(Buffer.from(body, "base64url").toString("utf8")); } catch (e) { return null; }
+  if (p.k !== kind) return null;
+  if (!p.exp || Date.now() > p.exp) return null;
+  return p;
+}
+
+// Frontend avval shu yerdan havola oladi, keyin uni tashqi brauzerda
+// ochadi. Ruxsat shu yerda tekshiriladi — eksportlarning o'zi esa
+// tokenni ko'rsa `auth`siz ishlayveradi.
+app.post("/api/export-link/:kind", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const kind = req.params.kind;
+  if (!["users", "tabel"].includes(kind)) {
+    return res.status(404).json({ error: "Bunday eksport yo'q" });
+  }
+  let yol, fayl;
+  if (kind === "users") {
+    yol = "/api/users/export.xlsx";
+    fayl = `xodimlar-${todayTashkent()}.xlsx`;
+  } else {
+    const month = tabelMonthGuard(req, res);
+    if (!month) return;
+    yol = `/api/tabel/export.xlsx?month=${month}`;
+    fayl = `Tabel_${month}.xlsx`;
+  }
+  const token = dlSign({ k: kind, u: String(req.user.id), exp: Date.now() + DL_UMRI });
+  const baza = (process.env.APP_URL || "").replace(/\/+$/, "");
+  res.json({ url: `${baza}${yol}${yol.includes("?") ? "&" : "?"}t=${token}`, fileName: fayl });
 });
 
 // ═══════════════════════════════════════════════════════════════════════
