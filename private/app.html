@@ -1649,6 +1649,71 @@
       .tb2-sk-card { height: 92px; }
       .tb2-sk-bar { height: 40px; margin-bottom: 14px; }
       .tb2-sk-row { height: 74px; margin-bottom: 8px; }
+
+      /* ── Mijoz fikri ──────────────────────────────────────────────
+         Kartochka loyiha sahifasining eng tepasida turadi va fikr
+         olinmaguncha ketmaydi — ataylab ko'zga tashlanadi, chunki uni
+         so'rash oson unutiladigan ish. */
+      .fb-card {
+        border: 1px solid var(--bd1); border-radius: 16px; padding: 14px;
+        background: var(--c1); margin-bottom: 16px;
+      }
+      .fb-card.waiting { border-color: var(--brand); }
+      .fb-top { display: flex; gap: 11px; align-items: flex-start; }
+      .fb-ico {
+        width: 34px; height: 34px; border-radius: 10px; flex: none;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--chip2); color: var(--brand);
+      }
+      .fb-ico svg { width: 18px; height: 18px; }
+      .fb-t { font-weight: 650; font-size: 14px; line-height: 1.35; }
+      .fb-s { font-size: 12px; color: var(--t3); margin-top: 2px; line-height: 1.4; }
+      .fb-acts { display: flex; gap: 8px; margin-top: 12px; }
+      .fb-acts .btn { flex: 1; }
+      .fb-url {
+        margin-top: 10px; padding: 9px 11px; border-radius: 10px;
+        background: var(--c2); border: 1px solid var(--bd1);
+        font-size: 12px; color: var(--t2); word-break: break-all;
+      }
+      /* Oy tanlash — Tabeldagi strelkalar bilan bir xil shaklda. */
+      .fb-nav { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 14px; }
+      .fb-nav button {
+        width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--bd1);
+        background: var(--c1); color: var(--t1); font-size: 16px; cursor: pointer;
+      }
+      .fb-nav button:disabled { opacity: .35; cursor: default; }
+      .fb-nav .fb-mon { font-weight: 650; font-size: 14px; min-width: 130px; text-align: center; }
+      .fb-big { text-align: center; padding: 18px 10px 6px; }
+      .fb-big .e { font-size: 46px; line-height: 1; }
+      .fb-big .l { margin-top: 8px; font-weight: 650; font-size: 15px; }
+      .fb-big .d { margin-top: 3px; font-size: 12px; color: var(--t3); }
+      .fb-note {
+        margin-top: 12px; padding: 12px 13px; border-radius: 12px;
+        background: var(--c2); font-size: 13px; line-height: 1.5; color: var(--t2);
+      }
+      /* Boshqaruv: umumiy manzara */
+      .fb-bars { display: flex; flex-direction: column; gap: 9px; }
+      .fb-bar-row { display: flex; align-items: center; gap: 10px; }
+      .fb-bar-e { font-size: 19px; width: 26px; flex: none; text-align: center; }
+      .fb-bar-l { font-size: 12px; color: var(--t3); width: 84px; flex: none; }
+      .fb-bar-track { flex: 1; height: 12px; border-radius: 6px; background: var(--c2); overflow: hidden; }
+      .fb-bar-fill { display: block; height: 100%; border-radius: 6px; }
+      .fb-bar-n { font-size: 13px; font-weight: 650; width: 30px; text-align: right; flex: none; }
+      .fb-kpis { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+      .fb-kpi {
+        flex: 1 1 140px; border: 1px solid var(--bd1); border-radius: 14px;
+        padding: 13px; background: var(--c1);
+      }
+      .fb-kpi-v { font-size: 24px; font-weight: 700; line-height: 1.1; }
+      .fb-kpi-l { font-size: 11px; color: var(--t3); margin-top: 3px; }
+      .fb-prow {
+        display: flex; align-items: center; gap: 10px; padding: 11px 13px;
+        cursor: pointer; border-bottom: 1px solid var(--bd1);
+      }
+      .fb-prow:last-child { border-bottom: none; }
+      .fb-prow-n { font-weight: 600; font-size: 14px; }
+      .fb-prow-r { text-align: right; flex: none; }
+      .fb-prow-v { font-weight: 700; font-size: 15px; }
       @keyframes tb2-puls { 0%, 100% { opacity: .55; } 50% { opacity: .9; } }
       @media (prefers-reduced-motion: reduce) { .tb2-sk { animation: none; } }
 
@@ -11714,6 +11779,9 @@
           <button class="atab" id="atab-perms" onclick="switchATab('perms')">
             Ruxsatlar
           </button>
+          <button class="atab" id="atab-feedback" onclick="switchATab('feedback')">
+            Mijoz fikri
+          </button>
           <button
             class="atab"
             id="atab-admins"
@@ -19949,6 +20017,123 @@
       }
 
       // ── TRACKER ───────────────────────────────────────────────────
+      // ── MIJOZ FIKRI ──────────────────────────────────────────────
+      // Oy yakunida biznes egasi ishimizga baho beradi. Fikrni xodim
+      // emas, mijozning O'ZI qoldiradi: har loyiha-oy uchun bir martalik
+      // havola ochiladi va mijozga yuboriladi. Bu yerdagi vazifa —
+      // havolani olish, uni nusxalash va kelgan javobni ko'rsatish.
+      const FB_EMOJI = ["", "\u{1F620}", "\u{1F641}", "\u{1F610}", "\u{1F60A}"];
+      const FB_RANG = ["", "#dc2626", "#ea580c", "#ca8a04", "#16a34a"];
+      const FB_ICO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.9 9.9 0 0 1-3.8-.7L3 21l1.9-4.6A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4Z"/></svg>`;
+
+      // Loyiha sahifasidagi kartochka. Backend faqat fikri OLINMAGAN
+      // oyni beradi, shuning uchun bu yerda qo'shimcha shart yo'q:
+      // `feedback` bor — demak kartochka kerak.
+      function fbCardHtml(p) {
+        const f = p.feedback;
+        if (!f) return "";
+        const kutilmoqda = f.status === "asked";
+        return `<div class="fb-card${kutilmoqda ? " waiting" : ""}">
+            <div class="fb-top">
+              <span class="fb-ico">${FB_ICO}</span>
+              <div style="flex:1;min-width:0">
+                <div class="fb-t">${escHtml(f.monthLabel)} — biznes egasining fikri</div>
+                <div class="fb-s">${
+                  kutilmoqda
+                    ? "Havola yuborilgan, mijozning javobi kutilmoqda."
+                    : f.cycleClosed
+                      ? "Oy yopildi. Mijozdan fikr so'rash vaqti keldi."
+                      : "Oy tugadi. Mijozdan fikr so'rash vaqti keldi."
+                }</div>
+              </div>
+            </div>
+            <div class="fb-acts">
+              <button type="button" class="btn btn-blue" onclick="fbLink('${escArg(p.id)}', this)">${
+                kutilmoqda ? "Havolani nusxalash" : "Mijozga havola olish"
+              }</button>
+              <button type="button" class="btn btn-soft" onclick="fbHistory('${escArg(p.id)}','${escArg(p.label)}')">Oylar</button>
+            </div>
+          </div>`;
+      }
+
+      async function fbLink(slug, btn) {
+        setBtnLoading(btn, true, "Tayyorlanmoqda…");
+        try {
+          const r = await apiFetch(`/api/projects/${encodeURIComponent(slug)}/feedback/link`, { method: "POST" });
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(d.error || "Xato");
+          const ok = await copyToClipboard(d.url);
+          // Nusxalash ishlamasa (Telegram WebView ba'zan rad etadi)
+          // havolaning o'zi ekranda qoladi — qo'lda belgilab olinadi.
+          showToast(ok ? "✅ Havola nusxalandi — mijozga yuboring" : "⚠ Nusxalanmadi, havolani qo'lda oling");
+          await loadProjects();
+          refreshAllViews();
+          if (!ok) fbShowUrl(slug, d.url);
+        } catch (e) {
+          showToast("⚠ " + e.message);
+          setBtnLoading(btn, false);
+        }
+      }
+      function fbShowUrl(slug, url) {
+        const { body } = makeSheet("Mijozga yuboriladigan havola");
+        body.innerHTML = `<div class="fb-url">${escHtml(url)}</div>
+          <button class="btn btn-soft" style="margin-top:12px" onclick="copyToClipboard('${escArg(url)}').then(ok=>showToast(ok?'✅ Nusxalandi':'⚠ Qo\\'lda belgilang'))">Yana nusxalash</button>`;
+      }
+
+      // ── Oylar bo'yicha ko'rish ───────────────────────────────────
+      let fbHist = null;
+      async function fbHistory(slug, label) {
+        const { body } = makeSheet(`${label} — mijoz fikri`);
+        body.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        try {
+          const r = await apiFetch(`/api/projects/${encodeURIComponent(slug)}/feedback`);
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(d.error || "Yuklab bo'lmadi");
+          fbHist = { slug, label, months: d.months || [], idx: 0, host: body };
+          fbHistRender();
+        } catch (e) {
+          body.innerHTML = `<div class="empty"><div class="empty-t">Yuklab bo'lmadi</div><div class="empty-s">${escHtml(e.message)}</div></div>`;
+        }
+      }
+      function fbHistShift(d) {
+        if (!fbHist) return;
+        const n = fbHist.idx + d;
+        if (n < 0 || n >= fbHist.months.length) return;
+        fbHist.idx = n;
+        fbHistRender();
+      }
+      function fbHistRender() {
+        if (!fbHist || !fbHist.host.isConnected) return;
+        const { months, idx, host } = fbHist;
+        if (!months.length) {
+          host.innerHTML = `<div class="empty"><div class="empty-t">Hali fikr so'ralmagan</div>
+            <div class="empty-s">Oy yakunlangach kartochka chiqadi va havola shu yerdan olinadi.</div></div>`;
+          return;
+        }
+        const m = months[idx];
+        host.innerHTML = `
+          <div class="fb-nav">
+            <button type="button" onclick="fbHistShift(1)"${idx >= months.length - 1 ? " disabled" : ""}>‹</button>
+            <div class="fb-mon">${escHtml(m.monthLabel)}</div>
+            <button type="button" onclick="fbHistShift(-1)"${idx <= 0 ? " disabled" : ""}>›</button>
+          </div>
+          ${
+            m.filled
+              ? `<div class="fb-big">
+                   <div class="e">${FB_EMOJI[m.rating]}</div>
+                   <div class="l" style="color:${FB_RANG[m.rating]}">${escHtml(m.ratingLabel || "")}</div>
+                   <div class="d">${m.filledAt ? escHtml(fmtDay(new Date(m.filledAt))) + " kuni belgilangan" : ""}</div>
+                 </div>
+                 ${m.note ? `<div class="fb-note">${escHtml(m.note)}</div>` : `<div class="fb-note" style="color:var(--t3)">Izoh yozilmagan.</div>`}`
+              : `<div class="fb-big">
+                   <div class="e" style="opacity:.3">${FB_EMOJI[3]}</div>
+                   <div class="l">Javob kutilmoqda</div>
+                   <div class="d">Havola ochilgan, mijoz hali belgilamagan.</div>
+                 </div>
+                 <button class="btn btn-soft" style="margin-top:12px" onclick="copyToClipboard('${escArg(m.url || "")}').then(ok=>showToast(ok?'✅ Havola nusxalandi':'⚠ Qo\\'lda belgilang'))">Havolani nusxalash</button>`
+          }`;
+      }
+
       function openTracker(id) {
         const p = projects.find((x) => x.id === id);
         if (!p) return;
@@ -20073,6 +20258,7 @@
           todayHtml = `<div style="padding:16px 14px;font-size:12.5px;color:var(--t3)">Bugun hali hech narsa belgilanmagan</div>`;
 
         document.getElementById("tracker-body").innerHTML = `
+          ${fbCardHtml(p)}
           <div class="cal-week">${WD.map((w) => `<span>${w}</span>`).join("")}</div>
           <div class="cal-grid">${cells}</div>
           <div class="cal-legend">
@@ -22073,17 +22259,23 @@
         "staff",
         "worklog",
         "perms",
+        "feedback",
         "admins",
         "announcement",
         "nshop",
       ];
       function switchATab(tabName) {
         adminActiveTab = tabName;
+        // Fikr tabi har ochilganda yangilanadi: javoblar bu yerdan
+        // emas, mijozlardan keladi — eski keshni ko'rsatish xato bo'lardi.
+        if (tabName === "feedback") fbOverview = null;
         ADMIN_TABS.forEach((t) => {
           const b = document.getElementById("atab-" + t);
           if (b) b.classList.toggle("active", t === tabName);
         });
-        const noSearch = tabName === "announcement" || tabName === "worklog" || tabName === "nshop";
+        const noSearch =
+          tabName === "announcement" || tabName === "worklog" ||
+          tabName === "nshop" || tabName === "feedback";
         document.getElementById("admin-search-box").style.display = noSearch
           ? "none"
           : "flex";
@@ -22107,6 +22299,7 @@
         else if (adminActiveTab === "worklog") renderWorklogTab(c);
         else if (adminActiveTab === "perms") renderAdminPermsTab(c);
         else if (adminActiveTab === "admins") renderAdminAdminsTab(c);
+        else if (adminActiveTab === "feedback") renderFeedbackTab(c);
         else if (adminActiveTab === "nshop") renderNShopAdminTab(c);
         else renderAnnouncementTab(c);
       }
@@ -22966,6 +23159,101 @@
         } finally {
           setBtnLoading(btn, false);
         }
+      }
+
+      // ── BOSHQARUV · MIJOZ FIKRI ──────────────────────────────────
+      // Tepada umumiy manzara (hamma loyiha, hamma oy), pastida har
+      // loyihaning o'z qatori. Qatorga bosilsa o'sha loyihaning oylari
+      // ochiladi — oy tanlash ataylab shu yerda emas, loyiha ichida.
+      let fbOverview = null;
+      async function renderFeedbackTab(c) {
+        if (fbOverview) return fbOverviewRender(c);
+        c.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        try {
+          const r = await apiFetch("/api/feedback/overview");
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(d.error || "Yuklab bo'lmadi");
+          fbOverview = d;
+        } catch (e) {
+          c.innerHTML = `<div class="empty"><div class="empty-t">Yuklab bo'lmadi</div>
+            <div class="empty-s">${escHtml(e.message)}</div>
+            <button class="btn btn-soft" style="margin-top:12px" onclick="fbOverview=null;renderAdminActiveTab()">Qayta urinish</button></div>`;
+          return;
+        }
+        fbOverviewRender(c);
+      }
+      function fbOverviewRender(c) {
+        const items = (fbOverview?.items || []).filter((x) => x.filled);
+        const kutilayotgan = (fbOverview?.items || []).filter((x) => !x.filled).length;
+        if (!items.length) {
+          c.innerHTML = `<div class="empty"><div class="empty-t">Hali bironta fikr kelmagan</div>
+            <div class="empty-s">${
+              kutilayotgan
+                ? `${kutilayotgan} ta havola yuborilgan, javob kutilmoqda.`
+                : "Oy yakunlangach loyiha sahifasida havola olinadi va mijozga yuboriladi."
+            }</div></div>`;
+          return;
+        }
+        const n = items.length;
+        const ort = items.reduce((a, x) => a + x.rating, 0) / n;
+        const mamnun = items.filter((x) => x.rating >= 3).length;
+        const taqsim = [0, 0, 0, 0, 0];
+        items.forEach((x) => taqsim[x.rating]++);
+        const eng = Math.max(...taqsim.slice(1));
+
+        // Loyiha kesimi: o'rtacha baho va eng oxirgi oy.
+        const byProj = new Map();
+        items.forEach((x) => {
+          if (!byProj.has(x.project)) byProj.set(x.project, { label: x.label, color: x.color, list: [] });
+          byProj.get(x.project).list.push(x);
+        });
+        const qatorlar = [...byProj.entries()]
+          .map(([slug, v]) => {
+            const o = v.list.reduce((a, x) => a + x.rating, 0) / v.list.length;
+            const oxirgi = v.list.slice().sort((a, b) => b.month.localeCompare(a.month))[0];
+            return { slug, label: v.label, color: v.color, ort: o, oxirgi, soni: v.list.length };
+          })
+          .sort((a, b) => a.ort - b.ort);
+
+        c.innerHTML = `
+          <div class="fb-kpis">
+            <div class="fb-kpi"><div class="fb-kpi-v" style="color:${FB_RANG[Math.round(ort)] || "var(--t1)"}">${ort.toFixed(1)}</div><div class="fb-kpi-l">O'rtacha baho (4 dan)</div></div>
+            <div class="fb-kpi"><div class="fb-kpi-v">${Math.round((100 * mamnun) / n)}%</div><div class="fb-kpi-l">Mamnun mijozlar</div></div>
+            <div class="fb-kpi"><div class="fb-kpi-v">${n}</div><div class="fb-kpi-l">Jami javob</div></div>
+            <div class="fb-kpi"><div class="fb-kpi-v"${kutilayotgan ? ' style="color:var(--brand)"' : ""}>${kutilayotgan}</div><div class="fb-kpi-l">Javob kutilmoqda</div></div>
+          </div>
+          <div class="sec-upper" style="margin:0 0 9px">Baholar taqsimoti</div>
+          <div class="fb-bars">
+            ${[4, 3, 2, 1]
+              .map(
+                (r) => `<div class="fb-bar-row">
+                  <span class="fb-bar-e">${FB_EMOJI[r]}</span>
+                  <span class="fb-bar-l">${escHtml(fbOverview.labels[r])}</span>
+                  <span class="fb-bar-track"><span class="fb-bar-fill" style="width:${eng ? (100 * taqsim[r]) / eng : 0}%;background:${FB_RANG[r]}"></span></span>
+                  <span class="fb-bar-n">${taqsim[r]}</span>
+                </div>`,
+              )
+              .join("")}
+          </div>
+          <div class="sec-upper" style="margin:20px 0 9px">Loyihalar</div>
+          <div class="list-card">
+            ${qatorlar
+              .map(
+                (q) => `<div class="fb-prow" onclick="fbHistory('${escArg(q.slug)}','${escArg(q.label)}')">
+                  <span class="fb-bar-e">${FB_EMOJI[Math.round(q.ort)]}</span>
+                  <div style="flex:1;min-width:0">
+                    <div class="fb-prow-n">${escHtml(q.label)}</div>
+                    <div class="r-sub">${escHtml(q.oxirgi.monthLabel)} · ${escHtml(q.oxirgi.ratingLabel)}${q.oxirgi.note ? " · izoh bor" : ""}</div>
+                  </div>
+                  <div class="fb-prow-r">
+                    <div class="fb-prow-v" style="color:${FB_RANG[Math.round(q.ort)]}">${q.ort.toFixed(1)}</div>
+                    <div class="r-sub">${q.soni} ta oy</div>
+                  </div>
+                  <div class="chev">›</div>
+                </div>`,
+              )
+              .join("")}
+          </div>`;
       }
 
       function renderAdminProjectsTab(c) {

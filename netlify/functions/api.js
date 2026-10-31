@@ -165,6 +165,22 @@ function loadAppHtml() {
   _appVersion = crypto.createHash("sha1").update(raw).digest("hex").slice(0, 12);
   _appHtmlCache = raw.replace(/__APP_VERSION__/g, _appVersion);
 }
+let _fikrHtmlCache = null;
+function sendFikrHtml(res) {
+  try {
+    if (_fikrHtmlCache === null) {
+      _fikrHtmlCache = fs.readFileSync(path.join(process.cwd(), "private", "fikr.html"), "utf8");
+    }
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    // Sahifaning o'zi hamma token uchun bir xil (ma'lumot /api/fikr dan
+    // keladi), shuning uchun chekka keshda yotaversin. Qidiruvga tushmasin.
+    res.setHeader("Cache-Control", "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800");
+    res.setHeader("X-Robots-Tag", "noindex, nofollow");
+    res.send(_fikrHtmlCache);
+  } catch (e) {
+    serverError(res, e, "GET /fikr/:token");
+  }
+}
 function sendAppHtml(res) {
   try {
     if (_appHtmlCache === null) loadAppHtml();
@@ -218,6 +234,11 @@ app.get(/^\/vazifalar(\/|$)/, (req, res) => sendAppHtml(res));
 // havolani nusxalab boshqa brauzerda ochsa, xuddi shu ko'rinish va
 // sana ochilishi kerak (TZ 3-bo'lim).
 app.get(/^\/kalendar(\/|$)/, (req, res) => sendAppHtml(res));
+// Mijoz fikri sahifasi — ILOVA EMAS, alohida kichik sahifa. Mijoz uni
+// oddiy brauzerda ochadi, shuning uchun unga 1 MB'lik app.html ham,
+// Telegram ham kerak emas. Token sahifaning o'zida emas, manzilda:
+// front uni `location.pathname` dan oladi.
+app.get(/^\/fikr\/[a-z0-9]{10,32}$/, (req, res) => sendFikrHtml(res));
 app.post("/api/get-app", auth, (req, res) => sendAppHtml(res));
 
 // ── /api/auth ─────────────────────────────────────────────────────────
@@ -3293,6 +3314,10 @@ app.get("/api/projects", auth, async (req, res) => {
       });
     }
 
+    // Mijoz fikri — hamma loyiha uchun bitta so'rovda (har loyiha
+    // uchun alohida so'rov yubormaslik kerak).
+    const fbMap = await fbPendingMap(projectIds);
+
     const projects = [];
     // Har bir loyiha o'z yozuvlariga tegadi, shu sabab ularni
     // parallel qayta ishlash xavfsiz. Ilgari sakkizta loyiha ketma-ket
@@ -3400,6 +3425,12 @@ app.get("/api/projects", auth, async (req, res) => {
         anchorDate: project.anchor_date,
         outstandingDebt: summary.outstandingDebt,
         assignees: assigneesByProject[project.id] || [],
+        // Fikri olingan oy kartochka ko'rsatmaydi — shuning uchun
+        // "done" holati frontendga umuman yuborilmaydi.
+        feedback: (() => {
+          const f = fbMap.get(String(project.id));
+          return f && f.status !== "done" ? f : null;
+        })(),
       };
     });
     projects.push(...builtProjects);
@@ -3461,6 +3492,264 @@ app.get("/api/projects/:slug/cycles", auth, async (req, res) => {
     });
   } catch (e) {
     serverError(res, e, "GET /api/projects/:slug/cycles");
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// MIJOZ FIKRI
+//
+// Oy yakunida biznes egasi bizning ishimizga baho beradi (1-4) va
+// ixtiyoriy izoh qoldiradi. Fikrni XODIM emas, mijozning o'zi yozadi:
+// har loyiha-oy uchun bir martalik havola ochiladi (/fikr/<token>) va
+// mijozga yuboriladi. Havola Telegram ham, login ham talab qilmaydi —
+// shu sababli u faqat bitta loyihaning bitta oyini ochadi va boshqa
+// hech narsaga yo'l bermaydi.
+//
+// QACHON SO'RALADI: davr yopilganda YOKI oyi tugaganda — qaysi biri
+// oldin bo'lsa. Ikkinchi shart ataylab: davrlar ko'pincha kech
+// yopiladi (sentabr davri ba'zi loyihada 24-oktabrda yopilgan), faqat
+// yopilishni kutsak eng kech qoladigan loyihalarning — ya'ni mijozi
+// eng ko'p norozi bo'lishi mumkin bo'lganlarning — fikri hech qachon
+// olinmay qolardi.
+//
+// IKKI OY SO'RALMAYDI: faqat ENG OXIRGI mos davr qaraladi. Eski oy
+// javobsiz qolsa, u qayta so'ralmaydi — mijozni ikki oylik savol
+// bilan charchatish o'rniga yangisini so'raymiz.
+// ═══════════════════════════════════════════════════════════════════════
+const FB_MON = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun",
+  "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"];
+const FB_LABELS = ["", "Juda norozi", "Norozi", "O'rtacha", "Mamnun"];
+function fbMonthLabel(month) {
+  const [y, m] = String(month).split("-").map(Number);
+  return `${FB_MON[m - 1] || month} ${y}`;
+}
+// Havola qo'lda ham ko'chiriladi (Telegram'ga tashlanadi, og'zaki
+// aytiladi) — shuning uchun chalkashadigan belgilar yo'q: 0/o, 1/l.
+const FB_ALIFBO = "abcdefghjkmnpqrstuvwxyz23456789";
+function fbToken() {
+  const b = crypto.randomBytes(16);
+  let out = "";
+  for (let i = 0; i < 12; i++) out += FB_ALIFBO[b[i] % FB_ALIFBO.length];
+  return out;
+}
+function fbUrl(token) {
+  return `${(process.env.APP_URL || "").replace(/\/+$/, "")}/fikr/${token}`;
+}
+
+// Har loyiha uchun: fikri so'raladigan ENG OXIRGI oy va uning holati.
+// Bitta so'rovda hamma loyiha uchun hisoblanadi — `/api/projects` har
+// loyiha uchun alohida so'rov yubormasligi kerak.
+async function fbPendingMap(projectIds) {
+  const out = new Map();
+  if (!projectIds.length) return out;
+  const today = todayTashkent();
+  const cycR = await db.query(
+    `select distinct on (project_id)
+            project_id, id as cycle_id, period_start, period_end, status,
+            to_char(period_start, 'YYYY-MM') as month
+       from project_cycles
+      where project_id = any($1::uuid[])
+        and (status = 'closed' or period_end < $2::date)
+      order by project_id, period_start desc`,
+    [projectIds, today],
+  );
+  if (!cycR.rows.length) return out;
+  const fbR = await db.query(
+    `select project_id, period_month, token, rating, note, filled_at
+       from project_feedback
+      where project_id = any($1::uuid[])`,
+    [projectIds],
+  );
+  const fbBy = new Map();
+  fbR.rows.forEach((r) => fbBy.set(`${r.project_id}:${r.period_month}`, r));
+  cycR.rows.forEach((c) => {
+    const fb = fbBy.get(`${c.project_id}:${c.month}`);
+    out.set(String(c.project_id), {
+      month: c.month,
+      monthLabel: fbMonthLabel(c.month),
+      cycleId: String(c.cycle_id),
+      cycleClosed: c.status === "closed",
+      // none  — hali havola ochilmagan
+      // asked — havola bor, mijoz hali javob bermagan
+      // done  — mijoz baho qo'ygan (kartochka ko'rsatilmaydi)
+      status: !fb ? "none" : fb.filled_at ? "done" : "asked",
+      rating: fb ? fb.rating : null,
+      note: fb ? fb.note : null,
+      url: fb ? fbUrl(fb.token) : null,
+    });
+  });
+  return out;
+}
+
+// Havolani ochadi (yoki allaqachon ochilgan bo'lsa o'shani qaytaradi).
+// Loyihaga biriktirilgan xodim ham so'ray oladi — fikr yig'ish SMM
+// managerning kundalik ishi, buning uchun admin kutib turish shart emas.
+app.post("/api/projects/:slug/feedback/link", auth, async (req, res) => {
+  try {
+    const projR = await db.query(`select * from projects where slug = $1`, [req.params.slug]);
+    const project = projR.rows[0];
+    if (!project) return res.status(404).json({ error: "Loyiha topilmadi" });
+    if (!isAdminRole(req.user.role)) {
+      const permR = await db.query(
+        `select 1 from permissions where user_id = $1 and project_id = $2`,
+        [req.user.id, project.id],
+      );
+      if (!permR.rows[0]) return res.status(403).json({ error: "Bu loyiha sizga biriktirilmagan" });
+    }
+    const pending = (await fbPendingMap([project.id])).get(String(project.id));
+    if (!pending) {
+      return res.status(409).json({ error: "Bu loyihada hali yakunlangan oy yo'q" });
+    }
+    if (pending.status === "done") {
+      return res.status(409).json({ error: "Bu oyning fikri allaqachon olingan" });
+    }
+    if (pending.status === "asked") {
+      return res.json({ month: pending.month, monthLabel: pending.monthLabel, url: pending.url, yangi: false });
+    }
+    // Poyga holati: ikki xodim bir vaqtda bossa, ikkinchisi mavjudini oladi.
+    const ins = await db.query(
+      `insert into project_feedback (project_id, cycle_id, period_month, token, asked_by)
+       values ($1, $2, $3, $4, $5)
+       on conflict (project_id, period_month) do nothing
+       returning token`,
+      [project.id, pending.cycleId, pending.month, fbToken(), req.user.id],
+    );
+    let token = ins.rows[0] && ins.rows[0].token;
+    if (!token) {
+      const cur = await db.query(
+        `select token from project_feedback where project_id = $1 and period_month = $2`,
+        [project.id, pending.month],
+      );
+      token = cur.rows[0].token;
+    }
+    res.json({ month: pending.month, monthLabel: pending.monthLabel, url: fbUrl(token), yangi: !!ins.rows[0] });
+  } catch (e) {
+    serverError(res, e, "POST /api/projects/:slug/feedback/link", req);
+  }
+});
+
+// Bitta loyihaning fikrlari tarixi — oy tanlash uchun.
+app.get("/api/projects/:slug/feedback", auth, async (req, res) => {
+  try {
+    const projR = await db.query(`select id, slug, label from projects where slug = $1`, [req.params.slug]);
+    const project = projR.rows[0];
+    if (!project) return res.status(404).json({ error: "Loyiha topilmadi" });
+    const r = await db.query(
+      `select period_month, rating, note, filled_at, token,
+              (filled_at is not null) as filled
+         from project_feedback
+        where project_id = $1
+        order by period_month desc`,
+      [project.id],
+    );
+    res.json({
+      project: { id: project.slug, label: project.label },
+      months: r.rows.map((x) => ({
+        month: x.period_month,
+        monthLabel: fbMonthLabel(x.period_month),
+        rating: x.rating,
+        ratingLabel: x.rating ? FB_LABELS[x.rating] : null,
+        note: x.note,
+        filled: x.filled,
+        filledAt: x.filled_at,
+        url: x.filled ? null : fbUrl(x.token),
+      })),
+      pending: (await fbPendingMap([project.id])).get(String(project.id)) || null,
+    });
+  } catch (e) {
+    serverError(res, e, "GET /api/projects/:slug/feedback", req);
+  }
+});
+
+// Boshqaruv bo'limi: umumiy manzara + loyihalar kesimi.
+app.get("/api/feedback/overview", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const r = await db.query(
+      `select p.slug, p.label, p.color, p.is_active,
+              f.period_month, f.rating, f.note, f.filled_at,
+              (f.filled_at is not null) as filled
+         from project_feedback f
+         join projects p on p.id = f.project_id
+        order by f.period_month desc, p.label`,
+    );
+    const oylar = [...new Set(r.rows.map((x) => x.period_month))].sort().reverse();
+    res.json({
+      months: oylar.map((m) => ({ month: m, monthLabel: fbMonthLabel(m) })),
+      labels: FB_LABELS,
+      items: r.rows.map((x) => ({
+        project: x.slug,
+        label: x.label,
+        color: x.color || null,
+        isActive: x.is_active,
+        month: x.period_month,
+        monthLabel: fbMonthLabel(x.period_month),
+        rating: x.rating,
+        ratingLabel: x.rating ? FB_LABELS[x.rating] : null,
+        note: x.note,
+        filled: x.filled,
+        filledAt: x.filled_at,
+      })),
+    });
+  } catch (e) {
+    serverError(res, e, "GET /api/feedback/overview", req);
+  }
+});
+
+// ── OCHIQ (login talab qilmaydigan) qism ────────────────────────────
+// Mijoz havolani brauzerda ochadi. Bu yerda `auth` YO'Q — himoya
+// tokenning o'zida: u bitta loyihaning bitta oyini ochadi, boshqa
+// ma'lumotga yo'l bermaydi va javob berilgandan keyin yozib bo'lmaydi.
+async function fbByToken(token) {
+  if (!/^[a-z0-9]{10,32}$/.test(String(token || ""))) return null;
+  const r = await db.query(
+    `select f.*, p.label as project_label
+       from project_feedback f join projects p on p.id = f.project_id
+      where f.token = $1`,
+    [token],
+  );
+  return r.rows[0] || null;
+}
+
+app.get("/api/fikr/:token", async (req, res) => {
+  try {
+    const fb = await fbByToken(req.params.token);
+    if (!fb) return res.status(404).json({ error: "Havola topilmadi yoki eskirgan" });
+    res.json({
+      project: fb.project_label,
+      month: fb.period_month,
+      monthLabel: fbMonthLabel(fb.period_month),
+      filled: !!fb.filled_at,
+      rating: fb.rating,
+      note: fb.note,
+      labels: FB_LABELS,
+    });
+  } catch (e) {
+    serverError(res, e, "GET /api/fikr/:token");
+  }
+});
+
+app.post("/api/fikr/:token", async (req, res) => {
+  try {
+    const fb = await fbByToken(req.params.token);
+    if (!fb) return res.status(404).json({ error: "Havola topilmadi yoki eskirgan" });
+    if (fb.filled_at) return res.status(409).json({ error: "Bu fikr allaqachon yuborilgan" });
+    const rating = Number(req.body.rating);
+    if (!Number.isInteger(rating) || rating < 1 || rating > 4) {
+      return res.status(400).json({ error: "Bahoni tanlang" });
+    }
+    const note = String(req.body.note || "").trim().slice(0, 500) || null;
+    // `filled_at is null` sharti ikki marta yuborishni bazada to'xtatadi.
+    const upd = await db.query(
+      `update project_feedback set rating = $2, note = $3, filled_at = now()
+        where id = $1 and filled_at is null
+        returning id`,
+      [fb.id, rating, note],
+    );
+    if (!upd.rows[0]) return res.status(409).json({ error: "Bu fikr allaqachon yuborilgan" });
+    res.json({ ok: true });
+  } catch (e) {
+    serverError(res, e, "POST /api/fikr/:token");
   }
 });
 

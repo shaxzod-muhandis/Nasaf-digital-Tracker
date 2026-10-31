@@ -20,6 +20,10 @@
       "destination": "/api/index"
     },
     {
+      "source": "/fikr/(.*)",
+      "destination": "/api/index"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/index"
     }

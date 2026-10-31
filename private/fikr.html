@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Nasaf Digital — fikringiz</title>
+<style>
+  /* Mijoz bu sahifani oddiy brauzerda ochadi: Telegram ham, login ham
+     yo'q. Shuning uchun u o'zi yetarli bo'lishi kerak — bitta savol,
+     to'rtta tugma va yuborish. Hech qanday menyu, havola yoki chalg'ituvchi
+     narsa yo'q. */
+  :root {
+    --bg: #fbfbf8; --card: #ffffff; --ink: #0e1726; --muted: #5b6573;
+    --faint: #8a95a3; --line: #e4e7eb; --brand: #2f7ab9; --soft: #eef3f8;
+    --shadow: 0 1px 2px rgba(14,23,38,.05), 0 8px 28px rgba(14,23,38,.07);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11161d; --card: #1a2029; --ink: #e8edf3; --muted: #9fb0c4;
+      --faint: #6e7f93; --line: #2a333f; --brand: #5fa3dd; --soft: #212a35;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 28px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11161d; --card: #1a2029; --ink: #e8edf3; --muted: #9fb0c4;
+    --faint: #6e7f93; --line: #2a333f; --brand: #5fa3dd; --soft: #212a35;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 28px rgba(0,0,0,.35);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    min-height: 100dvh; display: flex; align-items: center; justify-content: center;
+    padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
+  }
+  .wrap { width: 100%; max-width: 520px; }
+  .brand {
+    display: flex; align-items: center; gap: 10px; justify-content: center;
+    margin-bottom: 18px; color: var(--faint); font-size: 13px; letter-spacing: 1.5px;
+    text-transform: uppercase; font-weight: 700;
+  }
+  .brand i { width: 8px; height: 8px; border-radius: 3px; background: var(--brand); }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 20px;
+    padding: 28px 22px; box-shadow: var(--shadow);
+  }
+  h1 { margin: 0 0 6px; font-size: 21px; line-height: 1.3; font-weight: 700; }
+  .sub { margin: 0 0 22px; color: var(--muted); font-size: 15px; }
+  .q { margin: 0 0 16px; font-size: 17px; font-weight: 600; line-height: 1.35; }
+  .faces { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .face {
+    appearance: none; border: 1.5px solid var(--line); background: var(--soft);
+    border-radius: 16px; padding: 16px 4px 11px; cursor: pointer; display: flex;
+    flex-direction: column; align-items: center; gap: 7px; transition: .15s;
+    font-family: inherit;
+  }
+  .face span.e { font-size: 34px; line-height: 1; }
+  .face span.t { font-size: 11.5px; color: var(--muted); font-weight: 600; text-align: center; }
+  .face:hover { border-color: var(--brand); }
+  .face.on { border-color: var(--brand); background: var(--card); box-shadow: 0 0 0 3px rgba(47,122,185,.18); }
+  .face.on span.t { color: var(--brand); }
+  textarea {
+    width: 100%; margin-top: 16px; min-height: 92px; resize: vertical;
+    border: 1.5px solid var(--line); border-radius: 14px; padding: 13px 14px;
+    background: var(--bg); color: var(--ink); font: inherit; font-size: 15px;
+  }
+  textarea:focus { outline: none; border-color: var(--brand); }
+  button.send {
+    width: 100%; margin-top: 16px; padding: 15px; border: 0; border-radius: 14px;
+    background: var(--brand); color: #fff; font: inherit; font-size: 16px;
+    font-weight: 700; cursor: pointer;
+  }
+  button.send:disabled { opacity: .45; cursor: default; }
+  .note { margin: 14px 0 0; color: var(--faint); font-size: 13px; text-align: center; line-height: 1.5; }
+  .state { text-align: center; padding: 22px 6px; }
+  .state .e { font-size: 54px; line-height: 1; }
+  .state h2 { margin: 14px 0 6px; font-size: 20px; }
+  .state p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
+  .err { color: #b45309; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><i></i>Nasaf Digital</div>
+  <div class="card" id="root">
+    <div class="state"><p>Yuklanmoqda…</p></div>
+  </div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var token = location.pathname.replace(/^\/+fikr\/+/, "").replace(/\/+$/, "");
+  var root = document.getElementById("root");
+  var tanlangan = null;
+  var EMOJI = ["", "😠", "🙁", "😐", "😊"];
+  var yuborilyapti = false;
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function holat(emoji, sarlavha, matn, xato) {
+    root.innerHTML =
+      '<div class="state"><div class="e">' + emoji + "</div>" +
+      '<h2' + (xato ? ' class="err"' : "") + ">" + esc(sarlavha) + "</h2>" +
+      "<p>" + esc(matn) + "</p></div>";
+  }
+
+  function forma(d) {
+    root.innerHTML =
+      "<h1>" + esc(d.project) + "</h1>" +
+      '<p class="sub">' + esc(d.monthLabel) + " oyi uchun fikringiz</p>" +
+      '<p class="q">Nasaf Digital xizmatidan qanchalik mamnun bo‘ldingiz?</p>' +
+      '<div class="faces" id="faces">' +
+      [1, 2, 3, 4].map(function (n) {
+        return '<button type="button" class="face" data-r="' + n + '">' +
+          '<span class="e">' + EMOJI[n] + "</span>" +
+          '<span class="t">' + esc(d.labels[n]) + "</span></button>";
+      }).join("") +
+      "</div>" +
+      '<textarea id="note" maxlength="500" placeholder="Izoh yozib qoldirishingiz mumkin (ixtiyoriy)"></textarea>' +
+      '<button type="button" class="send" id="send" disabled>Yuborish</button>' +
+      '<p class="note">Fikringizni faqat Nasaf Digital jamoasi ko‘radi. Bir marta yuboriladi.</p>';
+
+    var send = document.getElementById("send");
+    document.getElementById("faces").addEventListener("click", function (e) {
+      var b = e.target.closest(".face");
+      if (!b) return;
+      tanlangan = Number(b.dataset.r);
+      [].forEach.call(root.querySelectorAll(".face"), function (x) {
+        x.classList.toggle("on", x === b);
+      });
+      send.disabled = false;
+    });
+    send.addEventListener("click", function () {
+      if (!tanlangan || yuborilyapti) return;
+      yuborilyapti = true;
+      send.disabled = true;
+      send.textContent = "Yuborilmoqda…";
+      fetch("/api/fikr/" + encodeURIComponent(token), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating: tanlangan, note: document.getElementById("note").value }),
+      })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (x) {
+          if (!x.ok) throw new Error(x.j.error || "Yuborib bo‘lmadi");
+          holat(EMOJI[tanlangan], "Rahmat!", "Fikringiz qabul qilindi. Biz uni albatta inobatga olamiz.");
+        })
+        .catch(function (e) {
+          yuborilyapti = false;
+          send.disabled = false;
+          send.textContent = "Yuborish";
+          var p = root.querySelector(".note");
+          p.className = "note err";
+          p.textContent = e.message;
+        });
+    });
+  }
+
+  if (!token) {
+    holat("🔗", "Havola noto‘g‘ri", "Havolani to‘liq nusxalaganingizga ishonch hosil qiling.", true);
+    return;
+  }
+  fetch("/api/fikr/" + encodeURIComponent(token))
+    .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+    .then(function (x) {
+      if (!x.ok) throw new Error(x.j.error || "Havola topilmadi");
+      if (x.j.filled) {
+        holat(EMOJI[x.j.rating] || "✅", "Rahmat!",
+          x.j.monthLabel + " oyi uchun fikringiz allaqachon qabul qilingan.");
+        return;
+      }
+      forma(x.j);
+    })
+    .catch(function (e) {
+      holat("🔗", "Havola ishlamadi", e.message, true);
+    });
+})();
+</script>
+</body>
+</html>
