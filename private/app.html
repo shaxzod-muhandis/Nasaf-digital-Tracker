@@ -1691,6 +1691,24 @@
         margin-top: 12px; padding: 12px 13px; border-radius: 12px;
         background: var(--c2); font-size: 13px; line-height: 1.5; color: var(--t2);
       }
+      /* Telegram guruhlari */
+      .tgg { border: 1px solid var(--bd1); border-radius: 16px; padding: 14px; background: var(--c1); margin-bottom: 12px; }
+      .tgg.new { border-color: var(--brand); }
+      .tgg-top { display: flex; gap: 10px; align-items: center; }
+      .tgg-t { font-weight: 650; font-size: 14px; flex: 1; min-width: 0; }
+      .tgg-tag {
+        font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 8px;
+        background: var(--chip2); color: var(--brand); flex: none;
+      }
+      .tgg-tag.off { background: var(--c2); color: var(--t3); }
+      .tgg-s { font-size: 12px; color: var(--t3); margin-top: 3px; }
+      .tgg-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 11px; }
+      .tgg-row select { flex: 1 1 150px; min-width: 0; }
+      .tgg-top-list { margin-top: 11px; border-top: 1px solid var(--bd1); padding-top: 10px; }
+      .tgg-topic { display: flex; gap: 8px; align-items: center; margin-top: 7px; }
+      .tgg-topic span { font-size: 13px; flex: 1; min-width: 0; }
+      .tgg-topic select { flex: 0 0 160px; }
+
       /* Boshqaruv: umumiy manzara */
       .fb-bars { display: flex; flex-direction: column; gap: 9px; }
       .fb-bar-row { display: flex; align-items: center; gap: 10px; }
@@ -11781,6 +11799,9 @@
           </button>
           <button class="atab" id="atab-feedback" onclick="switchATab('feedback')">
             Mijoz fikri
+          </button>
+          <button class="atab" id="atab-tggroups" onclick="switchATab('tggroups')">
+            Guruhlar
           </button>
           <button
             class="atab"
@@ -22260,6 +22281,7 @@
         "worklog",
         "perms",
         "feedback",
+        "tggroups",
         "admins",
         "announcement",
         "nshop",
@@ -22269,13 +22291,14 @@
         // Fikr tabi har ochilganda yangilanadi: javoblar bu yerdan
         // emas, mijozlardan keladi — eski keshni ko'rsatish xato bo'lardi.
         if (tabName === "feedback") fbOverview = null;
+        if (tabName === "tggroups") tgGroups = null;
         ADMIN_TABS.forEach((t) => {
           const b = document.getElementById("atab-" + t);
           if (b) b.classList.toggle("active", t === tabName);
         });
         const noSearch =
           tabName === "announcement" || tabName === "worklog" ||
-          tabName === "nshop" || tabName === "feedback";
+          tabName === "nshop" || tabName === "feedback" || tabName === "tggroups";
         document.getElementById("admin-search-box").style.display = noSearch
           ? "none"
           : "flex";
@@ -22300,6 +22323,7 @@
         else if (adminActiveTab === "perms") renderAdminPermsTab(c);
         else if (adminActiveTab === "admins") renderAdminAdminsTab(c);
         else if (adminActiveTab === "feedback") renderFeedbackTab(c);
+        else if (adminActiveTab === "tggroups") renderTgGroupsTab(c);
         else if (adminActiveTab === "nshop") renderNShopAdminTab(c);
         else renderAnnouncementTab(c);
       }
@@ -23154,6 +23178,132 @@
       // ── Excel ────────────────────────────────────────────────────
       function tb2Export(btn) {
         return excelYuklash("tabel", `?month=${tb2Month}`, btn);
+      }
+
+      // ── BOSHQARUV · TELEGRAM GURUHLARI ───────────────────────────
+      // Bot guruhga qo'shilgach o'zi ro'yxatdan o'tadi, lekin "bu qaysi
+      // guruh" ekanini faqat odam ayta oladi. Shu yerda turi, loyihasi
+      // va `/task` mas'uli belgilanadi.
+      let tgGroups = null;
+      // Alohida ro'yxat: `allUsers` boshqa tablar bilan baham ko'riladi
+      // va ular uni o'z ehtiyojiga qarab filtrlab qo'yadi (masalan
+      // faqat `role === "employee"`). Mas'ul tanlashda esa to'liq
+      // ro'yxat kerak.
+      let tgUsers = null;
+      const TGG_KIND = { montaj: "Montaj", dizayn: "Dizayn", video: "Video hisobot" };
+
+      async function renderTgGroupsTab(c) {
+        if (tgGroups) return tgGroupsRender(c);
+        c.innerHTML = `<div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>`;
+        try {
+          // `/task` mas'uli Telegram xodimlaridan tanlanadi (dizayner
+          // `staff` jadvalida emas, `users`da). Xodimlar tabi hali
+          // ochilmagan bo'lsa ro'yxat bo'sh bo'ladi — shu yerda olamiz.
+          const [r, ru] = await Promise.all([apiFetch("/api/tg/groups"), apiFetch("/api/users")]);
+          if (!ru.ok) throw new Error("Xodimlar ro'yxatini yuklab bo'lmadi");
+          tgUsers = (await ru.json()).users || [];
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(d.error || "Yuklab bo'lmadi");
+          tgGroups = d.groups || [];
+        } catch (e) {
+          c.innerHTML = `<div class="empty"><div class="empty-t">Yuklab bo'lmadi</div>
+            <div class="empty-s">${escHtml(e.message)}</div></div>`;
+          return;
+        }
+        tgGroupsRender(c);
+      }
+
+      function tgProjOptions(tanlangan) {
+        return `<option value="">Loyiha tanlanmagan</option>` +
+          projects.map((p) => `<option value="${escHtml(p.id)}"${p.id === tanlangan ? " selected" : ""}>${escHtml(p.label)}</option>`).join("");
+      }
+
+      function tgGroupsRender(c) {
+        if (!tgGroups.length) {
+          c.innerHTML = `<div class="empty">
+            <div class="empty-t">Hali bironta guruh ko'rinmadi</div>
+            <div class="empty-s">Bot guruhga qo'shilgan va admin qilingan bo'lsa, o'sha guruhga bitta xabar yozing — guruh shu yerda o'zi paydo bo'ladi.</div></div>`;
+          return;
+        }
+        const xodimlar = (tgUsers || []).filter(
+          (x) => x.is_active && x.access_status !== "removed" && x.access_status !== "blocked",
+        );
+        const xodimNomi = (x) =>
+          [x.first_name, x.last_name].filter(Boolean).join(" ") || x.full_name || "@" + x.username;
+        c.innerHTML = tgGroups
+          .map((g) => {
+            const yangi = !g.kind;
+            return `<div class="tgg${yangi ? " new" : ""}">
+              <div class="tgg-top">
+                <div style="flex:1;min-width:0">
+                  <div class="tgg-t">${escHtml(g.title || "Nomsiz guruh")}</div>
+                  <div class="tgg-s">${g.msgCount} ta xabar${g.isForum ? " · mavzuli (forum)" : ""}${g.isActive ? "" : " · bot chiqarilgan"}</div>
+                </div>
+                <span class="tgg-tag${yangi ? " off" : ""}">${yangi ? "belgilanmagan" : TGG_KIND[g.kind]}</span>
+              </div>
+              <div class="tgg-row">
+                <select onchange="tgGroupSave('${escArg(g.chatId)}', this)" data-f="kind">
+                  <option value="">Turi tanlanmagan</option>
+                  ${Object.entries(TGG_KIND).map(([k, v]) => `<option value="${k}"${g.kind === k ? " selected" : ""}>${v}</option>`).join("")}
+                </select>
+                ${g.isForum ? "" : `<select onchange="tgGroupSave('${escArg(g.chatId)}', this)" data-f="project">${tgProjOptions(g.project)}</select>`}
+                ${g.kind === "dizayn" ? `<select onchange="tgGroupSave('${escArg(g.chatId)}', this)" data-f="assignee">
+                  <option value="">Mas'ul tanlanmagan</option>
+                  ${xodimlar.map((x) => `<option value="${escHtml(x.id)}"${x.id === g.assigneeId ? " selected" : ""}>${escHtml(xodimNomi(x))}${x.position ? " · " + escHtml(POSITION_LABELS[x.position] || x.position) : ""}</option>`).join("")}
+                </select>` : ""}
+              </div>
+              ${
+                g.isForum && g.topics.length
+                  ? `<div class="tgg-top-list">
+                      <div class="tgg-s">Mavzular — har birini loyihaga bog'lang</div>
+                      ${g.topics.map((t) => `<div class="tgg-topic">
+                        <span>${escHtml(t.title || "Mavzu #" + t.threadId)}</span>
+                        <select onchange="tgTopicSave('${escArg(g.chatId)}','${escArg(t.threadId)}', this)">${tgProjOptions(t.project)}</select>
+                      </div>`).join("")}
+                    </div>`
+                  : g.isForum
+                    ? `<div class="tgg-top-list"><div class="tgg-s">Mavzular hali ko'rinmadi — har mavzuga bitta xabar yozilsa paydo bo'ladi.</div></div>`
+                    : ""
+              }
+            </div>`;
+          })
+          .join("") +
+          `<div class="mk-hint" style="margin-top:14px">Dizayn guruhida <b>/task Banner kerak</b> deb yozsangiz yoki mijoz xabariga javob qilib <b>/task</b> yuborsangiz, vazifa Vazifalar bo'limida ochiladi. Sana qo'shsa ham bo'ladi: <b>/task 05.11 Banner kerak</b>.</div>`;
+      }
+
+      async function tgGroupSave(chatId, el) {
+        const karta = el.closest(".tgg");
+        const qiymat = (f) => karta.querySelector(`[data-f="${f}"]`)?.value || null;
+        el.disabled = true;
+        try {
+          const r = await apiFetch(`/api/tg/groups/${encodeURIComponent(chatId)}`, {
+            method: "PATCH",
+            body: JSON.stringify({ kind: qiymat("kind"), project: qiymat("project"), assigneeId: qiymat("assignee") }),
+          });
+          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
+          showToast("✅ Saqlandi");
+          tgGroups = null;
+          renderAdminActiveTab();
+        } catch (e) {
+          showToast("⚠ " + e.message);
+          el.disabled = false;
+        }
+      }
+
+      async function tgTopicSave(chatId, threadId, el) {
+        el.disabled = true;
+        try {
+          const r = await apiFetch(`/api/tg/topics/${encodeURIComponent(chatId)}/${encodeURIComponent(threadId)}`, {
+            method: "PATCH",
+            body: JSON.stringify({ project: el.value || null }),
+          });
+          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
+          showToast("✅ Saqlandi");
+        } catch (e) {
+          showToast("⚠ " + e.message);
+        } finally {
+          el.disabled = false;
+        }
       }
 
       // ── BOSHQARUV · MIJOZ FIKRI ──────────────────────────────────

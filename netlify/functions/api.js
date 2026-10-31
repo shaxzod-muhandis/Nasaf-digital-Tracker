@@ -3522,6 +3522,345 @@ app.get("/api/projects/:slug/cycles", auth, async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════
+// TELEGRAM GURUHLARI — botning "qulog'i"
+//
+// Shu paytgacha bot faqat xabar yuborardi. Endi Telegram har bir
+// guruh xabarini shu yerga yuboradi.
+//
+// IKKI QOIDA:
+//  1. Webhook HECH QACHON uzoq ish qilmaydi — faqat bazaga yozadi va
+//     darhol 200 qaytaradi. Telegram javobni kutmasa, o'sha xabarni
+//     qayta-qayta yuboraveradi. Tahlil (AI) kunlik cronda bo'ladi.
+//  2. Har qanday holatda ham 200 qaytariladi. Xato bo'lsa jurnalga
+//     yoziladi, lekin Telegram'ga "qayta yubor" deb aytilmaydi —
+//     aks holda bitta buzuq xabar cheksiz qaytaverardi.
+//
+// Guruh QO'LDA kiritilmaydi: birinchi xabarda o'zi ro'yxatdan o'tadi,
+// admin keyin Boshqaruvda turini belgilaydi.
+// ═══════════════════════════════════════════════════════════════════════
+const TG_API = (m) => `https://api.telegram.org/bot${process.env.BOT_TOKEN || ""}/${m}`;
+
+// Guruhga javob yozish. `sendMsg` shaxsiy xabar uchun va u har
+// yuborilganni `notification_log`ga yozadi — guruh javoblari uchun bu
+// ortiqcha shovqin, shuning uchun alohida.
+async function tgReply(chatId, text, { replyTo, threadId } = {}) {
+  try {
+    const body = { chat_id: chatId, text, parse_mode: "HTML" };
+    if (replyTo) body.reply_parameters = { message_id: replyTo, allow_sending_without_reply: true };
+    if (threadId) body.message_thread_id = threadId;
+    const r = await fetch(TG_API("sendMessage"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) console.error("tgReply xato:", r.status, JSON.stringify(await r.json().catch(() => ({}))));
+  } catch (e) {
+    console.error("tgReply fetch xato:", e.message);
+  }
+}
+
+function tgMsgKind(m) {
+  if (m.video) return "video";
+  if (m.video_note) return "video_note";
+  if (m.photo) return "photo";
+  if (m.document) return "document";
+  if (m.audio) return "audio";
+  if (m.voice) return "voice";
+  if (m.sticker) return "sticker";
+  if (m.text) return "text";
+  return "other";
+}
+
+async function tgUpsertGroup(chat) {
+  const r = await db.query(
+    `insert into tg_groups (chat_id, title, is_forum, last_seen_at)
+     values ($1, $2, $3, now())
+     on conflict (chat_id) do update
+       set title = excluded.title,
+           is_forum = excluded.is_forum,
+           last_seen_at = now(),
+           is_active = true
+     returning *`,
+    [chat.id, chat.title || null, !!chat.is_forum],
+  );
+  return r.rows[0];
+}
+
+// Telegram foydalanuvchisini bizning xodimga bog'laydi. Avval
+// `telegram_user_id` bo'yicha (ishonchli), topilmasa username bo'yicha
+// (xodim ilovani hali ochmagan bo'lsa ham ishlaydi).
+async function tgFindUser(from) {
+  if (!from) return null;
+  let r = await db.query(`select * from users where telegram_user_id = $1`, [String(from.id)]);
+  if (r.rows[0]) return r.rows[0];
+  if (from.username) {
+    r = await db.query(`select * from users where lower(username) = lower($1)`, [from.username]);
+    if (r.rows[0]) return r.rows[0];
+  }
+  return null;
+}
+
+async function tgLogMessage(m, user) {
+  await db.query(
+    `insert into tg_messages
+       (chat_id, message_id, thread_id, user_id, tg_user_id, tg_username, kind, body, reply_to, sent_at)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9, to_timestamp($10))
+     on conflict (chat_id, message_id) do nothing`,
+    [
+      m.chat.id, m.message_id, m.message_thread_id || null,
+      user ? user.id : null,
+      m.from ? String(m.from.id) : null,
+      m.from ? m.from.username || null : null,
+      tgMsgKind(m),
+      (m.text || m.caption || "").slice(0, 4000) || null,
+      m.reply_to_message ? m.reply_to_message.message_id : null,
+      m.date,
+    ],
+  );
+  // Forum mavzusi birinchi marta ko'rinsa — ro'yxatga olamiz, admin
+  // keyin uni loyihaga bog'laydi.
+  if (m.message_thread_id) {
+    await db.query(
+      `insert into tg_topics (chat_id, thread_id, title)
+       values ($1, $2, $3) on conflict (chat_id, thread_id) do nothing`,
+      [m.chat.id, m.message_thread_id, (m.reply_to_message && m.reply_to_message.forum_topic_created &&
+        m.reply_to_message.forum_topic_created.name) || null],
+    );
+  }
+}
+
+// ── /task ────────────────────────────────────────────────────────────
+// Dizayner guruhida: `/task Banner kerak` yoki mijoz xabariga javob
+// qilib `/task`. Ixtiyoriy sana: `/task 05.11 Banner kerak`.
+// Sanasiz vazifa "backlog"ka tushadi — noto'g'ri muddat qo'yishdan
+// ko'ra muddatsiz qo'ygan yaxshi.
+function tgParseDate(token) {
+  const m = /^(\d{1,2})\.(\d{1,2})(?:\.(\d{4}))?$/.exec(token || "");
+  if (!m) return null;
+  const bugun = todayTashkent();
+  const yil = m[3] ? Number(m[3]) : Number(bugun.slice(0, 4));
+  const oy = Number(m[2]), kun = Number(m[1]);
+  if (oy < 1 || oy > 12 || kun < 1 || kun > 31) return null;
+  const iso = `${yil}-${String(oy).padStart(2, "0")}-${String(kun).padStart(2, "0")}`;
+  // Yilsiz kiritilgan sana o'tib ketgan bo'lsa — keyingi yil nazarda
+  // tutilgan (dekabrda "05.01" deyilsa, yanvar).
+  if (!m[3] && iso < bugun) return `${yil + 1}-${String(oy).padStart(2, "0")}-${String(kun).padStart(2, "0")}`;
+  return iso;
+}
+
+async function tgHandleTask(m, group, user) {
+  const javob = (t) => tgReply(m.chat.id, t, { replyTo: m.message_id, threadId: m.message_thread_id });
+
+  if (!user || !user.is_active || user.access_status !== "active") {
+    return javob("Sizni xodimlar ro'yxatidan topa olmadim. Avval ilovani bir marta oching.");
+  }
+  if (group.kind !== "dizayn") {
+    return javob("Bu guruh dizayn guruhi sifatida belgilanmagan. Boshqaruv › Guruhlar bo'limidan belgilang.");
+  }
+
+  const xom = (m.text || m.caption || "").replace(/^\/task(@\S+)?\s*/i, "").trim();
+  const bolaklar = xom.split(/\s+/);
+  const sana = tgParseDate(bolaklar[0]);
+  const sarlavha = (sana ? bolaklar.slice(1).join(" ") : xom).trim();
+
+  // Javob bo'lsa, asl xabar izohga tushadi — mijozning gapi
+  // yo'qolmasin.
+  const manba = m.reply_to_message;
+  const izoh = manba ? (manba.text || manba.caption || "").slice(0, 2000) || null : null;
+  const yakuniySarlavha = sarlavha || (izoh ? izoh.split("\n")[0].slice(0, 120) : "");
+  if (!yakuniySarlavha) {
+    return javob("Vazifa matnini yozing: <code>/task Banner kerak</code>\nYoki mijoz xabariga javob qilib <code>/task</code> yuboring.");
+  }
+
+  let masul = group.assignee_id;
+  if (!masul) {
+    const d = await db.query(
+      `select id from users where position = 'dizayner' and is_active and access_status = 'active'`,
+    );
+    if (d.rows.length === 1) masul = d.rows[0].id;
+  }
+  if (!masul) {
+    return javob("Vazifa kimga biriktirilishi belgilanmagan. Boshqaruv › Guruhlar bo'limida mas'ulni tanlang.");
+  }
+
+  try {
+    const ins = await db.query(
+      `insert into tasks (project_id, title, description, due_date, created_by, status, priority, tg_chat_id, tg_message_id)
+       values ($1,$2,$3,$4,$5,$6,'no_priority',$7,$8)
+       -- Indeks QISMAN (null'lar kirmaydi), shuning uchun shart shu
+       -- yerda ham takrorlanishi kerak — aks holda Postgres indeksni
+       -- topa olmaydi va "no unique constraint" xatosini beradi.
+       on conflict (tg_chat_id, tg_message_id)
+         where tg_chat_id is not null and tg_message_id is not null
+         do nothing
+       returning id`,
+      [group.project_id || null, yakuniySarlavha.slice(0, 200), izoh, sana,
+       user.id, sana ? "todo" : "backlog", m.chat.id, m.message_id],
+    );
+    if (!ins.rows[0]) return javob("Bu xabardan vazifa allaqachon ochilgan.");
+    const taskId = ins.rows[0].id;
+    await setTaskAssignees(db, taskId, [masul]);
+    await logTaskActivity(taskId, user.id, "created");
+
+    const r = await db.query(`${TASK_ROW_SQL} where t.id = $1`, [taskId]);
+    const [task] = await attachTags([shapeTaskRow(r.rows[0])]);
+    // Mas'ulga shaxsiy xabar — ilovadagi oddiy vazifa bilan bir xil.
+    notifyTaskAssigned(db, { assigneeUserId: masul, task, actorUsername: user.username })
+      .catch((e) => console.error("tgHandleTask notify:", e.message));
+
+    const kim = task.assignees && task.assignees[0] ? task.assignees[0].name : "mas'ul";
+    await javob(
+      `✅ Vazifa ochildi — <b>${escHtmlTg(yakuniySarlavha.slice(0, 120))}</b>\n` +
+        `Mas'ul: ${escHtmlTg(kim)}\n` +
+        (sana ? `Muddat: ${sana}\n` : "Muddat qo'yilmagan (backlog)\n") +
+        `Ilovada: Vazifalar bo'limi`,
+    );
+  } catch (e) {
+    console.error("tgHandleTask xato:", e.message);
+    await javob("Vazifa ochilmadi — xatolik yuz berdi.");
+  }
+}
+
+function escHtmlTg(t) {
+  return String(t == null ? "" : t).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+}
+
+// ── Guruhlarni sozlash (Boshqaruv) ──────────────────────────────────
+// Bot guruhni o'zi topadi, lekin "bu qaysi guruh" ekanini faqat odam
+// ayta oladi. Shu yerda turi, loyihasi va `/task` mas'uli belgilanadi.
+app.get("/api/tg/groups", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const g = await db.query(
+      `select g.*, p.slug as project_slug, p.label as project_label,
+              coalesce(nullif(trim(concat(u.first_name, ' ', u.last_name)), ''), u.full_name, u.username) as assignee_name,
+              (select count(*) from tg_messages m where m.chat_id = g.chat_id)::int as msg_count
+         from tg_groups g
+         left join projects p on p.id = g.project_id
+         left join users u on u.id = g.assignee_id
+        order by g.kind nulls first, g.title`,
+    );
+    const t = await db.query(
+      `select t.*, p.slug as project_slug, p.label as project_label
+         from tg_topics t left join projects p on p.id = t.project_id
+        order by t.seen_at desc`,
+    );
+    res.json({
+      groups: g.rows.map((x) => ({
+        chatId: String(x.chat_id),
+        title: x.title,
+        kind: x.kind,
+        isForum: x.is_forum,
+        isActive: x.is_active,
+        project: x.project_slug,
+        projectLabel: x.project_label,
+        assigneeId: x.assignee_id,
+        assigneeName: x.assignee_name,
+        msgCount: x.msg_count,
+        lastSeenAt: x.last_seen_at,
+        topics: t.rows
+          .filter((y) => String(y.chat_id) === String(x.chat_id))
+          .map((y) => ({
+            threadId: String(y.thread_id),
+            title: y.title,
+            project: y.project_slug,
+            projectLabel: y.project_label,
+          })),
+      })),
+    });
+  } catch (e) {
+    serverError(res, e, "GET /api/tg/groups", req);
+  }
+});
+
+app.patch("/api/tg/groups/:chatId", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const kind = req.body.kind || null;
+    if (kind && !["montaj", "dizayn", "video"].includes(kind)) {
+      return res.status(400).json({ error: "Noto'g'ri guruh turi" });
+    }
+    let projectId = null;
+    if (req.body.project) {
+      const p = await db.query(`select id from projects where slug = $1`, [req.body.project]);
+      if (!p.rows[0]) return res.status(404).json({ error: "Loyiha topilmadi" });
+      projectId = p.rows[0].id;
+    }
+    const r = await db.query(
+      `update tg_groups set kind = $2, project_id = $3, assignee_id = $4
+        where chat_id = $1 returning chat_id`,
+      [req.params.chatId, kind, projectId, req.body.assigneeId || null],
+    );
+    if (!r.rows[0]) return res.status(404).json({ error: "Guruh topilmadi" });
+    res.json({ ok: true });
+  } catch (e) {
+    serverError(res, e, "PATCH /api/tg/groups/:chatId", req);
+  }
+});
+
+app.patch("/api/tg/topics/:chatId/:threadId", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    let projectId = null;
+    if (req.body.project) {
+      const p = await db.query(`select id from projects where slug = $1`, [req.body.project]);
+      if (!p.rows[0]) return res.status(404).json({ error: "Loyiha topilmadi" });
+      projectId = p.rows[0].id;
+    }
+    const r = await db.query(
+      `update tg_topics set project_id = $3 where chat_id = $1 and thread_id = $2 returning chat_id`,
+      [req.params.chatId, req.params.threadId, projectId],
+    );
+    if (!r.rows[0]) return res.status(404).json({ error: "Mavzu topilmadi" });
+    res.json({ ok: true });
+  } catch (e) {
+    serverError(res, e, "PATCH /api/tg/topics", req);
+  }
+});
+
+app.post("/api/tg/webhook", async (req, res) => {
+  // Telegram maxfiy sarlavhani har so'rovda qaytaradi — busiz endpoint
+  // ochiq qolardi va istalgan kishi soxta xabar yuborishi mumkin edi.
+  const kutilgan = process.env.TG_WEBHOOK_SECRET || "";
+  if (!kutilgan || req.headers["x-telegram-bot-api-secret-token"] !== kutilgan) {
+    return res.sendStatus(403);
+  }
+  // Javobni DARHOL qaytaramiz (yuqoridagi 1-qoida).
+  res.sendStatus(200);
+
+  try {
+    const u = req.body || {};
+    // Bot guruhga qo'shilgan/chiqarilgan.
+    if (u.my_chat_member) {
+      const c = u.my_chat_member.chat;
+      if (c && (c.type === "group" || c.type === "supergroup")) {
+        const holat = u.my_chat_member.new_chat_member || {};
+        if (["left", "kicked"].includes(holat.status)) {
+          await db.query(`update tg_groups set is_active = false where chat_id = $1`, [c.id]);
+        } else {
+          await tgUpsertGroup(c);
+        }
+      }
+      return;
+    }
+
+    const m = u.message || u.channel_post;
+    if (!m || !m.chat) return;
+    if (m.chat.type !== "group" && m.chat.type !== "supergroup") return;
+
+    const group = await tgUpsertGroup(m.chat);
+    const user = await tgFindUser(m.from);
+    await tgLogMessage(m, user);
+
+    const matn = m.text || m.caption || "";
+    if (/^\/task(@\S+)?(\s|$)/i.test(matn)) await tgHandleTask(m, group, user);
+  } catch (e) {
+    // 200 allaqachon ketgan — bu yerda faqat jurnalga yozamiz.
+    console.error("tg webhook xato:", e.message);
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
 // FAYL YUKLAB OLISH — qisqa muddatli imzolangan havola
 //
 // Telegram'ning ichki oynasi `blob:` orqali fayl saqlashni bloklaydi:

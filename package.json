@@ -13,7 +13,8 @@
     "test:profile": "node test/profile-and-tasks.js",
     "test:ncoin": "node test/ncoin.js",
     "db:migrate:test": "node scripts/migrate.js --test",
-    "test:all": "npm test && npm run test:staff && npm run test:profile && npm run test:ncoin"
+    "test:all": "npm test && npm run test:staff && npm run test:profile && npm run test:ncoin",
+    "tg:webhook": "node scripts/tg-webhook.js"
   },
   "dependencies": {
     "@vercel/blob": "^2.8.0",
