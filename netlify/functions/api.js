@@ -3543,11 +3543,12 @@ const TG_API = (m) => `https://api.telegram.org/bot${process.env.BOT_TOKEN || ""
 // Guruhga javob yozish. `sendMsg` shaxsiy xabar uchun va u har
 // yuborilganni `notification_log`ga yozadi — guruh javoblari uchun bu
 // ortiqcha shovqin, shuning uchun alohida.
-async function tgReply(chatId, text, { replyTo, threadId } = {}) {
+async function tgReply(chatId, text, { replyTo, threadId, replyMarkup } = {}) {
   try {
     const body = { chat_id: chatId, text, parse_mode: "HTML" };
     if (replyTo) body.reply_parameters = { message_id: replyTo, allow_sending_without_reply: true };
     if (threadId) body.message_thread_id = threadId;
+    if (replyMarkup) body.reply_markup = replyMarkup;
     const r = await fetch(TG_API("sendMessage"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -3557,6 +3558,24 @@ async function tgReply(chatId, text, { replyTo, threadId } = {}) {
   } catch (e) {
     console.error("tgReply fetch xato:", e.message);
   }
+}
+
+// Botning o'z useri — guruhda "meni belgilashdi"ni aniqlash va
+// shaxsiy chatga havola qurish uchun. Bir marta so'raladi: nusxa
+// issiq turganda qayta chaqiruv shart emas, sovuq startda esa
+// bitta qo'shimcha so'rov hech narsani sekinlashtirmaydi.
+let _botUsername = null;
+async function tgBotUsername() {
+  if (_botUsername !== null) return _botUsername;
+  try {
+    const r = await fetch(TG_API("getMe"));
+    const j = await r.json();
+    _botUsername = (j.result && j.result.username) || "";
+  } catch (e) {
+    console.error("getMe xato:", e.message);
+    _botUsername = "";
+  }
+  return _botUsername;
 }
 
 // Tugma bosilganda Telegram javob kutadi — busiz tugma ustida
@@ -3955,6 +3974,43 @@ async function tgEkran(kod, user) {
   };
 }
 
+// Guruhda bot belgilanganda chiqadigan karta. Ma'lumotning O'ZI
+// bu yerda ko'rsatilmaydi — faqat nima qilish mumkinligi va
+// tugmalar. Natija har doim shaxsiy keladi (pastdagi
+// tgHandleCallback'ga qarang), chunki guruhda mijozlar o'tiradi.
+async function tgHandleEslatma(m, group, user) {
+  // Begona odam (mijoz, mehmon) botni belgilasa — jim turamiz.
+  // Ichki yo'riqnomani ularga ko'rsatishning ma'nosi yo'q.
+  if (!user || !user.is_active || user.access_status !== "active") return;
+
+  const bot = await tgBotUsername();
+  const satrlar = [
+    "<b>Nasaf Digital bot</b>",
+    "",
+    "Shu guruhda:",
+    group.kind === "dizayn"
+      ? "• <code>/task Banner kerak</code> — yangi vazifa ochish\n   (mijoz xabariga javob qilib <code>/task</code> ham bo'ladi)"
+      : "• <code>/task</code> — bu guruh <b>dizayn</b> guruhi sifatida belgilanmagan, shuning uchun hozir ishlamaydi",
+    "• <code>/vazifalar</code> — ochiq ishlar ro'yxati",
+    "",
+    "<i>Ro'yxatlar guruhga emas, sizga shaxsiy keladi.</i>",
+  ];
+  const tugmalar = [
+    [
+      { text: "📋 Vazifalarim", callback_data: "v" },
+      { text: "📊 Loyihalar", callback_data: "p" },
+    ],
+  ];
+  // Mini App tugmasi guruhda ishlamaydi — o'rniga shaxsiy chatga havola.
+  if (bot) tugmalar.push([{ text: "📱 To'liq menyu", url: `https://t.me/${bot}?start=menu` }]);
+
+  await tgReply(m.chat.id, satrlar.join("\n"), {
+    replyTo: m.message_id,
+    threadId: m.message_thread_id,
+    replyMarkup: { inline_keyboard: tugmalar },
+  });
+}
+
 async function tgHandleCallback(cq) {
   const user = await tgFindUser(cq.from);
   if (!user || !user.is_active || user.access_status !== "active") {
@@ -3963,11 +4019,30 @@ async function tgHandleCallback(cq) {
   // Avval javob — aks holda tugma aylanaveradi.
   await tgAnswerCallback(cq.id);
   if (!cq.message || !cq.message.chat) return;
+  const chat = cq.message.chat;
   // Huquq har bosishda qayta tekshiriladi: callback_data foydalanuvchi
   // tomonidan o'zgartirilishi mumkin, eski xabardagi tugma esa rol
   // olib qo'yilgandan keyin ham bosilishi mumkin.
   const ekran = await tgEkran(String(cq.data || "m"), user);
-  await tgEditMessage(cq.message.chat.id, cq.message.message_id, ekran.text, ekran.markup);
+
+  // GURUHDA tugma bosilsa, xabarni joyida almashtirsak — kimda
+  // qancha ish borligi va qaysi loyiha qarzdaligi butun guruhga,
+  // shu jumladan mijozlarga ko'rinib qolardi. Shuning uchun guruhda
+  // natija FAQAT shaxsiy yuboriladi, guruhdagi karta o'zgarmaydi.
+  if (chat.type === "group" || chat.type === "supergroup") {
+    const yuborildi = user.telegram_chat_id
+      ? await sendMsg(db, user.telegram_chat_id, ekran.text, { replyMarkup: ekran.markup })
+      : { ok: false };
+    if (!yuborildi.ok) {
+      await tgReply(chat.id, "Shaxsiy xabar yubora olmadim — avval botga shaxsiy <code>/start</code> yozing.", {
+        replyTo: cq.message.message_id,
+        threadId: cq.message.message_thread_id,
+      });
+    }
+    return;
+  }
+
+  await tgEditMessage(chat.id, cq.message.message_id, ekran.text, ekran.markup);
 }
 
 async function tgHandleShaxsiy(m) {
@@ -4198,6 +4273,16 @@ async function tgWebhookIshla(u) {
   // yoki satr oxiri kutiladi), shuning uchun tartib muhim emas.
   if (/^\/task(@\S+)?(\s|$)/i.test(matn)) await tgHandleTask(m, group, user);
   else if (/^\/(vazifalar|tasks)(@\S+)?(\s|$)/i.test(matn)) await tgHandleVazifalar(m, group, user);
+  else if (matn && (await tgEslatmaBormi(matn))) await tgHandleEslatma(m, group, user);
+}
+
+// Xabarda bot belgilanganmi. Buyruqlar yuqorida ushlangani uchun bu
+// yerga faqat oddiy xabarlar tushadi — ya'ni `/task@bot` ikki marta
+// javob bermaydi.
+async function tgEslatmaBormi(matn) {
+  const bot = await tgBotUsername();
+  if (!bot) return false;
+  return matn.toLowerCase().includes("@" + bot.toLowerCase());
 }
 
 // ═══════════════════════════════════════════════════════════════════════
