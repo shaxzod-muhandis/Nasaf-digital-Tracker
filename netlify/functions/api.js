@@ -3825,40 +3825,54 @@ app.post("/api/tg/webhook", async (req, res) => {
   if (!kutilgan || req.headers["x-telegram-bot-api-secret-token"] !== kutilgan) {
     return res.sendStatus(403);
   }
-  // Javobni DARHOL qaytaramiz (yuqoridagi 1-qoida).
-  res.sendStatus(200);
-
+  // Ish JAVOBDAN OLDIN bajariladi.
+  //
+  // Avval teskari edi: "Telegramni kuttirmaslik" uchun 200 darhol
+  // qaytarilib, bazaga yozish keyin kelardi. Oddiy, doim ishlab turgan
+  // serverda bu to'g'ri. Serverless'da esa YO'Q: javob ketishi bilan
+  // platforma funksiya nusxasini muzlatadi, yarim yo'lda qolgan baza
+  // ulanishi esa keyingi chaqiruvda "Connection terminated due to
+  // connection timeout" bilan uziladi. Natijada Telegram 200 oladi,
+  // navbat bo'shaydi, xabar esa HECH QAYERGA yozilmaydi — guruhlar
+  // ro'yxatdan o'tmaydi va hech qanday xato ham ko'rinmaydi.
   try {
-    const u = req.body || {};
-    // Bot guruhga qo'shilgan/chiqarilgan.
-    if (u.my_chat_member) {
-      const c = u.my_chat_member.chat;
-      if (c && (c.type === "group" || c.type === "supergroup")) {
-        const holat = u.my_chat_member.new_chat_member || {};
-        if (["left", "kicked"].includes(holat.status)) {
-          await db.query(`update tg_groups set is_active = false where chat_id = $1`, [c.id]);
-        } else {
-          await tgUpsertGroup(c);
-        }
-      }
-      return;
-    }
-
-    const m = u.message || u.channel_post;
-    if (!m || !m.chat) return;
-    if (m.chat.type !== "group" && m.chat.type !== "supergroup") return;
-
-    const group = await tgUpsertGroup(m.chat);
-    const user = await tgFindUser(m.from);
-    await tgLogMessage(m, user);
-
-    const matn = m.text || m.caption || "";
-    if (/^\/task(@\S+)?(\s|$)/i.test(matn)) await tgHandleTask(m, group, user);
+    await tgWebhookIshla(req.body || {});
   } catch (e) {
-    // 200 allaqachon ketgan — bu yerda faqat jurnalga yozamiz.
     console.error("tg webhook xato:", e.message);
   }
+  // Xatolikda ham 200: aks holda Telegram shu bitta yangilanishni
+  // qayta-qayta yuboraverib, butun navbatni to'sib qo'yadi.
+  res.sendStatus(200);
 });
+
+// Webhook mantig'i alohida funksiyada — ichkarida erta `return`'lar bor
+// va ular javobni yuborishga xalal bermasligi kerak.
+async function tgWebhookIshla(u) {
+  // Bot guruhga qo'shilgan/chiqarilgan.
+  if (u.my_chat_member) {
+    const c = u.my_chat_member.chat;
+    if (c && (c.type === "group" || c.type === "supergroup")) {
+      const holat = u.my_chat_member.new_chat_member || {};
+      if (["left", "kicked"].includes(holat.status)) {
+        await db.query(`update tg_groups set is_active = false where chat_id = $1`, [c.id]);
+      } else {
+        await tgUpsertGroup(c);
+      }
+    }
+    return;
+  }
+
+  const m = u.message || u.channel_post;
+  if (!m || !m.chat) return;
+  if (m.chat.type !== "group" && m.chat.type !== "supergroup") return;
+
+  const group = await tgUpsertGroup(m.chat);
+  const user = await tgFindUser(m.from);
+  await tgLogMessage(m, user);
+
+  const matn = m.text || m.caption || "";
+  if (/^\/task(@\S+)?(\s|$)/i.test(matn)) await tgHandleTask(m, group, user);
+}
 
 // ═══════════════════════════════════════════════════════════════════════
 // FAYL YUKLAB OLISH — qisqa muddatli imzolangan havola
