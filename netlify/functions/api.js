@@ -3559,6 +3559,43 @@ async function tgReply(chatId, text, { replyTo, threadId } = {}) {
   }
 }
 
+// Tugma bosilganda Telegram javob kutadi — busiz tugma ustida
+// aylanuvchi belgi qolib ketadi.
+async function tgAnswerCallback(callbackQueryId, text) {
+  try {
+    const body = { callback_query_id: callbackQueryId };
+    if (text) { body.text = text; body.show_alert = false; }
+    await fetch(TG_API("answerCallbackQuery"), {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+    });
+  } catch (e) {
+    console.error("tgAnswerCallback xato:", e.message);
+  }
+}
+
+// Menyu YANGI xabar yubormaydi, mavjudini almashtiradi — BotFather
+// qanday ishlasa, shunday. Aks holda har bosishda chat yangi
+// xabarlar bilan to'lib ketardi.
+async function tgEditMessage(chatId, messageId, text, replyMarkup) {
+  try {
+    const r = await fetch(TG_API("editMessageText"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, message_id: messageId, text, parse_mode: "HTML", reply_markup: replyMarkup }),
+    });
+    if (!r.ok) {
+      const b = await r.json().catch(() => ({}));
+      // "message is not modified" — bir xil ekranni qayta bosish;
+      // bu xato emas, e'tiborsiz qoldiriladi.
+      if (!String(b.description || "").includes("not modified")) {
+        console.error("tgEditMessage xato:", r.status, JSON.stringify(b));
+      }
+    }
+  } catch (e) {
+    console.error("tgEditMessage fetch xato:", e.message);
+  }
+}
+
 function tgMsgKind(m) {
   if (m.video) return "video";
   if (m.video_note) return "video_note";
@@ -3725,6 +3762,276 @@ function escHtmlTg(t) {
   return String(t == null ? "" : t).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
 }
 
+// ── /vazifalar ───────────────────────────────────────────────────────
+// "Kimda qanday ish bor" degan savolga javob.
+//
+//   /vazifalar          — o'zingizniki
+//   /vazifalar @ali     — bitta xodimniki (faqat admin)
+//   /vazifalar hamma    — hammasi, odamlar bo'yicha (faqat admin)
+//
+// Ro'yxat GURUHGA EMAS, so'ragan odamga SHAXSIY yuboriladi. Sabab:
+// dizayn guruhida mijozlar ham o'tiradi — `/task` oqimi aynan mijoz
+// xabariga javob berish uchun qurilgan — ichki ish taqsimoti esa
+// ularga ko'rinmasligi kerak. Guruhda faqat "yubordim" degan bir
+// qator qoladi, ya'ni guruh ham ifloslanmaydi.
+const TG_OCHIQ_HOLATLAR = ["backlog", "todo", "in_progress", "review"];
+const TG_HOLAT_NOMI = {
+  backlog: "rejada",
+  todo: "boshlanmagan",
+  in_progress: "jarayonda",
+  review: "tekshiruvda",
+};
+
+// userIds = null bo'lsa — hamma xodim.
+async function tgVazifalarniOl(userIds) {
+  const r = await db.query(
+    `select ta.user_id,
+            coalesce(nullif(trim(concat(u.first_name,' ',u.last_name)), ''), u.full_name, u.username) as kim,
+            t.title, t.status, t.due_date,
+            p.label as project_label
+       from task_assignees ta
+       join tasks t on t.id = ta.task_id
+       join users u on u.id = ta.user_id
+       left join projects p on p.id = t.project_id
+      where t.status = any($1::text[])
+        and u.is_active
+        and ($2::uuid[] is null or ta.user_id = any($2::uuid[]))
+      order by kim, (t.due_date is null), t.due_date, t.title`,
+    [TG_OCHIQ_HOLATLAR, userIds],
+  );
+  return r.rows;
+}
+
+// Telegram xabari 4096 belgidan oshmasligi kerak, shuning uchun har
+// odamga ko'pi bilan 12 ta ish va umumiy uzunlikka ham chegara.
+const TG_MAX_ISH = 12;
+const TG_MAX_BELGI = 3600;
+
+function tgVazifalarMatn(rows, bugun) {
+  if (!rows.length) return null;
+  const odamlar = new Map();
+  for (const r of rows) {
+    const k = String(r.user_id);
+    if (!odamlar.has(k)) odamlar.set(k, { kim: r.kim, ishlar: [] });
+    odamlar.get(k).ishlar.push(r);
+  }
+  const bloklar = [];
+  let uzunlik = 0;
+  let kesildi = 0;
+  for (const o of odamlar.values()) {
+    const kech = o.ishlar.filter((t) => t.due_date && t.due_date < bugun).length;
+    const qatorlar = o.ishlar.slice(0, TG_MAX_ISH).map((t) => {
+      const muddat = t.due_date
+        ? (t.due_date < bugun ? `⚠ ${t.due_date}` : t.due_date)
+        : "muddatsiz";
+      const loyiha = t.project_label ? ` · ${escHtmlTg(t.project_label)}` : "";
+      return `• ${escHtmlTg(t.title)}\n   ${muddat} · ${TG_HOLAT_NOMI[t.status] || t.status}${loyiha}`;
+    });
+    const qoldi = o.ishlar.length - qatorlar.length;
+    const blok =
+      `<b>${escHtmlTg(o.kim)}</b> — ${o.ishlar.length} ta ochiq ish` +
+      (kech ? `, shundan <b>${kech} ta muddati o'tgan</b>` : "") + "\n" +
+      qatorlar.join("\n") +
+      (qoldi > 0 ? `\n   …va yana ${qoldi} ta` : "");
+    if (uzunlik + blok.length > TG_MAX_BELGI) { kesildi++; continue; }
+    uzunlik += blok.length + 2;
+    bloklar.push(blok);
+  }
+  return bloklar.join("\n\n") + (kesildi ? `\n\n…va yana ${kesildi} ta xodim — to'liq ro'yxat ilovada.` : "");
+}
+
+// ── MENYU (shaxsiy chat) ─────────────────────────────────────────────
+// Inline tugmalar faqat SHAXSIY chatda ko'rsatiladi: guruhda ichki
+// ma'lumot (kimda qancha ish bor, qaysi loyiha qarzda) mijozlarga
+// ko'rinib qolardi, ustiga har bosish guruhni ifloslantirardi.
+//
+// callback_data 64 baytdan oshmasligi kerak, shuning uchun kodlar
+// qisqa: m=menyu, v=mening ishlarim, x=xodimlar, x:<uuid>=bitta
+// xodim, p=loyihalar.
+async function tgLoyihalarMatn(user) {
+  const r = isAdminRole(user.role)
+    ? await db.query(`select * from projects where is_active = true and has_plan order by created_at`)
+    : await db.query(
+        `select pr.* from projects pr
+           join permissions p on p.project_id = pr.id
+          where pr.is_active = true and pr.has_plan and p.user_id = $1
+          order by pr.created_at`,
+        [user.id],
+      );
+  if (!r.rows.length) return "Sizga biriktirilgan, kontent rejasi bor loyiha yo'q.";
+  const bugun = todayTashkent();
+  const bloklar = [];
+  for (const project of r.rows) {
+    const sm = await getProjectCycleSummary(db, project);
+    const jami = sm.cycle.posts_target + sm.cycle.stories_target;
+    const foiz = jami ? Math.round(((sm.doneK + sm.doneS) / jami) * 100) : 0;
+    const kunlar = dayDiff(bugun, sm.cycle.period_end);
+    const belgi = sm.outstandingDebt ? "🔴" : foiz >= 100 ? "🟢" : "🟡";
+    let blok =
+      `${belgi} <b>${escHtmlTg(project.label)}</b> — ${foiz}%\n` +
+      `   Post ${sm.doneK}/${sm.cycle.posts_target} · Stories ${sm.doneS}/${sm.cycle.stories_target} · ` +
+      (kunlar >= 0 ? `${kunlar} kun qoldi` : `muddat ${-kunlar} kun oldin tugagan`);
+    if (sm.outstandingDebt) {
+      const d = sm.outstandingDebt;
+      const qp = d.totalPosts != null ? d.totalPosts : d.remainingPosts;
+      const qs = d.totalStories != null ? d.totalStories : d.remainingStories;
+      blok += `\n   ⚠ Qarz: ${qp} post, ${qs} stories`;
+    }
+    bloklar.push(blok);
+  }
+  return bloklar.join("\n\n");
+}
+
+// Ochiq ishi bor xodimlar va ularning soni — menyudagi tugmalar uchun.
+async function tgXodimlarSoni() {
+  const r = await db.query(
+    `select ta.user_id,
+            coalesce(nullif(trim(concat(u.first_name,' ',u.last_name)), ''), u.full_name, u.username) as kim,
+            count(*)::int as n
+       from task_assignees ta
+       join tasks t on t.id = ta.task_id
+       join users u on u.id = ta.user_id
+      where t.status = any($1::text[]) and u.is_active
+      group by ta.user_id, kim
+      order by n desc, kim`,
+    [TG_OCHIQ_HOLATLAR],
+  );
+  return r.rows;
+}
+
+const TG_ORQAGA = (kod) => ({ text: "« Orqaga", callback_data: kod });
+
+async function tgEkran(kod, user) {
+  const admin = isAdminRole(user.role);
+  const bugun = todayTashkent();
+
+  if (kod === "v") {
+    const rows = await tgVazifalarniOl([user.id]);
+    return {
+      text: "<b>📋 Mening vazifalarim</b>\n\n" + (tgVazifalarMatn(rows, bugun) || "Ochiq ish yo'q."),
+      markup: { inline_keyboard: [[TG_ORQAGA("m")]] },
+    };
+  }
+
+  if (kod === "x" && admin) {
+    const odamlar = await tgXodimlarSoni();
+    const tugmalar = odamlar.slice(0, 20).map((o) => [
+      { text: `${o.kim} — ${o.n} ta`, callback_data: `x:${o.user_id}` },
+    ]);
+    tugmalar.push([TG_ORQAGA("m")]);
+    return {
+      text: odamlar.length
+        ? "<b>👥 Xodimlar vazifalari</b>\n\nKimni ko'ramiz?"
+        : "<b>👥 Xodimlar vazifalari</b>\n\nHech kimda ochiq ish yo'q.",
+      markup: { inline_keyboard: tugmalar },
+    };
+  }
+
+  if (kod.startsWith("x:") && admin) {
+    const rows = await tgVazifalarniOl([kod.slice(2)]);
+    const kim = rows[0] ? rows[0].kim : "Xodim";
+    return {
+      text: `<b>${escHtmlTg(kim)}</b>\n\n` + (tgVazifalarMatn(rows, bugun) || "Ochiq ish yo'q."),
+      markup: { inline_keyboard: [[TG_ORQAGA("x")], [{ text: "« Bosh menyu", callback_data: "m" }]] },
+    };
+  }
+
+  if (kod === "p") {
+    return {
+      text: "<b>📊 Loyihalar holati</b>\n\n" + (await tgLoyihalarMatn(user)),
+      markup: { inline_keyboard: [[TG_ORQAGA("m")]] },
+    };
+  }
+
+  // Asosiy menyu (noma'lum kod ham shu yerga tushadi).
+  const k = [[{ text: "📋 Mening vazifalarim", callback_data: "v" }]];
+  if (admin) k.push([{ text: "👥 Xodimlar vazifalari", callback_data: "x" }]);
+  k.push([{ text: "📊 Loyihalar holati", callback_data: "p" }]);
+  k.push([appOpenButton().inline_keyboard[0][0]]);
+  const ism = (user.first_name || user.full_name || user.username || "").trim();
+  return {
+    text: `<b>Nasaf Digital — menyu</b>\n\n${ism ? escHtmlTg(ism) + ", s" : "S"}alom! Kerakli bo'limni tanlang.`,
+    markup: { inline_keyboard: k },
+  };
+}
+
+async function tgHandleCallback(cq) {
+  const user = await tgFindUser(cq.from);
+  if (!user || !user.is_active || user.access_status !== "active") {
+    return tgAnswerCallback(cq.id, "Sizni xodimlar ro'yxatidan topa olmadim.");
+  }
+  // Avval javob — aks holda tugma aylanaveradi.
+  await tgAnswerCallback(cq.id);
+  if (!cq.message || !cq.message.chat) return;
+  // Huquq har bosishda qayta tekshiriladi: callback_data foydalanuvchi
+  // tomonidan o'zgartirilishi mumkin, eski xabardagi tugma esa rol
+  // olib qo'yilgandan keyin ham bosilishi mumkin.
+  const ekran = await tgEkran(String(cq.data || "m"), user);
+  await tgEditMessage(cq.message.chat.id, cq.message.message_id, ekran.text, ekran.markup);
+}
+
+async function tgHandleShaxsiy(m) {
+  const user = await tgFindUser(m.from);
+  if (!user || !user.is_active || user.access_status !== "active") {
+    return tgReply(m.chat.id, "Sizni xodimlar ro'yxatidan topa olmadim. Avval ilovani bir marta oching.");
+  }
+  const matn = (m.text || "").trim();
+  const kod = /^\/(vazifalar|tasks)(@\S+)?(\s|$)/i.test(matn) ? "v" : "m";
+  const ekran = await tgEkran(kod, user);
+  await sendMsg(db, m.chat.id, ekran.text, { replyMarkup: ekran.markup });
+}
+
+async function tgHandleVazifalar(m, group, user) {
+  const javob = (t) => tgReply(m.chat.id, t, { replyTo: m.message_id, threadId: m.message_thread_id });
+
+  if (!user || !user.is_active || user.access_status !== "active") {
+    return javob("Sizni xodimlar ro'yxatidan topa olmadim. Avval ilovani bir marta oching.");
+  }
+
+  const arg = (m.text || m.caption || "")
+    .replace(/^\/(vazifalar|tasks)(@\S+)?\s*/i, "")
+    .trim();
+  const admin = isAdminRole(user.role);
+
+  let userIds = [user.id];
+  let sarlavha = "Sizning ochiq ishlaringiz";
+
+  if (arg) {
+    if (!admin) {
+      return javob(
+        "Boshqa xodimning ishlarini faqat admin ko'ra oladi.\n" +
+          "O'zingiznikini ko'rish uchun shunchaki <code>/vazifalar</code> yozing.",
+      );
+    }
+    if (/^(hamma|all)$/i.test(arg)) {
+      userIds = null;
+      sarlavha = "Hamma xodimlarning ochiq ishlari";
+    } else {
+      const uname = arg.replace(/^@/, "").split(/\s+/)[0].toLowerCase();
+      const u = await db.query(`select id from users where lower(username) = $1`, [uname]);
+      if (!u.rows[0]) return javob(`@${escHtmlTg(uname)} — bunday xodim topilmadi.`);
+      userIds = [u.rows[0].id];
+      sarlavha = `@${escHtmlTg(uname)} ning ochiq ishlari`;
+    }
+  }
+
+  const rows = await tgVazifalarniOl(userIds);
+  const matn = tgVazifalarMatn(rows, todayTashkent());
+  const toliq = `<b>${sarlavha}</b>\n\n` + (matn || "Ochiq ish yo'q.");
+
+  const yuborildi = user.telegram_chat_id
+    ? await sendMsg(db, user.telegram_chat_id, toliq, { replyMarkup: appOpenButton("vazifalar") })
+    : { ok: false };
+
+  if (yuborildi.ok) {
+    await javob("📋 Ro'yxatni shaxsiy xabarda yubordim.");
+  } else {
+    await javob(
+      "Shaxsiy xabar yubora olmadim — avval botga shaxsiy <code>/start</code> yozing, keyin qayta urinib ko'ring.",
+    );
+  }
+}
+
 // ── Guruhlarni sozlash (Boshqaruv) ──────────────────────────────────
 // Bot guruhni o'zi topadi, lekin "bu qaysi guruh" ekanini faqat odam
 // ayta oladi. Shu yerda turi, loyihasi va `/task` mas'uli belgilanadi.
@@ -3848,6 +4155,12 @@ app.post("/api/tg/webhook", async (req, res) => {
 // Webhook mantig'i alohida funksiyada — ichkarida erta `return`'lar bor
 // va ular javobni yuborishga xalal bermasligi kerak.
 async function tgWebhookIshla(u) {
+  // Menyu tugmasi bosildi.
+  if (u.callback_query) {
+    await tgHandleCallback(u.callback_query);
+    return;
+  }
+
   // Bot guruhga qo'shilgan/chiqarilgan.
   if (u.my_chat_member) {
     const c = u.my_chat_member.chat;
@@ -3864,6 +4177,16 @@ async function tgWebhookIshla(u) {
 
   const m = u.message || u.channel_post;
   if (!m || !m.chat) return;
+
+  // Shaxsiy chat — menyu. Avval bu shoxcha umuman yo'q edi: botga
+  // `/start` yozilsa u jim turardi va odamga "ishlamadi" bo'lib
+  // tuyulardi. Shaxsiy xabarlar `tg_messages` ga YOZILMAYDI — u
+  // jadval guruh faolligi uchun.
+  if (m.chat.type === "private") {
+    await tgHandleShaxsiy(m);
+    return;
+  }
+
   if (m.chat.type !== "group" && m.chat.type !== "supergroup") return;
 
   const group = await tgUpsertGroup(m.chat);
@@ -3871,7 +4194,10 @@ async function tgWebhookIshla(u) {
   await tgLogMessage(m, user);
 
   const matn = m.text || m.caption || "";
+  // Diqqat: `/task` shabloni `/tasks` ga MOS KELMAYDI (keyin `@`, probel
+  // yoki satr oxiri kutiladi), shuning uchun tartib muhim emas.
   if (/^\/task(@\S+)?(\s|$)/i.test(matn)) await tgHandleTask(m, group, user);
+  else if (/^\/(vazifalar|tasks)(@\S+)?(\s|$)/i.test(matn)) await tgHandleVazifalar(m, group, user);
 }
 
 // ═══════════════════════════════════════════════════════════════════════

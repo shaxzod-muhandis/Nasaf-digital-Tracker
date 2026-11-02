@@ -13,6 +13,15 @@ require("./_env.js").loadEnv();
 const crypto = require("crypto");
 
 const TOKEN = process.env.BOT_TOKEN || "";
+
+// Telegram'da `/` yozilganda va input yonidagi "Menu" tugmasida
+// ko'rinadigan ro'yxat. Shu yerda turgani uchun yangi buyruq
+// qo'shilganda bitta joyni yangilash kifoya.
+const BUYRUQLAR = [
+  { command: "menu", description: "Asosiy menyu" },
+  { command: "vazifalar", description: "Ochiq vazifalar" },
+  { command: "task", description: "Dizayn guruhida: yangi vazifa ochish" },
+];
 const API = (m) => `https://api.telegram.org/bot${TOKEN}/${m}`;
 
 async function tg(method, body) {
@@ -74,10 +83,14 @@ async function tg(method, body) {
     await tg("setWebhook", {
       url: `${base}/api/tg/webhook`,
       secret_token: secret,
-      // Faqat kerakli turlar: bot qo'shilgani/chiqarilgani va guruh
-      // xabarlari. Qolganini so'ramaymiz — ortiqcha chaqiruv, ortiqcha
-      // ma'lumot.
-      allowed_updates: ["message", "my_chat_member"],
+      // Faqat kerakli turlar: bot qo'shilgani/chiqarilgani, xabarlar
+      // va menyu tugmalari. Qolganini so'ramaymiz — ortiqcha chaqiruv,
+      // ortiqcha ma'lumot.
+      //
+      // `callback_query` SHART: busiz inline menyu tugmalari bosilganda
+      // Telegram serverga hech narsa yubormaydi va tugma ustida
+      // aylanuvchi belgi qotib qoladi.
+      allowed_updates: ["message", "my_chat_member", "callback_query"],
       // Navbatdagi xabarlarni TASHLAMAYMIZ: ular orasida "bot guruhga
       // qo'shildi" hodisalari bor va aynan o'shalar guruhlarni
       // ro'yxatdan o'tkazadi. Tashlab yuborsak, har guruhga qo'lda
@@ -87,6 +100,10 @@ async function tg(method, body) {
     });
     console.log(`✅ Webhook o'rnatildi: ${base}/api/tg/webhook`);
     console.log("   Navbatda turgan xabarlar ham yetkaziladi — guruhlar o'zi ro'yxatdan o'tadi.\n");
+    await tg("setMyCommands", { commands: BUYRUQLAR });
+    console.log("✅ Buyruqlar ro'yxati yangilandi (`/` yozilganda va Menu tugmasida chiqadi):");
+    BUYRUQLAR.forEach((c) => console.log(`   /${c.command} — ${c.description}`));
+    console.log();
   }
 
   const info = await tg("getWebhookInfo");
