@@ -3704,6 +3704,8 @@ function tgParseDate(token) {
   return iso;
 }
 
+const TG_DARAJA_NOMI = { high: "Yuqori", medium: "O'rta", low: "Past", urgent: "Shoshilinch" };
+
 async function tgHandleTask(m, group, user) {
   const javob = (t) => tgReply(m.chat.id, t, { replyTo: m.message_id, threadId: m.message_thread_id });
 
@@ -3714,25 +3716,70 @@ async function tgHandleTask(m, group, user) {
   // Avval faqat `dizayn` guruhida ishlardi, ya'ni montaj yoki video
   // guruhida gap chiqsa, uni qo'lda ilovaga ko'chirish kerak edi.
 
+  // Buyruq BUTUN matn bo'ylab tahlil qilinadi, faqat boshidan emas:
+  // odam "Test 11.11.2026 !yuqori" deb yozsa ham ishlashi kerak edi,
+  // avvalgi variant esa faqat birinchi bo'laklarni ko'rardi va sanani
+  // sarlavha ichida qoldirib ketardi.
   const xom = (m.text || m.caption || "").replace(/^\/task(@\S+)?\s*/i, "").trim();
-  const bolaklar = xom.split(/\s+/).filter(Boolean);
-  // Sarlavhadan oldin sana va/yoki @username kelishi mumkin, tartibi
-  // muhim emas: `/task @ali 05.11 Banner` ham, `/task 05.11 @ali Banner`
-  // ham ishlaydi.
   const botNomi = (await tgBotUsername()).toLowerCase();
-  let sana = null;
-  let korsatilgan = null;
-  while (bolaklar.length) {
-    const b = bolaklar[0];
-    const d = tgParseDate(b);
-    if (!sana && d) { sana = d; bolaklar.shift(); continue; }
+
+  // Ilovada yangi vazifaga uch daraja qo'yiladi (`urgent` — eski
+  // qiymat, faqat tarixda qoladi), shuning uchun "shoshilinch" ham
+  // "yuqori"ga tushadi.
+  const TG_DARAJA = {
+    yuqori: "high", shoshilinch: "high", muhim: "high",
+    "o'rta": "medium", "o‘rta": "medium", orta: "medium", ortacha: "medium",
+    past: "low",
+  };
+
+  let sana = null, soat = null, korsatilgan = null, daraja = null;
+  const xomTeglar = [];
+  const qolgan = [];
+  const bolaklar = xom.split(/\s+/).filter(Boolean);
+  bolaklar.forEach((b, i) => {
+    // SANA. Matn o'rtasida qat'iyroq shakl talab qilinadi (kun va oy
+    // ikki raqamli, yoki yil bor): aks holda "versiya 1.5" kabi oddiy
+    // so'z sanaga aylanib ketardi. Birinchi bo'lakda esa eski,
+    // yumshoqroq shakl ham qabul qilinadi.
+    if (!sana) {
+      const qatiy = /^\d{2}\.\d{2}(\.\d{4})?$/.test(b);
+      if (qatiy || i === 0) {
+        const d = tgParseDate(b);
+        if (d) { sana = d; return; }
+      }
+    }
+    // SOAT. "16:9" (kadr nisbati) mos kelmaydi — daqiqa ikki raqamli.
+    const st = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(b);
+    if (!soat && st) { soat = `${st[1].padStart(2, "0")}:${st[2]}`; return; }
+    // MAS'UL. Botning o'zi belgilansa — e'tiborsiz qoldiriladi.
     const mm = /^@([A-Za-z0-9_]{3,})$/.exec(b);
-    // Botning o'zi belgilansa, u mas'ul emas — shunchaki e'tiborsiz.
-    if (mm && mm[1].toLowerCase() === botNomi) { bolaklar.shift(); continue; }
-    if (!korsatilgan && mm) { korsatilgan = mm[1].toLowerCase(); bolaklar.shift(); continue; }
-    break;
+    if (mm) {
+      if (mm[1].toLowerCase() === botNomi) return;
+      if (!korsatilgan) { korsatilgan = mm[1].toLowerCase(); return; }
+    }
+    // DARAJA. `!` shart: busiz "shoshilinch" so'zi oddiy sarlavhadan
+    // ham yulib olinardi.
+    const pr = /^!(.+)$/.exec(b);
+    if (pr && TG_DARAJA[pr[1].toLowerCase()]) { daraja = TG_DARAJA[pr[1].toLowerCase()]; return; }
+    // TEG.
+    const tg = /^#([^\s#]{2,30})$/.exec(b);
+    if (tg) { xomTeglar.push(tg[1]); return; }
+    qolgan.push(b);
+  });
+  const sarlavha = qolgan.join(" ").trim();
+
+  // Teglar MAVJUDLARI ichidan topiladi — chatdan yangi teg yaratish
+  // ro'yxatni tezda axlatga to'ldirardi. Tanilmagani javobda aytiladi.
+  let tegIdlari = [];
+  let tanilmaganTeglar = [];
+  if (xomTeglar.length) {
+    const tr = await db.query(`select id, name from tags where lower(name) = any($1::text[])`, [
+      xomTeglar.map((x) => x.toLowerCase()),
+    ]);
+    const topildi = new Map(tr.rows.map((r) => [r.name.toLowerCase(), r.id]));
+    tegIdlari = tr.rows.map((r) => r.id);
+    tanilmaganTeglar = xomTeglar.filter((x) => !topildi.has(x.toLowerCase()));
   }
-  const sarlavha = bolaklar.join(" ").trim();
 
   // Javob bo'lsa, asl xabar izohga tushadi — mijozning gapi
   // yo'qolmasin.
@@ -3740,7 +3787,14 @@ async function tgHandleTask(m, group, user) {
   const izoh = manba ? (manba.text || manba.caption || "").slice(0, 2000) || null : null;
   const yakuniySarlavha = sarlavha || (izoh ? izoh.split("\n")[0].slice(0, 120) : "");
   if (!yakuniySarlavha) {
-    return javob("Vazifa matnini yozing: <code>/task Banner kerak</code>\nYoki xabarga javob qilib <code>/task</code> yuboring.");
+    return javob(
+      "Vazifa matnini yozing: <code>/task Banner kerak</code>\n" +
+        "Yoki xabarga javob qilib <code>/task</code> yuboring.\n\n" +
+        "Qo'shimcha (matnning istalgan joyida):\n" +
+        "<code>@ali</code> — kimga   <code>11.11</code> yoki <code>11.11.2026</code> — muddat\n" +
+        "<code>14:30</code> — soat   <code>!yuqori</code> / <code>!o'rta</code> / <code>!past</code> — daraja\n" +
+        "<code>#Reels</code> — teg",
+    );
   }
 
   // LOYIHA: avval forum mavzusi, keyin guruh. Mavzuli guruhda har
@@ -3805,8 +3859,8 @@ async function tgHandleTask(m, group, user) {
 
   try {
     const ins = await db.query(
-      `insert into tasks (project_id, title, description, due_date, created_by, status, priority, tg_chat_id, tg_message_id)
-       values ($1,$2,$3,$4,$5,$6,'no_priority',$7,$8)
+      `insert into tasks (project_id, title, description, due_date, due_time, created_by, status, priority, tg_chat_id, tg_message_id)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
        -- Indeks QISMAN (null'lar kirmaydi), shuning uchun shart shu
        -- yerda ham takrorlanishi kerak — aks holda Postgres indeksni
        -- topa olmaydi va "no unique constraint" xatosini beradi.
@@ -3814,12 +3868,18 @@ async function tgHandleTask(m, group, user) {
          where tg_chat_id is not null and tg_message_id is not null
          do nothing
        returning id`,
-      [projectId, yakuniySarlavha.slice(0, 200), izoh, sana,
-       user.id, sana && masul ? "todo" : "backlog", m.chat.id, m.message_id],
+      // Soat sanasiz ma'nosiz (u muddatning soati), shuning uchun
+      // faqat sana bilan birga yoziladi.
+      [projectId, yakuniySarlavha.slice(0, 200), izoh, sana, sana ? soat : null,
+       user.id, sana && masul ? "todo" : "backlog", daraja || "no_priority",
+       m.chat.id, m.message_id],
     );
     if (!ins.rows[0]) return javob("Bu xabardan vazifa allaqachon ochilgan.");
     const taskId = ins.rows[0].id;
     await setTaskAssignees(db, taskId, masul ? [masul] : []);
+    for (const tagId of tegIdlari) {
+      await db.query(`insert into task_tags (task_id, tag_id) values ($1,$2) on conflict do nothing`, [taskId, tagId]);
+    }
     await logTaskActivity(taskId, user.id, "created");
 
     const r = await db.query(`${TASK_ROW_SQL} where t.id = $1`, [taskId]);
@@ -3839,7 +3899,13 @@ async function tgHandleTask(m, group, user) {
           ? `Mas'ul: ${escHtmlTg(kim)}\n`
           : "Mas'ul: <b>belgilanmadi</b> — ilovada biriktiring\n") +
         (task.projectLabel ? `Loyiha: ${escHtmlTg(task.projectLabel)}\n` : "") +
-        (sana ? `Muddat: ${sana}\n` : "Muddat qo'yilmagan (backlog)\n") +
+        (sana ? `Muddat: ${sana}${soat ? " " + soat : ""}\n` : "Muddat qo'yilmagan (backlog)\n") +
+        (soat && !sana ? "Soat sanasiz saqlanmadi — sanani ham yozing\n" : "") +
+        (daraja ? `Daraja: ${TG_DARAJA_NOMI[daraja]}\n` : "") +
+        (tegIdlari.length ? `Teglar: ${tegIdlari.length} ta\n` : "") +
+        (tanilmaganTeglar.length
+          ? `Tanilmagan teg: ${tanilmaganTeglar.map((x) => "#" + escHtmlTg(x)).join(", ")}\n`
+          : "") +
         `Ilovada: Vazifalar bo'limi`,
     );
   } catch (e) {
@@ -4060,8 +4126,12 @@ async function tgHandleEslatma(m, group, user) {
     "",
     "Shu guruhda:",
     "• <code>/task Banner kerak</code> — yangi vazifa ochish",
-    "   <code>/task @ali 05.11 Banner kerak</code> — kimga va qachongacha",
     "   Xabarga javob qilib <code>/task</code> — o'sha xabar izohga tushadi",
+    "",
+    "Matnning <b>istalgan joyiga</b> qo'shsa bo'ladi:",
+    "   <code>@ali</code> kimga · <code>11.11</code> muddat · <code>14:30</code> soat",
+    "   <code>!yuqori</code> / <code>!o'rta</code> / <code>!past</code> daraja · <code>#Reels</code> teg",
+    "",
     "• <code>/vazifalar</code> — ochiq ishlar ro'yxati",
     "",
     "<i>Ro'yxatlar guruhga emas, sizga shaxsiy keladi.</i>",
