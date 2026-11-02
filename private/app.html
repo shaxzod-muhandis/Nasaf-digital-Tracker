@@ -2938,6 +2938,48 @@
         border-color: var(--brand);
         color: #fff;
       }
+      /* Qulflangan (o'qish rejimidagi) katakcha — bosilmaydigani
+         ko'rinib tursin, lekin o'qilishi qiyinlashmasin. */
+      .cbi input:disabled + .cbi-box {
+        cursor: default;
+        opacity: 0.92;
+      }
+      /* Belgi ostidagi chiqish sanasi — tarixni katakni bosmasdan
+         o'qish uchun. */
+      .cbi-dated {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+      }
+      .cbi-date {
+        font-size: 9.5px;
+        line-height: 1;
+        color: var(--t3);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .hist-edit {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--bd1);
+      }
+      .hist-edit-s {
+        flex: 1;
+        min-width: 0;
+        font-size: 11.5px;
+        color: var(--t3);
+        line-height: 1.5;
+      }
+      .hist-edit .btn {
+        width: auto;
+        flex-shrink: 0;
+        padding: 0 14px;
+      }
 
       /* ── YANGI LOYIHA MODALI ────────────────────────────────────── */
       .np-ov-hdr {
@@ -27052,6 +27094,11 @@
                 <div style="min-width:0">
                   <div class="cycle-item-label">${cyc.periodStart} – ${cyc.periodEnd}</div>
                   <div class="cycle-item-sub">${statusLabel} · K ${cyc.doneK}/${cyc.k} · S ${cyc.doneS}/${cyc.s}</div>
+                  ${
+                    cyc.lastDay
+                      ? `<div class="cycle-item-sub">Chiqish sanalari: ${escHtml(cyc.firstDay)} — <b>${escHtml(cyc.lastDay)}</b></div>`
+                      : ""
+                  }
                 </div>
                 <div class="c-chev">▾</div>
               </div>
@@ -27060,50 +27107,105 @@
                   cyc.status === "active"
                     ? `<div style="font-size:11.5px;color:var(--t3);line-height:1.6">Bu joriy davr — belgilash uchun Tracker ekranidan foydalaning.</div>`
                     : `<div class="cb-section"><div class="cb-head"><span class="cb-badge">Post</span></div><div class="cb-row" id="hist-${cyc.cycleId}-k"></div></div>
-                       <div class="cb-section"><div class="cb-head"><span class="cb-badge">Stories</span></div><div class="cb-row" id="hist-${cyc.cycleId}-s"></div></div>`
+                       <div class="cb-section"><div class="cb-head"><span class="cb-badge">Stories</span></div><div class="cb-row" id="hist-${cyc.cycleId}-s"></div></div>
+                       <div class="hist-edit">
+                         <span class="hist-edit-s">O'tgan davr faqat o'qish uchun ochilgan.</span>
+                         ${
+                           isAdmin
+                             ? `<button type="button" class="btn btn-soft btn-sm" onclick="histToggleEdit('${escArg(cyc.cycleId)}', this)">Tahrirlash</button>`
+                             : ""
+                         }
+                       </div>`
                 }
                 ${fixHtml}
               </div>`;
             body.appendChild(item);
             if (cyc.status !== "active") {
-              buildHistoryCBs(body, slug, cyc.cycleId, cyc.k, "k", cyc.checks);
-              buildHistoryCBs(body, slug, cyc.cycleId, cyc.s, "s", cyc.checks);
+              buildHistoryCBs(body, slug, cyc.cycleId, cyc.k, "k", cyc.checks, cyc.checkDates);
+              buildHistoryCBs(body, slug, cyc.cycleId, cyc.s, "s", cyc.checks, cyc.checkDates);
             }
           });
         } catch (e) {
           body.innerHTML = `<div style="color:var(--red);font-size:12px">⚠ ${escHtml(e.message)}</div>`;
         }
       }
-      function buildHistoryCBs(body, projectSlug, cycleId, count, type, checksMap) {
+      // O'tgan davr STANDART holatda QULFLANGAN. Sabab: bu oyna tarixni
+      // KO'RISH uchun ochiladi, katakcha esa bir bosishda belgini
+      // o'chirib, Ncoinni qaytarib olar va ish sanasini bugunga
+      // almashtirar edi — ya'ni "qarab qo'yaman" degan harakat pul va
+      // tarixni buzardi. Endi avval "Tahrirlash" bosiladi, har bir
+      // o'zgarish esa alohida tasdiqlanadi.
+      const histEditable = new Set();
+      function histToggleEdit(cycleId, btn) {
+        const ochiq = histEditable.has(cycleId);
+        if (ochiq) histEditable.delete(cycleId);
+        else histEditable.add(cycleId);
+        const item = document.getElementById(`cyc-${cycleId}`);
+        if (item) {
+          item.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+            cb.disabled = ochiq;
+          });
+          const s = item.querySelector(".hist-edit-s");
+          if (s) s.textContent = ochiq
+            ? "O'tgan davr faqat o'qish uchun ochilgan."
+            : "Tahrirlash yoqilgan — har bir o'zgarish tasdiq so'raydi.";
+        }
+        if (btn) btn.textContent = ochiq ? "Tahrirlash" : "Qulflash";
+      }
+
+      function buildHistoryCBs(body, projectSlug, cycleId, count, type, checksMap, dates) {
         const row = body.querySelector(`#hist-${cycleId}-${type}`);
         if (!row) return;
         row.innerHTML = "";
+        const nom = type === "k" ? "Post" : "Stories";
         for (let i = 1; i <= count; i++) {
+          const key = `${type}-${i}`;
+          const belgilangan = !!checksMap?.[key];
+          const info = dates?.[key] || null;
           const lbl = document.createElement("label");
-          lbl.className = "cbi";
+          lbl.className = "cbi" + (info ? " cbi-dated" : "");
           const cb = document.createElement("input");
           cb.type = "checkbox";
-          cb.checked = !!checksMap?.[`${type}-${i}`];
+          cb.checked = belgilangan;
+          cb.disabled = !histEditable.has(cycleId);
+          if (info) {
+            lbl.title = `${nom} ${i} · ${info.day}` + (info.by ? ` · ${info.by}` : "");
+          }
           cb.addEventListener("change", async () => {
-            const openIds = [...body.querySelectorAll(".cycle-item.open")].map(
-              (n) => n.id,
+            const xohlangan = cb.checked;
+            cb.checked = belgilangan; // tasdiqlanmaguncha o'zgarmaydi
+            const matn = xohlangan
+              ? `<b>${nom} ${i}</b> bajarilgan deb belgilanadi. Ish sanasi <b>bugungi kun</b> bo'lib yoziladi va jamoaga Ncoin beriladi.`
+              : `<b>${nom} ${i}</b> belgisi olib tashlanadi.<br><br>` +
+                `<span style="color:var(--red)">Bu ish uchun berilgan Ncoin qaytarib olinadi, montajchi/mobilograf yozuvi va ish sanasi esa butunlay yo'qoladi — qayta belgilaganda ular tiklanmaydi.</span>`;
+            showConfirmModal(
+              xohlangan ? "Belgilansinmi?" : "Belgi olib tashlansinmi?",
+              matn + `<br><br><span style="color:var(--t3);font-size:12px">${escHtml(info?.day ? "Hozirgi sana: " + info.day : "Davr: o'tgan")}</span>`,
+              async () => {
+                const openIds = [...body.querySelectorAll(".cycle-item.open")].map((n) => n.id);
+                try {
+                  const data = await onCheck(projectSlug, type, i, xohlangan, cycleId);
+                  showToast(data?.isDebt ? "⚠ Hali ham qarz bor" : "✅ Yangilandi");
+                  await refreshHistoryBody(body, projectSlug);
+                  openIds.forEach((id) => document.getElementById(id)?.classList.add("open"));
+                } catch (e) {
+                  showToast("⚠ " + e.message);
+                }
+              },
+              xohlangan ? "Belgilash" : "Olib tashlash",
             );
-            try {
-              const data = await onCheck(projectSlug, type, i, cb.checked, cycleId);
-              showToast(data?.isDebt ? "⚠ Hali ham qarz bor" : "✅ Yangilandi");
-              await refreshHistoryBody(body, projectSlug);
-              openIds.forEach((id) =>
-                document.getElementById(id)?.classList.add("open"),
-              );
-            } catch (e) {
-              cb.checked = !cb.checked;
-            }
           });
           const box = document.createElement("span");
           box.className = "cbi-box";
           box.textContent = i;
           lbl.appendChild(cb);
           lbl.appendChild(box);
+          if (info) {
+            const d = document.createElement("span");
+            d.className = "cbi-date";
+            d.textContent = ntfDayShort(String(info.day).slice(0, 10));
+            lbl.appendChild(d);
+          }
           row.appendChild(lbl);
         }
       }

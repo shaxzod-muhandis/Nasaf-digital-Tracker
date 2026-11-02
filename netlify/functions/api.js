@@ -3486,11 +3486,30 @@ app.get("/api/projects/:slug/cycles", auth, async (req, res) => {
     const today = todayTashkent();
     for (const c of cyclesR.rows) {
       const { doneK, doneS } = await countDoneChecks(db, c.id);
-      const checksR = await db.query(`select type, seq_number from checks where cycle_id = $1`, [c.id]);
+      // Belgining o'zi emas, SANASI ham qaytariladi: "qaysi post qachon
+      // chiqqan" degan savolga javob berish uchun. Avval faqat
+      // `true`/`false` kelardi va tarixni ko'rish uchun katakni bosib
+      // ko'rishdan boshqa yo'l yo'q edi — aynan shu tasodifiy
+      // bosishlarga olib kelardi.
+      const checksR = await db.query(
+        `select ch.type, ch.seq_number, ch.story_kind,
+                coalesce(ch.work_date, (ch.done_at at time zone 'utc' at time zone 'Asia/Tashkent')::date) as kun,
+                coalesce(nullif(trim(concat(pu.first_name,' ',pu.last_name)),''), pu.full_name, pu.username) as bajaruvchi
+           from checks ch
+           left join users pu on pu.id = ch.performer_id
+          where ch.cycle_id = $1`,
+        [c.id],
+      );
       const checksMap = {};
+      const checkDates = {};
       checksR.rows.forEach((row) => {
-        checksMap[`${row.type}-${row.seq_number}`] = true;
+        const k = `${row.type}-${row.seq_number}`;
+        checksMap[k] = true;
+        checkDates[k] = { day: row.kun, by: row.bajaruvchi || null, storyKind: row.story_kind || null };
       });
+      // Oxirgi chiqqan post/stories sanasi — kartochka sarlavhasida
+      // ko'rsatiladi.
+      const kunlar = Object.values(checkDates).map((x) => x.day).filter(Boolean).sort();
       // `is_debt` ustuni faqat davr YOPILGANDA yoziladi. Shu sababli
       // muddati o'tgan, lekin hali yopilmagan davr bu yerda "qarz emas"
       // bo'lib ko'rinardi va Tarixdagi "Qarzli" filtri aynan hozirgi
@@ -3510,6 +3529,9 @@ app.get("/api/projects/:slug/cycles", auth, async (req, res) => {
         status: c.status,
         isDebt: !!c.is_debt || kechikkan,
         checks: checksMap,
+        checkDates,
+        firstDay: kunlar[0] || null,
+        lastDay: kunlar[kunlar.length - 1] || null,
       });
     }
     res.json({
