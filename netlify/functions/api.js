@@ -3554,9 +3554,18 @@ async function tgReply(chatId, text, { replyTo, threadId, replyMarkup } = {}) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    if (!r.ok) console.error("tgReply xato:", r.status, JSON.stringify(await r.json().catch(() => ({}))));
+    const b = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      console.error("tgReply xato:", r.status, JSON.stringify(b));
+      return null;
+    }
+    // Yuborilgan xabar qaytariladi: vazifa tasdig'ining message_id si
+    // bazaga yoziladi va keyin o'sha xabarga javob yozilsa, izoh
+    // qaysi vazifaga tegishli ekani shundan topiladi.
+    return b.result || null;
   } catch (e) {
     console.error("tgReply fetch xato:", e.message);
+    return null;
   }
 }
 
@@ -3893,7 +3902,7 @@ async function tgHandleTask(m, group, user) {
     // Tasdiq ataylab batafsil: kim, qaysi loyiha, qaysi muddat —
     // noto'g'ri biriktirish darhol ko'rinib tursin.
     const kim = task.assignees && task.assignees[0] ? task.assignees[0].name : null;
-    await javob(
+    const tasdiq = await javob(
       `✅ Vazifa ochildi — <b>${escHtmlTg(yakuniySarlavha.slice(0, 120))}</b>\n` +
         (kim
           ? `Mas'ul: ${escHtmlTg(kim)}\n`
@@ -3908,10 +3917,57 @@ async function tgHandleTask(m, group, user) {
           : "") +
         `Ilovada: Vazifalar bo'limi`,
     );
+    // Shu xabarga javob yozilsa izoh bo'lib tushadi — quyidagi
+    // tgHandleIzoh shu id bo'yicha vazifani topadi.
+    if (tasdiq && tasdiq.message_id) {
+      await db
+        .query(`update tasks set tg_reply_message_id = $2 where id = $1`, [taskId, tasdiq.message_id])
+        .catch((e) => console.error("tg_reply_message_id yozilmadi:", e.message));
+    }
   } catch (e) {
     console.error("tgHandleTask xato:", e.message);
     await javob("Vazifa ochilmadi — xatolik yuz berdi.");
   }
+}
+
+// ── Guruhdan IZOH ────────────────────────────────────────────────────
+// Bot "Vazifa ochildi" deb yozgan xabarga javob yozilsa, matn o'sha
+// vazifaga izoh bo'lib tushadi. Boshqa xabarga javob bo'lsa — bu
+// bizning ishimiz emas, `false` qaytariladi va xabar odatdagidek
+// davom etadi.
+//
+// Ruxsat ilovadagi bilan bir xil (canCommentOnTask): admin yoki
+// vazifaning mas'uli.
+async function tgHandleIzoh(m, user) {
+  const manba = m.reply_to_message;
+  if (!manba) return false;
+  const matn = (m.text || m.caption || "").trim();
+  if (!matn) return false;
+
+  const r = await db.query(
+    `select id from tasks where tg_chat_id = $1 and tg_reply_message_id = $2`,
+    [m.chat.id, manba.message_id],
+  );
+  const vazifa = r.rows[0];
+  if (!vazifa) return false;
+
+  const javob = (t) => tgReply(m.chat.id, t, { replyTo: m.message_id, threadId: m.message_thread_id });
+  if (!user || !user.is_active || user.access_status !== "active") {
+    await javob("Sizni xodimlar ro'yxatidan topa olmadim. Avval ilovani bir marta oching.");
+    return true;
+  }
+  const meniki = await db.query(`select 1 from task_assignees where task_id = $1 and user_id = $2`, [
+    vazifa.id,
+    user.id,
+  ]);
+  if (!isAdminRole(user.role) && !meniki.rows[0]) {
+    await javob("Bu vazifaga izoh qoldira olmaysiz — faqat admin yoki vazifa mas'uli yoza oladi.");
+    return true;
+  }
+
+  await logTaskActivity(vazifa.id, user.id, "comment", { body: matn.slice(0, 4000) });
+  await javob("💬 Izoh qo'shildi.");
+  return true;
 }
 
 function escHtmlTg(t) {
@@ -4127,6 +4183,7 @@ async function tgHandleEslatma(m, group, user) {
     "Shu guruhda:",
     "• <code>/task Banner kerak</code> — yangi vazifa ochish",
     "   Xabarga javob qilib <code>/task</code> — o'sha xabar izohga tushadi",
+    "• Botning «Vazifa ochildi» xabariga javob yozsangiz — vazifaga izoh bo'lib tushadi",
     "",
     "Matnning <b>istalgan joyiga</b> qo'shsa bo'ladi:",
     "   <code>@ali</code> kimga · <code>11.11</code> muddat · <code>14:30</code> soat",
@@ -4414,7 +4471,12 @@ async function tgWebhookIshla(u) {
   // yoki satr oxiri kutiladi), shuning uchun tartib muhim emas.
   if (/^\/task(@\S+)?(\s|$)/i.test(matn)) await tgHandleTask(m, group, user);
   else if (/^\/(vazifalar|tasks)(@\S+)?(\s|$)/i.test(matn)) await tgHandleVazifalar(m, group, user);
-  else if (matn && (await tgEslatmaBormi(matn))) await tgHandleEslatma(m, group, user);
+  // Izoh eslatmadan OLDIN: botning tasdiq xabariga javob yozilganda,
+  // matnda `@bot` ham bo'lsa, u izoh bo'lishi kerak — yo'riqnoma
+  // kartasi emas.
+  else if (await tgHandleIzoh(m, user)) {
+    // izoh qo'shildi (yoki ruxsat yo'qligi aytildi)
+  } else if (matn && (await tgEslatmaBormi(matn))) await tgHandleEslatma(m, group, user);
 }
 
 // Xabarda bot belgilanganmi. Buyruqlar yuqorida ushlangani uchun bu
