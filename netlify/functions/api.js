@@ -3710,14 +3710,29 @@ async function tgHandleTask(m, group, user) {
   if (!user || !user.is_active || user.access_status !== "active") {
     return javob("Sizni xodimlar ro'yxatidan topa olmadim. Avval ilovani bir marta oching.");
   }
-  if (group.kind !== "dizayn") {
-    return javob("Bu guruh dizayn guruhi sifatida belgilanmagan. Boshqaruv › Guruhlar bo'limidan belgilang.");
-  }
+  // Guruh turi endi SHART EMAS: vazifa har qanday guruhda ochiladi.
+  // Avval faqat `dizayn` guruhida ishlardi, ya'ni montaj yoki video
+  // guruhida gap chiqsa, uni qo'lda ilovaga ko'chirish kerak edi.
 
   const xom = (m.text || m.caption || "").replace(/^\/task(@\S+)?\s*/i, "").trim();
-  const bolaklar = xom.split(/\s+/);
-  const sana = tgParseDate(bolaklar[0]);
-  const sarlavha = (sana ? bolaklar.slice(1).join(" ") : xom).trim();
+  const bolaklar = xom.split(/\s+/).filter(Boolean);
+  // Sarlavhadan oldin sana va/yoki @username kelishi mumkin, tartibi
+  // muhim emas: `/task @ali 05.11 Banner` ham, `/task 05.11 @ali Banner`
+  // ham ishlaydi.
+  const botNomi = (await tgBotUsername()).toLowerCase();
+  let sana = null;
+  let korsatilgan = null;
+  while (bolaklar.length) {
+    const b = bolaklar[0];
+    const d = tgParseDate(b);
+    if (!sana && d) { sana = d; bolaklar.shift(); continue; }
+    const mm = /^@([A-Za-z0-9_]{3,})$/.exec(b);
+    // Botning o'zi belgilansa, u mas'ul emas — shunchaki e'tiborsiz.
+    if (mm && mm[1].toLowerCase() === botNomi) { bolaklar.shift(); continue; }
+    if (!korsatilgan && mm) { korsatilgan = mm[1].toLowerCase(); bolaklar.shift(); continue; }
+    break;
+  }
+  const sarlavha = bolaklar.join(" ").trim();
 
   // Javob bo'lsa, asl xabar izohga tushadi — mijozning gapi
   // yo'qolmasin.
@@ -3725,19 +3740,68 @@ async function tgHandleTask(m, group, user) {
   const izoh = manba ? (manba.text || manba.caption || "").slice(0, 2000) || null : null;
   const yakuniySarlavha = sarlavha || (izoh ? izoh.split("\n")[0].slice(0, 120) : "");
   if (!yakuniySarlavha) {
-    return javob("Vazifa matnini yozing: <code>/task Banner kerak</code>\nYoki mijoz xabariga javob qilib <code>/task</code> yuboring.");
+    return javob("Vazifa matnini yozing: <code>/task Banner kerak</code>\nYoki xabarga javob qilib <code>/task</code> yuboring.");
   }
 
-  let masul = group.assignee_id;
-  if (!masul) {
+  // LOYIHA: avval forum mavzusi, keyin guruh. Mavzuli guruhda har
+  // mavzu alohida loyiha bo'lishi mumkin va admin uni Boshqaruvda
+  // allaqachon belgilay oladi — avval bu qiymat hech kim tomonidan
+  // o'qilmasdi.
+  let projectId = group.project_id || null;
+  if (m.message_thread_id) {
+    const tp = await db.query(
+      `select project_id from tg_topics where chat_id = $1 and thread_id = $2`,
+      [m.chat.id, m.message_thread_id],
+    );
+    if (tp.rows[0] && tp.rows[0].project_id) projectId = tp.rows[0].project_id;
+  }
+
+  // MAS'UL: birinchi mos kelgan qoida yutadi.
+  let masul = null;
+
+  // 1. Buyruqda to'g'ridan-to'g'ri ko'rsatilgan.
+  if (korsatilgan) {
+    const u = await db.query(
+      `select id from users where lower(username) = $1 and is_active and access_status = 'active'`,
+      [korsatilgan],
+    );
+    if (!u.rows[0]) return javob(`@${escHtmlTg(korsatilgan)} — bunday faol xodim topilmadi.`);
+    masul = u.rows[0].id;
+  }
+  // 2. XODIMNING xabariga javob bo'lsa — o'shanga. Mijoz `users` da
+  //    yo'q, shuning uchun uning xabari avvalgidek faqat izoh bo'lib
+  //    qoladi va zanjir pastga tushadi.
+  if (!masul && manba && manba.from) {
+    const mu = await tgFindUser(manba.from);
+    if (mu && mu.is_active && mu.access_status === "active") masul = mu.id;
+  }
+  // 3. Guruhning standart mas'uli.
+  if (!masul && group.assignee_id) masul = group.assignee_id;
+  // 4. Guruh turiga mos loyiha roli.
+  if (!masul && projectId) {
+    const ROL = { montaj: "montajchi", video: "mobilograf", dizayn: "dizayner" };
+    const rol = ROL[group.kind];
+    if (rol) {
+      const pr = await db.query(
+        `select p.user_id from permissions p
+           join users u on u.id = p.user_id
+          where p.project_id = $1 and p.role = $2 and u.is_active and u.access_status = 'active'
+          limit 1`,
+        [projectId, rol],
+      );
+      if (pr.rows[0]) masul = pr.rows[0].user_id;
+    }
+  }
+  // 5. Dizayn guruhida eski zaxira: jamoada bitta faol dizayner bo'lsa.
+  if (!masul && group.kind === "dizayn") {
     const d = await db.query(
       `select id from users where position = 'dizayner' and is_active and access_status = 'active'`,
     );
     if (d.rows.length === 1) masul = d.rows[0].id;
   }
-  if (!masul) {
-    return javob("Vazifa kimga biriktirilishi belgilanmagan. Boshqaruv › Guruhlar bo'limida mas'ulni tanlang.");
-  }
+  // 6. Baribir topilmadi — vazifa MAS'ULSIZ ochiladi. Guruhdagi gapni
+  //    yo'qotgandan ko'ra, uni backlog'ga olib qo'yib, ilovada
+  //    biriktirgan yaxshi.
 
   try {
     const ins = await db.query(
@@ -3750,24 +3814,31 @@ async function tgHandleTask(m, group, user) {
          where tg_chat_id is not null and tg_message_id is not null
          do nothing
        returning id`,
-      [group.project_id || null, yakuniySarlavha.slice(0, 200), izoh, sana,
-       user.id, sana ? "todo" : "backlog", m.chat.id, m.message_id],
+      [projectId, yakuniySarlavha.slice(0, 200), izoh, sana,
+       user.id, sana && masul ? "todo" : "backlog", m.chat.id, m.message_id],
     );
     if (!ins.rows[0]) return javob("Bu xabardan vazifa allaqachon ochilgan.");
     const taskId = ins.rows[0].id;
-    await setTaskAssignees(db, taskId, [masul]);
+    await setTaskAssignees(db, taskId, masul ? [masul] : []);
     await logTaskActivity(taskId, user.id, "created");
 
     const r = await db.query(`${TASK_ROW_SQL} where t.id = $1`, [taskId]);
     const [task] = await attachTags([shapeTaskRow(r.rows[0])]);
     // Mas'ulga shaxsiy xabar — ilovadagi oddiy vazifa bilan bir xil.
-    notifyTaskAssigned(db, { assigneeUserId: masul, task, actorUsername: user.username })
-      .catch((e) => console.error("tgHandleTask notify:", e.message));
+    if (masul) {
+      notifyTaskAssigned(db, { assigneeUserId: masul, task, actorUsername: user.username })
+        .catch((e) => console.error("tgHandleTask notify:", e.message));
+    }
 
-    const kim = task.assignees && task.assignees[0] ? task.assignees[0].name : "mas'ul";
+    // Tasdiq ataylab batafsil: kim, qaysi loyiha, qaysi muddat —
+    // noto'g'ri biriktirish darhol ko'rinib tursin.
+    const kim = task.assignees && task.assignees[0] ? task.assignees[0].name : null;
     await javob(
       `✅ Vazifa ochildi — <b>${escHtmlTg(yakuniySarlavha.slice(0, 120))}</b>\n` +
-        `Mas'ul: ${escHtmlTg(kim)}\n` +
+        (kim
+          ? `Mas'ul: ${escHtmlTg(kim)}\n`
+          : "Mas'ul: <b>belgilanmadi</b> — ilovada biriktiring\n") +
+        (task.projectLabel ? `Loyiha: ${escHtmlTg(task.projectLabel)}\n` : "") +
         (sana ? `Muddat: ${sana}\n` : "Muddat qo'yilmagan (backlog)\n") +
         `Ilovada: Vazifalar bo'limi`,
     );
@@ -3988,9 +4059,9 @@ async function tgHandleEslatma(m, group, user) {
     "<b>Nasaf Digital bot</b>",
     "",
     "Shu guruhda:",
-    group.kind === "dizayn"
-      ? "• <code>/task Banner kerak</code> — yangi vazifa ochish\n   (mijoz xabariga javob qilib <code>/task</code> ham bo'ladi)"
-      : "• <code>/task</code> — bu guruh <b>dizayn</b> guruhi sifatida belgilanmagan, shuning uchun hozir ishlamaydi",
+    "• <code>/task Banner kerak</code> — yangi vazifa ochish",
+    "   <code>/task @ali 05.11 Banner kerak</code> — kimga va qachongacha",
+    "   Xabarga javob qilib <code>/task</code> — o'sha xabar izohga tushadi",
     "• <code>/vazifalar</code> — ochiq ishlar ro'yxati",
     "",
     "<i>Ro'yxatlar guruhga emas, sizga shaxsiy keladi.</i>",

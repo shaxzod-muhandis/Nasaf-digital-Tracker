@@ -23247,10 +23247,10 @@
                   ${Object.entries(TGG_KIND).map(([k, v]) => `<option value="${k}"${g.kind === k ? " selected" : ""}>${v}</option>`).join("")}
                 </select>
                 ${g.isForum ? "" : `<select onchange="tgGroupSave('${escArg(g.chatId)}', this)" data-f="project">${tgProjOptions(g.project)}</select>`}
-                ${g.kind === "dizayn" ? `<select onchange="tgGroupSave('${escArg(g.chatId)}', this)" data-f="assignee">
-                  <option value="">Mas'ul tanlanmagan</option>
+                <select onchange="tgGroupSave('${escArg(g.chatId)}', this)" data-f="assignee">
+                  <option value="">Standart mas'ul tanlanmagan</option>
                   ${xodimlar.map((x) => `<option value="${escHtml(x.id)}"${x.id === g.assigneeId ? " selected" : ""}>${escHtml(xodimNomi(x))}${x.position ? " · " + escHtml(POSITION_LABELS[x.position] || x.position) : ""}</option>`).join("")}
-                </select>` : ""}
+                </select>
               </div>
               ${
                 g.isForum && g.topics.length
