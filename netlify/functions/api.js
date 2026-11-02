@@ -3729,7 +3729,14 @@ async function tgHandleTask(m, group, user) {
   // odam "Test 11.11.2026 !yuqori" deb yozsa ham ishlashi kerak edi,
   // avvalgi variant esa faqat birinchi bo'laklarni ko'rardi va sanani
   // sarlavha ichida qoldirib ketardi.
-  const xom = (m.text || m.caption || "").replace(/^\/task(@\S+)?\s*/i, "").trim();
+  // BIRINCHI QATOR — sarlavha (sana, daraja, @mas'ul, #teg o'shandan
+  // olinadi), QOLGAN QATORLAR — tavsif. Avval butun matn bitta
+  // sarlavhaga yopishib ketardi va tavsifni faqat javob orqali
+  // berish mumkin edi.
+  const toliqMatn = (m.text || m.caption || "").replace(/^\/task(@\S+)?\s*/i, "");
+  const qatorlar = toliqMatn.split("\n");
+  const xom = (qatorlar[0] || "").trim();
+  const ozTavsif = qatorlar.slice(1).join("\n").trim();
   const botNomi = (await tgBotUsername()).toLowerCase();
 
   // Ilovada yangi vazifaga uch daraja qo'yiladi (`urgent` — eski
@@ -3790,16 +3797,19 @@ async function tgHandleTask(m, group, user) {
     tanilmaganTeglar = xomTeglar.filter((x) => !topildi.has(x.toLowerCase()));
   }
 
-  // Javob bo'lsa, asl xabar izohga tushadi — mijozning gapi
-  // yo'qolmasin.
+  // Javob bo'lsa, asl xabar ham tavsifga tushadi — mijozning gapi
+  // yo'qolmasin. Ikkalasi bo'lsa ikkalasi saqlanadi: avval o'zingiz
+  // yozgan tavsif, ostida javob berilgan xabar.
   const manba = m.reply_to_message;
-  const izoh = manba ? (manba.text || manba.caption || "").slice(0, 2000) || null : null;
+  const manbaMatn = manba ? (manba.text || manba.caption || "").trim() : "";
+  const izoh = [ozTavsif, manbaMatn].filter(Boolean).join("\n\n").slice(0, 2000) || null;
   const yakuniySarlavha = sarlavha || (izoh ? izoh.split("\n")[0].slice(0, 120) : "");
   if (!yakuniySarlavha) {
     return javob(
       "Vazifa matnini yozing: <code>/task Banner kerak</code>\n" +
         "Yoki xabarga javob qilib <code>/task</code> yuboring.\n\n" +
-        "Qo'shimcha (matnning istalgan joyida):\n" +
+        "Birinchi qator — sarlavha, keyingi qatorlar — tavsif.\n\n" +
+        "Qo'shimcha (birinchi qatorning istalgan joyida):\n" +
         "<code>@ali</code> — kimga   <code>11.11</code> yoki <code>11.11.2026</code> — muddat\n" +
         "<code>14:30</code> — soat   <code>!yuqori</code> / <code>!o'rta</code> / <code>!past</code> — daraja\n" +
         "<code>#Reels</code> — teg",

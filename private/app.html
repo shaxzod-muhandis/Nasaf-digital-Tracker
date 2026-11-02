@@ -27403,15 +27403,34 @@
         // qo'shadi). Ilova ochiq turganda bu o'zgarishlar bu yerga
         // yetib kelmaydi, shuning uchun foydalanuvchi ilovaga qaytgan
         // zahoti balans qayta so'raladi.
+        //
+        // Vazifalar ham shu yerda qayta so'raladi: ro'yxat FAQAT ilova
+        // ochilganda va ilova ICHIDAGI amallardan keyin yuklanardi.
+        // Telegram boti orqali ochilgan vazifa (yoki boshqa xodim
+        // kiritgan o'zgarish) shuning uchun ilovada ko'rinmay turardi —
+        // ilovani butunlay yopib qayta ochmaguncha.
+        //
+        // Ochiq oyna (sheet/modal) bo'lsa ro'yxatga tegilmaydi:
+        // foydalanuvchi forma to'ldirayotgan bo'lishi mumkin, qayta
+        // render esa uni yopib yuborardi.
+        async function qaytibKirganda() {
+          checkAppVersion();
+          if (document.querySelector(".overlay")) {
+            refreshMyNcoin();
+            return;
+          }
+          try {
+            await Promise.all([loadTasks(), loadProjects()]);
+            refreshAllViews(); // ichida refreshMyNcoin() ham bor
+          } catch (e) {
+            refreshMyNcoin();
+          }
+        }
         document.addEventListener("visibilitychange", () => {
           if (document.hidden) return;
-          refreshMyNcoin();
-          checkAppVersion();
+          qaytibKirganda();
         });
-        window.addEventListener("focus", () => {
-          refreshMyNcoin();
-          checkAppVersion();
-        });
+        window.addEventListener("focus", qaytibKirganda);
         // Ilova uzoq ochiq tursa, qaytib kirmasdan ham yangilanish
         // borligini bilsin.
         setTimeout(checkAppVersion, 60_000);
