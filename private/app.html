@@ -23232,7 +23232,11 @@
       // faqat `role === "employee"`). Mas'ul tanlashda esa to'liq
       // ro'yxat kerak.
       let tgUsers = null;
-      const TGG_KIND = { montaj: "Montaj", dizayn: "Dizayn", video: "Video hisobot" };
+      const TGG_KIND = { montaj: "Montaj", dizayn: "Dizayn", video: "Video hisobot", mijoz: "Mijoz guruhi" };
+      // Mijoz guruhida mavzular LOYIHA bo'yicha emas, MAZMUN turi
+      // bo'yicha bo'linadi: tasdiqlangan ish aynan shu belgiga qarab
+      // joylashtiriladi.
+      const TGG_PURPOSE = { kontent: "Kontent", stories: "Stories", dizayn: "Dizayn" };
 
       async function renderTgGroupsTab(c) {
         if (tgGroups) return tgGroupsRender(c);
@@ -23288,7 +23292,7 @@
                   <option value="">Turi tanlanmagan</option>
                   ${Object.entries(TGG_KIND).map(([k, v]) => `<option value="${k}"${g.kind === k ? " selected" : ""}>${v}</option>`).join("")}
                 </select>
-                ${g.isForum ? "" : `<select onchange="tgGroupSave('${escArg(g.chatId)}', this)" data-f="project">${tgProjOptions(g.project)}</select>`}
+                ${g.isForum && g.kind !== "mijoz" ? "" : `<select onchange="tgGroupSave('${escArg(g.chatId)}', this)" data-f="project">${tgProjOptions(g.project)}</select>`}
                 <select onchange="tgGroupSave('${escArg(g.chatId)}', this)" data-f="assignee">
                   <option value="">Standart mas'ul tanlanmagan</option>
                   ${xodimlar.map((x) => `<option value="${escHtml(x.id)}"${x.id === g.assigneeId ? " selected" : ""}>${escHtml(xodimNomi(x))}${x.position ? " · " + escHtml(POSITION_LABELS[x.position] || x.position) : ""}</option>`).join("")}
@@ -23297,10 +23301,17 @@
               ${
                 g.isForum && g.topics.length
                   ? `<div class="tgg-top-list">
-                      <div class="tgg-s">Mavzular — har birini loyihaga bog'lang</div>
+                      <div class="tgg-s">${g.kind === "mijoz"
+                        ? "Mavzular — tasdiqlangan ish qaysi mavzuga tushsin"
+                        : "Mavzular — har birini loyihaga bog'lang"}</div>
                       ${g.topics.map((t) => `<div class="tgg-topic">
                         <span>${escHtml(t.title || "Mavzu #" + t.threadId)}</span>
-                        <select onchange="tgTopicSave('${escArg(g.chatId)}','${escArg(t.threadId)}', this)">${tgProjOptions(t.project)}</select>
+                        <select onchange="tgTopicSave('${escArg(g.chatId)}','${escArg(t.threadId)}', this)" data-f="${g.kind === "mijoz" ? "purpose" : "project"}">${
+                          g.kind === "mijoz"
+                            ? `<option value="">Vazifasi yo'q</option>` +
+                              Object.entries(TGG_PURPOSE).map(([k, v]) => `<option value="${k}"${t.purpose === k ? " selected" : ""}>${v}</option>`).join("")
+                            : tgProjOptions(t.project)
+                        }</select>
                       </div>`).join("")}
                     </div>`
                   : g.isForum
@@ -23310,7 +23321,15 @@
             </div>`;
           })
           .join("") +
-          `<div class="mk-hint" style="margin-top:14px">Dizayn guruhida <b>/task Banner kerak</b> deb yozsangiz yoki mijoz xabariga javob qilib <b>/task</b> yuborsangiz, vazifa Vazifalar bo'limida ochiladi. Sana qo'shsa ham bo'ladi: <b>/task 05.11 Banner kerak</b>.</div>`;
+          `<div class="mk-hint" style="margin-top:14px">Dizayn guruhida <b>/task Banner kerak</b> deb yozsangiz yoki mijoz xabariga javob qilib <b>/task</b> yuborsangiz, vazifa Vazifalar bo'limida ochiladi. Sana qo'shsa ham bo'ladi: <b>/task 05.11 Banner kerak</b>.</div>
+           <div class="mk-hint" style="margin-top:10px"><b>Tasdiqlangan ishni mijozga yuborish.</b>
+             Montaj yoki Dizayn guruhidagi videoga <b>👍</b> qo'ysangiz, bot uni o'sha loyihaning
+             mijoz guruhiga ko'chiradi: montajdan — Kontentga, dizayndan — Dizaynga.
+             <b>🔥</b> esa Stories'ga yuboradi. Reaksiyani olib tashlasangiz, nusxa ham o'chadi.<br>
+             Ishlashi uchun uchta shart bor: bot mijoz guruhida ham bo'lishi, ichki guruhda
+             <b>admin</b> qilinishi, va quyidagilar belgilanishi — ichki guruh mavzulariga loyiha,
+             mijoz guruhiga loyiha, uning mavzulariga vazifa.
+             Tasdiqlay oladiganlar: adminlar va loyihaning SMM mas'uli.</div>`;
       }
 
       async function tgGroupSave(chatId, el) {
@@ -23332,16 +23351,25 @@
         }
       }
 
+      // Bitta tanlov, ikki xil ma'no: mijoz guruhida mavzuning
+      // VAZIFASI, qolganlarida mavzuning LOYIHASI tanlanadi. Qaysi
+      // biri ekani `data-f` da yozilgan.
       async function tgTopicSave(chatId, threadId, el) {
+        const maydon = el.dataset.f === "purpose" ? "purpose" : "project";
+        const eski = el.dataset.old ?? "";
         el.disabled = true;
         try {
           const r = await apiFetch(`/api/tg/topics/${encodeURIComponent(chatId)}/${encodeURIComponent(threadId)}`, {
             method: "PATCH",
-            body: JSON.stringify({ project: el.value || null }),
+            body: JSON.stringify({ [maydon]: el.value || null }),
           });
           if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
+          el.dataset.old = el.value;
           showToast("✅ Saqlandi");
         } catch (e) {
+          // Saqlanmagan tanlov ekranda qolib ketmasin: odam uni
+          // saqlangan deb o'ylardi.
+          el.value = eski;
           showToast("⚠ " + e.message);
         } finally {
           el.disabled = false;

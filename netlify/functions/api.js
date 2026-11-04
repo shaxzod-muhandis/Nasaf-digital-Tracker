@@ -4241,6 +4241,256 @@ async function tgHandleEslatma(m, group, user) {
   });
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// TASDIQLANGAN ISHNI MIJOZ GURUHIGA YUBORISH
+//
+// Muammo: montajchi ichki "Montaj" guruhida tekshiruvdan o'tgan videoni
+// mijoz guruhiga QO'LDA ko'chirardi — va esdan chiqarardi.
+//
+// Yechim: ichki guruhdagi xabarga reaksiya qo'yilsa, bot uni o'zi
+// ko'chiradi. Reaksiya tanlangani bejiz emas: u xabarning yonida
+// turadi, hech narsa yozish va eslab qolish kerak emas.
+//
+//   👍  bu ish tayyor  → manba guruhiga qarab Kontent yoki Dizayn
+//   🔥  bu stories     → Stories
+//
+// Ikkita belgi uchta manzilni qoplaydi, chunki yo'nalishning yarmini
+// manba guruhining O'ZI aytib turadi: montaj guruhidan chiqqan ish
+// kontentga, dizayn guruhidan chiqqani dizaynga ketadi.
+// ═══════════════════════════════════════════════════════════════════════
+
+// "auto" — manba guruh turidan kelib chiqadi (pastdagi jadval).
+const NASHR_EMOJI = { "\u{1F44D}": "auto", "\u{1F525}": "stories" };
+// Qaysi guruhdan chiqqan ish qayerga boradi.
+const NASHR_MANBA = { montaj: "kontent", dizayn: "dizayn" };
+// Faqat tayyor ish ko'chiriladi: matnga qo'yilgan reaksiya oddiy
+// suhbat, uni mijozga yuborish kerak emas.
+const NASHR_TURLARI = new Set(["video", "video_note", "document", "photo", "audio"]);
+const NASHR_NOMI = { kontent: "Kontent", stories: "Stories", dizayn: "Dizayn" };
+
+async function tgCopyMessage(fromChatId, messageId, toChatId, threadId) {
+  try {
+    const body = { chat_id: toChatId, from_chat_id: fromChatId, message_id: messageId };
+    if (threadId) body.message_thread_id = threadId;
+    const r = await fetch(TG_API("copyMessage"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const b = await r.json().catch(() => ({}));
+    if (!r.ok || !b.ok) {
+      console.error("tgCopyMessage xato:", r.status, JSON.stringify(b));
+      return { ok: false, error: b.description || `HTTP ${r.status}` };
+    }
+    return { ok: true, messageId: b.result && b.result.message_id };
+  } catch (e) {
+    console.error("tgCopyMessage fetch xato:", e.message);
+    return { ok: false, error: e.message };
+  }
+}
+
+async function tgDeleteMessage(chatId, messageId) {
+  try {
+    const r = await fetch(TG_API("deleteMessage"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, message_id: messageId }),
+    });
+    const b = await r.json().catch(() => ({}));
+    // Telegram botga o'z xabarini 48 soat ichida o'chirishga ruxsat
+    // beradi. Keyin "message can't be deleted" qaytadi — bu xato emas,
+    // shunchaki muddat o'tgan.
+    if (!r.ok || !b.ok) return { ok: false, error: b.description || `HTTP ${r.status}` };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+// Tasdiqlash huquqi: admin yoki shu LOYIHANING SMM mas'uli. Boshqa
+// xodimning 👍 si oddiy reaksiya bo'lib qolaveradi.
+async function tgTasdiqlayOladimi(user, projectId) {
+  if (!user || !user.is_active || user.access_status !== "active") return false;
+  if (isAdminRole(user.role)) return true;
+  if (!projectId) return false;
+  const r = await db.query(
+    `select 1 from permissions where user_id = $1 and project_id = $2 and role = 'smm'`,
+    [user.id, projectId],
+  );
+  return !!r.rows[0];
+}
+
+// Manzil: loyihaning mijoz guruhi va undagi kerakli mavzu.
+async function tgNashrManzil(projectId, purpose) {
+  const r = await db.query(
+    `select g.chat_id, g.title, g.is_forum, t.thread_id, t.title as topic_title
+       from tg_groups g
+       left join tg_topics t on t.chat_id = g.chat_id and t.purpose = $2
+      where g.kind = 'mijoz' and g.project_id = $1 and g.is_active
+      order by g.last_seen_at desc nulls last
+      limit 1`,
+    [projectId, purpose],
+  );
+  return r.rows[0] || null;
+}
+
+async function tgHandleReaction(mr) {
+  // Anonim admin nomidan qo'yilgan reaksiyada `user` bo'lmaydi —
+  // kim bosganini bilmasak, huquqni ham tekshira olmaymiz.
+  if (!mr || !mr.user || !mr.chat || !mr.chat.id) return;
+
+  const emoji = (list) =>
+    (list || []).filter((x) => x && x.type === "emoji").map((x) => x.emoji);
+  const eski = emoji(mr.old_reaction);
+  const yangi = emoji(mr.new_reaction);
+
+  const qoshildi = yangi.find((e) => NASHR_EMOJI[e] && !eski.includes(e));
+  if (qoshildi) return tgNashrQil(mr, qoshildi);
+
+  const olindi = eski.find((e) => NASHR_EMOJI[e] && !yangi.includes(e));
+  if (olindi) return tgNashrniQaytar(mr, olindi);
+}
+
+async function tgNashrQil(mr, emoji) {
+  const chatId = mr.chat.id;
+
+  const gr = await db.query(`select * from tg_groups where chat_id = $1`, [chatId]);
+  const group = gr.rows[0];
+  // Faqat ICHKI guruhdan ko'chiramiz. Mijoz guruhidagi reaksiya
+  // xabarni yana o'ziga yuborib, halqa hosil qilardi.
+  if (!group || !NASHR_MANBA[group.kind]) return;
+
+  // Xabarning turini faqat o'z jurnalimizdan bilamiz: Telegram'da
+  // "xabarni id bo'yicha o'qish" degan metod yo'q.
+  const mm = await db.query(
+    `select * from tg_messages where chat_id = $1 and message_id = $2`,
+    [chatId, mr.message_id],
+  );
+  const msg = mm.rows[0];
+  if (!msg || !NASHR_TURLARI.has(msg.kind)) return;
+
+  const threadId = msg.thread_id || null;
+
+  // LOYIHA: mavzu aytadi, mavzuda belgilanmagan bo'lsa — guruh.
+  let projectId = group.project_id || null;
+  if (threadId) {
+    const tp = await db.query(
+      `select project_id from tg_topics where chat_id = $1 and thread_id = $2`,
+      [chatId, threadId],
+    );
+    if (tp.rows[0] && tp.rows[0].project_id) projectId = tp.rows[0].project_id;
+  }
+
+  const user = await tgFindUser(mr.user);
+  if (!(await tgTasdiqlayOladimi(user, projectId))) return;
+
+  // Shu yerdan boshlab odamning huquqi bor — demak javob berish
+  // kerak. Yuqoridagi "jim qaytish"lar ataylab: har bir tasodifiy
+  // 👍 ga bot izoh yozsa, guruh shovqinga to'lardi.
+  const javob = (t, markup) =>
+    tgReply(chatId, t, { replyTo: mr.message_id, threadId, replyMarkup: markup });
+
+  if (!projectId) {
+    return javob(
+      "⚠️ Bu mavzu loyihaga bog'lanmagan — qayerga yuborishni bilmayman.\n" +
+      "<i>Boshqaruv › Guruhlar</i> bo'limida mavzuga loyiha tanlang.",
+    );
+  }
+
+  const purpose = NASHR_EMOJI[emoji] === "auto" ? NASHR_MANBA[group.kind] : NASHR_EMOJI[emoji];
+
+  const pr = await db.query(`select label from projects where id = $1`, [projectId]);
+  const loyiha = (pr.rows[0] && pr.rows[0].label) || "Loyiha";
+
+  const bor = await db.query(
+    `select id from tg_publications
+      where src_chat_id = $1 and src_message_id = $2 and purpose = $3 and revoked_at is null`,
+    [chatId, mr.message_id, purpose],
+  );
+  if (bor.rows[0]) return; // Allaqachon yuborilgan — jim.
+
+  const manzil = await tgNashrManzil(projectId, purpose);
+  if (!manzil) {
+    return javob(
+      `⚠️ <b>${escHtmlTg(loyiha)}</b> uchun mijoz guruhi topilmadi.\n` +
+      "<i>Boshqaruv › Guruhlar</i>da guruh turini «Mijoz» qilib, loyihani tanlang.",
+    );
+  }
+  // Forum guruhida mavzu belgilanmagan bo'lsa yuborib bo'lmaydi: xabar
+  // "General"ga tushib, mijozning ko'z oldida noto'g'ri joyda turardi.
+  if (manzil.is_forum && !manzil.thread_id) {
+    return javob(
+      `⚠️ <b>${escHtmlTg(manzil.title || "Mijoz guruhi")}</b>da ` +
+      `«${NASHR_NOMI[purpose]}» mavzusi belgilanmagan.\n` +
+      "<i>Boshqaruv › Guruhlar</i>da mavzuga vazifa tanlang.",
+    );
+  }
+
+  const nusxa = await tgCopyMessage(chatId, mr.message_id, manzil.chat_id, manzil.thread_id);
+  if (!nusxa.ok) {
+    return javob(
+      `⚠️ Yuborib bo'lmadi: ${escHtmlTg(nusxa.error || "noma'lum xato")}\n` +
+      "<i>Bot o'sha guruhda bormi va yozishga ruxsati bormi?</i>",
+    );
+  }
+
+  const ins = await db.query(
+    `insert into tg_publications
+       (src_chat_id, src_message_id, dst_chat_id, dst_thread_id, dst_message_id,
+        purpose, project_id, approved_by, emoji)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9) returning id`,
+    [chatId, mr.message_id, manzil.chat_id, manzil.thread_id || null, nusxa.messageId,
+     purpose, projectId, user.id, emoji],
+  );
+
+  await javob(
+    `✅ <b>${escHtmlTg(loyiha)}</b> → ${NASHR_NOMI[purpose]}` +
+    (manzil.title ? ` <i>(${escHtmlTg(manzil.title)})</i>` : "") + " ga yuborildi.",
+    { inline_keyboard: [[{ text: "↩️ Qaytarib olish", callback_data: "np:" + ins.rows[0].id }]] },
+  );
+}
+
+// Reaksiya olib tashlansa — yuborilgan nusxa ham olib tashlanadi.
+// Shu sabab "qaytarib olish" ikki yo'l bilan ishlaydi: tugma orqali
+// va reaksiyani bekor qilish orqali.
+async function tgNashrniQaytar(mr, emoji) {
+  const chatId = mr.chat.id;
+  const user = await tgFindUser(mr.user);
+  if (!user) return;
+
+  const r = await db.query(
+    `select * from tg_publications
+      where src_chat_id = $1 and src_message_id = $2 and emoji = $3 and revoked_at is null`,
+    [chatId, mr.message_id, emoji],
+  );
+  const pub = r.rows[0];
+  if (!pub) return;
+  if (!(await tgTasdiqlayOladimi(user, pub.project_id))) return;
+  await tgNashrniOchir(pub, user, chatId, mr.message_id);
+}
+
+async function tgNashrniOchir(pub, user, javobChat, javobMsg) {
+  const och = await tgDeleteMessage(pub.dst_chat_id, pub.dst_message_id);
+  await db.query(
+    `update tg_publications set revoked_at = now(), revoked_by = $2 where id = $1`,
+    [pub.id, user.id],
+  );
+  const msg = await db.query(
+    `select thread_id from tg_messages where chat_id = $1 and message_id = $2`,
+    [javobChat, javobMsg],
+  );
+  const threadId = (msg.rows[0] && msg.rows[0].thread_id) || null;
+  await tgReply(
+    javobChat,
+    och.ok
+      ? "↩️ Qaytarib olindi — mijoz guruhidan o'chirildi."
+      : "⚠️ Mijoz guruhidan o'chira olmadim (48 soatdan oshgan bo'lishi mumkin). " +
+        "Belgini olib qo'ydim, xabarni qo'lda o'chirish kerak.",
+    { replyTo: javobMsg, threadId },
+  );
+  return och.ok;
+}
+
 async function tgHandleCallback(cq) {
   const user = await tgFindUser(cq.from);
   if (!user || !user.is_active || user.access_status !== "active") {
@@ -4250,6 +4500,26 @@ async function tgHandleCallback(cq) {
   await tgAnswerCallback(cq.id);
   if (!cq.message || !cq.message.chat) return;
   const chat = cq.message.chat;
+
+  // Nashrni qaytarib olish. Menyu ekranlaridan OLDIN tekshiriladi:
+  // bu tugma guruhda turadi va natijasi ham guruhda ko'rinishi kerak,
+  // quyidagi umumiy shoxcha esa hammasini shaxsiy chatga yuboradi.
+  if (String(cq.data || "").startsWith("np:")) {
+    const id = String(cq.data).slice(3);
+    const r = await db.query(`select * from tg_publications where id = $1`, [id]);
+    const pub = r.rows[0];
+    if (!pub) return;
+    if (pub.revoked_at) return;
+    if (!(await tgTasdiqlayOladimi(user, pub.project_id))) return;
+    await tgNashrniOchir(pub, user, pub.src_chat_id, pub.src_message_id);
+    // Tugma bir martalik: bosilgandan keyin olib tashlanadi.
+    // `cq.message.text` — belgilashsiz, SOF matn (Telegram teglarni
+    // ajratib beradi). Uni HTML sifatida qaytarsak, loyiha nomidagi
+    // `&` yoki `<` butun xabarni buzib yuborardi.
+    await tgEditMessage(chat.id, cq.message.message_id,
+      escHtmlTg(cq.message.text || "") + "\n\n\u21A9\uFE0F Qaytarib olindi.", null);
+    return;
+  }
   // Huquq har bosishda qayta tekshiriladi: callback_data foydalanuvchi
   // tomonidan o'zgartirilishi mumkin, eski xabardagi tugma esa rol
   // olib qo'yilgandan keyin ham bosilishi mumkin.
@@ -4377,6 +4647,7 @@ app.get("/api/tg/groups", auth, async (req, res) => {
             title: y.title,
             project: y.project_slug,
             projectLabel: y.project_label,
+            purpose: y.purpose,
           })),
       })),
     });
@@ -4389,7 +4660,7 @@ app.patch("/api/tg/groups/:chatId", auth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
     const kind = req.body.kind || null;
-    if (kind && !["montaj", "dizayn", "video"].includes(kind)) {
+    if (kind && !["montaj", "dizayn", "video", "mijoz"].includes(kind)) {
       return res.status(400).json({ error: "Noto'g'ri guruh turi" });
     }
     let projectId = null;
@@ -4413,16 +4684,56 @@ app.patch("/api/tg/groups/:chatId", auth, async (req, res) => {
 app.patch("/api/tg/topics/:chatId/:threadId", auth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
-    let projectId = null;
-    if (req.body.project) {
-      const p = await db.query(`select id from projects where slug = $1`, [req.body.project]);
-      if (!p.rows[0]) return res.status(404).json({ error: "Loyiha topilmadi" });
-      projectId = p.rows[0].id;
+    // Mavzuning ikkita mustaqil sozlamasi bor va ularni ikki xil
+    // ekran tahrirlaydi: ichki guruhda LOYIHA, mijoz guruhida
+    // VAZIFA. Shuning uchun faqat YUBORILGAN maydon yangilanadi —
+    // ikkalasini birdan yozsak, bittasini tahrirlash ikkinchisini
+    // o'chirib yuborardi.
+    const set = [];
+    const par = [req.params.chatId, req.params.threadId];
+
+    if ("project" in req.body) {
+      let projectId = null;
+      if (req.body.project) {
+        const p = await db.query(`select id from projects where slug = $1`, [req.body.project]);
+        if (!p.rows[0]) return res.status(404).json({ error: "Loyiha topilmadi" });
+        projectId = p.rows[0].id;
+      }
+      par.push(projectId);
+      set.push(`project_id = $${par.length}`);
     }
-    const r = await db.query(
-      `update tg_topics set project_id = $3 where chat_id = $1 and thread_id = $2 returning chat_id`,
-      [req.params.chatId, req.params.threadId, projectId],
-    );
+
+    // `purpose` — mijoz guruhidagi mavzu nima uchun ishlatilishi.
+    // Bot tasdiqlangan ishni aynan shu belgiga qarab joylaydi.
+    if ("purpose" in req.body) {
+      const purpose = req.body.purpose || null;
+      if (purpose && !["kontent", "stories", "dizayn"].includes(purpose)) {
+        return res.status(400).json({ error: "Noto'g'ri mavzu vazifasi" });
+      }
+      par.push(purpose);
+      set.push(`purpose = $${par.length}`);
+    }
+
+    if (!set.length) return res.status(400).json({ error: "O'zgartirish berilmadi" });
+
+    // Bitta guruhda ikkita «Kontent» bo'lsa bot qaysisini tanlashni
+    // bilmaydi, shuning uchun bazadagi cheklov buni rad etadi —
+    // xatoni tushunarli qilib qaytaramiz.
+    let r;
+    try {
+      r = await db.query(
+        `update tg_topics set ${set.join(", ")}
+          where chat_id = $1 and thread_id = $2 returning chat_id`,
+        par,
+      );
+    } catch (e) {
+      if (e.code === "23505") {
+        return res.status(409).json({
+          error: "Bu guruhda shunday vazifali mavzu allaqachon bor",
+        });
+      }
+      throw e;
+    }
     if (!r.rows[0]) return res.status(404).json({ error: "Mavzu topilmadi" });
     res.json({ ok: true });
   } catch (e) {
@@ -4460,6 +4771,14 @@ app.post("/api/tg/webhook", async (req, res) => {
 // Webhook mantig'i alohida funksiyada — ichkarida erta `return`'lar bor
 // va ular javobni yuborishga xalal bermasligi kerak.
 async function tgWebhookIshla(u) {
+  // Xabarga reaksiya qo'yildi yoki olib tashlandi. Bu yangilanish
+  // TURI SO'RALGANDA va bot guruhda ADMIN bo'lgandagina keladi —
+  // ikkalasi ham Telegram'ning sharti.
+  if (u.message_reaction) {
+    await tgHandleReaction(u.message_reaction);
+    return;
+  }
+
   // Menyu tugmasi bosildi.
   if (u.callback_query) {
     await tgHandleCallback(u.callback_query);

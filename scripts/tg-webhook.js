@@ -24,15 +24,38 @@ const BUYRUQLAR = [
 ];
 const API = (m) => `https://api.telegram.org/bot${TOKEN}/${m}`;
 
+const kut = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Tarmoq uzilishi bu skriptni butunlay to'xtatib qo'yardi va odam
+// buyruqni qo'lda qayta terishi kerak bo'lardi. Faqat ULANISH xatosi
+// qayta uriniladi — Telegram'ning o'zi rad etgan so'rov (noto'g'ri
+// token, noto'g'ri URL) qayta urinishdan tuzalmaydi, uni darhol
+// ko'rsatish kerak.
 async function tg(method, body) {
-  const r = await fetch(API(method), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body || {}),
-  });
-  const j = await r.json().catch(() => ({}));
-  if (!j.ok) throw new Error(`${method}: ${j.description || r.status}`);
-  return j.result;
+  let oxirgi;
+  for (let urinish = 1; urinish <= 3; urinish++) {
+    let r;
+    try {
+      r = await fetch(API(method), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body || {}),
+        signal: AbortSignal.timeout(20000),
+      });
+    } catch (e) {
+      oxirgi = e;
+      if (urinish < 3) {
+        console.log(`   ⏳ ${method}: ulanmadi (${e.cause?.code || e.name}), qayta urinaman…`);
+        await kut(urinish * 1500);
+        continue;
+      }
+      throw new Error(`${method}: tarmoqqa ulanib bo'lmadi (${e.cause?.code || e.name}). Internetni tekshiring.`);
+    }
+    const j = await r.json().catch(() => ({}));
+    if (!j.ok) throw new Error(`${method}: ${j.description || r.status}`);
+    return j.result;
+  }
+  throw oxirgi;
 }
 
 (async () => {
@@ -90,7 +113,15 @@ async function tg(method, body) {
       // `callback_query` SHART: busiz inline menyu tugmalari bosilganda
       // Telegram serverga hech narsa yubormaydi va tugma ustida
       // aylanuvchi belgi qotib qoladi.
-      allowed_updates: ["message", "my_chat_member", "callback_query"],
+      //
+      // `message_reaction` ham SHART: tasdiqlangan ishni mijoz guruhiga
+      // yuborish aynan reaksiyadan boshlanadi. Buning IKKI sharti bor
+      // va ikkalasi ham Telegram tomonidan qo'yilgan:
+      //   1) shu yerda ochiq ko'rsatilishi (standart ro'yxatga kirmaydi);
+      //   2) bot o'sha guruhda ADMIN bo'lishi.
+      // Admin bo'lmasa Telegram reaksiyalarni umuman yubormaydi —
+      // server tomonda tuzatib bo'lmaydigan yagona joy shu.
+      allowed_updates: ["message", "my_chat_member", "callback_query", "message_reaction"],
       // Navbatdagi xabarlarni TASHLAMAYMIZ: ular orasida "bot guruhga
       // qo'shildi" hodisalari bor va aynan o'shalar guruhlarni
       // ro'yxatdan o'tkazadi. Tashlab yuborsak, har guruhga qo'lda
