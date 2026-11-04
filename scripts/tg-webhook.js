@@ -142,9 +142,26 @@ async function tg(method, body) {
   console.log("   manzil           :", info.url || "(o'rnatilmagan)");
   console.log("   maxfiy kalit     :", info.has_custom_certificate ? "(sertifikat)" : process.env.TG_WEBHOOK_SECRET ? "bor" : "YO'Q — xabarlar rad etiladi");
   console.log("   kutayotgan xabar :", info.pending_update_count);
+  // Telegram oxirgi xatoni UNUTMAYDI: muammo bir yil oldin tuzalgan
+  // bo'lsa ham shu yerda turaveradi. Avval u hozirgi nosozlikdek
+  // ko'rinardi va odam buyruqni bekorga qayta-qayta yuborardi.
+  // Shuning uchun xato qachonligi va hali dolzarbmi — aytiladi.
   if (info.last_error_message) {
-    console.log("   oxirgi xato      :", info.last_error_message,
-      info.last_error_date ? `(${new Date(info.last_error_date * 1000).toISOString()})` : "");
+    const vaqt = info.last_error_date ? new Date(info.last_error_date * 1000) : null;
+    const soat = vaqt ? (Date.now() - vaqt.getTime()) / 3600000 : null;
+    const qachon = !vaqt ? ""
+      : soat < 1 ? `${Math.round(soat * 60)} daqiqa oldin`
+      : soat < 48 ? `${Math.round(soat)} soat oldin`
+      : `${Math.round(soat / 24)} kun oldin`;
+    // Navbat bo'sh = xabarlar hozir yetib boryapti. Bir soatdan eski
+    // xato bunday holatda eskirgan deb hisoblanadi.
+    const eskirgan = soat !== null && soat > 1 && info.pending_update_count === 0;
+    console.log(`   oxirgi xato      : ${info.last_error_message}${qachon ? ` (${qachon})` : ""}`);
+    console.log(eskirgan
+      ? "                      ℹ️  Eskirgan: navbat bo'sh, ya'ni xabarlar hozir yetib boryapti."
+      : "                      ⚠️  Dolzarb bo'lishi mumkin — tekshiring.");
+  } else if (info.url) {
+    console.log("   oxirgi xato      : yo'q");
   }
   if (!info.url) {
     console.log(
