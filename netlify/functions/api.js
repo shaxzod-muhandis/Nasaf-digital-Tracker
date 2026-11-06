@@ -4209,6 +4209,24 @@ function tgVazifalarMatn(rows, bugun) {
 // callback_data 64 baytdan oshmasligi kerak, shuning uchun kodlar
 // qisqa: m=menyu, v=mening ishlarim, x=xodimlar, x:<uuid>=bitta
 // xodim, p=loyihalar.
+// Loyiha holati — ilova paneli (projStatus) va devor ekrani bilan AYNAN
+// bir xil qoida. Reja haftalik bosqichlar bilan: har tugagan hafta +25%,
+// tugamagan hafta hisobga olinmaydi. Farq = bajarilgan − reja:
+//   > +2 → 🟢 Oldinda · ±2 → 🔵 Rejada · −3…−12 → 🟡 Ortda · < −12 → 🔴 Jiddiy ortda
+function tgRejaFoizi(cycle, bugun) {
+  const jami = dayDiff(cycle.period_start, cycle.period_end) + 1;
+  if (jami <= 0) return 0;
+  const otdi = Math.min(jami, Math.max(0, dayDiff(cycle.period_start, bugun) + 1));
+  return Math.round(Math.min(1, Math.floor(otdi / 7) / 4) * 100);
+}
+function tgLoyihaHolati(foiz, reja) {
+  const farq = foiz - reja;
+  if (farq > 2) return { belgi: "🟢", nom: "Oldinda" };
+  if (farq < -12) return { belgi: "🔴", nom: "Jiddiy ortda" };
+  if (farq < -2) return { belgi: "🟡", nom: "Ortda" };
+  return { belgi: "🔵", nom: "Rejada" };
+}
+
 async function tgLoyihalarMatn(user) {
   const r = isAdminRole(user.role)
     ? await db.query(`select * from projects where is_active = true and has_plan order by created_at`)
@@ -4227,9 +4245,15 @@ async function tgLoyihalarMatn(user) {
     const jami = sm.cycle.posts_target + sm.cycle.stories_target;
     const foiz = jami ? Math.round(((sm.doneK + sm.doneS) / jami) * 100) : 0;
     const kunlar = dayDiff(bugun, sm.cycle.period_end);
-    const belgi = sm.outstandingDebt ? "🔴" : foiz >= 100 ? "🟢" : "🟡";
+    const reja = tgRejaFoizi(sm.cycle, bugun);
+    const holat = sm.outstandingDebt
+      ? { belgi: "🔴", nom: "Qarz" }
+      : foiz >= 100
+        ? { belgi: "🟢", nom: "Bajarildi" }
+        : tgLoyihaHolati(foiz, reja);
+    const rejaQism = sm.outstandingDebt || foiz >= 100 ? "" : ` (reja ${reja}%)`;
     let blok =
-      `${belgi} <b>${escHtmlTg(project.label)}</b> — ${foiz}%\n` +
+      `${holat.belgi} <b>${escHtmlTg(project.label)}</b> — ${foiz}% · ${holat.nom}${rejaQism}\n` +
       `   Post ${sm.doneK}/${sm.cycle.posts_target} · Stories ${sm.doneS}/${sm.cycle.stories_target} · ` +
       (kunlar >= 0 ? `${kunlar} kun qoldi` : `muddat ${-kunlar} kun oldin tugagan`);
     if (sm.outstandingDebt) {

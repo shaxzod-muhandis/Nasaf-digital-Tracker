@@ -8323,9 +8323,9 @@
         background: var(--dot);
       }
       .st-pill.st-debt { background: var(--st-debt-bg); color: var(--st-debt); --dot: var(--st-debt-dot); }
-      .st-pill.st-behind { background: var(--st-behind-bg); color: var(--st-behind); --dot: var(--st-behind-dot); }
+      .st-pill.st-behind { background: var(--st-debt-bg); color: var(--st-debt); --dot: var(--st-debt-dot); }
       .st-pill.st-mid { background: var(--st-mid-bg); color: var(--st-mid); --dot: var(--st-mid-dot); }
-      .st-pill.st-onplan { background: var(--st-ahead-bg); color: var(--st-ahead); --dot: var(--st-ahead-dot); }
+      .st-pill.st-onplan { background: var(--st-onplan-bg); color: var(--st-onplan); --dot: var(--st-onplan-dot); }
       .st-pill.st-ahead { background: var(--st-ahead-bg); color: var(--st-ahead); --dot: var(--st-ahead-dot); }
       .st-pill.st-done { background: var(--st-ahead-bg); color: var(--st-ahead); --dot: var(--st-ahead-dot); }
 
@@ -8354,9 +8354,9 @@
         background: var(--marker);
       }
       .st-fill-debt { background: var(--st-debt-dot); }
-      .st-fill-behind { background: var(--st-behind-dot); }
+      .st-fill-behind { background: var(--st-debt-dot); }
       .st-fill-mid { background: var(--st-mid-dot); }
-      .st-fill-onplan { background: var(--st-ahead-dot); }
+      .st-fill-onplan { background: var(--st-onplan-dot); }
       .st-fill-ahead { background: var(--st-ahead-dot); }
       .st-fill-done { background: var(--st-ahead-dot); }
 
@@ -13378,38 +13378,32 @@
         return Math.round(projElapsedFrac(p) * 100);
       }
 
-      // Loyiha holati. Qarz — alohida, eng og'ir holat. Qolganida
-      // bajarilgan foiz davr bo'yicha kutilgan foizdan qanchalik
-      // uzoqligiga qaraladi; 5 foiz ichidagi farq "rejada" deb olinadi,
-      // aks holda har kichik tebranish holatni almashtirib turardi.
-      // Chegaralar ataylab assimetrik. "Ortda" — ogohlantirish, shuning
-      // uchun u faqat jiddiy farqda chiqadi: davrning oxiriga borib
-      // kutilgan foiz tabiiy ravishda yuqori bo'ladi va kichik
-      // kechikishda ham hamma loyiha qizarib ketardi. "Oldinda" esa
-      // maqtov — uni qiyinlashtirishning ma'nosi yo'q.
-      // Haftalik rejani bajargan (yoki oshirgan) loyiha — yashil
-      // "Rejada". Shu sabab alohida "Oldinda" darajasi yo'q: rejani
-      // bajarish va undan oshirish bir xil yaxshi xabar, ikkita yashil
-      // daraja esa faqat chalkashtirardi.
-      //
-      // Orqada qolganlar ikkiga bo'linadi: ishning yarmidan o'tgani
-      // "O'rtacha", yarmiga ham yetmagani "Ortda". Ya'ni 36% da turgan
-      // loyiha hech qachon "o'rtacha" deb yumshatilmaydi.
-      const PROJ_MID_MIN_PCT = 50;
+      // Loyiha holati — bajarilgan foiz "Reja" chizig'iga nisbatan (farq =
+      // bajarilgan − reja, foiz punktida). Bot ("Loyihalar holati") va
+      // devor ekrani (TV) bilan AYNAN bir xil qoida (2026-11-06):
+      //   chiziqdan o'tib ketgan (> +2)  → Oldinda       (yashil)
+      //   chiziqning o'zida (±2)         → Rejada        (ko'k)
+      //   ortda (−3 … −12)               → Ortda         (sariq)
+      //   ancha ortda (−12 dan ko'p)     → Jiddiy ortda  (qizil)
+      // ±2 — yaxlitlash shovqini: reja 50% da 49% ham "chiziqda".
+      // Ichki kalitlar o'zgarmadi: mid = Ortda, behind = Jiddiy ortda.
+      const PROJ_REJA_TOLERANCE = 2;
+      const PROJ_JIDDIY_GAP = 12;
       function projStatus(p) {
         if (p.outstandingDebt) return "debt";
-        // To'liq bajarilgan — eng yaxshi holat, alohida. Tempo bilan
-        // solishtirishning ma'nosi yo'q: ish tugagan.
+        // To'liq bajarilgan — eng yaxshi holat, alohida.
         if ((p.k > 0 || p.s > 0) && p.doneK >= p.k && p.doneS >= p.s) return "done";
-        const pc = projPct(p);
-        if (pc >= projExpectedPct(p)) return "onplan";
-        return pc >= PROJ_MID_MIN_PCT ? "mid" : "behind";
+        const farq = projPct(p) - projExpectedPct(p);
+        if (farq > PROJ_REJA_TOLERANCE) return "ahead";
+        if (farq < -PROJ_JIDDIY_GAP) return "behind";
+        if (farq < -PROJ_REJA_TOLERANCE) return "mid";
+        return "onplan";
       }
       const PROJ_STATUS_LABEL = {
         done: "Bajarildi",
         debt: "Qarz",
-        behind: "Ortda",
-        mid: "O'rtacha",
+        behind: "Jiddiy ortda",
+        mid: "Ortda",
         onplan: "Rejada",
         ahead: "Oldinda",
       };
@@ -13742,7 +13736,8 @@
         renderToday();
       }
       function buildTodayDesktopHtml(t) {
-        const behindCount = planProjects().filter((p) => projStatus(p) === "behind").length;
+        // "Ortda" kartasi — ortda va jiddiy ortda qolganlar birga.
+        const behindCount = planProjects().filter((p) => ["behind", "mid"].includes(projStatus(p))).length;
         const debtCount = planProjects().filter((p) => p.outstandingDebt).length;
 
         const stats = `<div class="d2-stats">
@@ -13766,7 +13761,7 @@
 
         // Jadval — filtr va qidiruv
         const q = (document.getElementById("today-search")?.value || "").toLowerCase().trim();
-        const problem = (p) => p.outstandingDebt || projStatus(p) === "behind";
+        const problem = (p) => p.outstandingDebt || ["behind", "mid"].includes(projStatus(p));
         let list = dashProjFilter === "problem" ? planProjects().filter(problem) : planProjects();
         if (q) {
           list = list.filter(
@@ -14043,7 +14038,7 @@
       // "Rejada" yashil ko'rsatiladi (haftalik rejani bajargan). Ko'k
       // "onplan" ranglari faqat tanlangan qator foni uchun qoladi, shu
       // sabab matn/nuqta rangi alohida xaritadan olinadi.
-      const ST_COLOR = { debt: "debt", behind: "behind", mid: "mid", onplan: "ahead", ahead: "ahead", done: "ahead" };
+      const ST_COLOR = { debt: "debt", behind: "debt", mid: "mid", onplan: "onplan", ahead: "ahead", done: "ahead" };
 
       function projPlanDelta(p) {
         const total = p.k + p.s;
