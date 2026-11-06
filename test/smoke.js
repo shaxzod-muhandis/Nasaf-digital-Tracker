@@ -80,14 +80,14 @@ async function main() {
     assert.strictEqual(r.status, 403);
   });
 
-  console.log("── LOYIHA PROGRESS % (Post 70% / Stories 30%) ─────");
-  await check("post va stories teng emas — 70/30 og'irlik bilan hisoblanadi", async () => {
-    assert.strictEqual(projectPct(7, 10, 3, 10), 58); // 0.7*0.7 + 0.3*0.3 = 0.58
-    assert.strictEqual(projectPct(0, 10, 10, 10), 30); // faqat stories bajarilgan
-    assert.strictEqual(projectPct(10, 10, 0, 10), 70); // faqat post bajarilgan
+  console.log("── LOYIHA PROGRESS % (jami post+stories) ──────────");
+  await check("foiz = bajarilgan post+stories / jami maqsad (botdagi bilan bir xil)", async () => {
+    assert.strictEqual(projectPct(9, 10, 15, 15), 96); // 24/25 — avvalgi 70/30 bilan 93 edi
+    assert.strictEqual(projectPct(7, 10, 1, 15), 32); // 8/25 — avval 51 edi
+    assert.strictEqual(projectPct(0, 10, 10, 10), 50);
     assert.strictEqual(projectPct(10, 10, 10, 10), 100);
   });
-  await check("loyihada faqat bitta tur bo'lsa — o'sha yagona 100% deb olinadi", async () => {
+  await check("loyihada faqat bitta tur bo'lsa ham to'g'ri", async () => {
     assert.strictEqual(projectPct(0, 0, 5, 10), 50); // faqat stories rejalashtirilgan
     assert.strictEqual(projectPct(3, 6, 0, 0), 50); // faqat post rejalashtirilgan
     assert.strictEqual(projectPct(0, 0, 0, 0), 0);

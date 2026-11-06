@@ -276,20 +276,13 @@ function progressEmoji(p) {
 
 const pct = (d, t) => (t === 0 ? 0 : Math.round((d / t) * 100));
 
-// Loyiha progress foizi — Post ("kontent") va Stories teng og'irlikda
-// hisoblanmaydi: Post umumiy progressning 70%ini, Stories 30%ini
-// tashkil qiladi (frontenddagi projPct() bilan bir xil mantiq — shu
-// pacing-eslatmasidagi % ilovada ko'rinadigan % bilan mos kelishi
-// uchun). Loyihada faqat bittasi bo'lsa, o'sha yagona tur 100% sifatida
-// hisoblanadi.
+// Loyiha progress foizi — bajarilgan post+stories JAMI maqsadga
+// nisbatan. Botdagi "📊 Loyihalar holati", ilova paneli (projPct) va
+// devor ekrani bilan bir xil. Avval Post 70% / Stories 30% og'irlik
+// bilan hisoblanardi va raqamlar bir-biridan farq qilardi.
 function projectPct(doneK, k, doneS, s) {
-  const hasK = k > 0,
-    hasS = s > 0;
-  if (!hasK && !hasS) return 0;
-  const kFrac = hasK ? doneK / k : 0;
-  const sFrac = hasS ? doneS / s : 0;
-  if (hasK && hasS) return Math.round((kFrac * 0.7 + sFrac * 0.3) * 100);
-  return Math.round((hasK ? kFrac : sFrac) * 100);
+  const jami = k + s;
+  return jami > 0 ? Math.round(((doneK + doneS) / jami) * 100) : 0;
 }
 
 // Xodimga shaxsiy pacing-eslatma matnini quradi (bir nechta loyiha bo'yicha)
