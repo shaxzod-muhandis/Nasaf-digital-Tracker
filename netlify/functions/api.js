@@ -2644,12 +2644,16 @@ app.get("/api/events", auth, async (req, res) => {
       });
     });
     items.sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0));
+    // Asosiy yo'l — har daqiqalik soat (pastdagi /reminders/tick). Bu
+    // yerdagisi zaxira: soat to'xtab qolsa, kalendar ochilganda navbat
+    // baribir suriladi.
+    //
+    // Javobdan OLDIN bajariladi. Avval keyin edi — Vercel javob
+    // ketgach funksiyani muzlatadi va ish yarmida qolardi: eslatma
+    // "yuborildi" deb belgilanar, lekin Telegram'ga umuman ketmasdi.
+    // Odatda hech narsa yuborilmaydi va bu bitta tez so'rov, xolos.
+    await evSendDueReminders().catch((err) => console.error("[eslatma navbati]", err.message));
     res.json({ items });
-    // Javob yuborilgandan keyin — vaqti kelgan eslatmalarni yuborib
-    // qo'yamiz. Vercel'da daqiqalik cron har doim mavjud emas, shuning
-    // uchun kalendar ochiq bo'lgan payt ham navbatni suradi. Xatosi
-    // foydalanuvchiga ta'sir qilmaydi.
-    evSendDueReminders().catch((err) => console.error("[eslatma navbati]", err.message));
   } catch (e) {
     serverError(res, e, "GET /api/events", req);
   }
@@ -3013,7 +3017,13 @@ async function evSendDueReminders() {
       `update event_reminders set sent_at = now()
         where id in (
           select id from event_reminders
-           where sent_at is null and send_at <= now() and send_at > now() - interval '2 hours'
+           where sent_at is null and send_at <= now()
+             -- Avval 2 soatdan eski eslatma jimgina tashlab yuborilardi:
+             -- bazadagi 147 tadan 45 tasi shunday yo'qolgan. Endi qoida
+             -- mantiqiy: tadbir hali boshlanmagan bo'lsa (5 daqiqa
+             -- ruxsat bilan) — yuboriladi. 1 kunlik eslatma 3 soat
+             -- kechiksa ham foydali; o'tib ketgan tadbirga esa yo'q.
+             and occurrence_start > now() - interval '5 minutes'
            order by send_at limit 200
         )
         returning event_id, user_id, occurrence_start`,
@@ -3030,10 +3040,16 @@ async function evSendDueReminders() {
       if (!ev) continue;
       const occ = new Date(row.occurrence_start);
       const davomiylik = new Date(ev.end_at).getTime() - new Date(ev.start_at).getTime();
-      const daqiqa = ev.remind_before || 0;
-      const qachon = daqiqa >= 1440 ? `${Math.round(daqiqa / 1440)} kundan` : daqiqa >= 60 ? `${Math.round(daqiqa / 60)} soatdan` : `${daqiqa} daqiqadan`;
+      // Qolgan vaqt HOZIRDAN hisoblanadi, sozlamadan emas. Avval doim
+      // "30 daqiqadan keyin" deyilardi — eslatma 20 daqiqa kechiksa ham.
+      // Odam 30 daqiqa bor deb o'ylab, tadbirga kechikardi.
+      const daqiqa = Math.round((occ.getTime() - Date.now()) / 60000);
+      const qachon = daqiqa < 1 ? null
+        : daqiqa >= 1440 ? `${Math.round(daqiqa / 1440)} kundan`
+        : daqiqa >= 60 ? `${Math.round(daqiqa / 60)} soatdan`
+        : `${daqiqa} daqiqadan`;
       await evNotify(ev.id, [row.user_id],
-        `⏰ <b>${qachon} keyin:</b> ${ev.title}\n${evFmtRange(occ.toISOString(), new Date(occ.getTime() + davomiylik).toISOString(), ev.all_day)}${ev.place ? `\n📍 ${ev.place}` : ""}`);
+        `⏰ <b>${qachon ? qachon + " keyin" : "Hozir boshlanadi"}:</b> ${ev.title}\n${evFmtRange(occ.toISOString(), new Date(occ.getTime() + davomiylik).toISOString(), ev.all_day)}${ev.place ? `\n📍 ${ev.place}` : ""}`);
       sent++;
     }
     return sent;
@@ -3041,6 +3057,36 @@ async function evSendDueReminders() {
     _evReminderBusy = false;
   }
 }
+
+// ── POST /api/events/reminders/tick — har daqiqalik soat ─────────────
+// Eslatma o'z vaqtida ketishi uchun navbatni kimdir har daqiqa surishi
+// kerak. Vercel'ning bepul tarifi cron'ni kuniga bir martagina beradi,
+// shuning uchun soat BAZANING ICHIDA: Supabase'dagi pg_cron har daqiqa
+// pg_net orqali shu manzilni chaqiradi (0034-migratsiya).
+//
+// Token ham bazada yaratiladi va ikkala tomon uni o'sha yerdan o'qiydi —
+// maxfiy kalitni hech kim qo'lda ko'chirmaydi. Himoya shart emas edi:
+// funksiya faqat vaqti KELGAN eslatmani yuboradi, erta ham, ikki marta
+// ham yubora olmaydi. Token esa begona chaqiruvlar bazaga ortiqcha yuk
+// bermasligi uchun.
+app.post("/api/events/reminders/tick", async (req, res) => {
+  try {
+    const r = await db.query(
+      `select value #>> '{}' as token from app_settings where key = 'reminder_tick_token'`,
+    );
+    const kutilgan = (r.rows[0] && r.rows[0].token) || "";
+    const kelgan = String(req.headers["x-tick-token"] || "");
+    if (!kutilgan || kelgan.length !== kutilgan.length ||
+        !crypto.timingSafeEqual(Buffer.from(kelgan), Buffer.from(kutilgan))) {
+      return res.sendStatus(403);
+    }
+    // Javobdan OLDIN — keyin qilsak Vercel funksiyani muzlatib qo'yardi.
+    const sent = await evSendDueReminders();
+    res.json({ ok: true, sent });
+  } catch (e) {
+    serverError(res, e, "POST /api/events/reminders/tick", req);
+  }
+});
 
 app.post("/api/events/reminders/run", async (req, res) => {
   try {
