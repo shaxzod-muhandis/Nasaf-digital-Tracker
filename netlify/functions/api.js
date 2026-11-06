@@ -3737,6 +3737,17 @@ function tgParseDate(token) {
 
 const TG_DARAJA_NOMI = { high: "Yuqori", medium: "O'rta", low: "Past", urgent: "Shoshilinch" };
 
+// `/task` buyrug'i QATORNING boshida turishi kerak — xabarning boshida
+// yoki oxirida. Xodimlar avval vazifani to'liq yozib, eng oxiriga
+// `/task @ali 05.11 !yuqori` qo'shishni afzal ko'rishdi: matn yozilib
+// bo'lgach kimga va qachongacha ekanini qo'shish tabiiyroq. Avval faqat
+// xabar boshidagi `/task` tanilardi va bunday xabarga bot jim qolardi.
+//
+// Gap o'rtasidagi "/task deb yozing" buyruq HISOBLANMAYDI — u qator
+// boshida emas. Bu tushuntirish xabarlaridan soxta vazifa ochilishining
+// oldini oladi.
+const TASK_BUYRUQ = /(^|\n)[ \t]*\/task(@\S+)?(?=\s|$)/i;
+
 async function tgHandleTask(m, group, user) {
   const javob = (t) => tgReply(m.chat.id, t, { replyTo: m.message_id, threadId: m.message_thread_id });
 
@@ -3755,10 +3766,10 @@ async function tgHandleTask(m, group, user) {
   // olinadi), QOLGAN QATORLAR — tavsif. Avval butun matn bitta
   // sarlavhaga yopishib ketardi va tavsifni faqat javob orqali
   // berish mumkin edi.
-  const toliqMatn = (m.text || m.caption || "").replace(/^\/task(@\S+)?\s*/i, "");
-  const qatorlar = toliqMatn.split("\n");
-  const xom = (qatorlar[0] || "").trim();
-  const ozTavsif = qatorlar.slice(1).join("\n").trim();
+  // Buyruq qaysi qatorda bo'lsa ham o'sha joydan olib tashlanadi. Qator
+  // yangi qatorligicha qoladi: undagi qolgan belgilar (`@ali 05.11`)
+  // pastdagi qatorma-qator tahlilda o'qiladi.
+  const toliqMatn = (m.text || m.caption || "").replace(TASK_BUYRUQ, "$1");
   const botNomi = (await tgBotUsername()).toLowerCase();
 
   // Ilovada yangi vazifaga uch daraja qo'yiladi (`urgent` — eski
@@ -3766,49 +3777,105 @@ async function tgHandleTask(m, group, user) {
   // "yuqori"ga tushadi.
   const TG_DARAJA = {
     yuqori: "high", shoshilinch: "high", muhim: "high",
-    "o'rta": "medium", "o‘rta": "medium", orta: "medium", ortacha: "medium",
+    "o'rta": "medium", orta: "medium", ortacha: "medium", "o'rtacha": "medium",
     past: "low",
   };
+  // Tutuq belgisi telefonga qarab turlicha chiqadi: iPhone `’` qo'yadi,
+  // boshqa klaviaturalar `‘`, `ʻ` yoki `` ` ``. Avval faqat ikkitasi
+  // tanilardi va "!o’rta" darajaga aylanmay, matnda qolib ketardi.
+  const tutuq = (x) => x.replace(/[’‘ʻʼ`´]/g, "'");
 
   let sana = null, soat = null, korsatilgan = null, daraja = null;
   const xomTeglar = [];
+
+  // Bo'lak belgimi — QIYMATNI YOZMASDAN tekshiradi. Qator faqat
+  // belgilardan iboratligini bilish uchun kerak: "06.11 uchrashuv"
+  // qatorini tekshirayotib sanani yozib qo'ysak, u sarlavha qatori
+  // bo'lib chiqqanda sana ikki marta ishlatilardi.
+  // `yumshoq` — sananing erkin shakli ("6.11") ham qabul qilinsinmi.
+  // Matn ichida qat'iy shakl talab qilinadi, aks holda "versiya 1.5"
+  // kabi so'z sanaga aylanardi.
+  const BELGI = {
+    sana: (b, yumshoq) => (yumshoq || /^\d{2}\.\d{2}(\.\d{4})?$/.test(b)) && tgParseDate(b),
+    // "16:9" (kadr nisbati) mos kelmaydi — daqiqa ikki raqamli.
+    soat: (b) => /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(b),
+    masul: (b) => /^@([A-Za-z0-9_]{3,})$/.exec(b),
+    // `!` shart: busiz "shoshilinch" so'zi oddiy sarlavhadan ham
+    // yulib olinardi.
+    daraja: (b) => { const p = /^!(.+)$/.exec(b); return p && TG_DARAJA[tutuq(p[1]).toLowerCase()]; },
+    teg: (b) => /^#([^\s#]{2,30})$/.exec(b),
+  };
+  const belgimi = (b, yumshoq) => Object.values(BELGI).some((f) => f(b, yumshoq));
+
+  // Belgini qo'llaydi. `true` — bo'lak yutildi va matnga kirmaydi.
+  // Har turdan birinchisi yutadi (darajadan tashqari — eski xatti-
+  // harakat saqlandi).
+  function qolla(b, yumshoq) {
+    let x;
+    if (!sana && (x = BELGI.sana(b, yumshoq))) { sana = x; return true; }
+    if (!soat && (x = BELGI.soat(b))) { soat = `${x[1].padStart(2, "0")}:${x[2]}`; return true; }
+    if ((x = BELGI.masul(b))) {
+      // Botning o'zi belgilansa — e'tiborsiz qoldiriladi.
+      if (x[1].toLowerCase() === botNomi) return true;
+      if (!korsatilgan) { korsatilgan = x[1].toLowerCase(); return true; }
+    }
+    if ((x = BELGI.daraja(b))) { daraja = x; return true; }
+    if ((x = BELGI.teg(b))) { xomTeglar.push(x[1]); return true; }
+    return false;
+  }
+
+  // QATORMA-QATOR. Odamlar belgilarni ko'pincha har birini alohida
+  // qatorga yozishadi:
+  //
+  //   /task @ali
+  //   06.11
+  //   #dizayn
+  //   TZ (AquaSoft)
+  //
+  // Avval faqat BIRINCHI qator o'qilardi: sarlavha "06.11" bo'lib
+  // qolar, sana, teg va daraja esa tavsifga tushib ketardi.
+  //
+  // Endi qoida:
+  //   • faqat belgilardan iborat qator — xabarning istalgan joyida
+  //     o'qiladi va olib tashlanadi;
+  //   • birinchi ODDIY matnli qator — sarlavha (undagi belgilar ham
+  //     o'qiladi, eskisi kabi);
+  //   • qolgani — tavsif. Tavsif ichidagi aralash qatorlarga
+  //     ("@aquasoft bilan gaplashing") TEGILMAYDI: ular matnning bir
+  //     qismi, buyruq emas.
+  const qatorlar = toliqMatn.split("\n");
+  const bolak = (q) => q.trim().split(/\s+/).filter(Boolean);
+  const olinganQatorlar = new Set();
   const qolgan = [];
-  const bolaklar = xom.split(/\s+/).filter(Boolean);
-  bolaklar.forEach((b, i) => {
-    // SANA. Matn o'rtasida qat'iyroq shakl talab qilinadi (kun va oy
-    // ikki raqamli, yoki yil bor): aks holda "versiya 1.5" kabi oddiy
-    // so'z sanaga aylanib ketardi. Birinchi bo'lakda esa eski,
-    // yumshoqroq shakl ham qabul qilinadi.
-    if (!sana) {
-      const qatiy = /^\d{2}\.\d{2}(\.\d{4})?$/.test(b);
-      if (qatiy || i === 0) {
-        const d = tgParseDate(b);
-        if (d) { sana = d; return; }
-      }
+  let sarlavhaQatori = -1;
+  qatorlar.forEach((q, i) => {
+    const b = bolak(q);
+    if (!b.length) return;
+    const yakka = b.length === 1;
+    if (b.every((x) => belgimi(x, yakka))) {
+      // Ikkinchi @mas'ul kabi yutilmagan bo'lak bo'lsa, qator tavsifda
+      // qoladi — Instagram manzili kabi ma'lumot jim yo'qolmasin.
+      const hammasi = b.map((x) => qolla(x, yakka)).every(Boolean);
+      if (hammasi) olinganQatorlar.add(i);
+      return;
     }
-    // SOAT. "16:9" (kadr nisbati) mos kelmaydi — daqiqa ikki raqamli.
-    const st = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(b);
-    if (!soat && st) { soat = `${st[1].padStart(2, "0")}:${st[2]}`; return; }
-    // MAS'UL. Botning o'zi belgilansa — e'tiborsiz qoldiriladi.
-    const mm = /^@([A-Za-z0-9_]{3,})$/.exec(b);
-    if (mm) {
-      if (mm[1].toLowerCase() === botNomi) return;
-      if (!korsatilgan) { korsatilgan = mm[1].toLowerCase(); return; }
+    if (sarlavhaQatori < 0) {
+      sarlavhaQatori = i;
+      olinganQatorlar.add(i);
+      b.forEach((x, j) => { if (!qolla(x, j === 0)) qolgan.push(x); });
     }
-    // DARAJA. `!` shart: busiz "shoshilinch" so'zi oddiy sarlavhadan
-    // ham yulib olinardi.
-    const pr = /^!(.+)$/.exec(b);
-    if (pr && TG_DARAJA[pr[1].toLowerCase()]) { daraja = TG_DARAJA[pr[1].toLowerCase()]; return; }
-    // TEG.
-    const tg = /^#([^\s#]{2,30})$/.exec(b);
-    if (tg) { xomTeglar.push(tg[1]); return; }
-    qolgan.push(b);
   });
+  const ozTavsif = qatorlar
+    .filter((_, i) => !olinganQatorlar.has(i))
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
   const sarlavha = qolgan.join(" ").trim();
 
   // Teglar MAVJUDLARI ichidan topiladi — chatdan yangi teg yaratish
   // ro'yxatni tezda axlatga to'ldirardi. Tanilmagani javobda aytiladi.
   let tegIdlari = [];
+  let tegNomlari = [];
   let tanilmaganTeglar = [];
   if (xomTeglar.length) {
     const tr = await db.query(`select id, name from tags where lower(name) = any($1::text[])`, [
@@ -3816,6 +3883,7 @@ async function tgHandleTask(m, group, user) {
     ]);
     const topildi = new Map(tr.rows.map((r) => [r.name.toLowerCase(), r.id]));
     tegIdlari = tr.rows.map((r) => r.id);
+    tegNomlari = tr.rows.map((r) => r.name);
     tanilmaganTeglar = xomTeglar.filter((x) => !topildi.has(x.toLowerCase()));
   }
 
@@ -3828,10 +3896,12 @@ async function tgHandleTask(m, group, user) {
   const yakuniySarlavha = sarlavha || (izoh ? izoh.split("\n")[0].slice(0, 120) : "");
   if (!yakuniySarlavha) {
     return javob(
-      "Vazifa matnini yozing: <code>/task Banner kerak</code>\n" +
+      "Vazifani yozing, eng oxiriga buyruqni qo'shing:\n\n" +
+        "<pre>Banner kerak\nUch o'lchamda, rangi ko'k\n\n/task @ali 05.11 !yuqori</pre>\n" +
+        "Birinchi qator — sarlavha, qolgani — tavsif.\n" +
+        "Bir qatorda ham bo'ladi: <code>/task Banner kerak</code>\n" +
         "Yoki xabarga javob qilib <code>/task</code> yuboring.\n\n" +
-        "Birinchi qator — sarlavha, keyingi qatorlar — tavsif.\n\n" +
-        "Qo'shimcha (birinchi qatorning istalgan joyida):\n" +
+        "Belgilar — <code>/task</code> qatorida yoki har biri o'z qatorida:\n" +
         "<code>@ali</code> — kimga   <code>11.11</code> yoki <code>11.11.2026</code> — muddat\n" +
         "<code>14:30</code> — soat   <code>!yuqori</code> / <code>!o'rta</code> / <code>!past</code> — daraja\n" +
         "<code>#Reels</code> — teg",
@@ -3943,7 +4013,8 @@ async function tgHandleTask(m, group, user) {
         (sana ? `Muddat: ${sana}${soat ? " " + soat : ""}\n` : "Muddat qo'yilmagan (backlog)\n") +
         (soat && !sana ? "Soat sanasiz saqlanmadi — sanani ham yozing\n" : "") +
         (daraja ? `Daraja: ${TG_DARAJA_NOMI[daraja]}\n` : "") +
-        (tegIdlari.length ? `Teglar: ${tegIdlari.length} ta\n` : "") +
+        // Nomi bilan: "2 ta" deyilsa, to'g'ri teg tushganini bilib bo'lmasdi.
+        (tegNomlari.length ? `Teg: ${tegNomlari.map((x) => "#" + escHtmlTg(x)).join(" ")}\n` : "") +
         (tanilmaganTeglar.length
           ? `Tanilmagan teg: ${tanilmaganTeglar.map((x) => "#" + escHtmlTg(x)).join(", ")}\n`
           : "") +
@@ -4213,11 +4284,13 @@ async function tgHandleEslatma(m, group, user) {
     "<b>Nasaf Digital bot</b>",
     "",
     "Shu guruhda:",
-    "• <code>/task Banner kerak</code> — yangi vazifa ochish",
+    "• Vazifani yozing, oxiriga <code>/task @ali 05.11</code> qo'shing — yangi vazifa ochiladi",
+    "   Birinchi qator — sarlavha, qolgani — tavsif",
+    "   Bir qatorda ham bo'ladi: <code>/task Banner kerak</code>",
     "   Xabarga javob qilib <code>/task</code> — o'sha xabar izohga tushadi",
     "• Botning «Vazifa ochildi» xabariga javob yozsangiz — vazifaga izoh bo'lib tushadi",
     "",
-    "Matnning <b>istalgan joyiga</b> qo'shsa bo'ladi:",
+    "<code>/task</code> qatoriga yoki <b>har birini alohida qatorga</b>:",
     "   <code>@ali</code> kimga · <code>11.11</code> muddat · <code>14:30</code> soat",
     "   <code>!yuqori</code> / <code>!o'rta</code> / <code>!past</code> daraja · <code>#Reels</code> teg",
     "",
@@ -4820,7 +4893,7 @@ async function tgWebhookIshla(u) {
   const matn = m.text || m.caption || "";
   // Diqqat: `/task` shabloni `/tasks` ga MOS KELMAYDI (keyin `@`, probel
   // yoki satr oxiri kutiladi), shuning uchun tartib muhim emas.
-  if (/^\/task(@\S+)?(\s|$)/i.test(matn)) await tgHandleTask(m, group, user);
+  if (TASK_BUYRUQ.test(matn)) await tgHandleTask(m, group, user);
   else if (/^\/(vazifalar|tasks)(@\S+)?(\s|$)/i.test(matn)) await tgHandleVazifalar(m, group, user);
   // Izoh eslatmadan OLDIN: botning tasdiq xabariga javob yozilganda,
   // matnda `@bot` ham bo'lsa, u izoh bo'lishi kerak — yo'riqnoma
