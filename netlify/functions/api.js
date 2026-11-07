@@ -4210,14 +4210,14 @@ function tgVazifalarMatn(rows, bugun) {
 // qisqa: m=menyu, v=mening ishlarim, x=xodimlar, x:<uuid>=bitta
 // xodim, p=loyihalar.
 // Loyiha holati — ilova paneli (projStatus) va devor ekrani bilan AYNAN
-// bir xil qoida. Reja haftalik bosqichlar bilan: har tugagan hafta +25%,
-// tugamagan hafta hisobga olinmaydi. Farq = bajarilgan − reja:
+// bir xil qoida. Reja KUNLIK: davrning necha kuni o'tganiga teng.
+// Farq = bajarilgan − reja:
 //   > +2 → 🟢 Oldinda · ±2 → 🔵 Rejada · −3…−12 → 🟡 Ortda · < −12 → 🔴 Jiddiy ortda
 function tgRejaFoizi(cycle, bugun) {
   const jami = dayDiff(cycle.period_start, cycle.period_end) + 1;
   if (jami <= 0) return 0;
   const otdi = Math.min(jami, Math.max(0, dayDiff(cycle.period_start, bugun) + 1));
-  return Math.round(Math.min(1, Math.floor(otdi / 7) / 4) * 100);
+  return Math.round((otdi / jami) * 100);
 }
 function tgLoyihaHolati(foiz, reja) {
   const farq = foiz - reja;

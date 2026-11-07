@@ -12947,21 +12947,10 @@
         const jami = (p.k || 0) + (p.s || 0);
         return jami > 0 ? Math.round((((p.doneK || 0) + (p.doneS || 0)) / jami) * 100) : 0;
       }
-      // Kutilgan bajarilish HAFTALIK bosqichlar bo'yicha o'lchanadi,
-      // kunlik chiziq bo'yicha emas. Sabab: kontent ishi kunlik tekis
-      // chiqmaydi — postlar hafta ichida to'planib chiqadi, shuning
-      // uchun kunlik o'lchovda hafta o'rtasida hamma loyiha "orqada"
-      // bo'lib ko'rinardi.
-      //
-      // Har hafta teng ulush: 1-hafta oxirida 25%, keyin 50%, 75%,
-      // 100%. Tugamagan hafta hisobga olinmaydi — joriy hafta xodimga
-      // qarshi ishlamaydi.
-      //
-      // Teng ulush ataylab: 33/66/100 bo'lganda kutilgan foiz oxirgi
-      // haftaga borib 100% ga yetardi va hech bir loyiha yashil bo'la
-      // olmasdi, dastlabki ikki haftada esa aksincha hammasi yashil
-      // bo'lib turardi.
-      const EXPECTED_WEEK_STEPS = 4;
+      // Kutilgan bajarilish (reja chizig'i) KUNLIK: davrning necha kuni
+      // o'tganiga teng — har kuni oldinga suriladi. Bot va devor ekrani
+      // (TV) bilan bir xil. Avval haftalik bosqich edi (+25% har hafta)
+      // va chiziq hafta davomida joyida turardi (2026-11-07 fikr-mulohaza).
       function projElapsedFrac(p) {
         const start = parseISO(p.periodStart);
         const end = parseISO(p.periodEnd);
@@ -12970,7 +12959,7 @@
         let elapsed = daysBetween(start, todayDate()) + 1;
         if (elapsed < 0) elapsed = 0;
         if (elapsed > total) elapsed = total;
-        return Math.min(1, Math.floor(elapsed / 7) / EXPECTED_WEEK_STEPS);
+        return elapsed / total;
       }
       function projDaysLeft(p) {
         return daysBetween(todayDate(), parseISO(p.periodEnd));
