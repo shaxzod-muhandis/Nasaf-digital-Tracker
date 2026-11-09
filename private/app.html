@@ -12943,9 +12943,19 @@
       // Avval Post 70% / Stories 30% og'irlik bilan hisoblanardi:
       // "93%" yonida "9/10 · 15/15" (24/25 = 96%) turar va bot bilan
       // farq qilardi (2026-11-06 fikr-mulohaza: botdagisi to'g'ri).
+      //
+      // 2026-11-10: endi ish HAJMI bo'yicha — 1 post = 4 stories (ball).
+      // Teng sanalganda stories soni ko'p bo'lgani uchun foizni o'zi
+      // tortardi: Voha'da post 4/10, stories 1/20 → 17%, holbuki post
+      // tayyorlash ancha og'irroq ish. Avvalgi 70/30 ulushdan farqi:
+      // ulush loyihaning rejasidan o'zi chiqadi, bitta postning qiymati
+      // esa hamma loyihada bir xil. Ncoin'ga aloqasi yo'q. Bot
+      // (lib/notify.js → projectPct) va TV (stats.js) bilan AYNAN bir xil.
+      const PROJ_POST_VAZNI = 4;
       function projPct(p) {
-        const jami = (p.k || 0) + (p.s || 0);
-        return jami > 0 ? Math.round((((p.doneK || 0) + (p.doneS || 0)) / jami) * 100) : 0;
+        const jami = PROJ_POST_VAZNI * (p.k || 0) + (p.s || 0);
+        const bajarildi = PROJ_POST_VAZNI * (p.doneK || 0) + (p.doneS || 0);
+        return jami > 0 ? Math.round((bajarildi / jami) * 100) : 0;
       }
       // Kutilgan bajarilish (reja chizig'i) KUNLIK: davrning necha kuni
       // o'tganiga teng — har kuni oldinga suriladi. Bot va devor ekrani
@@ -13039,9 +13049,11 @@
         if (isAdmin) return null;
         const myProjects = projects.filter((p) => (perms[currentUser] || []).includes(p.id));
         if (!myProjects.length) return null;
-        const doneSum = myProjects.reduce((s, p) => s + p.doneK + p.doneS, 0);
-        const totalSum = myProjects.reduce((s, p) => s + p.k + p.s, 0);
-        return { avgPct: pct(doneSum, totalSum), count: myProjects.length, doneSum, totalSum };
+        // Ball bo'yicha (1 post = PROJ_POST_VAZNI stories) — loyiha
+        // foizi bilan bir xil qoida (2026-11-10).
+        const doneSum = myProjects.reduce((s, p) => s + PROJ_POST_VAZNI * p.doneK + p.doneS, 0);
+        const totalSum = myProjects.reduce((s, p) => s + PROJ_POST_VAZNI * p.k + p.s, 0);
+        return { avgPct: pct(doneSum, totalSum), count: myProjects.length };
       }
 
       // ── XULOSA KARTALARI (bosh sahifa — mobil va desktopda bir xil) ─
@@ -13093,7 +13105,7 @@
           <div class="rail-title">Mening progressim</div>
           <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
             <span class="num" style="font-weight:600;font-size:22px;color:var(--ink)">${mp.avgPct}%</span>
-            <span class="r-sub">${mp.count} loyihada · ${mp.doneSum}/${mp.totalSum} post/stories</span>
+            <span class="r-sub">${mp.count} loyihada</span>
           </div>
           <div class="hist-track"><div class="hist-fill" style="width:${mp.avgPct}%"></div></div>
         </div>`;
@@ -13436,28 +13448,35 @@
         } catch (e) {}
       }
 
+      // Jamoa foizi va rejasi ham loyiha foizi kabi BALL bo'yicha
+      // (1 post = PROJ_POST_VAZNI stories, 2026-11-10). Loyihalar o'z
+      // ballari bilan tortiladi. `doneAll` / `totalTasks` esa oddiy ish
+      // soni bo'lib qoladi — ular faqat "Bajarildi: 73 / 230 vazifa" kabi
+      // alohida son sifatida ko'rsatiladi, foiz yonida emas (mobil davr
+      // kartasidagi "73 / 230 vazifa" shu sababli olib tashlandi).
       function computeHomeTempo() {
         let totalTasks = 0,
-          weightedElapsed = 0,
-          doneAll = 0;
+          doneAll = 0,
+          jamiBall = 0,
+          bajarildiBall = 0,
+          weightedElapsed = 0;
         // Rejasiz loyihada davr sanalari yo'q — `projElapsedFrac` NaN
         // qaytarib, "reja NaN%" bo'lib chiqardi.
         planProjects().forEach((p) => {
-          const tot = p.k + p.s;
-          totalTasks += tot;
+          const ball = PROJ_POST_VAZNI * p.k + p.s;
+          totalTasks += p.k + p.s;
           doneAll += p.doneK + p.doneS;
-          weightedElapsed += tot * projElapsedFrac(p);
+          jamiBall += ball;
+          bajarildiBall += PROJ_POST_VAZNI * p.doneK + p.doneS;
+          weightedElapsed += ball * projElapsedFrac(p);
         });
-        const expectedFrac = totalTasks ? weightedElapsed / totalTasks : 0;
-        const expectedDone = Math.round(expectedFrac * totalTasks);
+        const expectedFrac = jamiBall ? weightedElapsed / jamiBall : 0;
         return {
-          overallPct: pct(doneAll, totalTasks),
+          overallPct: pct(bajarildiBall, jamiBall),
           expectedPct: Math.round(expectedFrac * 100),
           expectedFrac,
           totalTasks,
           doneAll,
-          expectedDone,
-          behind: Math.max(0, expectedDone - doneAll),
         };
       }
       function buildSegs(frac) {
@@ -13570,11 +13589,14 @@
           .map((p) => daysBetween(today, parseISO(p.periodEnd)))
           .filter((n) => n >= 0);
         const daysLeft = ends.length ? Math.min(...ends) : 0;
-        const diff = t.doneAll - t.expectedDone;
+        // Farq foiz punktida — foizning o'zi ball bo'yicha bo'lgani uchun
+        // ish soni bilan solishtirsak, foiz va nishon bir-biriga zid
+        // chiqardi (2026-11-10).
+        const diff = t.overallPct - t.expectedPct;
         const badge =
           diff >= 0
-            ? `<div class="dcard-badge">Rejadan +${diff}</div>`
-            : `<div class="dcard-badge behind">Rejadan −${Math.abs(diff)}</div>`;
+            ? `<div class="dcard-badge">Rejadan +${diff}%</div>`
+            : `<div class="dcard-badge behind">Rejadan −${Math.abs(diff)}%</div>`;
         const periodCard = `<div class="dcard">
           <div class="dcard-top">
             <span>${MONTHS[today.getMonth()]} davri</span>
@@ -13583,7 +13605,6 @@
           </div>
           <div class="dcard-val">
             <div class="dcard-pct">${t.overallPct}<span>%</span></div>
-            <div class="dcard-sub">${t.doneAll} / ${t.totalTasks} vazifa</div>
             <div style="flex:1"></div>
             ${badge}
           </div>
@@ -14029,10 +14050,12 @@
       // sabab matn/nuqta rangi alohida xaritadan olinadi.
       const ST_COLOR = { debt: "debt", behind: "debt", mid: "mid", onplan: "onplan", ahead: "ahead", done: "ahead" };
 
+      // 2026-11-10: farq ish sonida emas, foiz punktida — holat
+      // (projStatus) aynan shu farqdan hisoblanadi. Foiz ball bo'yicha
+      // bo'lgach, ish sonidagi farq holatga zid chiqardi: Voha "Rejada",
+      // ustunda esa "−4".
       function projPlanDelta(p) {
-        const total = p.k + p.s;
-        const expected = Math.round(projElapsedFrac(p) * total);
-        return p.doneK + p.doneS - expected;
+        return projPct(p) - projExpectedPct(p);
       }
 
       function pdPeriodText(p) {
@@ -14158,7 +14181,7 @@
         const left = Math.max(0, total - done);
         const delta = projPlanDelta(p);
         const deltaCls = delta > 0 ? " good" : delta < 0 ? " bad" : "";
-        const deltaText = delta > 0 ? `+${delta}` : String(delta);
+        const deltaText = delta > 0 ? `+${delta}%` : `${delta}%`;
 
         const segs = [
           { key: "all", label: `Hammasi ${total}` },
@@ -14191,7 +14214,6 @@
             <div class="pd-stat-main">
               <div class="pd-stat-row">
                 <div class="pd-stat-pct">${pc}<span>%</span></div>
-                <div class="pd-stat-frac">${done}/${total}</div>
                 <div style="flex:1"></div>
                 ${statusPillHtml(st)}
               </div>

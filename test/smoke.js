@@ -80,11 +80,12 @@ async function main() {
     assert.strictEqual(r.status, 403);
   });
 
-  console.log("── LOYIHA PROGRESS % (jami post+stories) ──────────");
-  await check("foiz = bajarilgan post+stories / jami maqsad (botdagi bilan bir xil)", async () => {
-    assert.strictEqual(projectPct(9, 10, 15, 15), 96); // 24/25 — avvalgi 70/30 bilan 93 edi
-    assert.strictEqual(projectPct(7, 10, 1, 15), 32); // 8/25 — avval 51 edi
-    assert.strictEqual(projectPct(0, 10, 10, 10), 50);
+  console.log("── LOYIHA PROGRESS % (ball: 1 post = 4 stories) ────");
+  await check("foiz ball bo'yicha: (4×post + stories) / (4×reja post + reja stories)", async () => {
+    assert.strictEqual(projectPct(9, 10, 15, 15), 93); // 51/55 ball — teng sanashda 96 edi
+    assert.strictEqual(projectPct(7, 10, 1, 15), 53); // 29/55 ball — teng sanashda 32 edi
+    assert.strictEqual(projectPct(4, 10, 1, 20), 28); // Voha: 17/60 ball — teng sanashda 17 edi
+    assert.strictEqual(projectPct(0, 10, 10, 10), 20); // 10/50 ball — stories postdan yengil
     assert.strictEqual(projectPct(10, 10, 10, 10), 100);
   });
   await check("loyihada faqat bitta tur bo'lsa ham to'g'ri", async () => {
