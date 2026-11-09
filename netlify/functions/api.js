@@ -3794,6 +3794,102 @@ const TG_DARAJA_NOMI = { high: "Yuqori", medium: "O'rta", low: "Past", urgent: "
 // oldini oladi.
 const TASK_BUYRUQ = /(^|\n)[ \t]*\/task(@\S+)?(?=\s|$)/i;
 
+// `+Anhor` → faol loyiha. Brend nomi qo'lda yoziladi, shuning uchun
+// nom to'liq yoki xatosiz yozilishi shart emas:
+//   +anhor, +beruniy  → Anhor | Beruniy   (istalgan so'z boshi)
+//   +eastbridge, +east_bridge, +East-Bridge → East Bridge School
+//   +ulugbek          → Ulug'bek LC       (tutuq, bo'sh joy, belgi e'tiborsiz)
+//   +granix           → Granix (aniq moslik "Granix press"dan ustun)
+//   +anhr, +aqasoft, +voxa, +sokn → imlo xatosi kechiriladi
+//   +Анхор            → kirillcha ham o'giriladi
+// Ikki loyiha bir xil yaqin chiqsa yoki hech biri yaqin bo'lmasa —
+// vazifa OCHILMAYDI va variantlar ko'rsatiladi: noto'g'ri loyihaga
+// tushgan vazifani keyin hech kim sezmasligi mumkin, qayta yuborish
+// esa bir soniya.
+const TG_KIRILL = {
+  а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "yo", ж: "j", з: "z", и: "i", й: "y",
+  к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f",
+  х: "x", ц: "ts", ч: "ch", ш: "sh", щ: "sh", ъ: "", ы: "i", ь: "", э: "e", ю: "yu", я: "ya",
+  ў: "o", қ: "q", ғ: "g", ҳ: "h",
+};
+const tgLoyihaNorm = (x) => String(x || "").toLowerCase()
+  .replace(/[Ѐ-ӿ]/g, (h) => (h in TG_KIRILL ? TG_KIRILL[h] : h))
+  .replace(/[^\p{L}\p{N}]+/gu, "");
+
+// Ikki so'z orasidagi tahrir masofasi; qo'shni harflar o'rni
+// almashgani ("anhro") bitta xato hisoblanadi.
+function tgTahrirMasofasi(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const narx = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + narx);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+      }
+    }
+  }
+  return d[a.length][b.length];
+}
+
+// Necha xato kechiriladi — so'z uzunligiga qarab. Qisqa so'zda bitta
+// xato ham boshqa loyihaga aylantirib yuborishi mumkin.
+const tgRuxsatXato = (n) => (n <= 3 ? 0 : n <= 5 ? 1 : n <= 9 ? 2 : 3);
+
+async function tgLoyihaTop(xom) {
+  const r = await db.query(`select id, slug, label from projects where is_active order by label`);
+  const kalit = tgLoyihaNorm(xom);
+  const variantlar = r.rows.map((p) => ({
+    ...p,
+    toliq: tgLoyihaNorm(p.label),
+    slugN: tgLoyihaNorm(p.slug),
+    sozlar: String(p.label).split(/[\s|/,-]+/).map(tgLoyihaNorm).filter(Boolean),
+  }));
+  const royxatOf = (arr) => arr.map((p) => escHtmlTg(p.label)).join(", ");
+
+  // 1. Aniq yoki boshidan mos — avvalgidek.
+  const aniq = variantlar.filter((p) => p.toliq === kalit || p.slugN === kalit);
+  const mos = aniq.length ? aniq : variantlar.filter((p) =>
+    p.toliq.startsWith(kalit) || p.slugN.startsWith(kalit) || p.sozlar.some((x) => x.startsWith(kalit)));
+  if (mos.length === 1) return { id: mos[0].id, label: mos[0].label, taxmin: false };
+  if (mos.length > 1) {
+    return { xato: `+${escHtmlTg(xom)} — bir nechta loyihaga mos: ${royxatOf(mos)}.\nAniqroq yozing va qayta yuboring.` };
+  }
+
+  // 2. Imlo xatosi. Kalit loyiha nomining o'zi, uning biror so'zi va
+  //    nomning shu uzunlikdagi boshi bilan solishtiriladi ("+aqasof" →
+  //    "aquasof"), eng yaqini olinadi.
+  const ruxsat = tgRuxsatXato(kalit.length);
+  if (ruxsat > 0) {
+    const ball = variantlar.map((p) => {
+      const nomzodlar = [p.toliq, p.slugN, ...p.sozlar];
+      for (let n = kalit.length - 1; n <= kalit.length + 1; n++) {
+        if (n > 0 && n < p.toliq.length) nomzodlar.push(p.toliq.slice(0, n));
+      }
+      // `t` — to'liq nomgacha masofa. Teng holatda hal qiladi: "+granx"
+      // ikkala Granix'ning "granix" so'ziga bir xil yaqin, lekin to'liq
+      // nomi "Granix" bo'lganiga ancha yaqinroq.
+      return { p, m: Math.min(...nomzodlar.map((x) => tgTahrirMasofasi(kalit, x))), t: tgTahrirMasofasi(kalit, p.toliq) };
+    }).filter((x) => x.m <= ruxsat);
+    if (ball.length) {
+      const eng = Math.min(...ball.map((x) => x.m));
+      const tengi = ball.filter((x) => x.m === eng);
+      const engT = Math.min(...tengi.map((x) => x.t));
+      const golib = tengi.filter((x) => x.t === engT);
+      if (golib.length === 1) return { id: golib[0].p.id, label: golib[0].p.label, taxmin: true };
+      return {
+        xato: `+${escHtmlTg(xom)} — qaysi loyiha ekani aniq emas: ${royxatOf(golib.map((x) => x.p))}.\n` +
+          "Aniqroq yozing va qayta yuboring.",
+      };
+    }
+  }
+  return {
+    xato: `+${escHtmlTg(xom)} — bunday loyiha topilmadi.\nLoyihalar: ${royxatOf(variantlar)}.\n` +
+      "Vazifa ochilmadi, to'g'rilab qayta yuboring.",
+  };
+}
+
 async function tgHandleTask(m, group, user) {
   const javob = (t) => tgReply(m.chat.id, t, { replyTo: m.message_id, threadId: m.message_thread_id });
 
@@ -3831,7 +3927,7 @@ async function tgHandleTask(m, group, user) {
   // tanilardi va "!o’rta" darajaga aylanmay, matnda qolib ketardi.
   const tutuq = (x) => x.replace(/[’‘ʻʼ`´]/g, "'");
 
-  let sana = null, soat = null, korsatilgan = null, daraja = null;
+  let sana = null, soat = null, korsatilgan = null, daraja = null, xomLoyiha = null;
   const xomTeglar = [];
 
   // Bo'lak belgimi — QIYMATNI YOZMASDAN tekshiradi. Qator faqat
@@ -3850,6 +3946,9 @@ async function tgHandleTask(m, group, user) {
     // yulib olinardi.
     daraja: (b) => { const p = /^!(.+)$/.exec(b); return p && TG_DARAJA[tutuq(p[1]).toLowerCase()]; },
     teg: (b) => /^#([^\s#]{2,30})$/.exec(b),
+    // `+Anhor` — loyiha. Harf bilan boshlanishi shart: "+998..."
+    // telefon raqami loyiha bo'lib qolmasin.
+    loyiha: (b) => /^\+(\p{L}[^\s+]{1,40})$/u.exec(b),
   };
   const belgimi = (b, yumshoq) => Object.values(BELGI).some((f) => f(b, yumshoq));
 
@@ -3867,6 +3966,7 @@ async function tgHandleTask(m, group, user) {
     }
     if ((x = BELGI.daraja(b))) { daraja = x; return true; }
     if ((x = BELGI.teg(b))) { xomTeglar.push(x[1]); return true; }
+    if (!xomLoyiha && (x = BELGI.loyiha(b))) { xomLoyiha = x[1]; return true; }
     return false;
   }
 
@@ -3943,14 +4043,14 @@ async function tgHandleTask(m, group, user) {
   if (!yakuniySarlavha) {
     return javob(
       "Vazifani yozing, eng oxiriga buyruqni qo'shing:\n\n" +
-        "<pre>Banner kerak\nUch o'lchamda, rangi ko'k\n\n/task @ali 05.11 !yuqori</pre>\n" +
+        "<pre>Banner kerak\nUch o'lchamda, rangi ko'k\n\n/task @ali 05.11 !yuqori +Anhor</pre>\n" +
         "Birinchi qator — sarlavha, qolgani — tavsif.\n" +
         "Bir qatorda ham bo'ladi: <code>/task Banner kerak</code>\n" +
         "Yoki xabarga javob qilib <code>/task</code> yuboring.\n\n" +
         "Belgilar — <code>/task</code> qatorida yoki har biri o'z qatorida:\n" +
         "<code>@ali</code> — kimga   <code>11.11</code> yoki <code>11.11.2026</code> — muddat\n" +
         "<code>14:30</code> — soat   <code>!yuqori</code> / <code>!o'rta</code> / <code>!past</code> — daraja\n" +
-        "<code>#Reels</code> — teg",
+        "<code>#Reels</code> — teg   <code>+Anhor</code> — loyiha",
     );
   }
 
@@ -3959,12 +4059,22 @@ async function tgHandleTask(m, group, user) {
   // allaqachon belgilay oladi — avval bu qiymat hech kim tomonidan
   // o'qilmasdi.
   let projectId = group.project_id || null;
+  let loyihaTaxmin = null;   // imlo xatosidan topilgan bo'lsa: yozilgani
   if (m.message_thread_id) {
     const tp = await db.query(
       `select project_id from tg_topics where chat_id = $1 and thread_id = $2`,
       [m.chat.id, m.message_thread_id],
     );
     if (tp.rows[0] && tp.rows[0].project_id) projectId = tp.rows[0].project_id;
+  }
+  // Matnda `+Anhor` yozilgan bo'lsa — u hammasidan ustun. Guruh
+  // loyihaga bog'lanmagan bo'lsa (umumiy jamoa guruhi), vazifa
+  // avval loyihasiz ochilardi va ilovada qo'lda biriktirilardi.
+  if (xomLoyiha) {
+    const topildi = await tgLoyihaTop(xomLoyiha);
+    if (topildi.xato) return javob(topildi.xato);
+    projectId = topildi.id;
+    if (topildi.taxmin) loyihaTaxmin = xomLoyiha;
   }
 
   // MAS'UL: birinchi mos kelgan qoida yutadi.
@@ -4055,7 +4165,12 @@ async function tgHandleTask(m, group, user) {
         (kim
           ? `Mas'ul: ${escHtmlTg(kim)}\n`
           : "Mas'ul: <b>belgilanmadi</b> — ilovada biriktiring\n") +
-        (task.projectLabel ? `Loyiha: ${escHtmlTg(task.projectLabel)}\n` : "") +
+        (task.projectLabel
+          ? `Loyiha: ${escHtmlTg(task.projectLabel)}` +
+            // Xato yozilgan nomdan topilgan — kim yozgan bo'lsa ko'rib
+            // olsin, noto'g'ri tushgan bo'lsa ilovada bir bosishda tuzatadi.
+            (loyihaTaxmin ? ` <i>(«+${escHtmlTg(loyihaTaxmin)}» deb yozilgan edi)</i>` : "") + "\n"
+          : "Loyiha: <b>belgilanmadi</b> — keyingi safar <code>+Anhor</code> kabi yozing\n") +
         (sana ? `Muddat: ${sana}${soat ? " " + soat : ""}\n` : "Muddat qo'yilmagan (backlog)\n") +
         (soat && !sana ? "Soat sanasiz saqlanmadi — sanani ham yozing\n" : "") +
         (daraja ? `Daraja: ${TG_DARAJA_NOMI[daraja]}\n` : "") +
@@ -4363,6 +4478,7 @@ async function tgHandleEslatma(m, group, user) {
     "<code>/task</code> qatoriga yoki <b>har birini alohida qatorga</b>:",
     "   <code>@ali</code> kimga · <code>11.11</code> muddat · <code>14:30</code> soat",
     "   <code>!yuqori</code> / <code>!o'rta</code> / <code>!past</code> daraja · <code>#Reels</code> teg",
+    "   <code>+Anhor</code> loyiha (nomining boshi yetarli: <code>+east</code>, <code>+ulugbek</code>)",
     "",
     "• <code>/vazifalar</code> — ochiq ishlar ro'yxati",
     "",
