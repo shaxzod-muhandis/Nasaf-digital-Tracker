@@ -18,6 +18,10 @@ Har bir so'rov Telegram'ning `initData` imzosi bilan tasdiqlanadi.
 | `test/` | Integratsion testlar (alohida test bazasi talab qiladi) |
 | `scripts/` | `migrate` (sxemani qo'llash), `seed` (boshlang'ich ma'lumot) |
 | `docs/SETUP.md` | Noldan sozlash qo'llanmasi |
+| `CLAUDE.md` | Claude / yangi dasturchi uchun asosiy yo'riqnoma — avval shuni o'qing |
+| `docs/TOPSHIRISH.md` | Loyihaga qo'shilish: kirish, o'rnatish, o'qish tartibi |
+| `docs/UI-USLUB.md` | Dizayn qoidalari |
+| `docs/OCHIQ-ISHLAR.md` | Tugallanmagan ishlar va ma'lum muammolar |
 
 ## Ishga tushirish
 
