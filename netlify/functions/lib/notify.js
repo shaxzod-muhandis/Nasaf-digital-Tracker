@@ -322,9 +322,17 @@ const pct = (d, t) => (t === 0 ? 0 : Math.round((d / t) * 100));
 // nisbatan. Botdagi "📊 Loyihalar holati", ilova paneli (projPct) va
 // devor ekrani bilan bir xil. Avval Post 70% / Stories 30% og'irlik
 // bilan hisoblanardi va raqamlar bir-biridan farq qilardi.
+//
+// 2026-11-10: ish HAJMI bo'yicha — 1 post = 4 stories (ball). Teng
+// sanalganda stories ko'p bo'lgani uchun foizni o'zi tortardi (Voha:
+// post 4/10, stories 1/20 → 17%). Ulush loyihaning rejasidan o'zi
+// chiqadi, bitta postning qiymati hamma loyihada bir xil. Ncoin'ga
+// aloqasi yo'q. Panel (projPct, PROJ_POST_VAZNI) va TV (stats.js) bilan
+// AYNAN bir xil.
+const POST_VAZNI = 4;
 function projectPct(doneK, k, doneS, s) {
-  const jami = k + s;
-  return jami > 0 ? Math.round(((doneK + doneS) / jami) * 100) : 0;
+  const jami = POST_VAZNI * k + s;
+  return jami > 0 ? Math.round(((POST_VAZNI * doneK + doneS) / jami) * 100) : 0;
 }
 
 // Xodimga shaxsiy pacing-eslatma matnini quradi (bir nechta loyiha bo'yicha)

@@ -4629,16 +4629,25 @@ async function tgLoyihalarMatn(user) {
   const bloklar = [];
   for (const project of r.rows) {
     const sm = await getProjectCycleSummary(db, project);
-    const jami = sm.cycle.posts_target + sm.cycle.stories_target;
-    const foiz = jami ? Math.round(((sm.doneK + sm.doneS) / jami) * 100) : 0;
+    // Foiz — ball bo'yicha (1 post = 4 stories), lib/notify.js →
+    // projectPct: panel va TV bilan bitta qoida (2026-11-10). Avval shu
+    // yerda alohida, teng sanash bilan hisoblanardi.
+    const foiz = projectPct(sm.doneK, sm.cycle.posts_target, sm.doneS, sm.cycle.stories_target);
     const kunlar = dayDiff(bugun, sm.cycle.period_end);
     const reja = tgRejaFoizi(sm.cycle, bugun);
+    // "Bajarildi" — har tur o'z rejasiga yetganda, panel va TV kabi.
+    // Avval yaxlitlangan `foiz >= 100` edi: 199/200 da bot
+    // "Bajarildi", panel va TV esa "Oldinda" ko'rsatardi.
+    const bajarildi =
+      sm.cycle.posts_target + sm.cycle.stories_target > 0 &&
+      sm.doneK >= sm.cycle.posts_target &&
+      sm.doneS >= sm.cycle.stories_target;
     const holat = sm.outstandingDebt
       ? { belgi: "🔴", nom: "Qarz" }
-      : foiz >= 100
+      : bajarildi
         ? { belgi: "🟢", nom: "Bajarildi" }
         : tgLoyihaHolati(foiz, reja);
-    const rejaQism = sm.outstandingDebt || foiz >= 100 ? "" : ` (reja ${reja}%)`;
+    const rejaQism = sm.outstandingDebt || bajarildi ? "" : ` (reja ${reja}%)`;
     let blok =
       `${holat.belgi} <b>${escHtmlTg(project.label)}</b> — ${foiz}% · ${holat.nom}${rejaQism}\n` +
       `   Post ${sm.doneK}/${sm.cycle.posts_target} · Stories ${sm.doneS}/${sm.cycle.stories_target} · ` +

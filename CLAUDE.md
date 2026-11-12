@@ -109,13 +109,19 @@ uchalasini o'zgartiring, aks holda panel, bot va TV turli raqam ko'rsatadi
 
 | Joy | Fayl | Funksiyalar |
 |---|---|---|
-| Panel | `private/app.html` | `projPct`, `projElapsedFrac`, `projStatus`, `PROJ_REJA_TOLERANCE`, `PROJ_JIDDIY_GAP`, `ST_COLOR` |
-| Bot | `netlify/functions/api.js` | `tgRejaFoizi`, `tgLoyihaHolati`; `lib/notify.js` → `projectPct` |
-| TV | `nasaf-wall-screen/server/lib/stats.js` | `projectPct`, `expectedPctOf`, `classifyProject`, `REJA_TOLERANCE`, `JIDDIY_ORTDA_GAP` |
+| Panel | `private/app.html` | `PROJ_POST_VAZNI`, `projPct`, `projElapsedFrac`, `projStatus`, `PROJ_REJA_TOLERANCE`, `PROJ_JIDDIY_GAP`, `ST_COLOR` |
+| Bot | `netlify/functions/api.js` | `tgRejaFoizi`, `tgLoyihaHolati`, `tgLoyihalarMatn`; `lib/notify.js` → `POST_VAZNI`, `projectPct` |
+| TV | `nasaf-wall-screen/server/lib/stats.js` | `POST_VAZNI`, `projectPct`, `expectedPctOf`, `classifyProject`, `REJA_TOLERANCE`, `JIDDIY_ORTDA_GAP` |
 
 Hozirgi qoida:
 
-- **Foiz** = (bajarilgan post + bajarilgan stories) / (reja post + reja stories).
+- **Foiz — ball bo'yicha, 1 post = 4 stories** (2026-11-10):
+  (4 × bajarilgan post + bajarilgan stories) / (4 × reja post + reja stories).
+  Vazn faqat foiz va holat uchun, Ncoin'ga aloqasi yo'q. Jamoa foizi ham
+  shu ballar bilan. Foiz yonida umumiy son (masalan "5/30") ko'rsatilmaydi —
+  u ballga mos kelmaydi; post va stories alohida ko'rsatiladi.
+- **Bajarildi** — har tur o'z rejasiga yetganda (`doneK >= k` va `doneS >= s`),
+  yaxlitlangan 100% emas.
 - **Reja (kutilgan foiz)** — kunlik: `o'tgan kunlar / davr kunlari`,
   bu yerda o'tgan = `davr boshidan bugungacha + 1`, `[0, jami]` oralig'ida.
 - **Holat**, `farq = foiz − reja`:
