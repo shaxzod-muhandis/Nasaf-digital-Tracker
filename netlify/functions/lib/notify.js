@@ -17,6 +17,7 @@
 // "hammaga umumiy xabar" muammosiga qayta-qayta duch kelishardi,
 // 2026-09-11). Shu yerdagi qiymat faqat oxirgi chora — ENV o'rnatilgan
 // bo'lsa, u ustun keladi.
+const { yozBildirishnoma } = require("./inbox");
 const APP_URL = (process.env.APP_URL || "https://nasaf-digital-tracker.vercel.app").replace(/\/$/, "");
 
 // Bitta "Ilovani ochish" tugmasi bo'lgan inline keyboard quradi. `path`
@@ -157,7 +158,18 @@ async function notifyCheckChange(db, { actorUserId, actorUsername, project, cycl
 // chaqirilmaydi — chaqiruvchi tomon buni ta'minlaydi, chunki bu
 // haqiqiy ishlab topish/sarflash hodisasi emas.
 async function notifyNcoinChange(db, userId, amountSigned, text) {
-  if (!process.env.BOT_TOKEN || !userId) return;
+  if (!userId) return;
+  // Ilova ichida ham (D29) — Telegram'dan qat'i nazar.
+  {
+    const a = Math.abs(Number(amountSigned));
+    const f = Number.isInteger(a) ? String(a) : a.toFixed(1);
+    await yozBildirishnoma(db, userId, {
+      type: "ncoin",
+      title: `${Number(amountSigned) < 0 ? "−" : "+"}${f} Ncoin`,
+      body: String(text || "").replace(/<[^>]+>/g, ""),
+    });
+  }
+  if (!process.env.BOT_TOKEN) return;
   const ur = await db.query(`select telegram_chat_id from users where id = $1`, [userId]);
   const chatId = ur.rows[0]?.telegram_chat_id;
   if (!chatId) return;
@@ -179,8 +191,16 @@ async function notifyNcoinChange(db, userId, amountSigned, text) {
 // tomon (api.js) buni javobga qo'shib, admin panelida "xabar bordimi
 // yo'qmi"ni ko'rsatishi uchun (jim-ketgan xatoni yashirmaslik uchun).
 async function notifyTaskAssigned(db, { assigneeUserId, task, actorUsername }) {
-  if (!process.env.BOT_TOKEN) return { attempted: false, ok: false, reason: "no_bot_token" };
   if (!assigneeUserId) return { attempted: false, ok: false, reason: "no_assignee" };
+  // Ilova ichida (D29): «Sizga vazifa biriktirildi».
+  await yozBildirishnoma(db, assigneeUserId, {
+    type: "vazifa",
+    title: `Sizga «${task.title}» biriktirildi`,
+    body: [task.projectLabel, task.dueDate ? `Muddat: ${task.dueDate}` : ""].filter(Boolean).join(" · ") || null,
+    entityType: "task",
+    entityId: task.id,
+  });
+  if (!process.env.BOT_TOKEN) return { attempted: false, ok: false, reason: "no_bot_token" };
   const ur = await db.query(`select telegram_chat_id from users where id = $1`, [assigneeUserId]);
   const chatId = ur.rows[0]?.telegram_chat_id;
   if (!chatId) return { attempted: false, ok: false, reason: "no_chat_id" };
@@ -208,8 +228,28 @@ async function notifyTaskEvent(
   db,
   { actorUserId, assigneeUserId, createdByUserId, personalText, overviewText, selfText, taskId, excludeUserIds = [] },
 ) {
-  if (!process.env.BOT_TOKEN) return { attempted: false, ok: false, reason: "no_bot_token" };
   const excluded = new Set([actorUserId, ...excludeUserIds].filter(Boolean).map(String));
+  // Ilova ichida (D29) — Telegram bilan bir xil oluvchilar: mas'ulga
+  // shaxsiy matn, bergan odam va adminlarga umumiy matn. O'z amalingiz
+  // haqida bildirishnoma kelmaydi (actor chiqarib tashlanadi).
+  {
+    const tegdi = new Set();
+    if (assigneeUserId && personalText && !excluded.has(String(assigneeUserId))) {
+      tegdi.add(String(assigneeUserId));
+      await yozBildirishnoma(db, assigneeUserId, { type: "vazifa", html: personalText, entityType: "task", entityId: taskId });
+    }
+    if (overviewText) {
+      const r = await db
+        .query(
+          `select id from users where is_active = true and (role in ('super_admin','admin') or id = $1)`,
+          [createdByUserId || null],
+        )
+        .catch(() => ({ rows: [] }));
+      const kimga = r.rows.map((u) => String(u.id)).filter((id) => !excluded.has(id) && !tegdi.has(id));
+      await yozBildirishnoma(db, kimga, { type: "vazifa", html: overviewText, entityType: "task", entityId: taskId });
+    }
+  }
+  if (!process.env.BOT_TOKEN) return { attempted: false, ok: false, reason: "no_bot_token" };
   const replyMarkup = appOpenButton(taskId ? `?openTask=${taskId}` : "");
   const sentTo = new Set();
   const jobs = [];
@@ -257,7 +297,9 @@ async function notifyTaskEvent(
 // Loyihaga ruxsat berilganda bildirishnoma yuboradi (kim berganini
 // ko'rsatib) — vazifalarnikiga o'xshash, lekin loyiha uchun.
 async function notifyProjectAssigned(db, { assigneeUserId, actorUsername, projectLabel }) {
-  if (!process.env.BOT_TOKEN || !assigneeUserId) return;
+  if (!assigneeUserId) return;
+  await yozBildirishnoma(db, assigneeUserId, { type: "ruxsat", title: `Siz «${projectLabel}» loyihasiga qo'shildingiz` });
+  if (!process.env.BOT_TOKEN) return;
   const ur = await db.query(`select telegram_chat_id from users where id = $1`, [assigneeUserId]);
   const chatId = ur.rows[0]?.telegram_chat_id;
   if (!chatId) return;

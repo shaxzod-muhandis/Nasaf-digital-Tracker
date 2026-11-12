@@ -46,6 +46,7 @@ const {
   projectPct,
   buildPacingMessage,
 } = require("./lib/notify");
+const { yozBildirishnoma } = require("./lib/inbox");
 const { getBalance, awardNcoin, reverseNcoin } = require("./lib/ncoin");
 const {
   expandOccurrences,
@@ -77,6 +78,11 @@ const TASK_STATUS_LABEL_UZ = {
 // shu sabab standart 0.2 o'rniga 0.5 belgilangan). job_title matni
 // profildagi qiymat bilan AYNAN bir xil bo'lishi kerak.
 const TASK_NCOIN_AMOUNT_BY_JOB_TITLE = { "Grafik Dizyayner": 0.5 };
+// 2026-11-12 (D16/D21 qarori): miqdor qat'iy lavozimga (`users.position`,
+// faqat admin o'zgartiradi) bog'lanadi. Erkin matnli `job_title`ni xodim
+// o'zi yozadi — bitta harf farqi ("Grafik Dizayner") coinni 0.2 ga
+// tushirib yuborardi. Eski `job_title` qoidasi zaxira bo'lib qoladi.
+const TASK_NCOIN_AMOUNT_BY_POSITION = { dizayner: 0.5 };
 const TASK_NCOIN_DEFAULT_AMOUNT = 0.2;
 // Vazifani biriktirgan (yaratgan) odamga — bajaruvchiga coin berilganda
 // — qo'shimcha beriladigan qat'iy miqdor. Lavozimga bog'liq emas
@@ -413,6 +419,69 @@ app.delete("/api/me/celebration-sound", auth, async (req, res) => {
   } catch (e) {
     if (e.code === "42703") return res.json({ ok: true });
     serverError(res, e, "DELETE /api/me/celebration-sound");
+  }
+});
+
+// ── BILDIRISHNOMALAR (ilova ichida, D29; 2026-11-12) ─────────────────
+// Faqat o'ziga tegishlilar. `cursor` — oxirgi ko'rilgan created_at
+// (ISO), sahifa 30 tadan. Javobda o'qilmaganlar soni ham bor —
+// qo'ng'iroq belgisi shu bitta so'rov bilan yangilanadi.
+app.get("/api/notifications", auth, async (req, res) => {
+  try {
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 30));
+    const faqatOqilmagan = req.query.unread === "1";
+    const cursor = req.query.cursor && !isNaN(Date.parse(req.query.cursor)) ? req.query.cursor : null;
+    const [listR, nR] = await Promise.all([
+      db.query(
+        `select id, type, title, body, entity_type, entity_id, created_at, read_at
+           from notifications
+          where user_id = $1
+            and ($2::boolean is false or read_at is null)
+            and ($3::timestamptz is null or created_at < $3::timestamptz)
+          order by created_at desc
+          limit $4`,
+        [req.user.id, faqatOqilmagan, cursor, limit + 1],
+      ),
+      db.query(`select count(*)::int as n from notifications where user_id = $1 and read_at is null`, [req.user.id]),
+    ]);
+    const rows = listR.rows.slice(0, limit);
+    res.json({
+      items: rows.map((r) => ({
+        id: r.id,
+        type: r.type,
+        title: r.title,
+        body: r.body,
+        entityType: r.entity_type,
+        entityId: r.entity_id,
+        createdAt: r.created_at,
+        read: !!r.read_at,
+      })),
+      unread: nR.rows[0].n,
+      nextCursor: listR.rows.length > limit ? rows[rows.length - 1].created_at : null,
+    });
+  } catch (e) {
+    serverError(res, e, "GET /api/notifications", req);
+  }
+});
+app.post("/api/notifications/read-all", auth, async (req, res) => {
+  try {
+    await db.query(`update notifications set read_at = now() where user_id = $1 and read_at is null`, [req.user.id]);
+    res.json({ ok: true, unread: 0 });
+  } catch (e) {
+    serverError(res, e, "POST /api/notifications/read-all", req);
+  }
+});
+app.post("/api/notifications/:id/read", auth, async (req, res) => {
+  try {
+    if (!/^[0-9a-f-]{36}$/i.test(req.params.id)) return res.status(400).json({ error: "Noto'g'ri id" });
+    await db.query(
+      `update notifications set read_at = coalesce(read_at, now()) where id = $1 and user_id = $2`,
+      [req.params.id, req.user.id],
+    );
+    const nR = await db.query(`select count(*)::int as n from notifications where user_id = $1 and read_at is null`, [req.user.id]);
+    res.json({ ok: true, unread: nR.rows[0].n });
+  } catch (e) {
+    serverError(res, e, "POST /api/notifications/:id/read", req);
   }
 });
 
@@ -2103,6 +2172,21 @@ app.post("/api/announcements", auth, async (req, res) => {
   const text = `📣 <b>@${escapeHtml(req.user.username)} e’loni</b>\n\n${escapeHtml(message)}`;
   const replyMarkup = appOpenButton();
 
+  // Ilova ichida ham (D29) — Telegram'i bo'lmagan faol xodimga ham.
+  {
+    const ichR = await db.query(
+      usernames && usernames.length
+        ? `select id from users where is_active and id <> $1 and username = any($2::text[])`
+        : `select id from users where is_active and id <> $1`,
+      usernames && usernames.length ? [req.user.id, usernames] : [req.user.id],
+    );
+    await yozBildirishnoma(db, ichR.rows.map((u) => u.id), {
+      type: "elon",
+      title: `@${req.user.username} e'loni`,
+      body: message.slice(0, 1000),
+    });
+  }
+
   let recipients; // Map<chatId, username|null>
   if (usernames && usernames.length) {
     const usersR = await db.query(
@@ -2536,7 +2620,10 @@ function evFmtRange(startIso, endIso, allDay) {
   return `${kun} · ${t(s)}–${t(e)}`;
 }
 async function evNotify(eventId, userIds, text) {
-  if (!process.env.BOT_TOKEN || !userIds.length) return;
+  if (!userIds.length) return;
+  // Ilova ichida (D29): taklif, o'zgarish, bekor qilish, chiqarish.
+  await yozBildirishnoma(db, userIds, { type: "kalendar", html: text, entityType: "event", entityId: eventId });
+  if (!process.env.BOT_TOKEN) return;
   const r = await db.query(
     `select telegram_chat_id from users where id = any($1::uuid[]) and telegram_chat_id is not null`,
     [userIds],
@@ -5419,19 +5506,34 @@ app.get("/api/projects/:slug/feedback", auth, async (req, res) => {
 app.get("/api/feedback/overview", auth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
-    const r = await db.query(
-      `select p.slug, p.label, p.color, p.is_active,
+    // Fikrdan ochilgan vazifa (0037, D24) — holati panelda ko'rinadi.
+    // Ustun hali yo'q bo'lsa (42703) — avvalgi so'rov.
+    const asos = `select f.id, p.slug, p.label, p.color, p.is_active,
               f.period_month, f.rating, f.note, f.filled_at,
-              (f.filled_at is not null) as filled
+              (f.filled_at is not null) as filled`;
+    const r = await db
+      .query(
+        `${asos},
+              (select json_build_object('id', t.id, 'title', t.title, 'status', t.status)
+                 from tasks t where t.feedback_id = f.id order by t.created_at desc limit 1) as task
          from project_feedback f
          join projects p on p.id = f.project_id
         order by f.period_month desc, p.label`,
-    );
+      )
+      .catch((e) => {
+        if (e.code !== "42703") throw e;
+        return db.query(
+          `${asos}, null as task from project_feedback f join projects p on p.id = f.project_id
+            order by f.period_month desc, p.label`,
+        );
+      });
     const oylar = [...new Set(r.rows.map((x) => x.period_month))].sort().reverse();
     res.json({
       months: oylar.map((m) => ({ month: m, monthLabel: fbMonthLabel(m) })),
       labels: FB_LABELS,
       items: r.rows.map((x) => ({
+        id: x.id,
+        task: x.task || null,
         project: x.slug,
         label: x.label,
         color: x.color || null,
@@ -5501,6 +5603,15 @@ app.post("/api/fikr/:token", async (req, res) => {
       [fb.id, rating, note],
     );
     if (!upd.rows[0]) return res.status(409).json({ error: "Bu fikr allaqachon yuborilgan" });
+    // Adminlarga ilova ichida (D29): «Granix · Oktabr — 2 · Norozi».
+    const admR = await db.query(`select id from users where is_active and role in ('admin','super_admin')`);
+    await yozBildirishnoma(db, admR.rows.map((a) => a.id), {
+      type: "fikr",
+      title: `${fb.project_label} · ${fbMonthLabel(fb.period_month)} — ${rating} · ${FB_LABELS[rating]}`,
+      body: note,
+      entityType: "feedback",
+      entityId: fb.id,
+    });
     res.json({ ok: true });
   } catch (e) {
     serverError(res, e, "POST /api/fikr/:token");
@@ -5762,11 +5873,52 @@ app.delete("/api/projects/:slug", auth, async (req, res) => {
     const project = projR.rows[0];
     if (!project) return res.status(404).json({ error: "Loyiha topilmadi" });
     await db.query(`update projects set is_active = false where id = $1`, [project.id]);
+    // Arxivlangan sana (0037). Ustun hali yo'q bo'lsa — jim o'tkaziladi.
+    await db.query(`update projects set archived_at = now() where id = $1`, [project.id]).catch(() => {});
     const active = await getActiveCycle(db, project.id);
     if (active) await closeCycle(db, active.id);
     res.json({ ok: true, archived: true });
   } catch (e) {
     serverError(res, e, "DELETE /api/projects/:slug");
+  }
+});
+
+// ── LOYIHALAR ARXIVI (D20, 2026-11-12) ───────────────────────────────
+// Avval arxivlangan loyihani ko'rish ham, qaytarish ham imkonsiz edi —
+// faqat bazada qo'lda. Qaytarishda davr mavjud qoida bilan aniqlanadi
+// (`ensureCurrentCycle`): qarzli davr turgan bo'lsa u qayta ochiladi
+// («qarz yopilmaguncha yangi davr yo'q» qoidasi), jadval uzoq orqada
+// qolgan bo'lsa — bugundan yangi davr. Ruxsatlar arxivlashda
+// o'chirilmaydi, shuning uchun jamoa ham qaytadi.
+app.get("/api/projects/archived", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const r = await db.query(`select * from projects where is_active = false order by label`);
+    res.json({
+      projects: r.rows.map((p) => ({
+        id: p.slug,
+        label: p.label,
+        color: p.color || null,
+        hasPlan: p.has_plan !== false,
+        archivedAt: p.archived_at || null,
+      })),
+    });
+  } catch (e) {
+    serverError(res, e, "GET /api/projects/archived", req);
+  }
+});
+app.post("/api/projects/:slug/restore", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const r = await db.query(`select * from projects where slug = $1 and is_active = false`, [req.params.slug]);
+    const project = r.rows[0];
+    if (!project) return res.status(404).json({ error: "Arxivda bunday loyiha yo'q" });
+    await db.query(`update projects set is_active = true where id = $1`, [project.id]);
+    await db.query(`update projects set archived_at = null where id = $1`, [project.id]).catch(() => {});
+    if (project.has_plan !== false) await ensureCurrentCycle(db, { ...project, is_active: true });
+    res.json({ ok: true });
+  } catch (e) {
+    serverError(res, e, "POST /api/projects/:slug/restore", req);
   }
 });
 
@@ -6161,11 +6313,16 @@ app.patch("/api/checks", auth, async (req, res) => {
           });
           // Telegram xabari tranzaksiyadan TASHQARIDA: tashqi xizmat
           // ishlamasligi coin yozuvini bekor qilmasligi kerak.
-          for (const rcp of recipients) {
-            notifyNcoinChange(db, rcp.userId, rcp.amount, rcp.text).catch((e) =>
-              console.error("Ncoin bildirishnomasi xatosi:", rcp.reason, e.message),
-            );
-          }
+          // Javobdan OLDIN kutiladi (serverless: javobdan keyingi ish
+          // yarmida qoladi). Endi bu ilova ichidagi bildirishnomani ham
+          // yozadi (D29) — u yo'qolmasligi kerak.
+          await Promise.allSettled(
+            recipients.map((rcp) =>
+              notifyNcoinChange(db, rcp.userId, rcp.amount, rcp.text).catch((e) =>
+                console.error("Ncoin bildirishnomasi xatosi:", rcp.reason, e.message),
+              ),
+            ),
+          );
         } catch (e) {
           console.error("[Ncoin berilmadi]", ncoinRef, e.message);
         }
@@ -6481,6 +6638,13 @@ app.post("/api/tasks", auth, async (req, res) => {
     const taskId = ins.rows[0].id;
     const assigneeUserId = assigneeIds[0] || null;
     if (assigneeIds.length) await setTaskAssignees(db, taskId, assigneeIds);
+    // Mijoz fikridan ochilgan vazifa (D24, 0037) — fikrga bog'lanadi.
+    // Faqat admin (Mijoz fikri bo'limi faqat adminda).
+    if (req.body.feedbackId && isAdminRole(req.user.role) && /^[0-9a-f-]{36}$/i.test(req.body.feedbackId)) {
+      await db
+        .query(`update tasks set feedback_id = $1 where id = $2`, [req.body.feedbackId, taskId])
+        .catch((e) => console.error("feedback_id yozilmadi:", e.message));
+    }
 
     await setTaskTags(taskId, req.body.tagIds);
     await logTaskActivity(taskId, req.user.id, "created");
@@ -6755,8 +6919,11 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
       if (existing.assignee_user_id && yakkaMasul) {
         if (before.status === "review" && task.status === "done" && req.body.awardNcoin === true) {
           try {
-            const jtR = await db.query(`select job_title from users where id = $1`, [existing.assignee_user_id]);
-            const amount = TASK_NCOIN_AMOUNT_BY_JOB_TITLE[jtR.rows[0]?.job_title] ?? TASK_NCOIN_DEFAULT_AMOUNT;
+            const jtR = await db.query(`select job_title, position from users where id = $1`, [existing.assignee_user_id]);
+            const amount =
+              TASK_NCOIN_AMOUNT_BY_POSITION[jtR.rows[0]?.position] ??
+              TASK_NCOIN_AMOUNT_BY_JOB_TITLE[jtR.rows[0]?.job_title] ??
+              TASK_NCOIN_DEFAULT_AMOUNT;
             await awardNcoin(db, {
               userId: existing.assignee_user_id,
               amount,
@@ -6933,6 +7100,13 @@ app.get("/api/ncoin/me", auth, async (req, res) => {
        where t.user_id = $1 order by t.created_at desc limit 50`,
       [req.user.id],
     );
+    // Oxirgi xaridlarim holati bilan (D06): Kutilmoqda / Topshirildi / Bekor.
+    const purchasesR = await db
+      .query(
+        `select x.* from ncoin_purchases x where x.user_id = $1 order by x.created_at desc limit 10`,
+        [req.user.id],
+      )
+      .catch(() => ({ rows: null }));
     const unseenR = await db.query(
       `select exists(
          select 1 from ncoin_transactions t
@@ -6947,6 +7121,7 @@ app.get("/api/ncoin/me", auth, async (req, res) => {
       earned: Number(statsR.rows[0].earned),
       spent: Number(statsR.rows[0].spent),
       purchaseCount: Number(statsR.rows[0].purchase_count),
+      purchases: purchasesR.rows ? purchasesR.rows.map(xaridShakl) : null,
       hasUnseen: unseenR.rows[0].has_unseen,
       transactions: txR.rows.map((row) => {
         let detail = null;
@@ -7023,12 +7198,26 @@ app.post("/api/ncoin/purchase", auth, async (req, res) => {
         throw Object.assign(new Error("Balansingiz yetarli emas"), { status: 400 });
       }
       await client.query(`update ncoin_products set stock = stock - 1 where id = $1`, [productId]);
-      await client.query(
+      const txR = await client.query(
         `insert into ncoin_transactions (user_id, amount, reason, reference_type, reference_id)
-         values ($1, $2, 'purchase', 'product', $3)`,
+         values ($1, $2, 'purchase', 'product', $3) returning id`,
         [req.user.id, -product.price, productId],
       );
-      return { newBalance: balance - product.price, product };
+      // Xarid holati (0036, D06): «Kutilmoqda» — admin topshirguncha.
+      // Jadval hali yo'q bo'lsa (migratsiya ishlatilmagan) — xarid
+      // avvalgidek ishlayveradi, faqat holat yozilmaydi. Tranzaksiya
+      // ichida xato butun xaridni buzmasligi uchun avval tekshiriladi.
+      const borR = await client.query(`select to_regclass('public.ncoin_purchases') is not null as bor`);
+      let purchaseId = null;
+      if (borR.rows[0].bor) {
+        const puR = await client.query(
+          `insert into ncoin_purchases (user_id, product_id, product_name, price, tx_id)
+           values ($1, $2, $3, $4, $5) returning id`,
+          [req.user.id, productId, product.name, product.price, txR.rows[0].id],
+        );
+        purchaseId = puR.rows[0].id;
+      }
+      return { newBalance: balance - product.price, product, purchaseId };
     });
 
     const priceLabel = Number.isInteger(result.product.price)
@@ -7041,10 +7230,37 @@ app.post("/api/ncoin/purchase", auth, async (req, res) => {
       `Siz "${result.product.name}" uchun ${priceLabel} Ncoin sarfladingiz.`,
     ).catch((e) => console.error("Ncoin bildirishnomasi xatosi:", e.message));
 
+    // Adminlarga: yangi xarid topshirishni kutyapti (D06/D29).
+    if (result.purchaseId) {
+      const admR = await db.query(
+        `select id, telegram_chat_id from users where is_active and role in ('admin','super_admin') and id <> $1`,
+        [req.user.id],
+      );
+      const kim = req.user.first_name ? `${req.user.first_name} ${req.user.last_name || ""}`.trim() : `@${req.user.username}`;
+      await yozBildirishnoma(db, admR.rows.map((a) => a.id), {
+        type: "nshop",
+        title: `${kim} «${result.product.name}» xarid qildi`,
+        body: "Topshirishni kutyapti",
+        entityType: "purchase",
+        entityId: result.purchaseId,
+      });
+      await Promise.allSettled(
+        admR.rows
+          .filter((a) => a.telegram_chat_id)
+          .map((a) =>
+            sendMsg(db, a.telegram_chat_id, `🛍 <b>${escHtmlTg(kim)}</b> «${escHtmlTg(result.product.name)}» xarid qildi.\nTopshirilgach ilovada «Topshirildi» deb belgilang.`, {
+              replyMarkup: appOpenButton(),
+            }),
+          ),
+      );
+    }
+
     res.json({
       ok: true,
       balance: result.newBalance,
       product: { id: result.product.id, name: result.product.name },
+      purchaseId: result.purchaseId,
+      status: result.purchaseId ? "pending" : null,
     });
   } catch (e) {
     // Bu yerda ataylab ikki xil: `e.status` qo'yilgan xatolar — bu
@@ -7052,6 +7268,114 @@ app.post("/api/ncoin/purchase", auth, async (req, res) => {
     // foydalanuvchiga ko'rsatilishi kerak. Qolgani — kutilmagan xato.
     if (e && e.status) return res.status(e.status).json({ error: e.message });
     serverError(res, e, "POST /api/ncoin/purchase");
+  }
+});
+
+// ── XARIDLAR HOLATI (0036, D06/D28; 2026-11-12) ──────────────────────
+// Admin kutilayotgan xaridni «Topshirildi» qiladi yoki bekor qiladi.
+// Bekor qilishda Ncoin to'liq qaytadi (`purchase_refund`) va qoldiq +1 —
+// hammasi bitta tranzaksiyada. Xodim o'zi bekor qila olmaydi (D07).
+function xaridShakl(r) {
+  return {
+    id: r.id,
+    status: r.status,
+    productId: r.product_id,
+    productName: r.product_name,
+    price: Number(r.price),
+    createdAt: r.created_at,
+    deliveredAt: r.delivered_at,
+    cancelledAt: r.cancelled_at,
+    cancelReason: r.cancel_reason,
+    user: r.username
+      ? { username: r.username, name: r.first_name ? `${r.first_name} ${r.last_name || ""}`.trim() : `@${r.username}` }
+      : null,
+    deliveredBy: r.delivered_by_username || null,
+  };
+}
+app.get("/api/ncoin/admin/purchases", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const status = ["pending", "delivered", "cancelled"].includes(req.query.status) ? req.query.status : null;
+    const r = await db.query(
+      `select x.*, u.username, u.first_name, u.last_name, d.username as delivered_by_username
+         from ncoin_purchases x
+         join users u on u.id = x.user_id
+         left join users d on d.id = x.delivered_by
+        where ($1::text is null or x.status = $1)
+        order by (x.status = 'pending') desc, x.created_at desc
+        limit 100`,
+      [status],
+    );
+    res.json({ ok: true, purchases: r.rows.map(xaridShakl) });
+  } catch (e) {
+    serverError(res, e, "GET /api/ncoin/admin/purchases", req);
+  }
+});
+app.post("/api/ncoin/admin/purchases/:id/deliver", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const r = await db.query(
+      `update ncoin_purchases set status = 'delivered', delivered_at = now(), delivered_by = $2
+        where id = $1 and status = 'pending'
+        returning id, user_id, product_name`,
+      [req.params.id, req.user.id],
+    );
+    const x = r.rows[0];
+    if (!x) return res.status(409).json({ error: "Xarid topilmadi yoki allaqachon yakunlangan" });
+    await yozBildirishnoma(db, x.user_id, {
+      type: "nshop",
+      title: `«${x.product_name}» sizga topshirildi`,
+      entityType: "purchase",
+      entityId: x.id,
+    });
+    const ur = await db.query(`select telegram_chat_id from users where id = $1`, [x.user_id]);
+    if (ur.rows[0]?.telegram_chat_id) {
+      await sendMsg(db, ur.rows[0].telegram_chat_id, `🎁 <b>«${escHtmlTg(x.product_name)}» sizga topshirildi</b>`, {
+        replyMarkup: appOpenButton(),
+      }).catch(() => {});
+    }
+    res.json({ ok: true });
+  } catch (e) {
+    serverError(res, e, "POST /api/ncoin/admin/purchases/:id/deliver", req);
+  }
+});
+app.post("/api/ncoin/admin/purchases/:id/cancel", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const sabab = String(req.body.reason || "").trim().slice(0, 200);
+  if (!sabab) return res.status(400).json({ error: "Bekor qilish sababini yozing" });
+  try {
+    const x = await db.withTransaction(async (c) => {
+      const r = await c.query(`select * from ncoin_purchases where id = $1 for update`, [req.params.id]);
+      const pu = r.rows[0];
+      if (!pu || pu.status !== "pending") return null;
+      await c.query(
+        `insert into ncoin_transactions (user_id, amount, reason, reference_type, reference_id)
+         values ($1, $2, 'purchase_refund', 'purchase', $3)`,
+        [pu.user_id, Number(pu.price), pu.id],
+      );
+      if (pu.product_id) await c.query(`update ncoin_products set stock = stock + 1 where id = $1`, [pu.product_id]);
+      await c.query(
+        `update ncoin_purchases set status = 'cancelled', cancelled_at = now(), cancelled_by = $2, cancel_reason = $3 where id = $1`,
+        [pu.id, req.user.id, sabab],
+      );
+      return pu;
+    });
+    if (!x) return res.status(409).json({ error: "Xarid topilmadi yoki allaqachon yakunlangan" });
+    const narx = Number(x.price);
+    const f = Number.isInteger(narx) ? String(narx) : narx.toFixed(1);
+    // Xaridorga: Ncoin qaytdi (Telegram + ilova ichida, notifyNcoinChange)
+    // va xarid bekor qilindi (ilova ichida, sabab bilan).
+    await notifyNcoinChange(db, x.user_id, narx, `«${x.product_name}» xaridi bekor qilindi, ${f} Ncoin qaytarildi.\nSabab: ${sabab}`).catch(() => {});
+    await yozBildirishnoma(db, x.user_id, {
+      type: "nshop",
+      title: `«${x.product_name}» xaridi bekor qilindi`,
+      body: `Sabab: ${sabab}`,
+      entityType: "purchase",
+      entityId: x.id,
+    });
+    res.json({ ok: true });
+  } catch (e) {
+    serverError(res, e, "POST /api/ncoin/admin/purchases/:id/cancel", req);
   }
 });
 
@@ -7303,12 +7627,23 @@ app.get("/api/ncoin/admin/nshop-stats", auth, async (req, res) => {
               count(*) filter (where stock_capacity > 0 and stock <= stock_capacity * 0.25) as low_stock_count
        from ncoin_products where is_archived = false`,
     );
-    const soldR = await db.query(
-      `select count(*) as sold_count, coalesce(-sum(amount), 0)::float as revenue
-       from ncoin_transactions
-       where reason = 'purchase' and to_char(created_at at time zone 'Asia/Tashkent', 'YYYY-MM') = $1`,
-      [month],
-    );
+    // Oylik sotuv — bekor qilinganlar kirmaydi (D28). Xarid holati
+    // jadvali (0036) bo'lmasa — avvalgidek tranzaksiyalardan.
+    const xaridBor = (await db.query(`select to_regclass('public.ncoin_purchases') is not null as bor`)).rows[0].bor;
+    const soldR = xaridBor
+      ? await db.query(
+          `select count(*) as sold_count, coalesce(sum(price), 0)::float as revenue,
+                  (select count(*) from ncoin_purchases where status = 'pending') as pending_count
+             from ncoin_purchases
+            where status <> 'cancelled' and to_char(created_at at time zone 'Asia/Tashkent', 'YYYY-MM') = $1`,
+          [month],
+        )
+      : await db.query(
+          `select count(*) as sold_count, coalesce(-sum(amount), 0)::float as revenue, null as pending_count
+           from ncoin_transactions
+           where reason = 'purchase' and to_char(created_at at time zone 'Asia/Tashkent', 'YYYY-MM') = $1`,
+          [month],
+        );
     const lowStockR = await db.query(
       `select p.id, p.name, p.stock, p.stock_capacity, p.is_visible,
               (select count(*) from ncoin_transactions t
@@ -7355,6 +7690,7 @@ app.get("/api/ncoin/admin/nshop-stats", auth, async (req, res) => {
       totalCapacity: Number(totalsR.rows[0].total_capacity),
       lowStockCount: Number(totalsR.rows[0].low_stock_count),
       soldThisMonth: Number(soldR.rows[0].sold_count),
+      pendingCount: soldR.rows[0].pending_count == null ? null : Number(soldR.rows[0].pending_count),
       revenueThisMonth: Number(soldR.rows[0].revenue),
       lowStock: lowStockR.rows.map((row) => ({
         id: row.id,
@@ -7930,7 +8266,11 @@ app.all("/api/cron-daily", async (req, res) => {
   try {
     const logR = await db.query(`delete from notification_log where created_at < now() - interval '60 days'`);
     const otpR = await db.query(`delete from wall_otp_codes where created_at < now() - interval '1 day'`);
-    results.push({ path: "cleanup", deleted: { notificationLog: logR.rowCount, otpCodes: otpR.rowCount } });
+    // Ilova bildirishnomalari — 90 kun, o'qilmaganlari ham (D29).
+    const ntfR = await db
+      .query(`delete from notifications where created_at < now() - interval '90 days'`)
+      .catch(() => ({ rowCount: 0 }));
+    results.push({ path: "cleanup", deleted: { notificationLog: logR.rowCount, otpCodes: otpR.rowCount, notifications: ntfR.rowCount } });
   } catch (e) {
     console.error("[cron-daily cleanup]", e.message);
     results.push({ path: "cleanup", error: "tozalash bajarilmadi" });
