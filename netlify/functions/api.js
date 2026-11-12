@@ -601,10 +601,15 @@ app.get("/api/users", auth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
     const r = await db.query(
-      `select username, full_name, role, is_active, access_status, access_granted_at, blocked_at,
-              telegram_user_id, (telegram_chat_id is not null) as has_chat,
-              first_name, last_name, birth_date, phone, job_title, avatar_url, email, position
-       from users order by (role = 'employee'), username`,
+      // Ncoin balansi va loyihalar soni — Xodimlar jadvali uchun (D21,
+      // 2026-11-11). Balans tranzaksiyalar yig'indisi (lib/ncoin bilan
+      // bir xil ta'rif); loyiha — Ruxsatlar'dagi biriktirishlar soni.
+      `select u.username, u.full_name, u.role, u.is_active, u.access_status, u.access_granted_at, u.blocked_at,
+              u.telegram_user_id, (u.telegram_chat_id is not null) as has_chat,
+              u.first_name, u.last_name, u.birth_date, u.phone, u.job_title, u.avatar_url, u.email, u.position,
+              (select coalesce(sum(t.amount), 0)::float from ncoin_transactions t where t.user_id = u.id) as ncoin,
+              (select count(distinct pm.project_id)::int from permissions pm where pm.user_id = u.id) as project_count
+       from users u order by (u.role = 'employee'), u.username`,
     );
     res.json({ users: r.rows });
   } catch (e) {
@@ -835,6 +840,15 @@ app.patch("/api/users/:username/access", auth, async (req, res) => {
     if (status === "removed") {
       await db.query(`delete from permissions where user_id = $1`, [r.rows[0].id]);
     }
+    // Bloklangan yoki chiqarilgan odam admin bo'lib qolmasin (D26,
+    // 2026-11-11). Avval faqat kirish yopilardi, `role = 'admin'`
+    // qolardi — qayta faollashtirilganda u avtomatik admin bo'lib
+    // qaytardi va buni hech kim sezmasdi. Super admin ENV'dan
+    // boshqariladi, unga tegilmaydi.
+    if (status !== "active" && r.rows[0].role === "admin") {
+      await db.query(`update users set role = 'employee' where id = $1 and role = 'admin'`, [r.rows[0].id]);
+      r.rows[0].role = "employee";
+    }
     res.json({ ok: true, user: r.rows[0] });
   } catch (e) {
     serverError(res, e, "PATCH /api/users/:username/access");
@@ -920,11 +934,18 @@ app.post("/api/admins", auth, async (req, res) => {
   try {
     const uname = (req.body.username || "").toLowerCase().replace("@", "").trim();
     if (!uname) return res.status(400).json({ error: "username kiritilmadi" });
-    const existing = await db.query(`select role from users where username = $1`, [uname]);
+    const existing = await db.query(`select role, is_active, access_status from users where username = $1`, [uname]);
     if (!existing.rows[0]) {
       return res.status(404).json({
         error: "Bunday foydalanuvchi topilmadi. Avval uni /api/users orqali (yoki botga /start bosgach) ro'yxatga oling.",
       });
+    }
+    // Faqat Xodimlar ro'yxatidagi FAOL odam admin bo'ladi (D26,
+    // 2026-11-11). Avval bloklangan yoki chiqarilgan odamni ham admin
+    // qilish mumkin edi — qayta faollashganda u to'g'ridan-to'g'ri
+    // Boshqaruvga kirib qolardi.
+    if (!existing.rows[0].is_active || existing.rows[0].access_status !== "active") {
+      return res.status(409).json({ error: `@${uname} bloklangan yoki chiqarilgan — avval Xodimlar bo'limida faollashtiring` });
     }
     if (existing.rows[0].role !== "employee") {
       return res.status(409).json({ error: "Allaqachon admin yoki super admin" });
@@ -2163,6 +2184,16 @@ function monthBounds(year, mon) {
 }
 app.get("/api/activity", auth, async (req, res) => {
   try {
+    // Kim ko'radi (Faollik grafigi TZ, 2-bo'lim; 2026-11-11): xodim
+    // faqat o'zini, admin — hammani. Avval server har kimga butun
+    // jamoaning ishini qaytarardi, cheklov faqat ekranda edi.
+    // Xodim `?user=<o'z username>` bilan so'raydi, javob unga toraytiriladi.
+    const isAdm = isAdminRole(req.user.role);
+    const menUser = String(req.user.username || "").toLowerCase();
+    const soralgan = String(req.query.user || "").toLowerCase().replace("@", "");
+    if (!isAdm && soralgan !== menUser) {
+      return res.status(403).json({ error: "Faqat o'z faolligingizni ko'ra olasiz", code: "ACTIVITY_SELF_ONLY" });
+    }
     const today = todayTashkent();
     const m = /^(\d{4})-(\d{1,2})$/.exec(String(req.query.month || ""));
     const year = m ? Number(m[1]) : Number(today.slice(0, 4));
@@ -2191,13 +2222,20 @@ app.get("/api/activity", auth, async (req, res) => {
                 p.label as project_label,
                 pu.username as performer,
                 eu.username as editor,
-                vu.username as videographer
+                vu.username as videographer,
+                c.story_kind,
+                asu.username as assignee,
+                mau.username as mob_assigned,
+                mou.username as mon_assigned
            from checks c
            join project_cycles pc on pc.id = c.cycle_id
            join projects p on p.id = pc.project_id
            left join users pu on pu.id = coalesce(c.performer_id, c.done_by)
            left join users eu on eu.id = c.editor_user_id
            left join users vu on vu.id = c.videographer_user_id
+           left join users asu on asu.id = c.assignee_id
+           left join users mau on mau.id = c.mobilograf_assigned_id
+           left join users mou on mou.id = c.montajchi_assigned_id
           where ${KUN} between $1::date and $2::date`,
         [from, to],
       ),
@@ -2223,6 +2261,11 @@ app.get("/api/activity", auth, async (req, res) => {
       db.query(
         `select p.slug, p.label,
                 sum(pc.posts_target + pc.stories_target)::int as plan,
+                sum(pc.posts_target)::int as posts_plan,
+                (select coalesce(json_agg(json_build_object('role', pm.role, 'username', u.username)), '[]'::json)
+                   from permissions pm
+                   join users u on u.id = pm.user_id
+                  where pm.project_id = p.id and pm.role in ('smm','mobilograf','montajchi')) as team,
                 (select u.username
                    from permissions pm
                    join users u on u.id = pm.user_id
@@ -2247,11 +2290,23 @@ app.get("/api/activity", auth, async (req, res) => {
       // Ishtirokchilar: chiqargan xodim + montaj qilgan + video olgan.
       // Takrorlanmasin — bitta odam ikki rolda bo'lishi mumkin.
       const users = [...new Set([r.performer, r.editor, r.videographer].filter(Boolean))];
+      // Zamena — belgilash paytida muhrlangan rejadagi xodim bilan
+      // haqiqiy bajaruvchi farq qilsa (F10, 2026-11-11). Avval
+      // Faollik «X o'rniga»ni taxmin qilardi: xodim SMM bo'lmagan har
+      // loyihada «SMM o'rniga» deb chiqardi.
+      const zamena = [];
+      if (r.assignee && r.performer && r.assignee !== r.performer) zamena.push({ user: r.performer, for: r.assignee });
+      if (r.mob_assigned && r.videographer && r.mob_assigned !== r.videographer) zamena.push({ user: r.videographer, for: r.mob_assigned });
+      if (r.mon_assigned && r.editor && r.mon_assigned !== r.editor) zamena.push({ user: r.editor, for: r.mon_assigned });
       items.push({
         day: r.day,
         kind: r.type === "k" ? "post" : "story",
         project: r.project_slug ? { slug: r.project_slug, label: r.project_label } : null,
         performer: r.performer || null,
+        editor: r.editor || null,
+        videographer: r.videographer || null,
+        storyKind: r.story_kind || null,
+        zamena,
         users,
         at: r.done_at,
       });
@@ -2269,6 +2324,18 @@ app.get("/api/activity", auth, async (req, res) => {
     }
     items.sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : 0));
 
+    if (!isAdm) {
+      const meniki = (x) => (x.users || []).some((u) => String(u).toLowerCase() === menUser);
+      const qoldi = items.filter(meniki);
+      items.length = 0;
+      items.push(...qoldi);
+      const mening = new Set(qoldi.map((x) => x.project && x.project.slug).filter(Boolean));
+      plansR.rows = plansR.rows.filter(
+        (r) => mening.has(r.slug) || (r.team || []).some((t) => String(t.username).toLowerCase() === menUser),
+      );
+      usersR.rows = usersR.rows.filter((u) => String(u.username).toLowerCase() === menUser);
+    }
+
     res.json({
       month: `${year}-${String(mon).padStart(2, "0")}`,
       today,
@@ -2278,7 +2345,9 @@ app.get("/api/activity", auth, async (req, res) => {
         slug: r.slug,
         label: r.label,
         plan: r.plan || 0,
+        postsPlan: r.posts_plan || 0,
         smm: r.smm || null,
+        team: r.team || [],
       })),
       users: usersR.rows.map((u) => ({
         username: u.username,
@@ -2293,6 +2362,8 @@ app.get("/api/activity", auth, async (req, res) => {
 });
 
 app.get("/api/team-activity", auth, async (req, res) => {
+  // Jamoa faolligi kartasi — faqat admin (Faollik grafigi TZ; 2026-11-11).
+  if (!requireAdmin(req, res)) return;
   try {
     const end = todayTashkent();
     const r = await db.query(
@@ -3537,12 +3608,25 @@ app.get("/api/projects/:slug/cycles", auth, async (req, res) => {
       // `true`/`false` kelardi va tarixni ko'rish uchun katakni bosib
       // ko'rishdan boshqa yo'l yo'q edi — aynan shu tasodifiy
       // bosishlarga olib kelardi.
+      // Kim video olgani va kim montaj qilgani ham — Tarix sahifasi
+      // har bir post bo'yicha uch rolni ko'rsatadi (desktop dizayn D08).
+      // Zamena: chiqargan odam rejadagi mas'uldan boshqa bo'lsa, asl
+      // mas'ulning ismi ham qaytadi ("X o'rniga").
       const checksR = await db.query(
         `select ch.type, ch.seq_number, ch.story_kind,
                 coalesce(ch.work_date, (ch.done_at at time zone 'utc' at time zone 'Asia/Tashkent')::date) as kun,
-                coalesce(nullif(trim(concat(pu.first_name,' ',pu.last_name)),''), pu.full_name, pu.username) as bajaruvchi
+                coalesce(nullif(trim(concat(pu.first_name,' ',pu.last_name)),''), pu.full_name, pu.username) as bajaruvchi,
+                coalesce(nullif(trim(concat(vu.first_name,' ',vu.last_name)),''), vu.full_name, vu.username, vs.full_name) as video,
+                coalesce(nullif(trim(concat(eu.first_name,' ',eu.last_name)),''), eu.full_name, eu.username, es.full_name) as montaj,
+                case when ch.assignee_id is not null and ch.performer_id is not null and ch.assignee_id <> ch.performer_id
+                     then coalesce(nullif(trim(concat(au.first_name,' ',au.last_name)),''), au.full_name, au.username) end as zamena_for
            from checks ch
            left join users pu on pu.id = ch.performer_id
+           left join users vu on vu.id = ch.videographer_user_id
+           left join staff vs on vs.id = ch.videographer_id
+           left join users eu on eu.id = ch.editor_user_id
+           left join staff es on es.id = ch.editor_id
+           left join users au on au.id = ch.assignee_id
           where ch.cycle_id = $1`,
         [c.id],
       );
@@ -3551,7 +3635,10 @@ app.get("/api/projects/:slug/cycles", auth, async (req, res) => {
       checksR.rows.forEach((row) => {
         const k = `${row.type}-${row.seq_number}`;
         checksMap[k] = true;
-        checkDates[k] = { day: row.kun, by: row.bajaruvchi || null, storyKind: row.story_kind || null };
+        checkDates[k] = {
+          day: row.kun, by: row.bajaruvchi || null, storyKind: row.story_kind || null,
+          video: row.video || null, montaj: row.montaj || null, zamenaFor: row.zamena_for || null,
+        };
       });
       // Oxirgi chiqqan post/stories sanasi — kartochka sarlavhasida
       // ko'rsatiladi.
@@ -5782,6 +5869,35 @@ app.patch("/api/checks", auth, async (req, res) => {
       return res.status(400).json({ error: "seqNumber chegaradan tashqarida" });
     }
 
+    // 2026-11-11 (desktop biznes mantiq, D10/D12): yopilgan davrga
+    // faqat admin yozadi. Avval `cycleId` bilan har qanday jamoa a'zosi
+    // o'tgan oyni o'zgartira olardi — bu Tabel va Ncoin'ni orqaga
+    // qarab buzish yo'li edi. Qarzdagi JORIY davr `active` bo'lib
+    // turadi (ensureCurrentCycle uni yopmaydi), shuning uchun oddiy
+    // qarz yopish bu cheklovga tushmaydi.
+    if (cycle.status !== "active" && !isAdm) {
+      return res.status(403).json({ error: "Yopilgan davrni faqat admin o'zgartira oladi" });
+    }
+
+    // Ish sanasi chegarasi (D10 «Boshqa sana»). Avval istalgan sana
+    // qabul qilinardi: davr boshidan oldingi sana hech qaysi haftaga
+    // tushmay haftalik grafikdan yo'qolardi, kelajak sana esa
+    // Faollikni buzardi. Endi: davr boshidan bugungacha. Yopilgan
+    // davrda — o'sha davr oralig'ida (o'tgan oy ishi bugunga yozilmasin).
+    if (checked && workDate) {
+      const bugun = todayTashkent();
+      const oxiri = cycle.status === "active" ? bugun : (cycle.period_end < bugun ? cycle.period_end : bugun);
+      if (workDate > bugun) {
+        return res.status(400).json({ error: "Kelajak sanasini tanlab bo'lmaydi" });
+      }
+      if (workDate < cycle.period_start || workDate > oxiri) {
+        return res.status(400).json({
+          error: `Sana davr ichida bo'lishi kerak: ${cycle.period_start} — ${oxiri}`,
+          code: "WORK_DATE_OUT_OF_CYCLE",
+        });
+      }
+    }
+
     // ── TABEL: mas'ul va bajaruvchi ──────────────────────────────
     // Mas'ul — loyihaning SMM roli berilgan xodimi (belgilash paytidagi
     // holat, yozuvga snapshot qilinadi: keyin rol almashsa ham eski
@@ -5813,6 +5929,31 @@ app.patch("/api/checks", auth, async (req, res) => {
     const isMonSub =
       !!montajchiAssignedId && !!editorUserId &&
       String(editorUserId) !== String(montajchiAssignedId);
+
+    // Belgini tahrirlash va olish huquqi (D10/D11, 2026-11-11): admin,
+    // belgilagan odam va loyihaning SMM'i. Avval loyihaga ruxsati bor
+    // har kim birovning belgisini olib tashlay olardi — bu o'sha
+    // odamlarning Ncoin'ini qaytarib olish degani. Eski qatorlarda
+    // `marked_by` bo'sh bo'lishi mumkin — o'shanda `done_by` olinadi.
+    if (!isAdm) {
+      const eskiR = await db.query(
+        `select marked_by, done_by from checks where cycle_id = $1 and type = $2 and seq_number = $3`,
+        [cycle.id, type, seq],
+      );
+      const eski = eskiR.rows[0];
+      if (eski) {
+        const egasi = eski.marked_by || eski.done_by;
+        const smmmi = asgR.rows.some((r) => r.role === "smm" && String(r.user_id) === String(req.user.id));
+        if (String(egasi) !== String(req.user.id) && !smmmi) {
+          return res.status(403).json({
+            error: checked
+              ? "Bu katak allaqachon belgilangan. Uni belgilagan odam, loyiha SMM'i yoki admin o'zgartira oladi"
+              : "Belgini faqat uni qo'ygan odam, loyiha SMM'i yoki admin olib tashlay oladi",
+            code: "CHECK_NOT_OWNER",
+          });
+        }
+      }
+    }
 
     if (checked) {
       // Bajaruvchi — o'zi yoki SHU LOYIHAGA biriktirilgan xodim.
