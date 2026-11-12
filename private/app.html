@@ -11739,7 +11739,18 @@
         #screen-activity-user .actu-hdr {
           padding-right: calc(28px + var(--d4-tg-right)) !important;
         }
-        body.td-drawer #screen-taskdetail .td-hdr { padding-right: calc(16px + var(--d4-tg-right)) !important; }
+        /* Yon paneldagi vazifa sarlavhasi: ✕ ‹ › va «10 / 66» CHAP tomonda,
+           o'ng burchak Telegram'ning ⋮ ✕ tugmalariga bo'sh qoldiriladi.
+           Avval yo'l («Vazifalar / Boshlanmagan / T1») + hisoblagich + 3
+           tugma o'ng tomonga siqilib, matn kesilib qolardi va ✕ Telegram
+           tugmalari yonida chalkashardi (2026-11-12). Yo'l panelda shart
+           emas — orqadagi ro'yxat ko'rinib turibdi. */
+        body.td-drawer #screen-taskdetail .td-hdr { padding: 0 var(--d4-tg-right) 0 14px !important; gap: 6px; }
+        body.td-drawer #screen-taskdetail .td-hdr .detail-breadcrumb { display: none; }
+        body.td-drawer #screen-taskdetail .td-hdr > button:last-child { order: -2; margin-right: 6px; }
+        body.td-drawer #screen-taskdetail #td-prev-btn,
+        body.td-drawer #screen-taskdetail #td-next-btn { order: -1; }
+        body.td-drawer #screen-taskdetail .td-counter { flex: 1; margin-left: 4px; }
         .overlay.drawer .sheet-hdr { padding-right: var(--d4-tg-right) !important; }
 
         /* Yon menyu — 232px */
@@ -12409,6 +12420,12 @@
           box-shadow: 0 0 0 100vmax rgba(15, 23, 42, 0.32), 0 24px 60px rgba(15, 23, 42, 0.25);
         }
         body.sidebar-collapsed #ntf-page.ntf-ov { left: 50%; }
+        /* Modal ichidan ochiladigan tanlagichlar (xodim, loyiha, teg, sana,
+           soat) modal USTIDA bo'lishi kerak. Avval ularning z-index'i
+           (860/870) modalnikidan (900) past edi — ro'yxat modal orqasida
+           ochilib, chetidan ko'rinib qolardi (2026-11-12, egasi qaytardi). */
+        .ntf-pop { z-index: 960; }
+        .ntf-sheet-ov { z-index: 970; }
         #ntf-page .ntf-hdr { height: 64px; min-height: 64px; padding: 0 22px; }
         #ntf-page .ntf-h1 { font-size: 19px; }
         #ntf-page .ntf-wrap { max-width: none; padding: 16px 18px; grid-template-columns: minmax(0, 1fr) 300px; }
