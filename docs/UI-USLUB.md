@@ -126,8 +126,11 @@ rangidan tanib olinadi.
 - Tayanch o'lcham — **"Bugun" sahifasi**: yon chekka 32px, kartalar
   oralig'i 16px. Yangi sahifani shunga moslang.
 - **Telegram Desktop tugmalari** ("⋯", "✕") o'ng yuqori burchakda sahifa
-  ustiga tushadi. Shuning uchun to'liq sahifalarda ≥860px da tepadan
-  ~56px, o'ngdan ~132–156px bo'sh joy beriladi. Bu bo'shliqni
+  ustiga tushadi. ≥860px da sahifa sarlavhasi eng tepada turadi (tepada
+  bo'sh qator YO'Q — 2026-11-12 da egasi "ortiqcha joy" deb qaytargan),
+  sarlavhaning o'ng tomonida esa `--d4-tg-right` (124px) joy qoldiriladi.
+  Yangi sarlavha yoki o'ngdan chiqadigan panel qo'shsangiz, uni
+  `--d4-tg-right` ro'yxatiga qo'shing (app.html, "TEPADAGI BO'SH QATOR"). Bu bo'shliqni
   **shartsiz** `@media (min-width: 860px)` ichida bering — "Telegram
   ichidamizmi?" tekshiruviga bog'lamang (ikki marta sinab ko'rilgan,
   ishlamagan). Yangi to'liq sahifa qo'shsangiz, shu qoidani takrorlang.

@@ -11721,16 +11721,37 @@
       @media (min-width: 860px) {
         .desktop-only-inline { display: inline; }
 
+        /* TEPADAGI BO'SH QATOR OLIB TASHLANDI (2026-11-12). Avval har
+           sahifa tepasida 48px bo'sh qator turardi — Telegram Desktop'ning
+           ⋮ va ✕ tugmalari uchun. Lekin tugmalar faqat O'NG burchakda,
+           qatorning qolgan qismi bo'sh qolib, egasi «ortiqcha joy» deb
+           qaytardi. Endi sarlavha eng tepada, o'ng tomonida esa tugmalar
+           uchun --d4-tg-right joy qoldiriladi (shartsiz — qarang
+           docs/UI-USLUB.md, 6-bo'lim). */
+        :root { --d4-top: 0px; --d4-tg-right: 124px; }
+        .screen > .hdr,
+        #screen-profile .pf-hdr,
+        #screen-taskdetail .td-hdr,
+        #screen-tracker .trk-d4-hdr,
+        .pd4-hdr,
+        .kal-d4-hdr,
+        #screen-activity .act-top,
+        #screen-activity-user .actu-hdr {
+          padding-right: calc(28px + var(--d4-tg-right)) !important;
+        }
+        body.td-drawer #screen-taskdetail .td-hdr { padding-right: calc(16px + var(--d4-tg-right)) !important; }
+        .overlay.drawer .sheet-hdr { padding-right: var(--d4-tg-right) !important; }
+
         /* Yon menyu — 232px */
         #sidebar {
           width: 232px;
           top: 0;
-          padding: calc(48px + 18px + var(--tg-safe-top)) 12px 14px;
+          padding: calc(var(--d4-top) + 18px + var(--tg-safe-top)) 12px 14px;
           gap: 4px;
           background: var(--surf);
           border-right: 1px solid var(--bd2);
         }
-        .sb-toggle { top: calc(48px + 26px + var(--tg-safe-top)); }
+        .sb-toggle { top: calc(var(--d4-top) + 26px + var(--tg-safe-top)); }
         .sb-brand { gap: 10px; padding: 0 8px 18px; }
         .sb-mark {
           width: 34px; height: 34px; border-radius: 10px;
@@ -11779,7 +11800,7 @@
         .ntf-ov { left: 232px; }
 
         /* Bugun — sarlavha 72px, kontent 24/28px */
-        #screen-today.screen { padding-top: 48px; background: var(--bg); font-family: Onest, system-ui, sans-serif; }
+        #screen-today.screen { padding-top: var(--d4-top); background: var(--bg); font-family: Onest, system-ui, sans-serif; }
         #screen-today .hdr {
           /* 72px + 1px chiziq — dizaynda chiziq balandlikka qo'shiladi. */
           height: 73px; padding: 0 28px; background: var(--surf);
@@ -11944,7 +11965,7 @@
       /* ═══ LOYIHALAR va TRACKER · DESKTOP DIZAYN (D04, D09) ════════════ */
       .trk-d4-hdr { display: none; }
       @media (min-width: 860px) {
-        #screen-projects.screen { padding-top: 48px; font-family: Onest, system-ui, sans-serif; }
+        #screen-projects.screen { padding-top: var(--d4-top); font-family: Onest, system-ui, sans-serif; }
         .pd-root { display: none !important; }
         .pd4-root { display: flex; flex-direction: column; flex: 1; min-height: 0; background: var(--bg); }
         .pd4-hdr, .trk-d4-hdr {
@@ -11988,7 +12009,7 @@
         .pd4-muted .late { color: var(--red); }
 
         /* Tracker */
-        #screen-tracker.screen { padding-top: 48px; background: var(--bg); font-family: Onest, system-ui, sans-serif; }
+        #screen-tracker.screen { padding-top: var(--d4-top); background: var(--bg); font-family: Onest, system-ui, sans-serif; }
         #screen-tracker .trk-hdr { display: none; }
         .trk-d4-hdr { display: flex; }
         .trk-d4-back { margin-right: 4px; }
@@ -12115,7 +12136,7 @@
         .overlay.drawer { justify-content: flex-end !important; align-items: stretch !important; padding: 0 !important; }
         .overlay.drawer .sheet {
           width: 440px !important; max-width: 440px !important; height: 100% !important; max-height: none !important;
-          margin: 0 !important; border-radius: 0 !important; padding-top: 48px; font-family: Onest, system-ui, sans-serif;
+          margin: 0 !important; border-radius: 0 !important; padding-top: var(--d4-top); font-family: Onest, system-ui, sans-serif;
           box-shadow: -18px 0 40px -20px rgba(15, 23, 42, 0.3);
         }
         .overlay.drawer .sheet-title { font: 700 20px Sora, system-ui, sans-serif; letter-spacing: -0.015em; }
@@ -12125,7 +12146,7 @@
 
       /* ═══ VAZIFALAR · DESKTOP DIZAYN (D05 kanban) ═════════════════════ */
       @media (min-width: 860px) {
-        #screen-tasks.screen { padding-top: 48px; background: var(--bg); font-family: Onest, system-ui, sans-serif; }
+        #screen-tasks.screen { padding-top: var(--d4-top); background: var(--bg); font-family: Onest, system-ui, sans-serif; }
         #screen-tasks .hdr {
           height: 73px; padding: 0 28px; background: var(--surf); border-bottom: 1px solid var(--bd2); flex: none;
         }
@@ -12190,7 +12211,7 @@
       .nshop-buy-foot .btn-blue { flex: 1; }
       @media (min-width: 860px) {
         /* NShop */
-        #screen-nshop.screen { padding-top: 48px; background: var(--bg); font-family: Onest, system-ui, sans-serif; }
+        #screen-nshop.screen { padding-top: var(--d4-top); background: var(--bg); font-family: Onest, system-ui, sans-serif; }
         #screen-nshop .hdr {
           height: 73px; padding: 0 28px; background: var(--surf); border-bottom: 1px solid var(--bd2);
           display: flex; align-items: center;
@@ -12216,9 +12237,9 @@
         .nshop-buy-foot .btn-soft { background: var(--surf); box-shadow: inset 0 0 0 1px var(--bd4); color: var(--ink); }
 
         /* Tarix */
-        #screen-history.screen { padding-top: 48px; background: var(--bg); font-family: Onest, system-ui, sans-serif; }
+        #screen-history.screen { padding-top: var(--d4-top); background: var(--bg); font-family: Onest, system-ui, sans-serif; }
         #screen-history .hdr { display: none; }
-        #screen-history #history-body { padding: 0; max-width: none; height: calc(100vh - 48px); display: flex; flex-direction: column; }
+        #screen-history #history-body { padding: 0; max-width: none; height: calc(100vh - var(--d4-top)); display: flex; flex-direction: column; }
         .h4-grid { display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 16px; align-items: start; }
         .h4-head, .h4-row {
           display: grid; grid-template-columns: minmax(0, 1.4fr) 110px minmax(0, 1fr) 84px; gap: 14px; padding: 0 16px; align-items: center;
@@ -12280,11 +12301,11 @@
 
         /* Vazifa detali va "Yangi vazifa" — sarlavha tizimi (tepada 48px
            Telegram uchun, 73px oq qator). Tarkib o'zgarmaydi. */
-        #screen-taskdetail.screen { padding-top: 48px; font-family: Onest, system-ui, sans-serif; }
+        #screen-taskdetail.screen { padding-top: var(--d4-top); font-family: Onest, system-ui, sans-serif; }
         #screen-taskdetail .td-hdr {
           height: 73px; padding: 0 28px; background: var(--surf); border-bottom: 1px solid var(--bd2); align-items: center;
         }
-        .ntf-ov { padding-top: 48px; font-family: Onest, system-ui, sans-serif; }
+        .ntf-ov { padding-top: var(--d4-top); font-family: Onest, system-ui, sans-serif; }
         #ntf-page .ntf-hdr {
           min-height: 73px; height: 73px; padding: 0 28px; background: var(--surf); border-bottom: 1px solid var(--bd2);
           display: flex; align-items: center;
@@ -12436,7 +12457,7 @@
 
       /* ═══ PROFIL · DESKTOP DIZAYN (D16, D17) ═══════════════════════════ */
       @media (min-width: 860px) {
-        #screen-profile.screen { padding-top: 48px; background: var(--bg); font-family: Onest, system-ui, sans-serif; }
+        #screen-profile.screen { padding-top: var(--d4-top); background: var(--bg); font-family: Onest, system-ui, sans-serif; }
         #screen-profile .pf-hdr { height: 73px; padding: 0 28px; border-bottom: 1px solid var(--bd2); gap: 12px; }
         #screen-profile .pf-back {
           width: 36px; height: 36px; border-radius: 10px; background: var(--surf); box-shadow: inset 0 0 0 1px var(--bd4);
@@ -12479,7 +12500,7 @@
          48px'lik qatorga tushadi. */
       @media (min-width: 860px) {
         #screen-activity.screen, #screen-activity-user.screen {
-          padding-top: 48px; background: var(--bg); font-family: Onest, system-ui, sans-serif;
+          padding-top: var(--d4-top); background: var(--bg); font-family: Onest, system-ui, sans-serif;
         }
         #screen-activity .scroll, #screen-activity-user .scroll {
           max-width: none; padding: 0 28px 24px; padding-top: 0;
@@ -12503,7 +12524,7 @@
       @media (min-width: 860px) {
         .desktop-only-flex { display: inline-flex !important; }
         #admin-primary[style*="none"] { display: none !important; }
-        #screen-admin.screen { padding-top: 48px; background: var(--bg); font-family: Onest, system-ui, sans-serif; }
+        #screen-admin.screen { padding-top: var(--d4-top); background: var(--bg); font-family: Onest, system-ui, sans-serif; }
         #screen-admin #admin-hdr {
           background: var(--surf); border-bottom: 1px solid var(--bd2); padding: 14px 28px 0; gap: 10px 12px; row-gap: 6px;
         }
@@ -12606,7 +12627,7 @@
 
       /* ═══ KALENDAR · DESKTOP DIZAYN (D02 oy, D03 hafta) ═══════════════ */
       @media (min-width: 860px) {
-        #screen-kalendar { padding-top: 48px; background: var(--bg); font-family: Onest, system-ui, sans-serif; }
+        #screen-kalendar { padding-top: var(--d4-top); background: var(--bg); font-family: Onest, system-ui, sans-serif; }
         .kal-d4 { display: flex; flex-direction: column; height: 100%; min-height: 0; }
         .kal-d4-hdr {
           height: 73px; flex: none; display: flex; align-items: center; gap: 10px;
