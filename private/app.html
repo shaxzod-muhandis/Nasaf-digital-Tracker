@@ -21948,9 +21948,8 @@
         const rows = list
           .map((r) => {
             const c = r.cycle;
-            const done = (c.doneK || 0) + (c.doneS || 0);
-            const total = (c.k || 0) + (c.s || 0);
-            const pc = pct(done, total);
+            // Ball bo'yicha (1 post = 4 stories) — joriy davr foizi bilan bir xil.
+            const pc = projPct(c);
             const st = hist4Status(c);
             const rang = st === "debt" ? "var(--st-debt-dot)" : "var(--brand)";
             return `<button class="h4-row${hist4Key(r) === histState.sel ? " on" : ""}" onclick="hist4Pick('${escArg(hist4Key(r))}')">
@@ -22168,9 +22167,8 @@
           head +
           filtered
             .map(({ project, cycle }, i) => {
-              const done = (cycle.doneK || 0) + (cycle.doneS || 0);
-              const total = (cycle.k || 0) + (cycle.s || 0);
-              const percent = pct(done, total);
+              // Ball bo'yicha (1 post = 4 stories) — joriy davr foizi bilan bir xil.
+              const percent = projPct(cycle);
               const status = cycle.isDebt ? "debt" : cycle.status === "active" ? "active" : "done";
               const statusLabel =
                 status === "active" ? "Joriy" : status === "debt" ? "Qarz" : "Tugagan";
