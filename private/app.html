@@ -12324,11 +12324,6 @@
       .ntfy-grp { padding: 10px 16px 4px; font-size: 11px; font-weight: 600; color: var(--t3); text-transform: uppercase; letter-spacing: 0.04em; }
       .ntfy-b { display: block; font-size: 12px; color: var(--t3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .stat-card.warn .stat-val { color: var(--st-mid); }
-      .pu-row { padding: 12px 2px; border-bottom: 1px solid var(--bd2); }
-      .pu-top { display: flex; align-items: center; gap: 8px; justify-content: space-between; font-size: 14px; color: var(--ink); }
-      .pu-sub { font-size: 12.5px; color: var(--t3); margin-top: 3px; }
-      .pu-acts { display: flex; gap: 8px; margin-top: 10px; }
-      .pu-acts .btn { width: auto; padding: 0 14px; }
       .fb-ans { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
       .fb-ans + .fb-ans { border-top: 1px solid var(--bd1); }
       .fb-task {
@@ -27359,99 +27354,12 @@
             <div class="stat-val">${s.soldThisMonth}</div>
             <div class="stat-foot">${fmtNcoin(s.revenueThisMonth)} Ncoin</div>
           </div>
-          ${s.pendingCount == null ? "" : `<button type="button" class="stat-card${s.pendingCount ? " warn" : ""}" style="text-align:left;cursor:pointer;font:inherit" onclick="openPurchasesSheet()">
-            <div class="stat-lbl">Kutilmoqda</div>
-            <div class="stat-val">${s.pendingCount}</div>
-            <div class="stat-foot">topshirilmagan xarid ›</div>
-          </button>`}
           <div class="stat-card danger">
             <div class="stat-lbl">Qoldiq kam</div>
             <div class="stat-val">${s.lowStockCount}</div>
             <div class="stat-foot">to'liq zaxiraning 25%idan kam</div>
           </div>
         </div>`;
-      }
-      // ── Kutilayotgan xaridlar (D28, 2026-11-12) ────────────────────
-      // Admin mahsulotni qo'liga berib «Topshirildi» qiladi yoki sabab
-      // bilan bekor qiladi (Ncoin qaytadi, qoldiq +1).
-      async function openPurchasesSheet() {
-        const { body } = makeSheet("Xaridlar", { drawer: true });
-        body.innerHTML = `<div class="d4-empty">Yuklanmoqda…</div>`;
-        const yukla = async () => {
-          try {
-            const r = await apiFetch("/api/ncoin/admin/purchases");
-            if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
-            const list = (await r.json()).purchases || [];
-            if (!list.length) {
-              body.innerHTML = `<div class="d4-empty">Hali xarid yo'q</div>`;
-              return;
-            }
-            body.innerHTML = list
-              .map((x) => {
-                const [lbl, cls] = XARID_HOLAT[x.status];
-                const amal =
-                  x.status === "pending"
-                    ? `<div class="pu-acts">
-                        <button type="button" class="btn btn-blue btn-sm" onclick="purchaseDeliver('${escArg(x.id)}', this)">Topshirildi</button>
-                        <button type="button" class="btn btn-soft btn-sm" onclick="purchaseCancel('${escArg(x.id)}','${escArg(x.productName)}')">Bekor qilish</button>
-                      </div>`
-                    : x.status === "cancelled" && x.cancelReason
-                      ? `<div class="f-hint" style="margin:4px 0 0">Sabab: ${escHtml(x.cancelReason)}</div>`
-                      : "";
-                return `<div class="pu-row">
-                    <div class="pu-top"><b>${escHtml(x.productName)}</b><span class="d4-pill ${cls}">${lbl}</span></div>
-                    <div class="pu-sub">${escHtml(x.user ? x.user.name : "—")} · ${fmtDay(new Date(x.createdAt))} · ${fmtNcoin(x.price)} N</div>
-                    ${amal}
-                  </div>`;
-              })
-              .join("");
-          } catch (e) {
-            body.innerHTML = d4ErrHtml("document.querySelector('.overlay')?.remove();openPurchasesSheet()", e.message);
-          }
-        };
-        window.__puReload = yukla;
-        yukla();
-      }
-      async function purchaseDeliver(id, btn) {
-        if (btn) btn.disabled = true;
-        try {
-          const r = await apiFetch(`/api/ncoin/admin/purchases/${encodeURIComponent(id)}/deliver`, { method: "POST" });
-          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
-          showToast("Topshirildi — xodimga xabar ketdi");
-          window.__puReload?.();
-          refreshNShopAdminList?.();
-        } catch (e) {
-          showToast("⚠ " + e.message);
-          if (btn) btn.disabled = false;
-        }
-      }
-      function purchaseCancel(id, nomi) {
-        const { body } = makeSheet("Xaridni bekor qilish");
-        body.innerHTML = `
-          <div style="font-size:13px;color:var(--t2);line-height:1.55;margin-bottom:12px">«${escHtml(nomi)}» bekor qilinadi: Ncoin xodimga to'liq qaytadi, qoldiq 1 ga oshadi.</div>
-          <label class="f-label">Sabab</label>
-          <input class="f-input" id="pu-sabab" maxlength="200" placeholder="Masalan: mahsulot tugab qoldi" />
-          <button type="button" class="btn btn-danger" style="margin-top:14px" onclick="purchaseCancelGo('${escArg(id)}', this)">Bekor qilish</button>`;
-        setTimeout(() => document.getElementById("pu-sabab")?.focus(), 50);
-      }
-      async function purchaseCancelGo(id, btn) {
-        const sabab = (document.getElementById("pu-sabab")?.value || "").trim();
-        if (!sabab) return showToast("⚠ Sababni yozing");
-        btn.disabled = true;
-        try {
-          const r = await apiFetch(`/api/ncoin/admin/purchases/${encodeURIComponent(id)}/cancel`, {
-            method: "POST",
-            body: JSON.stringify({ reason: sabab }),
-          });
-          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
-          btn.closest(".overlay")?.remove();
-          showToast("Bekor qilindi — Ncoin qaytarildi");
-          window.__puReload?.();
-          refreshNShopAdminList?.();
-        } catch (e) {
-          showToast("⚠ " + e.message);
-          btn.disabled = false;
-        }
       }
       function nshopAdminMobileRowHtml(p) {
         return `<div class="m-item">
@@ -29003,25 +28911,8 @@
           ${nshopBottomSectionHtml()}`;
       }
 
-      // Xarid holati tegi (D06): Kutilmoqda / Topshirildi / Bekor qilindi.
-      const XARID_HOLAT = {
-        pending: ["Kutilmoqda", "st-mid"],
-        delivered: ["Topshirildi", "st-done"],
-        cancelled: ["Bekor qilindi", "st-none"],
-      };
       function nshopBottomSectionHtml() {
-        // Server xarid holatini qaytarsa (0036) — o'shandan; aks holda
-        // avvalgidek tranzaksiyalardan (holatsiz).
-        const holatli = Array.isArray(nshopMe?.purchases);
-        const purchases = holatli
-          ? nshopMe.purchases.map((x) => ({
-              productName: x.productName,
-              at: x.createdAt,
-              amount: -x.price,
-              status: x.status,
-              productImageUrl: (nshopProducts.find((p) => p.id === x.productId) || {}).image_url || null,
-            }))
-          : (nshopMe?.transactions || []).filter((t) => t.reason === "purchase");
+        const purchases = (nshopMe?.transactions || []).filter((t) => t.reason === "purchase");
         const shown = purchases.slice(0, 6);
         return `
           <div class="nshop-bottom-grid">
@@ -29038,9 +28929,9 @@
                           ${nshopThumbHtml(t.productImageUrl, "width:40px;height:40px;border-radius:10px")}
                           <div style="flex:1;min-width:0">
                             <div class="nshop-purchase-name">${escHtml(t.productName || "Mahsulot")}</div>
-                            <div class="nshop-purchase-date">${fmtDay(new Date(t.at))}${t.status ? ` · <span class="d4-pill ${XARID_HOLAT[t.status][1]}" style="font-size:11px;padding:1px 7px">${XARID_HOLAT[t.status][0]}</span>` : ""}</div>
+                            <div class="nshop-purchase-date">${fmtDay(new Date(t.at))}</div>
                           </div>
-                          <div class="nshop-purchase-amt"${t.status === "cancelled" ? ' style="text-decoration:line-through;opacity:.6"' : ""}>−${fmtNcoin(-t.amount)}</div>
+                          <div class="nshop-purchase-amt">−${fmtNcoin(-t.amount)}</div>
                         </div>`,
                       )
                       .join("")
@@ -29148,9 +29039,7 @@
           setMyNcoinBalance(data.balance);
           // Xarid holati bor bo'lsa (D07): mahsulot hali qo'lga berilmagan.
           showToast(
-            data.status === "pending"
-              ? `✅ ${data.product.name} xarid qilindi. Admin topshirganda xabar olasiz`
-              : `✅ ${data.product.name} sizniki! Yangi balans: ${fmtNcoin(data.balance)} Ncoin`,
+            `✅ ${data.product.name} sizniki! Yangi balans: ${fmtNcoin(data.balance)} Ncoin`,
           );
           renderNShopScreen();
         } catch (e) {
