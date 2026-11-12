@@ -12335,6 +12335,27 @@
         border: 0; border-radius: 99px; padding: 5px 11px; background: var(--nav-act-bg); color: var(--brand);
         font: 500 12px Onest, system-ui, sans-serif; cursor: pointer; white-space: nowrap;
       }
+      .np2-swatches { display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; max-width: 420px; }
+      .np2-sw {
+        aspect-ratio: 1; border: 0; border-radius: 8px; cursor: pointer; color: #fff;
+        font: 700 11px Onest, system-ui, sans-serif; display: flex; align-items: center; justify-content: center;
+      }
+      .np2-sw.busy { opacity: 0.38; }
+      .np2-sw.on { opacity: 1; box-shadow: 0 0 0 2px var(--surf), 0 0 0 4px var(--ink); }
+      @media (min-width: 860px) {
+        .elon-grid { display: grid; grid-template-columns: minmax(0, 520px) 360px; gap: 28px; align-items: start; }
+      }
+      .elon-chat { background: #c9d9e6; border-radius: 14px; padding: 18px 14px; margin: 6px 0 8px; }
+      .elon-bubble {
+        background: #fff; color: #0f172a; border-radius: 12px 12px 12px 4px; padding: 10px 12px 8px;
+        font: 400 13.5px/1.45 -apple-system, "Segoe UI", sans-serif; max-width: 320px; word-wrap: break-word;
+      }
+      .elon-btn { margin-top: 10px; padding: 8px; text-align: center; border-radius: 8px; background: #eef4fa; color: #2a7fc7; font-size: 13px; font-weight: 500; }
+      .tagc-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 2px; border-bottom: 1px solid var(--bd1); }
+      .tagc-sws { display: flex; gap: 5px; align-items: center; }
+      .tagc-sw { width: 26px; height: 26px; border-radius: 8px; border: 0; cursor: pointer; font-size: 12px; }
+      .tagc-sw.on, .tagc-auto.on { box-shadow: 0 0 0 2px var(--ink); }
+      .tagc-auto { height: 26px; padding: 0 8px; border: 0; border-radius: 8px; background: var(--chip); color: var(--t2); font: 500 11.5px Onest, system-ui, sans-serif; cursor: pointer; }
       /* ═══ KALENDAR · TO'QNASHUV (D03; 2026-11-11) ═══════════════════ */
       .kal-ev.conflict { box-shadow: inset 0 0 0 2px var(--red); }
       .d4-banner-x {
@@ -14178,8 +14199,12 @@
             ? "@" + currentUser
             : "—";
         document.getElementById("sidebar-user-name").textContent = shortName;
+        // Xodimda — lavozim («Mobilograf»), adminda — rol (0.4 qarori,
+        // 2026-11-12): xodimga lavozimi, adminga rolini bilish muhimroq.
         document.getElementById("sidebar-user-role").textContent =
-          ROLE_LABEL_UZ[userRole] || userRole || "—";
+          userRole === "employee" && myProfile?.position && POSITION_LABELS[myProfile.position]
+            ? POSITION_LABELS[myProfile.position]
+            : ROLE_LABEL_UZ[userRole] || userRole || "—";
 
         const debtCount = projects.filter((p) => p.outstandingDebt).length;
         const debtEl = document.getElementById("sidebar-debt-count");
@@ -15802,6 +15827,9 @@
         Matn: 6,
       };
       function tagColor(name) {
+        // Admin tanlagan rang (D05, 0039) — birinchi o'rinda.
+        const saqlangan = tagsList.find((t) => t.name === name)?.color;
+        if (saqlangan != null && TAG_PALETTE[Number(saqlangan)]) return TAG_PALETTE[Number(saqlangan)];
         if (name in TAG_COLOR_BY_NAME) return TAG_PALETTE[TAG_COLOR_BY_NAME[name]];
         let h = 0;
         for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
@@ -16316,13 +16344,52 @@
         }
         const { body } = makeSheet(titles[key]);
         const cur = taskBoardFilter[key];
+        const rangTugma = key === "tag" && isAdmin
+          ? `<button type="button" class="d4-link" style="display:block;margin:4px 0 12px" onclick="document.querySelector('.overlay')?.remove();openTagColorsSheet()">Teg ranglarini sozlash ›</button>`
+          : "";
         const rows = [{ v: "", label: "Hammasi" }, ...options]
           .map(
             (o) =>
               `<button type="button" class="btn ${o.v === cur ? "btn-blue" : "btn-soft"}" style="margin-bottom:8px;justify-content:flex-start;padding:0 14px" onclick="setTaskFilterValue('${key}','${escArg(o.v)}')">${key === "project" ? projDotHtml(o.v) : ""}${escHtml(o.label)}</button>`,
           )
           .join("");
-        body.innerHTML = rows;
+        body.innerHTML = rangTugma + rows;
+      }
+      // ── Teg ranglari (D05, 2026-11-12) — faqat admin ──────────────
+      function openTagColorsSheet() {
+        const { body } = makeSheet("Teg ranglari");
+        const chiz = () => {
+          body.innerHTML = tagsList
+            .map((t) => {
+              const joriy = t.color == null ? null : Number(t.color);
+              const sw = TAG_PALETTE.map(
+                (p, i) => `<button type="button" class="tagc-sw${joriy === i ? " on" : ""}" style="background:${p.bg};color:${p.ink}" title="Rang ${i + 1}" onclick="setTagColor('${escArg(t.id)}',${i})">●</button>`,
+              ).join("");
+              const c = tagColor(t.name);
+              return `<div class="tagc-row">
+                  <span class="tag-chip" style="background:${c.bg};color:${c.ink}">${escHtml(t.name)}</span>
+                  <span class="tagc-sws">${sw}<button type="button" class="tagc-auto${joriy === null ? " on" : ""}" onclick="setTagColor('${escArg(t.id)}',null)">Avto</button></span>
+                </div>`;
+            })
+            .join("") || `<div class="d4-empty">Teg yo'q</div>`;
+        };
+        window.__tagcChiz = chiz;
+        chiz();
+      }
+      async function setTagColor(id, i) {
+        try {
+          const r = await apiFetch(`/api/tags/${encodeURIComponent(id)}`, {
+            method: "PATCH",
+            body: JSON.stringify({ color: i == null ? null : String(i) }),
+          });
+          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
+          const t = tagsList.find((x) => x.id === id);
+          if (t) t.color = i == null ? null : String(i);
+          window.__tagcChiz?.();
+          renderTasksBody();
+        } catch (e) {
+          showToast("⚠ " + e.message);
+        }
       }
       function setTaskFilterValue(key, value) {
         taskBoardFilter[key] = value;
@@ -20141,10 +20208,36 @@
         try {
           const r = await apiFetch(`/api/events/${encodeURIComponent(id)}/decline`, { method: "POST" });
           if (!r.ok) throw new Error(await kalErrText(r));
-          showToast("Rejadan chiqdingiz");
           kalCloseDetail();
           kalLoad();
+          // 6 soniya ichida qaytarish mumkin (D33 qarori, 2026-11-12).
+          undoToast("Rejadan chiqdingiz", async () => {
+            const q = await apiFetch(`/api/events/${encodeURIComponent(id)}/rejoin`, { method: "POST" });
+            if (!q.ok) throw new Error(await kalErrText(q));
+            showToast("Rejaga qaytdingiz");
+            kalLoad();
+          });
         } catch (e) { showToast("⚠ " + e.message); }
+      }
+      // Umumiy «Qaytarish» toasti (Ruxsatlar'dagi rb-toast ko'rinishida).
+      let undoState = null;
+      function undoToast(matn, fn, ms = 6000) {
+        document.getElementById("undo-toast")?.remove();
+        if (undoState?.timer) clearTimeout(undoState.timer);
+        const el = document.createElement("div");
+        el.className = "rb-toast";
+        el.id = "undo-toast";
+        el.innerHTML = `<span>${escHtml(matn)}</span><button type="button" onclick="undoNow()">Qaytarish</button>`;
+        document.body.appendChild(el);
+        undoState = { fn, timer: setTimeout(() => { el.remove(); undoState = null; }, ms) };
+      }
+      async function undoNow() {
+        const u = undoState;
+        if (!u) return;
+        clearTimeout(u.timer);
+        undoState = null;
+        document.getElementById("undo-toast")?.remove();
+        try { await u.fn(); } catch (e) { showToast("⚠ " + e.message); }
       }
       function kalDuplicate(id, occ) {
         const ev = kalFind(id, occ);
@@ -20308,8 +20401,8 @@
         const ogoh = f.conflicts.length
           ? `<div class="kal-warn"><span>!</span><div>${f.conflicts
               .slice(0, 4)
-              .map((c) => `<b>${escHtml(c.user.name)}</b> shu vaqtda band: ${escHtml(c.event.title)}, ${kalHHMM(c.event.start)}–${kalHHMM(c.event.end)}`)
-              .join("<br>")}</div></div>`
+              .map((c) => `${c.kun && c.kun !== f.date ? `${escHtml(fmtDay(parseISO(c.kun)))}: ` : ""}<b>${escHtml(c.user.name)}</b> shu vaqtda band: ${escHtml(c.event.title)}, ${kalHHMM(c.event.start)}–${kalHHMM(c.event.end)}`)
+              .join("<br>")}${f.conflicts.length > 4 ? `<br>va yana ${f.conflicts.length - 4} ta` : ""}</div></div>`
           : "";
 
         ov.innerHTML = `<div class="kal-form" onclick="event.stopPropagation()">
@@ -20420,7 +20513,7 @@
         f[k] = v;
         f.dirty = true;
         if (k === "title" || k === "place" || k === "note") { kalCountSync(); return; }
-        if (k === "date" || k === "allDay") kalCheckConflicts();
+        if (k === "date" || k === "allDay" || k === "rrule") kalCheckConflicts();
         kalFormRender();
       }
       function kalTime(k, v) {
@@ -20456,6 +20549,21 @@
         kalFormRender();
         kalCheckConflicts();
       }
+      // Takrorlanish qoidasi bo'yicha birinchi kundan 28 kun ichidagi
+      // sanalar (birinchi kun ham). Takrorlanmasa — faqat o'sha kun.
+      function kalTakrorKunlari(bosh, rrule) {
+        if (!rrule) return [bosh];
+        const out = [];
+        for (let i = 0; i < 28; i++) {
+          const kun = kalAddDays(bosh, i);
+          const hk = kalWeekday(kun); // 0 = Du
+          if (rrule === "FREQ=DAILY") out.push(kun);
+          else if (rrule.includes("BYDAY=MO,TU,WE,TH,FR")) { if (hk < 5) out.push(kun); }
+          else if (rrule.startsWith("FREQ=WEEKLY")) { if (i % 7 === 0) out.push(kun); }
+          else if (i === 0) out.push(kun); // oylik — 4 hafta ichida faqat birinchisi
+        }
+        return out;
+      }
       // Bandlik tekshiruvi — 300ms kechikish bilan (TZ 8-bo'lim).
       function kalCheckConflicts() {
         if (kalConflictTimer) clearTimeout(kalConflictTimer);
@@ -20463,15 +20571,26 @@
           const f = kal.form;
           if (!f || f.allDay || !f.participants.size) return;
           try {
-            const q = new URLSearchParams({
-              users: [...f.participants].join(","),
-              start: kalToIso(f.date, f.start),
-              end: kalToIso(f.date, f.end),
-            });
-            if (f.id) q.set("exclude", f.id);
-            const r = await apiFetch(`/api/events/conflicts?${q}`);
-            const d = await r.json();
-            if (kal.form === f) { f.conflicts = d.items || []; kalFormRender(); }
+            // Takrorlanuvchi rejada keyingi 4 hafta ichidagi nusxalar ham
+            // tekshiriladi (D32 qarori, 2026-11-12). Avval faqat birinchi
+            // kun ko'rilardi — haftalik syomka 2-haftada boshqa reja bilan
+            // to'qnashsa, hech kim sezmasdi. So'rovlar soni 8 ta bilan
+            // cheklangan (har kunlik rejada ham).
+            const kunlar = kalTakrorKunlari(f.date, f.rrule).slice(0, 8);
+            const javoblar = await Promise.all(
+              kunlar.map(async (kun) => {
+                const q = new URLSearchParams({
+                  users: [...f.participants].join(","),
+                  start: kalToIso(kun, f.start),
+                  end: kalToIso(kun, f.end),
+                });
+                if (f.id) q.set("exclude", f.id);
+                const r = await apiFetch(`/api/events/conflicts?${q}`);
+                const d = await r.json();
+                return (d.items || []).map((x) => ({ ...x, kun }));
+              }),
+            );
+            if (kal.form === f) { f.conflicts = javoblar.flat(); kalFormRender(); }
           } catch (e) { /* tekshiruv ishlamasa saqlash baribir ishlaydi */ }
         }, 300);
       }
@@ -20951,7 +21070,11 @@
         if (!w) return null;
         const scoped = actScoped();
         const items = actInRange(scoped, w.start, w.end);
-        const oldingi = i > 0 ? actInRange(scoped, weeks[i - 1].start, weeks[i - 1].end).length : null;
+        // Birinchi qator uchun ham farq (D18 qarori, 2026-11-12): oldingi
+        // 7 kun o'tgan oyda, lekin API o'tgan oyni to'liq qaytaradi.
+        const oldingi = i > 0
+          ? actInRange(scoped, weeks[i - 1].start, weeks[i - 1].end).length
+          : actInRange(scoped, kalAddDays(w.start, -7), kalAddDays(w.start, -1)).length;
         // Hafta tugamagan bo'lsa farq ko'rsatilmaydi — yarim hafta
         // bilan to'liq haftani solishtirish chalg'itadi.
         const tugagan = w.end < act.today;
@@ -21144,10 +21267,20 @@
               })
               .join("")}
           </div>
-          <div class="act-seclbl">Kim qancha qildi</div>
+          <div class="act-seclbl">${
+            // Xodim filtri yoqilganda ro'yxat «u bilan birga ishlaganlar»
+            // bo'ladi (D35 qarori, 2026-11-12) — sarlavha shuni aytsin,
+            // tanlangan xodim birinchi qatorda.
+            act.filter
+              ? `${escHtml(actShortName(actUser(act.filter)))} bilan birga`
+              : act.dayIso
+                ? `Kim qancha qildi · ${escHtml(fmtDay(parseISO(act.dayIso)))}`
+                : "Kim qancha qildi"
+          }</div>
           <div class="act-people">
             ${
-              kishilar
+              [...kishilar]
+                .sort((a, b) => (a === act.filter ? -1 : b === act.filter ? 1 : 0))
                 .map((un) => {
                   const u = actUser(un);
                   const d = oldingi ? counts[un] - (oldingi[un] || 0) : null;
@@ -24041,6 +24174,7 @@
           s: 15,
           assignees: [],
           notify: true,
+          color: null, // null — avtomatik (D13)
           calMonth: t.getMonth(),
           calYear: t.getFullYear(),
           calSel: null,
@@ -24453,6 +24587,82 @@
           <button type="button" class="np2-btn-outline" onclick="requestCloseNewProject()">Bekor</button>
           <button type="button" class="np2-btn-primary" id="np-create-btn" ${npState.saving ? "disabled" : ""} onclick="submitNewProject()">${npState.saving ? "Yaratilmoqda…" : npState.hasPlan ? `Yaratish · ${total} vazifa` : "Yaratish"}</button>`;
       }
+      // ── Loyiha rangi (D13, 2026-11-12) ─────────────────────────────
+      // Backenddagi PROJECT_COLORS va rangTanla bilan BIR XIL: forma
+      // avtomatik tanlovni oldindan ko'rsatadi, server ham shuni beradi.
+      const PROJECT_PALETTE = [
+        "#0284c7", "#0d9488", "#d97706", "#db2777", "#7c3aed", "#65a30d",
+        "#4f46e5", "#c2410c", "#0891b2", "#9333ea", "#15803d", "#475569",
+        "#1d4ed8", "#0f766e", "#b45309", "#be185d", "#6d28d9", "#4d7c0f",
+        "#3730a3", "#9a3412", "#0e7490", "#7e22ce", "#166534", "#334155",
+      ];
+      function npRangHsl(hex) {
+        const n = parseInt(String(hex).replace("#", ""), 16);
+        const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+        const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+        let h = 0;
+        if (d) {
+          if (mx === r) h = ((g - b) / d) % 6;
+          else if (mx === g) h = (b - r) / d + 2;
+          else h = (r - g) / d + 4;
+          h *= 60;
+          if (h < 0) h += 360;
+        }
+        return { h, l, s: d ? d / (1 - Math.abs(2 * l - 1)) : 0 };
+      }
+      function npRangMasofa(a, b) {
+        const x = npRangHsl(a), y = npRangHsl(b);
+        let dh = Math.abs(x.h - y.h);
+        if (dh > 180) dh = 360 - dh;
+        if (x.s < 0.2 || y.s < 0.2) dh = Math.max(dh, 90 * Math.abs(x.s - y.s));
+        return dh + Math.abs(x.l - y.l) * 150;
+      }
+      function npBandRanglar() {
+        const m = {};
+        projects.forEach((p) => {
+          if (p.color) (m[p.color.toLowerCase()] = m[p.color.toLowerCase()] || []).push(p);
+        });
+        return m;
+      }
+      function npAvtoRang() {
+        const band = npBandRanglar();
+        const sanoq = (c) => (band[c] || []).length;
+        const eng = Math.min(...PROJECT_PALETTE.map(sanoq));
+        const nomzod = PROJECT_PALETTE.filter((c) => sanoq(c) === eng);
+        const keys = Object.keys(band);
+        if (!keys.length) return nomzod[0];
+        let yaxshi = nomzod[0], engM = -1;
+        nomzod.forEach((c) => {
+          const m = Math.min(...keys.map((b) => npRangMasofa(c, b)));
+          if (m > engM) { engM = m; yaxshi = c; }
+        });
+        return yaxshi;
+      }
+      function npColorHtml() {
+        const band = npBandRanglar();
+        const tanlangan = npState.color || npAvtoRang();
+        const bosh = PROJECT_PALETTE.filter((c) => !band[c]).length;
+        const kv = PROJECT_PALETTE.map((c) => {
+          const egasi = band[c] && band[c][0];
+          return `<button type="button" class="np2-sw${c === tanlangan ? " on" : ""}${egasi ? " busy" : ""}" style="background:${c}"
+              title="${egasi ? `Band: ${escHtml(egasi.label)}` : "Bo'sh"}" onclick="npPickColor('${c}')">${egasi ? escHtml(egasi.label.slice(0, 1).toUpperCase()) : ""}</button>`;
+        }).join("");
+        return `<div class="np2-sec">
+            <div class="np2-label">Rang <span class="np2-sub-hint">${npState.color ? "Qo'lda tanlandi" : "Avto tanlandi"} · ${bosh} ta bo'sh</span></div>
+            <div class="np2-swatches">${kv}</div>
+            <div class="np2-sub-hint" style="display:block;margin-top:7px">Band ranglarda loyiha harfi turadi va xira. Tizim mavjudlaridan eng uzoq rangni o'zi tanlaydi.</div>
+          </div>`;
+      }
+      function npPickColor(c) {
+        const band = npBandRanglar()[c];
+        const qoy = () => {
+          npState.color = c;
+          renderNewProjectForm();
+        };
+        if (band && band.length) {
+          showConfirmModal("Rang band", `Bu rang «${escHtml(band[0].label)}»da band — baribir tanlansinmi?`, qoy, "Tanlash");
+        } else qoy();
+      }
       function renderNewProjectForm() {
         const anchor = parseISO(npState.anchor);
         document.getElementById("np-body").innerHTML = `
@@ -24461,6 +24671,7 @@
               <div class="np2-label">Loyiha nomi</div>
               <input class="np2-name-input ${npState.labelErr ? "err" : ""}" placeholder="Masalan: Coffee House" value="${escHtml(npState.label)}" oninput="npState.label=this.value; npState.labelErr=false; this.classList.remove('err'); document.getElementById('np-footer').innerHTML=npBuildFooterHtml()"/>
               ${npState.labelErr ? `<div class="np2-err-msg">Loyiha nomini kiriting</div>` : ""}
+              ${npColorHtml()}
 
               <div class="np2-sec">
                 <div class="np2-label">Loyiha turi</div>
@@ -24564,6 +24775,7 @@
               storiesTarget: npState.hasPlan ? npState.s : 0,
               assigneeUsernames: npState.assignees,
               notifyTelegram: npState.notify,
+              color: npState.color || npAvtoRang(),
             }),
           });
           const d = await res.json().catch(() => ({}));
@@ -26838,6 +27050,8 @@
             <div class="f-hint" style="margin-top:6px">Ruxsatlarda loyihaga qo'shilganda roli shu yerdan olinadi.</div>
           </div>
           <div class="f-group"><label class="f-label">Tug'ilgan sana</label>${renderDateFieldHtml("ue-birth", u.birth_date ? String(u.birth_date).slice(0, 10) : "", "Sana tanlang")}</div>
+          <div class="f-group"><label class="f-label">Ishga kirgan sana</label>${renderDateFieldHtml("ue-hire", u.hire_date ? String(u.hire_date).slice(0, 10) : "", "Sana tanlang")}
+            <div class="f-hint">Profil'dagi «Jamoada … dan beri» shu sanadan hisoblanadi.</div></div>
           <button class="btn btn-blue" id="ue-save-btn" onclick="saveUserEdit('${escArg(username)}')" style="margin-bottom:18px">Saqlash</button>
           ${
             isSuperAdmin
@@ -26881,6 +27095,13 @@
           position: document.getElementById("ue-position")?.value || undefined,
           birthDate: document.getElementById("ue-birth")?.value || null,
         };
+        // Ishga kirgan sana — faqat o'zgargan bo'lsa yuboriladi (0038
+        // migratsiyasi hali ishlatilmagan bazada boshqa tahrirlar buzilmasin).
+        {
+          const hire = document.getElementById("ue-hire")?.value || null;
+          const eski = (allUsers.find((x) => x.username === username) || {}).hire_date || null;
+          if ((hire || null) !== (eski ? String(eski).slice(0, 10) : null)) body.hireDate = hire;
+        }
         if (btn) {
           btn.disabled = true;
           btn.textContent = "Saqlanmoqda…";
@@ -27079,7 +27300,7 @@
           <div class="dtbl-wrap">
             <table class="dtbl">
               <thead><tr>
-                <th>Mahsulot</th><th style="width:90px">Narxi</th><th style="width:170px">Qoldiq</th><th style="width:70px">Sotildi</th><th style="width:80px">Ko'rinsin</th><th style="width:84px;text-align:right">Amal</th>
+                <th>Mahsulot</th><th style="width:90px">Narxi</th><th style="width:170px">Qoldiq</th><th style="width:90px">Bu oy sotildi</th><th style="width:80px">Ko'rinsin</th><th style="width:84px;text-align:right">Amal</th>
               </tr></thead>
               <tbody>${
                 list.length
@@ -27263,7 +27484,7 @@
               <span style="font-size:12.5px;color:var(--t5);white-space:nowrap">${p.stock}/${cap}</span>
             </div>
           </td>
-          <td>${p.sold_count}</td>
+          <td title="Barcha vaqt: ${p.sold_count} ta">${p.sold_month ?? p.sold_count}</td>
           <td><button type="button" class="tglsw brand ${p.is_visible ? "on" : ""}" onclick="toggleNShopVisible('${escArg(p.id)}',${p.is_visible})"><div class="knob"></div></button></td>
           <td style="text-align:right">
             <div style="display:flex;gap:6px;justify-content:flex-end">
@@ -27735,8 +27956,9 @@
               .join("")
           : `<div class="f-hint" style="padding:10px 0">Faol xodim topilmadi</div>`;
 
+        // Matn va Telegram ko'rinishi yonma-yon (D27, 2026-11-12).
         c.innerHTML = `
-          <div style="max-width:520px">
+          <div class="elon-grid"><div style="max-width:520px;min-width:0">
             <div class="f-group">
               <label class="f-label">Kimga yuborilsin</label>
               <div class="seg" style="margin-top:0">
@@ -27753,16 +27975,35 @@
             </div>
             <div class="f-group">
               <label class="f-label" for="announcement-message">Xabar matni</label>
-              <textarea class="f-input" id="announcement-message" rows="7" maxlength="4000" placeholder="Jamoaga yuboriladigan xabarni yozing..."></textarea>
+              <textarea class="f-input" id="announcement-message" rows="7" maxlength="4000" placeholder="Jamoaga yuboriladigan xabarni yozing..." oninput="elonPreview()"></textarea>
               <div class="f-hint">${announcementMode === "all" ? "Xabar Telegram chat ID'si ro'yxatdan o'tgan boshqa faol foydalanuvchilarga yuboriladi." : "Xabar faqat yuqorida tanlangan xodimlarga yuboriladi."}</div>
             </div>
             <button class="btn btn-blue" id="announcement-send-btn" onclick="sendAnnouncement()">${announcementSendLabel()}</button>
-          </div>`;
+          </div>
+          <div class="elon-prev desktop-only">
+            <div class="f-label">Telegram'da shunday ko'rinadi</div>
+            <div class="elon-chat"><div class="elon-bubble" id="elon-bubble"></div></div>
+            <div class="f-hint">Bot har bir xodimga shaxsiy chatda yuboradi. Ilovada ham «E'lon» bildirishnomasi bo'lib chiqadi.</div>
+          </div></div>`;
         const ta = document.getElementById("announcement-message");
         if (ta) ta.value = prevMessage;
+        elonPreview();
+      }
+      // Server yuboradigan formatning o'zi: «📣 @kim e'loni», bo'sh qator, matn.
+      function elonPreview() {
+        const el = document.getElementById("elon-bubble");
+        if (!el) return;
+        const matn = (document.getElementById("announcement-message")?.value || "").trim();
+        el.innerHTML = `<b>📣 @${escHtml(currentUser || "")} e’loni</b><br><br>${
+          matn ? escHtml(matn).replace(/\n/g, "<br>") : `<span style="opacity:.5">Xabar matni shu yerda ko'rinadi</span>`
+        }<div class="elon-btn">📱 Ilovani ochish</div>`;
       }
       function announcementSendLabel() {
-        if (announcementMode === "all") return "Barchaga yuborish";
+        // Qabul qiluvchilar soni (D27): o'zingizdan tashqari faol xodimlar.
+        if (announcementMode === "all") {
+          const n = (announcementUsersList || []).filter((u) => u.username !== currentUser).length;
+          return n ? `Barchaga yuborish · ${n} kishi` : "Barchaga yuborish";
+        }
         return announcementSelected.size ? `${announcementSelected.size} kishiga yuborish` : "Xodim tanlang";
       }
       function setAnnouncementMode(mode) {
@@ -28593,8 +28834,42 @@
         showTab("history");
       }
 
+      // Profil rasmi (D16, 2026-11-12): 256×256 kvadratga kesib, JPEG
+      // qilib yuboriladi — telefon kamerasidagi 5MB rasm ham 30KB bo'ladi.
       function pfUploadAvatarStub() {
-        showToast("📷 Rasm yuklash imkoniyati tez orada qo'shiladi");
+        const inp = document.createElement("input");
+        inp.type = "file";
+        inp.accept = "image/jpeg,image/png,image/webp";
+        inp.onchange = async () => {
+          const f = inp.files && inp.files[0];
+          if (!f) return;
+          try {
+            const url = await new Promise((resolve, reject) => {
+              const img = new Image();
+              img.onload = () => {
+                const k = Math.min(img.width, img.height);
+                const cv = document.createElement("canvas");
+                cv.width = cv.height = 256;
+                cv.getContext("2d").drawImage(img, (img.width - k) / 2, (img.height - k) / 2, k, k, 0, 0, 256, 256);
+                resolve(cv.toDataURL("image/jpeg", 0.86));
+                URL.revokeObjectURL(img.src);
+              };
+              img.onerror = () => reject(new Error("Rasmni o'qib bo'lmadi"));
+              img.src = URL.createObjectURL(f);
+            });
+            showToast("Yuklanmoqda…");
+            const r = await apiFetch("/api/me/avatar", { method: "POST", body: JSON.stringify({ imageBase64: url }) });
+            const d = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(d.error || "Xato");
+            if (myProfile) myProfile.avatarUrl = myProfile.avatar_url = d.url;
+            showToast("✅ Rasm yangilandi");
+            if (typeof renderProfilePage === "function") renderProfilePage();
+            renderMeAvatars();
+          } catch (e) {
+            showToast("⚠ " + e.message);
+          }
+        };
+        inp.click();
       }
 
       function pfToggleDarkMode() {

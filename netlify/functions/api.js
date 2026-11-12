@@ -389,6 +389,35 @@ app.post("/api/me/celebration-sound", auth, async (req, res) => {
   }
 });
 
+// ── Profil rasmi (D16, 2026-11-12) ───────────────────────────────────
+// Avval «Rasm yuklash» tugmasi faqat «tez orada» deyardi. Rasm
+// frontendda 256×256 ga kichraytirib yuboriladi; bu yerda tur va hajm
+// tekshiriladi. Telegram rasmi buni ustidan yozmaydi (lib/auth.js).
+const AVATAR_TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+app.post("/api/me/avatar", auth, async (req, res) => {
+  try {
+    const m = String(req.body.imageBase64 || "").match(/^data:([a-z/]+);base64,(.+)$/i);
+    if (!m) return res.status(400).json({ error: "Rasm fayli kerak" });
+    const ext = AVATAR_TYPES[m[1].toLowerCase()];
+    if (!ext) return res.status(400).json({ error: "Faqat JPG, PNG yoki WEBP" });
+    const buf = Buffer.from(m[2], "base64");
+    if (buf.length > 2 * 1024 * 1024) return res.status(400).json({ error: "Rasm 2MB dan oshmasin" });
+    const blob = await blobPut(`avatar/${req.user.username}-${Date.now()}.${ext}`, buf, { access: "public", contentType: m[1] });
+    await db.query(`update users set avatar_url = $1 where id = $2`, [blob.url, req.user.id]);
+    res.json({ ok: true, url: blob.url });
+  } catch (e) {
+    serverError(res, e, "POST /api/me/avatar", req);
+  }
+});
+app.delete("/api/me/avatar", auth, async (req, res) => {
+  try {
+    await db.query(`update users set avatar_url = null where id = $1`, [req.user.id]);
+    res.json({ ok: true });
+  } catch (e) {
+    serverError(res, e, "DELETE /api/me/avatar", req);
+  }
+});
+
 // Xodim tanlagan 10 soniyalik parchaning boshlanish nuqtasi.
 app.patch("/api/me/celebration-sound", auth, async (req, res) => {
   try {
@@ -522,6 +551,8 @@ app.get("/api/me", auth, async (req, res) => {
       birthDate: u.birth_date,
       phone: u.phone,
       jobTitle: u.job_title,
+      // Qat'iy lavozim (yon menyuda ism ostida, D16/0.4).
+      position: u.position || null,
       email: u.email || null,
       avatarUrl: u.avatar_url,
       role: u.role,
@@ -609,7 +640,10 @@ app.get("/api/activity-stats", auth, async (req, res) => {
       return res.status(403).json({ error: "Faqat admin boshqa xodimning faolligini ko'rishi mumkin" });
     }
     const ur = await db.query(
-      `select id, username, first_name, last_name, full_name, job_title, created_at from users where username = $1`,
+      // `hire_date` (0038) to_jsonb orqali: ustun hali yo'q bo'lsa null.
+      `select id, username, first_name, last_name, full_name, job_title, created_at,
+              to_jsonb(users)->>'hire_date' as hire_date
+         from users where username = $1`,
       [targetUsername],
     );
     const user = ur.rows[0];
@@ -652,7 +686,8 @@ app.get("/api/activity-stats", auth, async (req, res) => {
         username: user.username,
         name: user.first_name ? `${user.first_name} ${user.last_name || ""}`.trim() : user.full_name || user.username,
         jobTitle: user.job_title,
-        joinedAt: user.created_at,
+        // Ishga kirgan sana (D16) — admin kiritgan bo'lsa o'sha.
+        joinedAt: user.hire_date || user.created_at,
       },
       checks: checksR.rows.map((r) => ({ doneAt: r.done_at, type: r.type, projectLabel: r.project_label })),
       taskEvents: taskR.rows.map((r) => ({ createdAt: r.created_at, kind: r.kind })),
@@ -677,7 +712,8 @@ app.get("/api/users", auth, async (req, res) => {
               u.telegram_user_id, (u.telegram_chat_id is not null) as has_chat,
               u.first_name, u.last_name, u.birth_date, u.phone, u.job_title, u.avatar_url, u.email, u.position,
               (select coalesce(sum(t.amount), 0)::float from ncoin_transactions t where t.user_id = u.id) as ncoin,
-              (select count(distinct pm.project_id)::int from permissions pm where pm.user_id = u.id) as project_count
+              (select count(distinct pm.project_id)::int from permissions pm where pm.user_id = u.id) as project_count,
+              to_jsonb(u)->>'hire_date' as hire_date
        from users u order by (u.role = 'employee'), u.username`,
     );
     res.json({ users: r.rows });
@@ -947,6 +983,8 @@ app.patch("/api/users/:username", auth, async (req, res) => {
       // qiymatdan olinadi. `job_title` erkin matn bo'lgani uchun uning
       // o'rnini bosa olmaydi.
       position: "position",
+      // Ishga kirgan sana (0038, D16) — faqat admin (bu endpoint admin).
+      hireDate: "hire_date",
     };
     for (const [bodyKey, column] of Object.entries(profileFieldMap)) {
       if (typeof req.body[bodyKey] === "undefined") continue;
@@ -958,6 +996,9 @@ app.patch("/api/users/:username", auth, async (req, res) => {
         if (v && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) {
           return res.status(400).json({ error: "Email manzili noto'g'ri" });
         }
+      }
+      if (bodyKey === "hireDate" && v && !/^\d{4}-\d{2}-\d{2}$/.test(String(v))) {
+        return res.status(400).json({ error: "Sana formati: YYYY-MM-DD" });
       }
       if (bodyKey === "position" && v && !STAFF_POSITIONS.includes(v)) {
         return res.status(400).json({ error: "Noto'g'ri lavozim" });
@@ -1067,19 +1108,63 @@ function isoDate(d) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
+// 24 rang (D13, 2026-11-12): avvalgi 12 tasi o'zgarmaydi (mavjud
+// loyihalar ko'rinishi saqlanadi) + ularning to'qroq 12 jufti. Hammasida
+// oq harf o'qiladi. Frontenddagi `PROJECT_PALETTE` bilan BIR XIL.
 const PROJECT_COLORS = [
   "#0284c7", "#0d9488", "#d97706", "#db2777", "#7c3aed", "#65a30d",
   "#4f46e5", "#c2410c", "#0891b2", "#9333ea", "#15803d", "#475569",
+  "#1d4ed8", "#0f766e", "#b45309", "#be185d", "#6d28d9", "#4d7c0f",
+  "#3730a3", "#9a3412", "#0e7490", "#7e22ce", "#166534", "#334155",
 ];
-
-// Yangi loyihaga rang: FAOL loyihalarda hali ishlatilmagan birinchi
-// rang. Oddiy "loyihalar soni % palitra" usuli arxivdagi loyihalarni
-// ham sanab, ekranda ko'rinadigan ikki loyihani bir xil rangga
-// tushirib qo'yardi.
-async function pickProjectColor() {
+function rangHsl(hex) {
+  const n = parseInt(String(hex).replace("#", ""), 16);
+  const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+  let h = 0;
+  if (d) {
+    if (mx === r) h = ((g - b) / d) % 6;
+    else if (mx === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  return { h, l, s: d ? d / (1 - Math.abs(2 * l - 1)) : 0 };
+}
+// Ikki rang orasidagi masofa: ton farqi (0–180°), yorqinlik farqi va
+// kulrang (to'yinmagan) rang uchun jarima. Soddalashtirilgan OKLCH
+// o'rnida — natija bir xil tartibni beradi va har safar bir xil.
+function rangMasofa(a, b) {
+  const x = rangHsl(a), y = rangHsl(b);
+  let dh = Math.abs(x.h - y.h);
+  if (dh > 180) dh = 360 - dh;
+  if (x.s < 0.2 || y.s < 0.2) dh = Math.max(dh, 90 * Math.abs(x.s - y.s));
+  return dh + Math.abs(x.l - y.l) * 150;
+}
+// «Eng uzoq bo'sh rang» (D13): har bo'sh rang uchun band ranglargacha
+// eng kichik masofa olinadi, shu masofasi eng katta bo'lgani tanlanadi.
+// Hammasi band bo'lsa — eng kam ishlatilganlar orasidan xuddi shunday.
+function rangTanla(bandRanglar) {
+  const sanoq = {};
+  bandRanglar.forEach((c) => (sanoq[String(c).toLowerCase()] = (sanoq[String(c).toLowerCase()] || 0) + 1));
+  const eng = Math.min(...PROJECT_COLORS.map((c) => sanoq[c] || 0));
+  const nomzod = PROJECT_COLORS.filter((c) => (sanoq[c] || 0) === eng);
+  const band = Object.keys(sanoq);
+  if (!band.length) return nomzod[0];
+  let eng_yaxshi = nomzod[0], engMasofa = -1;
+  nomzod.forEach((c) => {
+    const m = Math.min(...band.map((b) => rangMasofa(c, b)));
+    if (m > engMasofa) { engMasofa = m; eng_yaxshi = c; }
+  });
+  return eng_yaxshi;
+}
+// Yangi loyihaga rang. Arxivdagi loyiha band hisoblanmaydi (D13, 6-band).
+// `soralgan` — formada qo'lda tanlangan rang (palitradan bo'lsa qabul).
+async function pickProjectColor(soralgan) {
+  const s = String(soralgan || "").toLowerCase();
+  if (PROJECT_COLORS.includes(s)) return s;
   const r = await db.query(`select color from projects where is_active and color is not null`);
-  const band = new Set(r.rows.map((x) => x.color));
-  return PROJECT_COLORS.find((c) => !band.has(c)) || PROJECT_COLORS[band.size % PROJECT_COLORS.length];
+  return rangTanla(r.rows.map((x) => x.color));
 }
 
 const POSITION_LABEL_UZ = {
@@ -3155,6 +3240,24 @@ app.post("/api/events/:id/decline", auth, async (req, res) => {
     res.json({ ok: true });
   } catch (e) {
     serverError(res, e, "POST /api/events/:id/decline", req);
+  }
+});
+
+// «Men qatnasha olmayman»ni qaytarish (D33, 2026-11-12). Faqat o'zi
+// rad etgan bo'lsa — begona odamni rejaga qo'shish yo'li emas.
+// Rad etishda o'chirilgan eslatmalar qayta tuziladi.
+app.post("/api/events/:id/rejoin", auth, async (req, res) => {
+  try {
+    const r = await db.query(
+      `update event_participants set status = 'going'
+        where event_id = $1 and user_id = $2 and status = 'declined' returning event_id`,
+      [req.params.id, req.user.id],
+    );
+    if (!r.rows.length) return res.status(404).json({ error: "Qaytarib bo'lmadi — siz bu rejadan chiqmagansiz" });
+    await evRescheduleReminders(req.params.id).catch((e) => console.error("Eslatma qayta tuzilmadi:", e.message));
+    res.json({ ok: true });
+  } catch (e) {
+    serverError(res, e, "POST /api/events/:id/rejoin", req);
   }
 });
 
@@ -5641,7 +5744,7 @@ app.post("/api/projects", auth, async (req, res) => {
     if (exists.rows[0]) slug = `${slug}_${Date.now().toString(36)}`;
 
     // Ruxsatlar ekranida har loyiha o'z rangida ko'rinadi.
-    const color = await pickProjectColor();
+    const color = await pickProjectColor(req.body.color);
 
     const r = await db.query(
       `insert into projects (slug, label, anchor_date, posts_target, stories_target, color, has_plan)
@@ -7391,9 +7494,30 @@ app.get("/api/ncoin/admin/products", auth, async (req, res) => {
        ${includeArchived ? "" : "where p.is_archived = false"}
        order by p.created_at asc`,
     );
+    // «Bu oy sotildi» (D28, 2026-11-12): shu kalendar oyda (Toshkent),
+    // bekor qilinganlarsiz. Xarid holati jadvali (0036) bo'lmasa —
+    // tranzaksiyalardan.
+    const oyda = {};
+    const xaridBor = (await db.query(`select to_regclass('public.ncoin_purchases') is not null as bor`)).rows[0].bor;
+    const oyR = await db.query(
+      xaridBor
+        ? `select product_id::text as pid, count(*)::int as n from ncoin_purchases
+            where status <> 'cancelled'
+              and to_char(created_at at time zone 'Asia/Tashkent', 'YYYY-MM') = to_char(now() at time zone 'Asia/Tashkent', 'YYYY-MM')
+            group by product_id`
+        : `select reference_id as pid, count(*)::int as n from ncoin_transactions
+            where reason = 'purchase' and reference_type = 'product'
+              and to_char(created_at at time zone 'Asia/Tashkent', 'YYYY-MM') = to_char(now() at time zone 'Asia/Tashkent', 'YYYY-MM')
+            group by reference_id`,
+    );
+    oyR.rows.forEach((x) => (oyda[x.pid] = x.n));
     res.json({
       ok: true,
-      products: r.rows.map((row) => ({ ...normalizeProduct(row), sold_count: Number(row.sold_count) })),
+      products: r.rows.map((row) => ({
+        ...normalizeProduct(row),
+        sold_count: Number(row.sold_count),
+        sold_month: oyda[row.id] || 0,
+      })),
     });
   } catch (e) {
     serverError(res, e, "GET /api/ncoin/admin/products");
@@ -7754,10 +7878,25 @@ app.post("/api/ncoin/admin/adjust", auth, async (req, res) => {
 // ── TAGLAR ─────────────────────────────────────────────────────────
 app.get("/api/tags", auth, async (req, res) => {
   try {
-    const r = await db.query(`select id, name from tags order by name`);
+    // `color` (0039) to_jsonb orqali — ustun hali yo'q bo'lsa null.
+    const r = await db.query(`select id, name, to_jsonb(tags)->>'color' as color from tags order by name`);
     res.json({ tags: r.rows });
   } catch (e) {
     serverError(res, e, "GET /api/tags");
+  }
+});
+
+// Teg rangi — faqat admin (D05 qarori, 2026-11-12). null — avvalgi qoida.
+app.patch("/api/tags/:id", auth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const c = req.body.color == null || req.body.color === "" ? null : String(req.body.color);
+    if (c !== null && !/^[0-9]$/.test(c)) return res.status(400).json({ error: "Noto'g'ri rang" });
+    const r = await db.query(`update tags set color = $1 where id = $2 returning id, name, color`, [c, req.params.id]);
+    if (!r.rows[0]) return res.status(404).json({ error: "Teg topilmadi" });
+    res.json({ ok: true, tag: r.rows[0] });
+  } catch (e) {
+    serverError(res, e, "PATCH /api/tags/:id", req);
   }
 });
 

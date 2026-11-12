@@ -95,7 +95,7 @@ function isAdminRole(role) {
 // select'ga profil maydonlari ham qo'shildi (Profil ekrani uchun) — bundan
 // tashqari hech narsa eski xulq-atvordan farq qilmaydi.
 const USER_ROW_SELECT = `select id, username, full_name, role, is_active, access_status, telegram_chat_id,
-       first_name, last_name, birth_date, phone, job_title, telegram_user_id, avatar_url,
+       first_name, last_name, birth_date, phone, job_title, telegram_user_id, avatar_url, position,
        birthday_ack_date
        from users`;
 
@@ -147,7 +147,11 @@ function createAuthMiddleware(db) {
       // bo'lgandagina bo'ladi. So'rovni kutdirmaymiz: rasm yangilanishi
       // javobga ta'sir qilmasligi kerak.
       const photoUrl = getPhotoUrlFromInitData(initData);
-      if (photoUrl && photoUrl !== row.avatar_url) {
+      // Xodim ilovada o'zi yuklagan rasm (Vercel Blob, D16 2026-11-12)
+      // Telegram rasmi bilan ustidan yozilmaydi. O'chirsa — Telegram
+      // rasmi keyingi so'rovda qaytadi.
+      const ozYuklagan = /vercel-storage\.com\/avatar\//.test(String(row.avatar_url || ""));
+      if (photoUrl && photoUrl !== row.avatar_url && !ozYuklagan) {
         row.avatar_url = photoUrl;
         db.query(`update users set avatar_url = $1 where id = $2`, [photoUrl, row.id]).catch((e) =>
           console.error("Avatar yangilanmadi:", e.message),
