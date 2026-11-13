@@ -470,7 +470,15 @@
         font-size: 10px;
         font-weight: 400;
         color: var(--t3);
+        /* 7 ta bo'lim 375px ekranda — har biriga ~53px. «Boshqaruv»
+           yozuvi o'z kengligida turib olib, menyuni o'ngga surib
+           chetidan kesilardi (2026-11-13). Endi hamma teng kenglikda,
+           yozuv sig'maganda harflar biroz zichlashadi. */
+        max-width: 100%;
+        white-space: nowrap;
+        letter-spacing: -0.02em;
       }
+      .nav-item { min-width: 0; }
       .nav-item.active .nav-lbl {
         font-weight: 600;
         color: var(--brand);
@@ -8304,6 +8312,20 @@
         display: none;
       }
       .pd-root { display: none; }
+      /* Desktop jadvali (Loyihalar, Tarix) — faqat ≥860px da ko'rinadi.
+         Bu qoida yo'q edi va telefonda mobil ro'yxat ostida kompyuter
+         jadvali ham chiqib qolardi (2026-11-13). */
+      .pd4-root { display: none; }
+      /* Chip-filtrlar (Boshqaruv → Loyihalar «Faol / Arxiv» va boshqalar)
+         telefonda ham ishlatiladi — uslubi faqat desktop ichida edi va
+         telefonda oddiy kulrang tugma bo'lib chiqardi (2026-11-13). */
+      .pd4-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+      .pd4-chip {
+        height: 34px; padding: 0 14px; border-radius: 99px; border: none; cursor: pointer;
+        background: var(--surf); box-shadow: inset 0 0 0 1px var(--bd4);
+        font: 500 13px Onest, system-ui, sans-serif; color: var(--ink);
+      }
+      .pd4-chip.on { background: var(--ink); color: var(--surf); box-shadow: none; font-weight: 600; }
 
       /* ══ "BUGUN" SAHIFASI — v3 dizayni ═══════════════════════════ */
       /* Holat belgisi: qarz / ortda / rejada / oldinda. Nuqta ::before
