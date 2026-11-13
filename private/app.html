@@ -431,32 +431,38 @@
         right: 0;
         bottom: 0;
         /* `env()` Telegram WebView ichida ko'pincha 0 qaytaradi —
-           shuning uchun Telegram bergan qiymat ham hisobga olinadi. */
-        height: calc(80px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
+           shuning uchun Telegram bergan qiymat ham hisobga olinadi.
+           Mobil dizayn (01): 76px, tepadan 9px, har band 78px kenglikgacha. */
+        height: calc(76px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
         padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px));
         background: var(--surf);
         border-top: 1px solid var(--bd2);
         display: flex;
         align-items: flex-start;
-        padding-top: 11px;
+        justify-content: space-around;
+        padding-top: 9px;
         z-index: 200;
       }
       .nav-item {
         flex: 1;
+        min-width: 0;
+        max-width: 78px;
+        height: 66px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 5px;
+        gap: 4px;
         cursor: pointer;
         background: none;
         border: none;
         color: inherit;
         padding: 0;
+        -webkit-tap-highlight-color: transparent;
       }
       .nav-ico {
-        width: 21px;
-        height: 21px;
-        color: var(--nav-off);
+        width: 22px;
+        height: 22px;
+        color: var(--t3);
       }
       .nav-ico svg {
         width: 100%;
@@ -467,22 +473,39 @@
         color: var(--brand);
       }
       .nav-lbl {
-        font-size: 10px;
-        font-weight: 400;
+        font: 500 11px Onest, system-ui, sans-serif;
         color: var(--t3);
-        /* 7 ta bo'lim 375px ekranda — har biriga ~53px. «Boshqaruv»
-           yozuvi o'z kengligida turib olib, menyuni o'ngga surib
-           chetidan kesilardi (2026-11-13). Endi hamma teng kenglikda,
-           yozuv sig'maganda harflar biroz zichlashadi. */
-        max-width: 100%;
         white-space: nowrap;
-        letter-spacing: -0.02em;
       }
-      .nav-item { min-width: 0; }
       .nav-item.active .nav-lbl {
         font-weight: 600;
         color: var(--brand);
       }
+
+      /* «Ko'proq» oynasi (01b) — menyu ustida ochiladi, menyu ko'rinib turadi. */
+      .more-ov { position: fixed; left: 0; right: 0; top: 0; bottom: calc(76px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))); z-index: 190; background: rgba(15, 23, 42, 0.4); }
+      .more-sheet {
+        position: fixed; left: 0; right: 0; z-index: 195;
+        bottom: calc(76px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
+        background: var(--surf); border-radius: 14px 14px 0 0; padding: 10px 16px 16px;
+        display: flex; flex-direction: column; gap: 12px;
+        box-shadow: 0 -12px 40px -12px rgba(15, 23, 42, 0.35);
+      }
+      .more-grab { width: 36px; height: 5px; border-radius: 9px; background: var(--bd4); align-self: center; }
+      .more-me { display: flex; align-items: center; gap: 12px; padding: 4px 2px; border: none; background: none; text-align: left; cursor: pointer; color: inherit; }
+      .more-me .av { width: 48px; height: 48px; border-radius: 99px; background: var(--brand); color: #fff; font: 600 17px Onest, system-ui, sans-serif; display: flex; align-items: center; justify-content: center; flex: none; overflow: hidden; }
+      .more-me .av img { width: 100%; height: 100%; object-fit: cover; }
+      .more-me b { display: block; font: 700 17px Sora, system-ui, sans-serif; color: var(--ink); }
+      .more-me span { display: block; font-size: 13px; color: var(--t3); margin-top: 1px; }
+      .more-list { background: var(--surf); border-radius: 14px; box-shadow: inset 0 0 0 1px var(--bd2); overflow: hidden; }
+      .more-row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 11px 14px; border: none; background: none; text-align: left; cursor: pointer; color: inherit; font: inherit; }
+      .more-row + .more-row { border-top: 1px solid var(--bd1); }
+      .more-ico { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex: none; }
+      .more-ico svg { width: 19px; height: 19px; }
+      .more-row b { display: block; font: 500 15px Onest, system-ui, sans-serif; color: var(--ink); }
+      .more-row small { display: block; font-size: 13px; color: var(--t3); margin-top: 1px; }
+      .more-chev { width: 16px; height: 16px; color: var(--t4, var(--t3)); flex: none; }
+      .more-coin { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px 0 4px; border-radius: 99px; background: var(--ncoin-bg, #fdf2e3); font: 600 13px Onest, system-ui, sans-serif; color: var(--ncoin-ink, #9a5b0b); flex: none; }
 
       /* ── TEMPO KARTASI ──────────────────────────────────────────── */
       .tempo {
@@ -12789,6 +12812,129 @@
         .kal-d4 .kal-ev-s { font: 400 11.5px Onest, system-ui, sans-serif; }
       }
 
+
+      /* ═══ MOBIL DIZAYN (Barcha ekranlar — mobil, 2026-11-13) ════════════
+         Manba: «Nasaf Tracker - Barcha ekranlar» (mobil), 390px kenglik.
+         Bosqichma-bosqich ko'chirilmoqda: M-A — pastki menyu, «Ko'proq»
+         oynasi, sarlavha 60px va «Bugun». Faqat <860px — desktopga
+         tegilmaydi. Sinf prefiksi `m5-`. */
+      .mobile-flex { display: none; }
+      @media (max-width: 859px) {
+        .mobile-flex { display: flex; }
+
+        /* Sarlavha — 60px: chapda nom (Sora 18), o'ngda amallar. */
+        #screen-today .hdr {
+          height: calc(60px + var(--tg-safe-top)); padding: var(--tg-safe-top) 12px 0 20px;
+          display: flex; align-items: center; gap: 6px; background: var(--surf); border-bottom: 1px solid var(--bd1);
+        }
+        #screen-today .hdr-title { font: 700 18px Sora, system-ui, sans-serif; letter-spacing: -0.015em; color: var(--ink); }
+        #screen-today .hdr-sub { font: 400 12.5px Onest, system-ui, sans-serif; color: var(--t3); margin-top: 1px; }
+        .m5-hdr-acts { align-items: center; gap: 8px; flex: none; }
+        .m5-bell.d4-bell {
+          display: flex; width: 40px; height: 40px; border-radius: 12px; border: none; cursor: pointer; flex: none;
+          background: var(--surf); box-shadow: inset 0 0 0 1px var(--bd4); color: var(--ink);
+          align-items: center; justify-content: center; position: relative; padding: 0;
+        }
+        .m5-bell svg { width: 20px; height: 20px; }
+        .m5-bell.dot::after {
+          content: ""; position: absolute; top: 7px; right: 8px; width: 9px; height: 9px; border-radius: 99px;
+          background: var(--red); box-shadow: 0 0 0 2px var(--surf);
+        }
+        body.ntfy-off .m5-bell { display: none !important; }
+        .m5-hdr-acts #me-avatar {
+          width: 40px; height: 40px; border-radius: 99px; background: var(--brand); color: #fff;
+          font: 600 14px Onest, system-ui, sans-serif;
+        }
+        .m5-hdr-acts #me-avatar::after { display: none; }
+        /* Bildirishnomalar ro'yxati telefonda — tepadan ochiladigan karta
+           (to'liq sahifa M-D bosqichida, 32-ekran). */
+        .ntfy-pop {
+          position: fixed !important; z-index: 1500; left: 8px !important; right: 8px !important; width: auto !important;
+          top: calc(var(--tg-safe-top) + 64px) !important; max-height: 72vh; overflow-y: auto;
+          background: var(--surf); border-radius: 16px; padding: 16px;
+          box-shadow: 0 24px 48px -16px rgba(15, 23, 42, 0.3), inset 0 0 0 1px var(--bd2);
+          display: flex; flex-direction: column; gap: 12px; font-family: Onest, system-ui, sans-serif;
+        }
+
+        /* Bugun (01) — 16px chekka, bloklar oralig'i 12px. */
+        #today-body { padding: 0; }
+        .m5-page {
+          display: flex; flex-direction: column; gap: 12px; padding: 16px 16px calc(96px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
+          font-family: Onest, system-ui, sans-serif;
+        }
+        .m5-banner {
+          display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; cursor: pointer;
+          padding: 12px 14px; border: none; border-radius: 14px; font: inherit;
+        }
+        .m5-banner > svg { width: 20px; height: 20px; flex: none; }
+        .m5-banner.bad { background: var(--red-bg); box-shadow: inset 0 0 0 1px var(--red-bd); color: var(--red); }
+        .m5-banner-txt { flex: 1; min-width: 0; }
+        .m5-banner-txt b { display: block; font: 600 14.5px Onest, system-ui, sans-serif; }
+        .m5-banner-txt span { display: block; font-size: 13px; line-height: 1.5; color: var(--t2); margin-top: 2px; }
+        .m5-banner-act { font: 600 14px Onest, system-ui, sans-serif; flex: none; }
+        .m5-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .m5-kpi { background: var(--surf); border-radius: 14px; padding: 12px 14px; box-shadow: inset 0 0 0 1px var(--bd2); min-width: 0; }
+        .m5-kpi-l { font: 500 12.5px Onest, system-ui, sans-serif; color: var(--t2); }
+        .m5-kpi-v { font: 700 24px Sora, system-ui, sans-serif; letter-spacing: -0.02em; color: var(--ink); margin-top: 2px; line-height: 1.27; }
+        .m5-kpi-v.bad { color: var(--red); }
+        .m5-kpi-s { font-size: 12px; color: var(--t3); }
+        .m5-cap { font: 600 12px Onest, system-ui, sans-serif; color: var(--t3); letter-spacing: 0.04em; text-transform: uppercase; padding: 0 4px; }
+        .m5-card { background: var(--surf); border-radius: 14px; box-shadow: inset 0 0 0 1px var(--bd2); overflow: hidden; }
+        .m5-row {
+          width: 100%; display: flex; align-items: center; gap: 12px; padding: 11px 14px;
+          border: none; background: none; text-align: left; cursor: pointer; font: inherit; color: inherit;
+        }
+        .m5-row + .m5-row { border-top: 1px solid var(--bd1); }
+        .m5-badge {
+          width: 36px; height: 36px; border-radius: 10px; flex: none; display: flex; align-items: center; justify-content: center;
+          font: 700 14px Onest, system-ui, sans-serif; color: #fff;
+        }
+        .m5-row-txt { flex: 1; min-width: 0; }
+        .m5-row-txt b { display: block; font: 500 15px Onest, system-ui, sans-serif; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .m5-row-txt span { display: block; font-size: 13px; color: var(--t3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      }
+      /* Tasdiq oynasi (34) — hamma ekranda markazdagi karta. */
+      .overlay.cf-ov { align-items: center !important; justify-content: center; padding: 16px; }
+      .cf-card {
+        width: 100%; max-width: 360px; background: var(--surf); border-radius: 20px; padding: 20px;
+        box-shadow: 0 24px 60px -12px rgba(15, 23, 42, 0.35); font-family: Onest, system-ui, sans-serif;
+        animation: cfIn 0.16s ease-out;
+      }
+      @keyframes cfIn { from { transform: scale(0.96); opacity: 0; } to { transform: none; opacity: 1; } }
+      .cf-ico { width: 40px; height: 40px; border-radius: 12px; background: var(--red-bg); color: var(--red); display: flex; align-items: center; justify-content: center; }
+      .cf-ico.info { background: var(--nav-act-bg); color: var(--brand); }
+      .cf-ico svg { width: 20px; height: 20px; }
+      .cf-t { font: 700 20px Sora, system-ui, sans-serif; letter-spacing: -0.015em; color: var(--ink); margin-top: 14px; line-height: 1.3; }
+      .cf-s { font-size: 14px; line-height: 1.5; color: var(--t2); margin-top: 6px; }
+      .cf-acts { display: flex; gap: 10px; margin-top: 18px; }
+      .cf-btn {
+        flex: 1; height: 44px; border-radius: 12px; border: none; cursor: pointer; font: 600 14.5px Onest, system-ui, sans-serif;
+        background: var(--surf); color: var(--ink); box-shadow: inset 0 0 0 1px var(--bd4);
+      }
+      .cf-btn.danger { background: var(--red); color: #fff; box-shadow: none; }
+      .cf-btn.primary { background: var(--brand); color: #fff; box-shadow: none; }
+      @media (max-width: 859px) {
+        /* Toast (33) — pastki menyu ustida, to'liq kenglikda, bittadan. */
+        .toast, .rb-toast {
+          left: 8px !important; right: 8px; max-width: none; transform: translateY(12px);
+          bottom: calc(84px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
+          background: #0e1726; color: #fff; border-radius: 12px; padding: 14px 16px; text-align: left;
+          font: 500 14px Onest, system-ui, sans-serif; z-index: 1500;
+        }
+        .toast.show { transform: none; }
+        .rb-toast { transform: none; display: flex; justify-content: space-between; }
+        .rb-toast button { font-size: 14px; }
+        .more-coin svg { width: 18px; height: 18px; flex: none; }
+      }
+      /* Holat tegi (5 daraja + Bajarildi) — hamma joyda bir xil, doim matn bilan. */
+      .m5-pill {
+        display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 8px; flex: none;
+        font: 600 12px Onest, system-ui, sans-serif; white-space: nowrap;
+      }
+      .m5-pill.st-debt, .m5-pill.st-behind { background: var(--st-debt-bg); color: var(--st-debt); }
+      .m5-pill.st-mid { background: var(--st-mid-bg); color: var(--st-mid); }
+      .m5-pill.st-onplan { background: var(--st-onplan-bg); color: var(--st-onplan); }
+      .m5-pill.st-ahead, .m5-pill.st-done { background: var(--st-ahead-bg); color: var(--st-ahead); }
     </style>
   </head>
   <body>
@@ -12817,7 +12963,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Yangi vazifa
           </button>
         </div>
-        <div id="me-avatar" class="hdr-avatar-btn mobile-only" onclick="openProfilePage()">?</div>
+        <div class="mobile-flex m5-hdr-acts">
+          <button class="m5-bell d4-bell" onclick="ntfyToggle(this)" aria-label="Bildirishnomalar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20h4"/></svg></button>
+          <div id="me-avatar" class="hdr-avatar-btn" onclick="openProfilePage()">?</div>
+        </div>
       </div>
       <div class="scroll" id="today-body"></div>
     </div>
@@ -13085,14 +13234,13 @@
     </div>
 
     <!-- ── PASTKI NAVIGATSIYA ──────────────────────────────────────── -->
+    <!-- Pastki menyu — 5 band (mobil dizayn 01/01b, 2026-11-13). Avval 7 ta
+         edi: yozuvlar sig'masdi, bosish maydoni ~53px. Kam ishlatiladigan
+         NShop, Tarix, Boshqaruv va Profil «Ko'proq» oynasiga ko'chdi. -->
     <div id="bottom-nav">
       <button class="nav-item" id="nav-today" onclick="showTab('today')">
         <div class="nav-ico"></div>
         <div class="nav-lbl">Bugun</div>
-      </button>
-      <button class="nav-item" id="nav-kalendar" onclick="showTab('kalendar')">
-        <div class="nav-ico"></div>
-        <div class="nav-lbl">Kalendar</div>
       </button>
       <button class="nav-item" id="nav-projects" onclick="showTab('projects')">
         <div class="nav-ico"></div>
@@ -13102,22 +13250,13 @@
         <div class="nav-ico"></div>
         <div class="nav-lbl">Vazifalar</div>
       </button>
-      <button class="nav-item" id="nav-nshop" onclick="showTab('nshop')">
+      <button class="nav-item" id="nav-kalendar" onclick="showTab('kalendar')">
         <div class="nav-ico"></div>
-        <div class="nav-lbl">NShop</div>
+        <div class="nav-lbl">Kalendar</div>
       </button>
-      <button class="nav-item" id="nav-history" onclick="showTab('history')">
+      <button class="nav-item" id="nav-more" onclick="openMoreSheet()">
         <div class="nav-ico"></div>
-        <div class="nav-lbl">Tarix</div>
-      </button>
-      <button
-        class="nav-item"
-        id="nav-admin"
-        onclick="showTab('admin')"
-        style="display: none"
-      >
-        <div class="nav-ico round"></div>
-        <div class="nav-lbl">Boshqaruv</div>
+        <div class="nav-lbl">Ko'proq</div>
       </button>
     </div>
 
@@ -13497,6 +13636,7 @@
         copy: `<svg ${SVG_ATTRS}><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5.5 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v.5"/></svg>`,
         check: `<svg ${SVG_ATTRS}><path d="m4.5 12.5 5 5 10-11"/></svg>`,
         close: `<svg ${SVG_ATTRS}><path d="M6 6l12 12M18 6 6 18"/></svg>`,
+        more: `<svg ${SVG_ATTRS}><circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg>`,
       };
       // Statik nav ikonalarini bir marta joylashtiradi (ma'lumot
       // yuklanishini kutmaydi — sahifa ochilgan zahoti chizilaveradi).
@@ -13508,7 +13648,8 @@
           "nav-tasks": "checkSquare", "sidebar-nav-tasks": "checkSquare",
           "nav-nshop": "shoppingBag", "sidebar-nav-nshop": "shoppingBag",
           "nav-history": "clock", "sidebar-nav-history": "clock",
-          "nav-admin": "settings", "sidebar-nav-admin": "settings",
+          "sidebar-nav-admin": "settings",
+          "nav-more": "more",
         };
         Object.entries(map).forEach(([id, icon]) => {
           const el = document.getElementById(id)?.querySelector(".nav-ico, .sb-ico");
@@ -14303,6 +14444,58 @@
         syncSidebarAdminActive();
       }
 
+      // ── «KO'PROQ» OYNASI (mobil dizayn 01b, 2026-11-13) ─────────────
+      // Pastki menyuda 5 band qoldi; NShop, Tarix, Boshqaruv va Profil shu
+      // oynada. Oyna menyu USTIDA ochiladi, menyu ko'rinib turadi, shuning
+      // uchun boshqa bandni bosish oynani yopib, o'sha bo'limga o'tadi.
+      const MORE_TABS = ["nshop", "history", "admin"];
+      function closeMoreSheet() {
+        document.querySelectorAll(".more-ov, .more-sheet").forEach((e) => e.remove());
+        syncMoreNav();
+      }
+      function syncMoreNav() {
+        const ochiq = !!document.querySelector(".more-sheet");
+        const profil = document.getElementById("screen-profile")?.classList.contains("active");
+        const ichida = MORE_TABS.includes(activeTab) || profil;
+        document.getElementById("nav-more")?.classList.toggle("active", ochiq || ichida);
+        // Oyna ochiq turganda asl bo'lim belgisi o'chadi — faol bitta.
+        if (ochiq) document.querySelectorAll("#bottom-nav .nav-item:not(#nav-more)").forEach((e) => e.classList.remove("active"));
+        else ROOT_TABS.forEach((t) => document.getElementById("nav-" + t)?.classList.toggle("active", t === activeTab && !profil));
+      }
+      function openMoreSheet() {
+        if (document.querySelector(".more-sheet")) return closeMoreSheet();
+        const ov = document.createElement("div");
+        ov.className = "more-ov";
+        ov.onclick = closeMoreSheet;
+        const sh = document.createElement("div");
+        sh.className = "more-sheet";
+        const first = (myProfile?.firstName || "").trim();
+        const last = (myProfile?.lastName || "").trim();
+        const ism = first ? `${first} ${last}`.trim() : currentUser ? "@" + currentUser : "Profil";
+        const harf = (first ? first[0] + (last[0] || "") : (currentUser || "?")[0]).toUpperCase();
+        const chev = `<span class="more-chev">${ICON.chevronRight}</span>`;
+        const qator = (onclick, ico, bg, color, title, sub, extra = "") =>
+          `<button type="button" class="more-row" onclick="${onclick}">
+            <span class="more-ico" style="background:${bg};color:${color}">${ICON[ico]}</span>
+            <span style="flex:1;min-width:0"><b>${title}</b><small>${sub}</small></span>${extra}${chev}
+          </button>`;
+        const coin =
+          myNcoinBalance === null ? "" : `<span class="more-coin">${NCOIN_MARK}${escHtml(fmtNcoin(myNcoinBalance))}</span>`;
+        sh.innerHTML = `<div class="more-grab"></div>
+          <button type="button" class="more-me" onclick="closeMoreSheet();openProfilePage()">
+            <span class="av">${escHtml(harf)}${avatarImg(myProfile?.avatarUrl)}</span>
+            <span style="flex:1;min-width:0"><b>${escHtml(ism)}</b><span>Profil va sozlamalar</span></span>${chev}
+          </button>
+          <div class="more-list">
+            ${qator("closeMoreSheet();showTab('nshop')", "shoppingBag", "var(--nav-coin-bg)", "var(--nav-coin-ink)", "NShop", "Ncoin evaziga mahsulotlar", coin)}
+            ${qator("closeMoreSheet();showTab('history')", "clock", "var(--chip)", "var(--t2)", "Tarix", "Barcha davrlar va chiqqan ishlar")}
+            ${isAdmin ? qator("closeMoreSheet();showTab('admin')", "settings", "var(--nav-act-bg)", "var(--brand)", "Boshqaruv", "Faqat admin · 9 bo'lim") : ""}
+          </div>`;
+        document.body.appendChild(ov);
+        document.body.appendChild(sh);
+        syncMoreNav();
+      }
+
       // Boshqaruv bo'limiga menyudan to'g'ridan-to'g'ri o'tish.
       function openAdminTab(key) {
         showTab("admin");
@@ -14402,6 +14595,7 @@
         if (document.getElementById("ntf-page") && !ntfLeaveFor(() => showTab(tab))) return;
         activeTab = tab;
         tdDrawerOff?.();
+        document.querySelectorAll(".more-ov, .more-sheet").forEach((e) => e.remove());
         ROOT_TABS.forEach((t) => {
           document
             .getElementById("screen-" + t)
@@ -14429,6 +14623,7 @@
         else if (tab === "history") openHistoryTab();
         else if (tab === "admin") switchATab(adminActiveTab);
         syncSidebarAdminActive();
+        syncMoreNav();
       }
 
       // Ichki (drill-in) ekranni ochish — root ekranlar yashiriladi
@@ -14597,7 +14792,9 @@
       // Sarlavhadagi profil tugmasi (Bugun va Vazifalar ekranlarida) —
       // Telegram profil rasmi bo'lsa o'sha, bo'lmasa bosh harf.
       function renderMeAvatars() {
-        const letter = escHtml((currentUser || "?").slice(0, 1).toUpperCase());
+        // Ism-familiya bosh harflari («JR»), profil yuklanmagan bo'lsa — username.
+        const fi = (myProfile?.firstName || "").trim(), la = (myProfile?.lastName || "").trim();
+        const letter = escHtml((fi ? fi[0] + (la[0] || "") : (currentUser || "?").slice(0, 1)).toUpperCase());
         const html = letter + avatarImg(myProfile?.avatarUrl);
         ["me-avatar", "me-avatar-tasks"].forEach((id) => {
           const el = document.getElementById(id);
@@ -14616,10 +14813,9 @@
       function renderToday() {
         const body = document.getElementById("today-body");
         const today = todayDate();
-        // Desktopda hafta kuni ham: "3-noyabr, seshanba".
-        document.getElementById("today-date-label").innerHTML =
-          escHtml(fmtDay(today)) +
-          `<span class="desktop-only-inline">, ${WEEKDAYS_FULL[(today.getDay() + 6) % 7]}</span>`;
+        // Hafta kuni bilan: "3-noyabr, seshanba" (desktop va mobil dizayn).
+        document.getElementById("today-date-label").textContent =
+          `${fmtDay(today)}, ${WEEKDAYS_FULL[(today.getDay() + 6) % 7]}`;
         renderMeAvatars();
         loadTodayEvents();
         if (ntfy.ok === null && !ntfy.loading) ntfyLoad();
@@ -14637,7 +14833,7 @@
 
         const t = computeHomeTempo();
         body.innerHTML =
-          `<div class="mobile-only">${buildTodayMobileHtml(t)}</div>` +
+          `<div class="mobile-only">${buildTodayM5Html(t)}</div>` +
           `<div class="desktop-only">${buildTodayDesktopHtml(t)}</div>`;
       }
 
@@ -15113,6 +15309,63 @@
       function d4ProjBadge(p) {
         const harf = (p.label || "?").trim().slice(0, 1).toUpperCase();
         return `<span class="d4-pbadge" style="background:${escHtml(d4ProjColor(p))}">${escHtml(harf)}</span>`;
+      }
+
+      // ── BUGUN · MOBIL DIZAYN (01, 2026-11-13) ───────────────────────
+      // Tartib dizayndagidek: muammo (qarz) — birinchi banner, keyin KPI
+      // 2×2, keyin loyihalar holati ro'yxati (muammolilar birinchi).
+      // Hisob desktop bilan bir xil (computeHomeTempo, projStatus).
+      function buildTodayM5Html(t) {
+        const list = planProjects();
+        const behindCount = list.filter((p) => ["behind", "mid"].includes(projStatus(p))).length;
+        const debtList = sortByDebt(list.filter((p) => p.outstandingDebt));
+        let banner = "";
+        if (debtList.length) {
+          const p = debtList[0];
+          const late = daysBetween(parseISO(p.outstandingDebt.periodEnd), todayDate());
+          const yana = debtList.length > 1 ? ` Yana ${debtList.length - 1} ta loyiha qarzda.` : "";
+          banner = `<button type="button" class="m5-banner bad" onclick="openTracker('${escArg(p.id)}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4 2.5 20h19z"/><path d="M12 10v4M12 17h.01"/></svg>
+            <span class="m5-banner-txt"><b>${escHtml(p.label)} — ${late} kun kechikdi</b><span>Qarz yopilmaguncha yangi davr ochilmaydi.${yana}</span></span>
+            <span class="m5-banner-act">Ochish</span>
+          </button>`;
+        }
+        const farq = t.overallPct - t.expectedPct;
+        const farqMatn =
+          Math.abs(farq) <= PROJ_REJA_TOLERANCE ? "rejada" : farq > 0 ? `+${farq}% rejadan oldinda` : `${Math.abs(farq)}% rejadan ortda`;
+        const kpi = (l, v, sub, cls = "") =>
+          `<div class="m5-kpi"><div class="m5-kpi-l">${l}</div><div class="m5-kpi-v${cls}">${v}</div><div class="m5-kpi-s">${sub}</div></div>`;
+        const sorted = [...list].sort(
+          (a, b) =>
+            D4_STATUS_ORDER[projStatus(a)] - D4_STATUS_ORDER[projStatus(b)] ||
+            projPct(a) - projPct(b) ||
+            a.label.localeCompare(b.label),
+        );
+        const rows = sorted
+          .map((p) => {
+            const st = projStatus(p);
+            return `<button type="button" class="m5-row" onclick="openTracker('${escArg(p.id)}')">
+              ${m5Badge(p)}
+              <span class="m5-row-txt"><b>${escHtml(p.label)}</b><span>Post ${p.doneK}/${p.k} · Stories ${p.doneS}/${p.s}</span></span>
+              <span class="m5-pill st-${st}">${PROJ_STATUS_LABEL[st]}</span>
+            </button>`;
+          })
+          .join("");
+        return `<div class="m5-page">
+          ${banner}
+          <div class="m5-kpis">
+            ${kpi("Umumiy bajarilish", `${t.overallPct}%`, farqMatn)}
+            ${kpi("Bajarildi", `${t.doneAll} / ${t.totalTasks}`, "post va stories")}
+            ${kpi("Ortda", behindCount, "loyiha")}
+            ${kpi("Qarz", debtList.length, "loyiha", debtList.length ? " bad" : "")}
+          </div>
+          <div class="m5-cap">Loyihalar holati</div>
+          <div class="m5-card">${rows}</div>
+        </div>`;
+      }
+      function m5Badge(p) {
+        const harf = (p.label || "?").trim().slice(0, 1).toUpperCase();
+        return `<span class="m5-badge" style="background:${escHtml(d4ProjColor(p))}">${escHtml(harf)}</span>`;
       }
 
       function buildTodayDesktopHtml(t) {
@@ -30180,16 +30433,22 @@
         modal.id = "confirm-modal";
         modal.className = "overlay";
         modal.style.zIndex = "900";
+        // Tasdiq oynasi (mobil dizayn 34, 2026-11-13): markazdagi karta —
+        // ikonka, savol, oqibat, ikki teng tugma; xavfli amal qizil, o'ngda.
+        // Avval pastdan chiqadigan sheet edi va telefonda menyu ostida qolardi.
+        const xavfli = !okLabel || /o'chir|olib tashla|bekor|arxiv|chiqar|blok/i.test(okLabel);
+        const ico = xavfli
+          ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>`
+          : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>`;
+        modal.classList.add("cf-ov");
         modal.innerHTML = `
-          <div class="sheet" style="max-width:480px">
-            <div class="sheet-handle"></div>
-            <div style="padding:14px 20px calc(28px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)))">
-              <div style="font-size:16px;font-weight:600;color:var(--ink);margin-bottom:10px">${title}</div>
-              <div style="font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:22px">${message}</div>
-              <div style="display:flex;gap:10px">
-                <button id="confirm-cancel-btn" class="btn btn-soft">Bekor qilish</button>
-                <button id="confirm-ok-btn" class="btn btn-danger">${okLabel || "O'chirish"}</button>
-              </div>
+          <div class="cf-card" role="dialog" aria-modal="true">
+            <div class="cf-ico${xavfli ? "" : " info"}">${ico}</div>
+            <div class="cf-t">${title}</div>
+            <div class="cf-s">${message}</div>
+            <div class="cf-acts">
+              <button id="confirm-cancel-btn" class="cf-btn">Bekor qilish</button>
+              <button id="confirm-ok-btn" class="cf-btn ${xavfli ? "danger" : "primary"}">${okLabel || "O'chirish"}</button>
             </div>
           </div>`;
         document.body.appendChild(modal);
@@ -30422,9 +30681,6 @@
           if (document.getElementById("screen-today")?.classList.contains("active")) renderToday();
         });
 
-        document.getElementById("nav-admin").style.display = isAdmin
-          ? "flex"
-          : "none";
         document.getElementById("sidebar-admin-wrap").style.display = isAdmin ? "block" : "none";
         document.getElementById("atab-admins").style.display = isSuperAdmin
           ? "block"
