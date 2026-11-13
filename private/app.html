@@ -12964,6 +12964,152 @@
         .m5-primary:disabled { opacity: 0.45; cursor: default; }
         #screen-tracker:not(.active) #trk-m5-bar { display: none !important; }
 
+        /* Vazifalar (06) — holat chiplari, alohida kartalar. */
+        .m5-ibtn {
+          width: 40px; height: 40px; border-radius: 12px; border: none; background: var(--surf); color: var(--ink); cursor: pointer;
+          box-shadow: inset 0 0 0 1px var(--bd4); align-items: center; justify-content: center; position: relative; flex: none; padding: 0;
+        }
+        .m5-ibtn svg { width: 20px; height: 20px; }
+        .m5-ibtn-dot { display: none; position: absolute; top: 7px; right: 8px; width: 9px; height: 9px; border-radius: 99px; background: var(--brand); box-shadow: 0 0 0 2px var(--surf); }
+        #tasks-body { padding: 0 !important; }
+        .m5-tasks { gap: 12px; }
+        .m5-tasks > .m5-chips { margin: 0 -16px; }
+        .m5-task {
+          width: 100%; text-align: left; border: none; cursor: pointer; font: inherit; color: inherit;
+          display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 14px;
+          background: var(--surf); box-shadow: inset 0 0 0 1px var(--bd2);
+        }
+        .m5-task.muted .m5-task-t { color: var(--t3); text-decoration: line-through; }
+        .m5-task-t { font: 500 15px Onest, system-ui, sans-serif; color: var(--ink); line-height: 1.35; }
+        .m5-task-m { display: flex; align-items: center; gap: 6px; min-height: 26px; }
+        .m5-task-p { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; font: 500 12.5px Onest, system-ui, sans-serif; color: var(--t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .m5-task-p > :first-child { flex: none; }
+        .m5-tag { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 8px; flex: none; font: 600 12px Onest, system-ui, sans-serif; white-space: nowrap; }
+        .m5-tag.bad { background: var(--red-bg); color: var(--red); }
+        .m5-tag.warn { background: var(--nav-coin-bg); color: var(--nav-coin-ink); }
+        .m5-tag.info { background: var(--nav-act-bg); color: var(--nav-act-ink); }
+        .m5-tag.norm { background: var(--chip); color: var(--t2); }
+        .m5-task-av {
+          width: 26px; height: 26px; border-radius: 99px; background: #e9edf2; color: #374151; flex: none; position: relative; overflow: hidden;
+          display: flex; align-items: center; justify-content: center; font: 600 9px Onest, system-ui, sans-serif;
+        }
+        .m5-task-av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        .m5-sbtn {
+          height: 36px; padding: 0 14px; border-radius: 10px; border: none; cursor: pointer; background: var(--surf);
+          box-shadow: inset 0 0 0 1px var(--bd4); font: 600 13.5px Onest, system-ui, sans-serif; color: var(--ink); margin-top: 6px;
+        }
+        /* FAB (06) — 56px doira, ko'k soya, menyudan 16px yuqorida. */
+        .fab {
+          width: 56px; height: 56px; border-radius: 99px; right: 16px; font-size: 0;
+          bottom: calc(92px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
+          box-shadow: 0 10px 24px -6px rgba(47, 122, 185, 0.6);
+        }
+        .fab::before { content: ""; width: 24px; height: 24px; background: #fff;
+          -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E") center/contain no-repeat; }
+        .m5-tasks { padding-bottom: calc(170px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))); }
+
+        /* Vazifa detali (16). */
+        #screen-taskdetail #tdm-hdr { height: calc(60px + var(--tg-safe-top)); padding: var(--tg-safe-top) 8px 0 6px; gap: 6px; border-bottom: 1px solid var(--bd1); }
+        .m5-hbtn {
+          width: 40px; height: 40px; border-radius: 12px; border: none; background: none; color: var(--ink); cursor: pointer;
+          display: flex; align-items: center; justify-content: center; flex: none; padding: 0;
+        }
+        .m5-hbtn.sm { width: 36px; height: 36px; }
+        .m5-hbtn svg { width: 20px; height: 20px; }
+        .m5-hbtn:disabled { color: var(--t4); cursor: default; }
+        .m5-hdr-txt { flex: 1; min-width: 0; }
+        .m5-hdr-t { font: 700 18px Sora, system-ui, sans-serif; letter-spacing: -0.015em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .m5-hdr-s { font: 400 12.5px Onest, system-ui, sans-serif; color: var(--t3); margin-top: 1px; }
+        .m5-hdr-n { font: 500 13px Onest, system-ui, sans-serif; color: var(--t3); flex: none; }
+        #td-body { padding: 0 !important; }
+        .m5-td { padding-bottom: 24px; }
+        .m5-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+        .m5-box { background: var(--surf); border-radius: 14px; padding: 14px 16px; box-shadow: inset 0 0 0 1px var(--bd2); display: flex; flex-direction: column; gap: 10px; }
+        .m5-desc { font: 400 14.5px Onest, system-ui, sans-serif; line-height: 1.55; color: var(--ink); white-space: pre-wrap; word-break: break-word; }
+        .m5-ck-h { display: flex; justify-content: space-between; align-items: center; }
+        .m5-ck-h b { font: 600 14.5px Onest, system-ui, sans-serif; color: var(--ink); }
+        .m5-ck-h span { font: 600 13px Onest, system-ui, sans-serif; color: var(--t3); }
+        .m5-ck { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .m5-ck-box { width: 22px; height: 22px; border-radius: 7px; box-shadow: inset 0 0 0 1.8px #c5cbd3; flex: none; display: flex; align-items: center; justify-content: center; color: #fff; }
+        .m5-ck-box svg { width: 14px; height: 14px; }
+        .m5-ck.on .m5-ck-box { background: var(--brand); box-shadow: none; }
+        .m5-ck-t { font: 500 14.5px Onest, system-ui, sans-serif; color: var(--ink); }
+        .m5-ck.on .m5-ck-t { color: var(--t3); text-decoration: line-through; }
+        .m5-cms { display: flex; flex-direction: column; gap: 8px; }
+        .m5-cm { display: flex; gap: 10px; background: var(--surf); border-radius: 14px; padding: 14px 16px; box-shadow: inset 0 0 0 1px var(--bd2); }
+        .m5-cm-av { width: 30px; height: 30px; border-radius: 99px; background: #e9edf2; color: #374151; font: 600 11px Onest, system-ui, sans-serif; display: flex; align-items: center; justify-content: center; flex: none; }
+        .m5-cm-b { flex: 1; min-width: 0; }
+        .m5-cm-n { font: 600 13.5px Onest, system-ui, sans-serif; color: var(--ink); }
+        .m5-cm-n span { font-weight: 400; color: var(--t3); }
+        .m5-cm-t { font: 400 14px Onest, system-ui, sans-serif; line-height: 1.5; color: var(--ink); margin-top: 2px; word-break: break-word; }
+        .m5-cm-empty { font-size: 13px; color: var(--t3); padding: 0 4px; }
+        .m5-compose { display: flex; gap: 8px; align-items: flex-end; }
+        .m5-compose textarea {
+          flex: 1; min-width: 0; min-height: 44px; max-height: 140px; resize: none; border: none; border-radius: 12px; padding: 12px 14px;
+          background: var(--surf); box-shadow: inset 0 0 0 1px var(--bd4); font: 400 14.5px Onest, system-ui, sans-serif; color: var(--ink);
+        }
+        .m5-compose textarea:focus { outline: none; box-shadow: inset 0 0 0 1.5px var(--brand); }
+        .m5-compose button { height: 44px; padding: 0 16px; border-radius: 12px; border: none; background: var(--brand); color: #fff; font: 600 14px Onest, system-ui, sans-serif; cursor: pointer; flex: none; }
+        #screen-taskdetail #tdm-bar { padding: 12px 16px calc(24px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))); }
+        .m5-bar2 { display: flex; gap: 10px; }
+        .m5-btn {
+          flex: 1; min-width: 0; height: 52px; padding: 0 12px; border-radius: 12px; border: none; cursor: pointer;
+          background: var(--surf); color: var(--ink); box-shadow: inset 0 0 0 1px var(--bd4);
+          font: 600 15.5px Onest, system-ui, sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .m5-btn.primary { background: var(--brand); color: #fff; box-shadow: none; }
+        .m5-btn.primary.green { background: var(--green, #16a34a); }
+        .m5-btn:disabled { opacity: 0.5; cursor: default; }
+
+        /* Yangi vazifa (17) — to'liq sahifa: yopish chapda, nom maydoni
+           (Sora 18, fokus halqasi), tavsif asboblar bilan, keyin qatorlar. */
+        #ntf-page .ntf-hdr { height: calc(60px + var(--tg-safe-top)) !important; padding: var(--tg-safe-top) 12px 0 6px !important; gap: 6px; display: flex; align-items: center; background: var(--surf); border-bottom: 1px solid var(--bd1); }
+        #ntf-page .ntf-crumb, #ntf-page .ntf-draft { display: none; }
+        #ntf-page .ntf-h1 { font: 700 18px Sora, system-ui, sans-serif !important; letter-spacing: -0.015em; color: var(--ink); }
+        #ntf-page .ntf-wrap { padding: 16px !important; display: flex; flex-direction: column; gap: 12px; }
+        #ntf-page .ntf-main { background: none; box-shadow: none; border: none; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+        #ntf-page .ntf-cap, #ntf-page .ntf-sep, #ntf-page .ntf-toolbtn, #ntf-page .ntf-tools-hint, #ntf-page .ntf-tool-div { display: none !important; }
+        #ntf-page .ntf-main-top { padding: 0; }
+        #ntf-page .ntf-title-in {
+          display: block; width: 100%; min-height: 52px; padding: 14px; border: none; border-radius: 12px; background: var(--surf); resize: none;
+          box-shadow: inset 0 0 0 1px var(--bd4); font: 600 18px Sora, system-ui, sans-serif; color: var(--ink); line-height: 1.35;
+        }
+        #ntf-page .ntf-title-in:focus { outline: none; box-shadow: inset 0 0 0 1.5px var(--brand), 0 0 0 3px rgba(47, 122, 185, 0.18); }
+        #ntf-page .ntf-main { position: relative; }
+        #ntf-page .ntf-main-desc { order: 3; padding: 0; background: var(--surf); border-radius: 0 0 12px 12px; box-shadow: inset 1px 0 0 var(--bd4), inset -1px 0 0 var(--bd4), inset 0 -1px 0 var(--bd4); margin-top: -12px; }
+        #ntf-page .ntf-tools { order: 2; display: flex !important; gap: 4px; padding: 6px; background: var(--surf); border-radius: 12px 12px 0 0; box-shadow: inset 1px 0 0 var(--bd4), inset -1px 0 0 var(--bd4), inset 0 1px 0 var(--bd4); border: none; margin: 0; }
+        #ntf-page .ntf-tool { width: 36px; height: 36px; border-radius: 9px; background: var(--chip); color: #374151; font: 700 14px Onest, system-ui, sans-serif; border: none; display: flex; align-items: center; justify-content: center; }
+        #ntf-page .ntf-desc-in { display: block; width: 100%; min-height: 88px; padding: 12px 14px; border: none; background: none; resize: none; font: 400 15px Onest, system-ui, sans-serif; color: var(--ink); }
+        #ntf-page .ntf-desc-in:focus { outline: none; }
+        #ntf-page .ntf-side { padding: 0; background: none; border: none; }
+        .m5-ntf { display: flex; flex-direction: column; gap: 12px; }
+        .m5-ntf .m5-row-txt b.ph { color: var(--t4); font-weight: 400; }
+        .m5-ntf .m5-cap { margin-top: 2px; }
+        .m5-ntf-av { width: 32px; height: 32px; border-radius: 99px; background: #e9edf2; color: #374151; font: 600 11px Onest, system-ui, sans-serif; display: flex; align-items: center; justify-content: center; flex: none; }
+        .m5-ntf-ico { width: 36px; height: 36px; border-radius: 12px; background: var(--chip); color: var(--t2); display: flex; align-items: center; justify-content: center; flex: none; }
+        .m5-ntf-ico svg { width: 19px; height: 19px; }
+        .m5-ntf-pb { width: 32px; height: 32px; border-radius: 10px; color: #fff; font: 700 13px Onest, system-ui, sans-serif; display: flex; align-items: center; justify-content: center; flex: none; }
+        .m5-chips.m5-wrap { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; }
+        .m5-tgrow { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: none; border-radius: 14px; background: var(--surf); box-shadow: inset 0 0 0 1px var(--bd2); cursor: pointer; font: inherit; }
+        .m5-tgrow b { display: block; font: 500 15px Onest, system-ui, sans-serif; color: var(--ink); }
+        .m5-tgrow small { display: block; font-size: 13px; color: var(--t3); margin-top: 1px; }
+        #ntf-page .ntf-foot { padding: 12px 16px calc(24px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))) !important; border-top: 1px solid var(--bd1); }
+        #ntf-page .ntf-foot-m { padding: 0 !important; display: flex; flex-direction: column; gap: 10px; }
+        #ntf-page .ntf-btn.primary { height: 52px; border-radius: 12px; font: 600 15.5px Onest, system-ui, sans-serif; width: 100%; }
+        /* Muddat (18) — kalendar + soat chiplari. */
+        .m5-cal-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .m5-cal-h b { font: 600 15px Onest, system-ui, sans-serif; color: var(--ink); }
+        .m5-cal-h button { width: 36px; height: 36px; border: none; background: none; color: var(--ink); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .m5-cal-h svg { width: 18px; height: 18px; }
+        .m5-cal-w, .m5-cal-g { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; }
+        .m5-cal-w span { font: 500 11.5px Onest, system-ui, sans-serif; color: var(--t3); padding-bottom: 6px; }
+        .m5-cal-g { row-gap: 4px; }
+        .m5-cal-g button { height: 40px; margin: 0 2px; border: none; background: none; border-radius: 10px; cursor: pointer; font: 500 14.5px Onest, system-ui, sans-serif; color: var(--ink); }
+        .m5-cal-g button.today { color: var(--brand); font-weight: 700; }
+        .m5-cal-g button.on { background: var(--brand); color: #fff; font-weight: 700; }
+        .m5-cal-g button:disabled { color: var(--t4); opacity: 0.5; cursor: default; }
+
         /* Belgilash oynasi (12) — pastdan chiqadigan sheet: sarlavha chapda,
            yopish (36px) o'ngda, «Kimlar ishladi» qatorlarida Ncoin, kun
            chiplari, Ncoin xulosasi, asosiy tugma oynaning o'zida. */
@@ -13219,7 +13365,7 @@
 
     <!-- ── VAZIFALAR ───────────────────────────────────────────────── -->
     <div class="screen" id="screen-tasks">
-      <div class="hdr" style="display: flex; align-items: center; gap: 12px">
+      <div class="hdr m5-hdr" style="display: flex; align-items: center; gap: 12px">
         <div style="flex: 1; min-width: 0">
           <div class="hdr-title">Vazifalar</div>
           <div class="hdr-sub" id="tasks-summary">—</div>
@@ -13231,7 +13377,8 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Yangi vazifa
           </button>
         </div>
-        <div id="me-avatar-tasks" class="hdr-avatar-btn mobile-only" onclick="openProfilePage()">?</div>
+        <div id="me-avatar-tasks" style="display: none"></div>
+        <button type="button" class="m5-ibtn mobile-flex" onclick="openTaskSearchSheet()" aria-label="Qidirish va filtr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><i class="m5-ibtn-dot" id="tasks-filter-dot"></i></button>
       </div>
       <div class="scroll" id="tasks-body"></div>
       <button
@@ -17022,7 +17169,93 @@
         taskStatusChip = taskStatusChip === key ? "all" : key;
         renderTasksBody();
       }
+      // ── VAZIFALAR · MOBIL DIZAYN (06, 2026-11-13) ───────────────────
+      // Kanban o'rniga ro'yxat + holat chiplari (egasi qarori). Holat
+      // vazifa ichidagi pastki tugmalar bilan o'zgaradi (16-ekran).
+      // Qidiruv, «Menga / Men berganlar» va filtrlar — sarlavhadagi
+      // qidiruv tugmasi ostida (openTaskSearchSheet).
+      const M5_TASK_CHIPS = [
+        { key: "all", label: "Hammasi" },
+        { key: "in_progress", label: "Jarayonda" },
+        { key: "review", label: "Tekshiruvda" },
+        { key: "assigned", label: "Biriktirilgan" },
+        { key: "done", label: "Bajarildi" },
+        { key: "archive", label: "Arxiv" },
+      ];
+      const M5_PRI = { urgent: ["Yuqori", "bad"], high: ["Yuqori", "bad"], medium: ["O'rta", "warn"], low: ["Past", "info"] };
+      function m5TaskDue(t) {
+        if (["done", "failed", "cancelled"].includes(t.status) || !t.dueDate) return null;
+        const diff = daysBetween(todayDate(), parseISO(t.dueDate));
+        if (diff < 0) return ["Kechikdi", "bad"];
+        if (diff === 0) return [t.dueTime ? `Bugun, ${t.dueTime.slice(0, 5)}` : "Bugun", "bad"];
+        if (diff === 1) return ["Ertaga", "warn"];
+        const d = parseISO(t.dueDate);
+        return [`${d.getDate()}-${MONTHS_SHORT[d.getMonth()]}`, "norm"];
+      }
+      function m5TaskCardHtml(t) {
+        const due = m5TaskDue(t);
+        const pri = M5_PRI[t.priority];
+        const a = taskAssignees(t)[0];
+        const ini = a
+          ? (String(a.name || a.username || "?").split(" ").map((x) => x[0] || "").join("").slice(0, 2) || "?").toUpperCase()
+          : "";
+        const muted = ["done", "failed", "cancelled"].includes(t.status);
+        return `<button type="button" class="m5-task${muted ? " muted" : ""}" onclick="openTaskActions('${escArg(t.id)}')">
+            <span class="m5-task-t">${escHtml(t.title)}</span>
+            <span class="m5-task-m">
+              <span class="m5-task-p">${taskDotHtml(t)}${escHtml(t.projectLabel || "Umumiy")}</span>
+              ${due ? `<span class="m5-tag ${due[1]}">${escHtml(due[0])}</span>` : ""}
+              ${pri && !muted ? `<span class="m5-tag ${pri[1]}">${pri[0]}</span>` : ""}
+              ${a ? `<span class="m5-task-av" title="${escHtml(a.name || a.username)}">${escHtml(ini)}${avatarImg(a.avatarUrl)}</span>` : ""}
+            </span>
+          </button>`;
+      }
       function buildTasksMobileHtml(allTasks) {
+        const scoped = tbApplySeg(allTasks);
+        const col = (t) => taskBoardColumn(t);
+        const ochiq = scoped.filter((t) => !["done", "archive"].includes(col(t)));
+        const sanoq = { all: ochiq.length };
+        M5_TASK_CHIPS.forEach((c) => c.key !== "all" && (sanoq[c.key] = scoped.filter((t) => col(t) === c.key).length));
+        if (!M5_TASK_CHIPS.some((c) => c.key === taskStatusChip)) taskStatusChip = "all";
+        const chips = M5_TASK_CHIPS.filter((c) => c.key === "all" || sanoq[c.key] || taskStatusChip === c.key)
+          .map((c) => `<button type="button" class="m5-chip${taskStatusChip === c.key ? " on" : ""}" onclick="setTaskStatChip('${c.key}')">${c.label} · ${sanoq[c.key]}</button>`)
+          .join("");
+        const royxat = taskStatusChip === "all" ? ochiq : scoped.filter((t) => col(t) === taskStatusChip);
+        const tartib = [...royxat].sort((a, b) => taskOrderRank(a) - taskOrderRank(b)).sort(
+          (a, b) => taskOrderRank(a) - taskOrderRank(b) || (a.dueDate || "9999").localeCompare(b.dueDate || "9999"),
+        );
+        const sub = document.getElementById("tasks-summary");
+        if (sub) sub.textContent = `${ochiq.length} ta ochiq${taskSeg === "menga" ? " · menga" : taskSeg === "menberdim" ? " · men berganlar" : ""}`;
+        const dot = document.getElementById("tasks-filter-dot");
+        if (dot) dot.style.display = taskQuery || Object.values(taskBoardFilter || {}).some(Boolean) ? "block" : "none";
+        const bosh = `<div class="d4-state"><div class="d4-state-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="m8 12 3 3 5-6"/></svg></div>
+            <div class="d4-state-t">Vazifa yo'q</div><div class="d4-state-s">${taskSeg === "menga" ? "Sizga biriktirilgan vazifalar shu yerda chiqadi" : "Filtrni o'zgartirib ko'ring"}</div>
+            <button type="button" class="m5-sbtn" onclick="openNewTaskSheet()">+ Vazifa yaratish</button></div>`;
+        return `<div class="mobile-only m5-page m5-tasks">
+          <div class="m5-chips">${chips}</div>
+          ${tartib.length ? tartib.map(m5TaskCardHtml).join("") : bosh}
+        </div>`;
+      }
+      function openTaskSearchSheet() {
+        const { body } = makeSheet("Qidirish va filtr");
+        const seg = (v, l) => `<button type="button" class="${taskSeg === v ? "on" : ""}" onclick="setTaskSeg('${v}');openTaskSearchSheet()">${l}</button>`;
+        const fl = taskBoardFilter || {};
+        const filtr = (k, l, v) => `<button type="button" class="m5-act" onclick="document.querySelector('.overlay')?.remove();openTaskFilterPicker('${k}')">
+            <span class="m5-act-t">${l}</span><span style="color:var(--t3);font-size:14px">${escHtml(v || "Hammasi")}</span><span class="m5-act-chev">${ICON.chevronRight}</span></button>`;
+        const odamNomi = fl.assignee
+          ? (tasksList.flatMap(taskAssignees).find((a) => a.username === fl.assignee) || {}).name || "@" + fl.assignee
+          : "";
+        const loyNomi = fl.project ? (projects.find((p) => p.id === fl.project) || {}).label : "";
+        const priNomi = fl.priority ? (M5_PRI[fl.priority] || [fl.priority])[0] : "";
+        const tegNomi = fl.tag ? (tasksList.flatMap((t) => t.tags || []).find((g) => g.id === fl.tag) || {}).name : "";
+        body.innerHTML = `
+          <label class="m5-search" style="margin-bottom:12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input id="tasks-search" placeholder="Vazifa, xodim yoki teg" value="${escHtml(taskQuery)}" oninput="taskQuery=this.value;renderTasksBody()" /></label>
+          <div class="m5-seg" style="margin-bottom:12px">${seg("hammasi", "Hammasi")}${seg("menga", "Menga")}${seg("menberdim", "Men berganlar")}</div>
+          <div class="m5-acts">${filtr("assignee", "Mas'ul", odamNomi)}${filtr("project", "Loyiha", loyNomi)}${filtr("priority", "Daraja", priNomi)}${filtr("tag", "Teg", tegNomi)}</div>`;
+        setTimeout(() => document.getElementById("tasks-search")?.focus(), 60);
+      }
+      function buildTasksMobileHtmlOld(allTasks) {
         const scoped = tbApplySeg(allTasks);
         const counts = {};
         TASK_BOARD_COLUMNS.forEach((c) => (counts[c.key] = scoped.filter((t) => taskBoardColumn(t) === c.key).length));
@@ -17489,122 +17722,102 @@
         const canChangeStatus = isAdmin || taskIsMine(t);
         const open = !["done", "failed", "cancelled"].includes(t.status);
         const close = () => `document.querySelector('.overlay')?.remove();`;
+        // «Holat: …» oynasi (16): holat amallari, keyin boshqa amallar;
+        // xavflisi (O'chirish) oxirida qizil.
+        const ico = {
+          ok: ICON.check,
+          back: ICON.chevronLeft,
+          fail: ICON.close,
+          clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`,
+        };
         const items = [];
+        const primary = taskPrimaryAction(t, canChangeStatus);
+        if (primary && primary.onclick && !primary.disabled)
+          items.push(m5ActHtml(`${close()}${primary.onclick.replace(",this)", ")")}`, ICON.chevronRight, escHtml(primary.label)));
         if (canChangeStatus && open && isAdmin && t.status !== "review")
-          items.push(`<button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="${close()}setTaskStatus('${escArg(t.id)}','done')">Darhol bajarildi</button>`);
+          items.push(m5ActHtml(`${close()}setTaskStatus('${escArg(t.id)}','done')`, ico.ok, "Darhol bajarildi"));
         if (canChangeStatus && open && t.status === "review" && isAdmin)
-          items.push(`<button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="${close()}setTaskStatus('${escArg(t.id)}','in_progress')">Qaytarish</button>`);
+          items.push(m5ActHtml(`${close()}setTaskStatus('${escArg(t.id)}','in_progress')`, ico.back, "Qaytarish"));
         if (canChangeStatus && open && t.status !== "backlog")
-          items.push(`<button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="${close()}openTaskFailForm('${escArg(t.id)}')">Bajarolmadim</button>`);
+          items.push(m5ActHtml(`${close()}openTaskFailForm('${escArg(t.id)}')`, ico.fail, "Bajarolmadim"));
         if (isAdmin && open && t.dueDate)
-          items.push(`<button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="${close()}openPushDueDateForm('${escArg(t.id)}')">Muddatni surish</button>`);
+          items.push(m5ActHtml(`${close()}openPushDueDateForm('${escArg(t.id)}')`, ico.clock, "Muddatni surish"));
         if (canManageTask(t)) {
-          items.push(`<button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="${close()}openEditTaskSheet('${escArg(t.id)}')">Tahrirlash</button>`);
-          items.push(`<button type="button" class="btn btn-soft" style="margin-bottom:10px" onclick="${close()}duplicateTask('${escArg(t.id)}')">Nusxalash</button>`);
-          items.push(`<button type="button" class="btn btn-danger" onclick="${close()}deleteTask('${escArg(t.id)}','${escArg(t.title)}')">O'chirish</button>`);
+          items.push(m5ActHtml(`${close()}openEditTaskSheet('${escArg(t.id)}')`, ICON.edit, "Tahrirlash"));
+          items.push(m5ActHtml(`${close()}duplicateTask('${escArg(t.id)}')`, ICON.copy, "Nusxalash"));
+          items.push(m5ActHtml(`${close()}deleteTask('${escArg(t.id)}','${escArg(t.title)}')`, ICON.trash, "O'chirish", true));
         }
-        const { body } = makeSheet(t.title);
-        body.innerHTML = items.join("") || `<div style="font-size:13px;color:var(--t3)">Amal mavjud emas</div>`;
+        const { body } = makeSheet(`Holat: ${escHtml(TASK_STATUS_LABEL[t.status])}`);
+        body.innerHTML = items.length ? `<div class="m5-acts">${items.join("")}</div>` : `<div style="font-size:13px;color:var(--t3)">Amal mavjud emas</div>`;
       }
-      // Sarlavha (ref · holat, sanoq) va pastki panel (bosqichlar + amal)
+      // ── VAZIFA DETALI · MOBIL DIZAYN (16, 2026-11-13) ───────────────
+      // Sarlavha: orqaga, nom (Sora 18) + «Vazifalar / holat», o'ngda
+      // «3/5» va ‹ ›. Pastda ikki teng tugma: «Holat: …» (barcha
+      // amallar oynasi) va keyingi qadam (ko'k).
       function renderTaskDetailMobileChrome(t, canChangeStatus) {
         const hdr = document.getElementById("tdm-hdr");
         if (hdr) {
           const nav = taskDetailNav;
-          const scopeWord = taskSeg === "menga" ? " menga" : taskSeg === "menberdim" ? " men berganlar" : "";
-          const counter = nav.index >= 0 && nav.ids.length ? `${nav.index + 1} / ${nav.ids.length}${scopeWord}` : "";
+          const counter = nav.index >= 0 && nav.ids.length ? `${nav.index + 1}/${nav.ids.length}` : "";
+          const chev = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
           hdr.innerHTML = `
-            <button type="button" class="tdm-iconbtn" onclick="closeTaskDetailScreen()" aria-label="Orqaga">
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            </button>
-            <div class="tdm-hdr-mid">
-              <div class="tdm-hdr-ref">${tbRef(t.id)} · ${escHtml(TASK_STATUS_LABEL[t.status])}</div>
-              <div class="tdm-hdr-sub">${escHtml(counter)}</div>
-            </div>
-            <button type="button" class="tdm-iconbtn" onclick="openTaskMobileMenu('${escArg(t.id)}')" aria-label="Menyu">⋯</button>`;
+            <button type="button" class="m5-hbtn" onclick="closeTaskDetailScreen()" aria-label="Orqaga">${chev("m14 6-6 6 6 6")}</button>
+            <div class="m5-hdr-txt"><div class="m5-hdr-t">${escHtml(t.title)}</div><div class="m5-hdr-s">Vazifalar / ${escHtml(TASK_STATUS_LABEL[t.status])}</div></div>
+            ${counter ? `<span class="m5-hdr-n">${counter}</span>
+              <button type="button" class="m5-hbtn sm" onclick="stepTaskDetail(-1)"${nav.index <= 0 ? " disabled" : ""} aria-label="Oldingi">${chev("m14 6-6 6 6 6")}</button>
+              <button type="button" class="m5-hbtn sm" onclick="stepTaskDetail(1)"${nav.index < 0 || nav.index >= nav.ids.length - 1 ? " disabled" : ""} aria-label="Keyingi">${chev("m10 6 6 6-6 6")}</button>` : ""}`;
         }
-
         const bar = document.getElementById("tdm-bar");
         if (!bar) return;
-        const steps = TASK_BOARD_COLUMNS.slice(0, 4);
-        const curIdx = Math.max(0, steps.findIndex((c) => c.key === taskBoardColumn(t)));
-        const closed = ["failed", "cancelled"].includes(t.status);
-        const stepsHtml = closed
-          ? ""
-          : `<div class="tdm-steps">${steps
-              .map((st, i) => {
-                const cls = i < curIdx ? "done" : i === curIdx ? "current" : "";
-                const line = i < steps.length - 1 ? `<div class="tdm-step-line${i < curIdx ? " done" : ""}"></div>` : "";
-                return `<div class="tdm-step-dot${cls ? " " + cls : ""}"></div>${line}`;
-              })
-              .join("")}</div>`;
         const act = taskPrimaryAction(t, canChangeStatus);
+        // Asosiy tugmada qisqa yozuv (dizayn: «Tekshiruvga»).
+        const qisqa = { "Ishni boshladim": "Boshlash", "Tekshiruvga yubordim": "Tekshiruvga", "Navbatga qo'yish": "Navbatga qo'yish", Tasdiqlash: "Tasdiqlash" };
         const actHtml = act
-          ? `<button type="button" class="tdm-act${act.cls ? " " + act.cls : ""}"${act.disabled ? " disabled" : ""}${act.onclick ? ` onclick="${act.onclick}"` : ""}>${escHtml(act.label)}</button>`
-          : `<button type="button" class="tdm-act" disabled>${escHtml(TASK_STATUS_LABEL[t.status])}</button>`;
-        bar.innerHTML = `${stepsHtml}
-          <div class="tdm-bar-row">
+          ? `<button type="button" class="m5-btn primary${act.cls === "green" ? " green" : ""}"${act.disabled ? " disabled" : ""}${act.onclick ? ` onclick="${act.onclick}"` : ""}>${escHtml(qisqa[act.label] || act.label)}</button>`
+          : "";
+        bar.innerHTML = `<div class="m5-bar2">
+            <button type="button" class="m5-btn" onclick="openTaskMobileMenu('${escArg(t.id)}')">Holat: ${escHtml(TASK_STATUS_LABEL[t.status])}</button>
             ${actHtml}
-            <button type="button" class="tdm-more" onclick="openTaskMobileMenu('${escArg(t.id)}')">⋯</button>
           </div>`;
+      }
+      function m5CommentHtml(a) {
+        const nom = a.actorName || (a.actorUsername ? "@" + a.actorUsername : "—");
+        const ini = String(nom).replace("@", "").split(" ").map((x) => x[0] || "").join("").slice(0, 2).toUpperCase();
+        const vaqt = a.createdAt ? activityTimestamp(a.createdAt) : "";
+        return `<div class="m5-cm"><span class="m5-cm-av">${escHtml(ini)}</span><div class="m5-cm-b">
+            <div class="m5-cm-n">${escHtml(nom)}${vaqt ? ` <span>· ${vaqt}</span>` : ""}</div>
+            <div class="m5-cm-t">${escHtml(a.body || "")}</div></div></div>`;
       }
       function buildTaskDetailMobileHtml(t, canChangeStatus) {
         const isOpen = !["done", "failed", "cancelled"].includes(t.status);
-        const daysLeft = t.dueDate ? daysBetween(todayDate(), parseISO(t.dueDate)) : null;
-
-        let banner = "";
-        if (isOpen && daysLeft !== null && daysLeft <= 2) {
-          const late = daysLeft < 0;
-          const today = daysLeft === 0;
-          const title = late ? `Muddat ${Math.abs(daysLeft)} kun oldin tugagan` : today ? "Muddat bugun tugaydi" : `Muddatga ${daysLeft} kun qoldi`;
-          banner = `<div class="tdm-banner${late || today ? "" : " soft"}">
-            <span class="tdm-banner-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
-            <div style="flex:1;min-width:0">
-              <div class="tdm-banner-t">${title}</div>
-              <div class="tdm-banner-s">${escHtml(fmtDay(parseISO(t.dueDate)))}${taskWorkStateLabel(t.status) ? " · " + taskWorkStateLabel(t.status) : ""}</div>
-            </div>
+        // Teglar qatori: daraja, muddat, #teglar, loyiha, mas'ul.
+        const pri = M5_PRI[t.priority];
+        const due = isOpen ? m5TaskDue(t) : null;
+        const tags = (t.tags || []).map((g) => `<span class="m5-tag norm">#${escHtml(g.name)}</span>`).join("");
+        const odam = taskAssigneeNames(t);
+        const pills = `<div class="m5-pills">
+            ${pri ? `<span class="m5-tag ${pri[1]}">${pri[0]}</span>` : ""}
+            ${due ? `<span class="m5-tag ${due[0] === "Kechikdi" ? "bad" : due[1] === "norm" ? "norm" : "warn"}">${escHtml(due[0])}</span>` : ""}
+            ${tags}
+            <span class="m5-tag info">${escHtml(t.projectLabel || "Umumiy")}</span>
+            ${odam ? `<span class="m5-tag norm">${escHtml(odam)}</span>` : ""}
+            ${isAdmin ? `<button type="button" class="m5-tag norm" style="border:none;cursor:pointer" onclick="openAddTagPicker('${escArg(t.id)}')">+ teg</button>` : ""}
           </div>`;
-        }
-
-        const pill = tbTagPillHtml(t);
         const reasonHtml =
           t.status === "failed" && t.reason
-            ? `<div class="tdm-banner" style="margin-top:12px"><div style="flex:1"><div class="tdm-banner-t">Bajarilmadi</div><div class="tdm-banner-s">${escHtml(t.reason)}</div></div></div>`
+            ? `<div class="m5-banner bad" style="cursor:default"><span class="m5-banner-txt"><b>Bajarilmadi</b><span>${escHtml(t.reason)}</span></span></div>`
             : "";
-
-        const av = taskPersonAvatarHtml(t, "tm-av");
-
-        return `<div class="mobile-only tdm-wrap">
-          ${banner}
-          <div class="tdm-card">
-            ${pill}
-            <div class="tdm-title">${escHtml(t.title)}</div>
-            ${t.description ? `<div class="tdm-desc">${escHtml(t.description)}</div>` : ""}
-            ${reasonHtml}
-          </div>
-          <div class="tdm-props">
-            <div class="tdm-prop">
-              <div class="tdm-prop-lbl">Mas'ul</div>
-              <div class="tdm-prop-val">${av}${escHtml(taskAssigneeNames(t) || "Biriktirilmagan")}</div>
-            </div>
-            <div class="tdm-prop">
-              <div class="tdm-prop-lbl">Ustuvorlik</div>
-              <div class="tdm-prop-val">${tbPriBarsHtml(t.priority)}${escHtml(TASK_PRIORITY_LABEL[t.priority])}</div>
-            </div>
-            <div class="tdm-prop">
-              <div class="tdm-prop-lbl">${t.startDate && t.dueDate && t.startDate !== t.dueDate ? "Ish vaqti" : "Muddat"}</div>
-              <div class="tdm-prop-val">${t.dueDate ? escHtml(fmtDateRangeField(t.startDate, t.dueDate)) : "Muddatsiz"}</div>
-            </div>
-            <div class="tdm-prop">
-              <div class="tdm-prop-lbl">Loyiha</div>
-              <div class="tdm-prop-val link">${escHtml(t.projectLabel || "Umumiy")}</div>
-            </div>
-            <div class="tdm-prop">
-              <div class="tdm-prop-lbl">Biriktirdi</div>
-              <div class="tdm-prop-val">${t.createdByUsername ? "@" + escHtml(t.createdByUsername) : "—"}</div>
-            </div>
-          </div>
-          <div class="tdm-card" id="tdm-checklist" style="display:none"></div>
+        return `<div class="mobile-only m5-page m5-td">
+          ${pills}
+          ${reasonHtml}
+          ${t.description ? `<div class="m5-box"><div class="m5-desc">${escHtml(t.description)}</div></div>` : ""}
+          <div class="m5-box" id="tdm-checklist" style="display:none"></div>
+          <div class="m5-cap" id="tdm-comments-cap">Izohlar</div>
+          <div class="m5-cms" id="tdm-comments"><div class="m5-cm-empty">Yuklanmoqda…</div></div>
+          ${canChangeStatus ? `<div class="m5-compose">
+            <textarea id="comment-input-m" placeholder="Izoh yozing…" rows="1"></textarea>
+            <button type="button" onclick="submitTaskComment('${escArg(t.id)}', this, 'comment-input-m')">Yuborish</button>
+          </div>` : ""}
         </div>`;
       }
       // Checklist — mobil kartaga chizish (desktopdagi #td-checklist bilan
@@ -17620,15 +17833,13 @@
         el.style.display = "";
         const done = items.filter((it) => it.done).length;
         el.innerHTML = `
-          <div class="tdm-check-hdr">
-            <div class="tdm-check-t">Checklist</div>
-            <div class="tdm-check-n">${done} / ${items.length}</div>
-          </div>
+          <div class="m5-ck-h"><b>Checklist</b><span>${done} / ${items.length}</span></div>
+          <div class="m5-week-bar"><i style="width:${Math.round((done / items.length) * 100)}%"></i></div>
           ${items
             .map(
-              (it) => `<div class="tdm-check-row">
-                <div class="tdm-check-box${it.done ? " done" : ""}" ${canEdit ? `onclick="toggleChecklistItem('${escArg(taskId)}','${escArg(it.id)}',${!it.done})"` : ""}>${it.done ? "✓" : ""}</div>
-                <div class="tdm-check-txt${it.done ? " done" : ""}">${escHtml(it.text)}</div>
+              (it) => `<div class="m5-ck${it.done ? " on" : ""}" ${canEdit ? `onclick="toggleChecklistItem('${escArg(taskId)}','${escArg(it.id)}',${!it.done})"` : ""}>
+                <span class="m5-ck-box">${it.done ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>` : ""}</span>
+                <span class="m5-ck-t">${escHtml(it.text)}</span>
               </div>`,
             )
             .join("")}`;
@@ -17807,6 +18018,15 @@
           activityBtn.textContent = `Faoliyat ${events.length}`;
           activityBtn.classList.toggle("active", taskDetailTab === "activity");
         }
+        // Telefon (16): «IZOHLAR · N» — faqat izohlar, kartada.
+        const mList = document.getElementById("tdm-comments");
+        if (mList) {
+          const cap = document.getElementById("tdm-comments-cap");
+          if (cap) cap.textContent = `Izohlar · ${comments.length}`;
+          mList.innerHTML = comments.length
+            ? comments.map(m5CommentHtml).join("")
+            : `<div class="m5-cm-empty">Hali izoh yo'q</div>`;
+        }
         const shown = taskDetailTab === "comments" ? comments : events;
         list.innerHTML = shown.length
           ? shown.map(buildActivityItemHtml).join("")
@@ -17949,8 +18169,8 @@
         const who = a.actorUsername ? "@" + escHtml(a.actorUsername) : "Tizim";
         return `<div class="activity-item system">${who} <span class="activity-system-action">${formatActivityDetail(a)}</span><span class="activity-time">${activityTimestamp(a.createdAt)}</span></div>`;
       }
-      async function submitTaskComment(id, btn) {
-        const input = document.getElementById("comment-input");
+      async function submitTaskComment(id, btn, inputId) {
+        const input = document.getElementById(inputId || "comment-input");
         const text = input?.value.trim();
         if (!text) return;
         setBtnLoading(btn, true);
@@ -18549,6 +18769,7 @@
         ov.id = "ntf-page";
         ov.innerHTML = `
           <header class="ntf-hdr">
+            <button type="button" class="m5-hbtn mobile-flex" onclick="ntfExit()" aria-label="Yopish"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
             <div class="ntf-hdr-txt">
               <div class="ntf-crumb">Vazifalar / <b>${t ? "Tahrirlash" : "Yangi vazifa"}</b></div>
               <div class="ntf-h1">${t ? "Vazifani tahrirlash" : "Yangi vazifa"}</div>
@@ -18807,7 +19028,121 @@
         if (draft && ntf.draftAt) draft.textContent = `Qoralama saqlandi · ${ntf.draftAt}`;
       }
       function ntfSideHtml() {
+        if (ntfIsMobile()) return ntfSideHtmlM5();
         return ntfMainParamsCard() + ntfExtraCard();
+      }
+      // ── YANGI VAZIFA · MOBIL DIZAYN (17, 2026-11-13) ────────────────
+      // Mas'ul, muddat, loyiha — bitta kartada qatorlar (bosilsa tanlov
+      // oynasi). Keyin daraja (4 ta — egasi qarori), teglar chiplari.
+      // «Boshlanishi» va Telegram xabari — ixcham, eng pastda.
+      function ntfSideHtmlM5() {
+        const chev = `<span class="m5-act-chev">${ICON.chevronRight}</span>`;
+        const odamlar = ntf.assignees.map((un) => ntfUsers.find((u) => u.username === un)).filter(Boolean);
+        const odamNom = odamlar.length ? (odamlar.length > 1 ? `${ntfShort(odamlar[0])} +${odamlar.length - 1}` : ntfShort(odamlar[0])) : "";
+        const odamIni = odamlar.length ? ntfShort(odamlar[0]).split(" ").map((x) => x[0] || "").join("").slice(0, 2).toUpperCase() : "";
+        const muddat = ntf.dueDate
+          ? `${parseISO(ntf.dueDate).getDate()}-${MONTHS[parseISO(ntf.dueDate).getMonth()].toLowerCase()}${ntf.dueTime ? ", " + ntf.dueTime : ""}`
+          : "";
+        const loyiha = projects.find((x) => (x.slug || x.id) === ntf.projectSlug);
+        const qator = (onclick, lead, val, lbl, bor) => `<button type="button" class="m5-row" onclick="${onclick}">
+            ${lead}<span class="m5-row-txt"><b class="${bor ? "" : "ph"}">${escHtml(val)}</b><span>${lbl}</span></span>${chev}</button>`;
+        const calIco = `<span class="m5-ntf-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>`;
+        const priSeg = NTF_PRIORITIES.map(
+          (p) => `<button type="button" class="${ntf.priority === p.v ? "on" : ""}" onclick="ntfSet('priority','${p.v}')">${p.label}</button>`,
+        ).join("");
+        const teglar = tagsList
+          .map((t) => `<button type="button" class="m5-chip${ntf.tagIds.has(t.id) ? " on" : ""}" onclick="ntfToggleTag('${escArg(t.id)}')">#${escHtml(t.name)}</button>`)
+          .join("");
+        return `<div class="m5-ntf">
+          <div class="m5-card">
+            ${qator("ntfOpenSheet('kim')", odamlar.length ? `<span class="m5-ntf-av">${escHtml(odamIni)}</span>` : `<span class="m5-ntf-ico">${ICON.users}</span>`, odamNom || "Mas'ulni tanlang", odamlar.length > 1 ? "Mas'ullar" : "Mas'ul", !!odamNom)}
+            ${qator("openM5DueSheet()", calIco, muddat || "Muddatni tanlang", "Muddat", !!muddat)}
+            ${qator("ntfOpenSheet('loyiha')", loyiha ? `<span class="m5-ntf-pb" style="background:${escHtml(d4ProjColor(loyiha))}">${escHtml(loyiha.label.slice(0, 1).toUpperCase())}</span>` : `<span class="m5-ntf-ico">${ICON.folder}</span>`, loyiha ? loyiha.label : "Umumiy", "Loyiha", true)}
+          </div>
+          <div class="m5-cap">Daraja</div>
+          <div class="m5-seg">${priSeg}</div>
+          ${tagsList.length ? `<div class="m5-cap">Teglar</div><div class="m5-chips m5-wrap">${teglar}</div>` : ""}
+          <div class="m5-cap">Boshlanishi</div>
+          <div class="m5-seg">
+            <button type="button" class="${ntf.startMode === "now" ? "on" : ""}" onclick="ntfSet('startMode','now')">Hozir boshlanadi</button>
+            <button type="button" class="${ntf.startMode === "queue" ? "on" : ""}" onclick="ntfSet('startMode','queue')">Navbatga</button>
+          </div>
+          <button type="button" class="m5-tgrow" onclick="ntfSet('notify',${!ntf.notify})">
+            <span style="flex:1;min-width:0;text-align:left"><b>Telegramga xabar</b><small>${escHtml(ntfNotifyText())}</small></span>
+            <span class="tglsw brand ${ntf.notify ? "on" : ""}"><span class="knob"></span></span>
+          </button>
+        </div>`;
+      }
+      // ── MUDDAT TANLASH (18) — sana va soat bitta sheet'da ───────────
+      let m5Due = null;
+      function openM5DueSheet() {
+        const asos = ntf.dueDate ? parseISO(ntf.dueDate) : todayDate();
+        m5Due = { y: asos.getFullYear(), m: asos.getMonth(), date: ntf.dueDate || "", time: ntf.dueTime || "" };
+        document.getElementById("m5-due-ov")?.remove();
+        const ov = document.createElement("div");
+        ov.className = "overlay";
+        ov.id = "m5-due-ov";
+        ov.style.zIndex = "960";
+        ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+        ov.innerHTML = `<div class="sheet"><div class="sheet-handle"></div>
+          <div class="sheet-hdr"><div style="flex:1;min-width:0"><div class="sheet-title">Muddat</div><div class="sheet-sub">${escHtml(ntfProjectLabel())}${ntf.title.trim() ? " · " + escHtml(ntf.title.trim().slice(0, 40)) : ""}</div></div>
+            <button class="sheet-close" onclick="this.closest('.overlay').remove()">×</button></div>
+          <div class="sheet-body" id="m5-due-body"></div></div>`;
+        document.body.appendChild(ov);
+        m5DueRender();
+      }
+      function m5DueRender() {
+        const el = document.getElementById("m5-due-body");
+        if (!el || !m5Due) return;
+        const { y, m } = m5Due;
+        const birinchi = new Date(y, m, 1);
+        const bosh = (birinchi.getDay() + 6) % 7;
+        const kunlar = new Date(y, m + 1, 0).getDate();
+        const bugun = isoOf(todayDate());
+        let kat = "";
+        for (let i = 0; i < bosh; i++) kat += `<span></span>`;
+        for (let d = 1; d <= kunlar; d++) {
+          const iso = isoOf(new Date(y, m, d));
+          const cls = iso === m5Due.date ? "on" : iso === bugun ? "today" : "";
+          kat += `<button type="button" class="${cls}"${iso < bugun ? " disabled" : ""} onclick="m5Due.date='${iso}';m5DueRender()">${d}</button>`;
+        }
+        const soatlar = ["", "10:00", "14:00", "18:00"];
+        if (m5Due.time && !soatlar.includes(m5Due.time)) soatlar.push(m5Due.time);
+        el.innerHTML = `<div class="m5-cal">
+            <div class="m5-cal-h"><button type="button" onclick="m5DueStep(-1)">${ICON.chevronLeft}</button><b>${MONTHS[m]} ${y}</b><button type="button" onclick="m5DueStep(1)">${ICON.chevronRight}</button></div>
+            <div class="m5-cal-w">${["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"].map((w) => `<span>${w}</span>`).join("")}</div>
+            <div class="m5-cal-g">${kat}</div>
+          </div>
+          <div class="m5-cap" style="margin:14px 0 10px">Soat</div>
+          <div class="m5-chips m5-wrap">${soatlar.map((t) => `<button type="button" class="m5-chip${m5Due.time === t ? " on" : ""}" onclick="m5Due.time='${t}';m5DueRender()">${t || "Soatsiz"}</button>`).join("")}
+            <button type="button" class="m5-chip" onclick="m5DueOtherTime()">Boshqa…</button></div>
+          <div class="m5-bar2" style="margin-top:16px">
+            <button type="button" class="m5-btn" onclick="ntf.startDate='';ntf.dueDate='';ntf.dueTime='';ntf.touched=true;document.getElementById('m5-due-ov')?.remove();ntfRender();ntfQueueDraft()">Tozalash</button>
+            <button type="button" class="m5-btn primary"${m5Due.date ? "" : " disabled"} onclick="m5DueApply()">Tanlash</button>
+          </div>`;
+      }
+      function m5DueStep(d) {
+        const t = new Date(m5Due.y, m5Due.m + d, 1);
+        m5Due.y = t.getFullYear();
+        m5Due.m = t.getMonth();
+        m5DueRender();
+      }
+      function m5DueOtherTime() {
+        document.getElementById("m5-due-ov")?.remove();
+        if (m5Due?.date) { ntf.startDate = ntf.startDate && ntf.startDate <= m5Due.date ? ntf.startDate : m5Due.date; ntf.dueDate = m5Due.date; }
+        ntfOpenSheet("soat");
+      }
+      function m5DueApply() {
+        if (!m5Due?.date) return;
+        // Bir kunlik ish: boshlanish ham shu kun (avvalgi oraliq saqlanmaydi,
+        // agar boshlanish muddatdan keyin qolib ketsa).
+        if (!ntf.startDate || ntf.startDate > m5Due.date) ntf.startDate = m5Due.date;
+        ntf.dueDate = m5Due.date;
+        ntf.dueTime = m5Due.time;
+        ntf.touched = true;
+        document.getElementById("m5-due-ov")?.remove();
+        ntfRender();
+        ntfQueueDraft();
       }
 
       // ── Karta 1: kim bajaradi · muddat · ustuvorlik ───────────────
@@ -19025,7 +19360,7 @@
       function ntfFootHtml() {
         const yoq = ntfMissing();
         const tahrir = ntf.mode === "edit";
-        const label = tahrir ? "Saqlash" : "Vazifani yaratish";
+        const label = tahrir ? "Saqlash" : ntfIsMobile() ? "Vazifa ochish" : "Vazifani yaratish";
         const ichi = ntf.saving
           ? `<span class="ntf-spin"></span>${tahrir ? "Saqlanmoqda…" : "Yaratilmoqda…"}`
           : label;
