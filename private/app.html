@@ -12823,12 +12823,12 @@
         .mobile-flex { display: flex; }
 
         /* Sarlavha — 60px: chapda nom (Sora 18), o'ngda amallar. */
-        #screen-today .hdr {
+        #screen-today .hdr, .screen > .m5-hdr {
           height: calc(60px + var(--tg-safe-top)); padding: var(--tg-safe-top) 12px 0 20px;
           display: flex; align-items: center; gap: 6px; background: var(--surf); border-bottom: 1px solid var(--bd1);
         }
-        #screen-today .hdr-title { font: 700 18px Sora, system-ui, sans-serif; letter-spacing: -0.015em; color: var(--ink); }
-        #screen-today .hdr-sub { font: 400 12.5px Onest, system-ui, sans-serif; color: var(--t3); margin-top: 1px; }
+        #screen-today .hdr-title, .m5-hdr .hdr-title { font: 700 18px Sora, system-ui, sans-serif; letter-spacing: -0.015em; color: var(--ink); }
+        #screen-today .hdr-sub, .m5-hdr .hdr-sub { font: 400 12.5px Onest, system-ui, sans-serif; color: var(--t3); margin-top: 1px; }
         .m5-hdr-acts { align-items: center; gap: 8px; flex: none; }
         .m5-bell.d4-bell {
           display: flex; width: 40px; height: 40px; border-radius: 12px; border: none; cursor: pointer; flex: none;
@@ -12892,6 +12892,209 @@
         .m5-row-txt { flex: 1; min-width: 0; }
         .m5-row-txt b { display: block; font: 500 15px Onest, system-ui, sans-serif; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .m5-row-txt span { display: block; font-size: 13px; color: var(--t3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .m5-pct { font: 600 14px Onest, system-ui, sans-serif; color: var(--ink); flex: none; }
+        .m5-page-tight { padding-top: 0; }
+
+        /* Tracker (10, 11) — sarlavha 60px: orqaga, nom, ⋯. */
+        #screen-tracker .trk-hdr { padding: var(--tg-safe-top) 12px 0 6px; background: var(--surf); border-bottom: 1px solid var(--bd1); }
+        #screen-tracker .trk-hdr .seg, #screen-tracker .trk-prog { display: none !important; }
+        #screen-tracker .trk-top { height: 60px; display: flex; align-items: center; gap: 6px; margin: 0; }
+        #screen-tracker .trk-back, #screen-tracker .trk-more {
+          width: 40px; height: 40px; border-radius: 12px; border: none; background: none; color: var(--ink);
+          display: flex; align-items: center; justify-content: center; font-size: 0; cursor: pointer; flex: none; padding: 0;
+        }
+        #screen-tracker .trk-back::before { content: ""; width: 20px; height: 20px; background: currentColor;
+          -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m14 6-6 6 6 6'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m14 6-6 6 6 6'/%3E%3C/svg%3E") center/contain no-repeat; }
+        #screen-tracker .trk-more::before { content: ""; width: 20px; height: 20px; background: currentColor;
+          -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='5' cy='12' r='1.9'/%3E%3Ccircle cx='12' cy='12' r='1.9'/%3E%3Ccircle cx='19' cy='12' r='1.9'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='5' cy='12' r='1.9'/%3E%3Ccircle cx='12' cy='12' r='1.9'/%3E%3Ccircle cx='19' cy='12' r='1.9'/%3E%3C/svg%3E") center/contain no-repeat; }
+        #screen-tracker .trk-name { font: 700 18px Sora, system-ui, sans-serif; letter-spacing: -0.015em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #screen-tracker .trk-period { font: 400 12.5px Onest, system-ui, sans-serif; color: var(--t3); margin-top: 1px; }
+        #tracker-body { padding: 0 !important; }
+        .m5-trk { padding-bottom: calc(110px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))); }
+        .m5-seg { display: flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--chip3); }
+        .m5-seg button {
+          flex: 1; height: 36px; border: none; border-radius: 9px; background: none; cursor: pointer;
+          font: 500 14px Onest, system-ui, sans-serif; color: var(--t2);
+        }
+        .m5-seg button.on { background: var(--surf); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12); }
+        .m5-week { background: var(--surf); border-radius: 14px; padding: 14px 16px; box-shadow: inset 0 0 0 1px var(--bd2); display: flex; flex-direction: column; gap: 10px; }
+        .m5-week-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .m5-week-top b { font: 600 14.5px Onest, system-ui, sans-serif; color: var(--ink); }
+        .m5-week-bar { height: 6px; border-radius: 99px; background: var(--chip2); overflow: hidden; }
+        .m5-week-bar i { display: block; height: 100%; border-radius: 99px; background: var(--brand); }
+        .m5-week-bar.s i { background: #7c3aed; }
+        .m5-week-note { font-size: 12.5px; color: var(--t3); }
+        .m5-cells { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+        .m5-cell {
+          height: 58px; border-radius: 12px; border: none; cursor: pointer; padding: 0;
+          display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+          background: var(--surf); box-shadow: inset 0 0 0 1px var(--bd4); font-family: Onest, system-ui, sans-serif;
+        }
+        .m5-cell .n { font-size: 16px; font-weight: 600; color: var(--t4); line-height: 1.28; }
+        .m5-cell .d { font-size: 10.5px; font-weight: 500; line-height: 1.24; }
+        .m5-cell.done { background: var(--brand); box-shadow: none; }
+        .m5-cell.done .n { color: #fff; font-weight: 700; }
+        .m5-cell.done .d { color: #d6e6f3; }
+        .m5-cell.done.atm { background: #7c3aed; }
+        .m5-cell.done.info { background: #c4b5fd; }
+        .m5-cell.done.info .n { color: #4c1d95; }
+        .m5-cell.next { background: var(--nav-act-bg); box-shadow: inset 0 0 0 1.5px var(--brand); }
+        .m5-cell.next .n, .m5-cell.next .d { color: var(--nav-act-ink); font-weight: 700; }
+        .m5-cell.next .d { font-weight: 600; }
+        .m5-trk .m5-cells:has(.atm, .info) .m5-cell.next { background: #f3effe; box-shadow: inset 0 0 0 1.5px #7c3aed; }
+        .m5-trk .m5-cells:has(.atm, .info) .m5-cell.next .n { color: #5b21b6; }
+        .m5-cell.debt { background: var(--red-bg); box-shadow: inset 0 0 0 1px var(--red-bd); }
+        .m5-cell.debt .n { color: var(--red); }
+        .m5-legend { display: flex; gap: 16px; font-size: 12px; color: var(--t2); padding: 0 2px; }
+        .m5-legend span { display: inline-flex; align-items: center; gap: 6px; }
+        .m5-legend i { width: 8px; height: 8px; border-radius: 99px; display: inline-block; }
+        /* Pastdagi asosiy amal — bitta ko'k tugma (dizayn qoidasi). */
+        .m5-bottombar {
+          position: fixed; left: 0; right: 0; bottom: 0; z-index: 150; background: var(--surf);
+          padding: 12px 16px calc(24px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
+          border-top: 1px solid var(--bd1);
+        }
+        .m5-primary {
+          width: 100%; height: 52px; border-radius: 12px; border: none; cursor: pointer; background: var(--brand); color: #fff;
+          font: 600 15.5px Onest, system-ui, sans-serif; display: flex; align-items: center; justify-content: center; gap: 7px;
+        }
+        .m5-primary svg { width: 18px; height: 18px; }
+        .m5-primary:disabled { opacity: 0.45; cursor: default; }
+        #screen-tracker:not(.active) #trk-m5-bar { display: none !important; }
+
+        /* Belgilash oynasi (12) — pastdan chiqadigan sheet: sarlavha chapda,
+           yopish (36px) o'ngda, «Kimlar ishladi» qatorlarida Ncoin, kun
+           chiplari, Ncoin xulosasi, asosiy tugma oynaning o'zida. */
+        #cwd-page { background: rgba(15, 23, 42, 0.4); justify-content: flex-end; }
+        #cwd-page > .ntv3 {
+          flex: none; max-height: calc(100% - var(--tg-safe-top) - 72px); padding-top: 10px;
+          background: var(--surf); border-radius: 14px 14px 0 0; box-shadow: 0 -12px 40px -12px rgba(15, 23, 42, 0.35);
+          animation: m5Up 0.2s ease-out;
+        }
+        @keyframes m5Up { from { transform: translateY(24px); opacity: 0.4; } to { transform: none; opacity: 1; } }
+        .m5-grab { width: 36px; height: 5px; border-radius: 9px; background: var(--bd4); align-self: center; flex: none; margin-bottom: 14px; }
+        #cwd-page .m5-sheet-hdr {
+          height: auto; min-height: 0; padding: 0 16px; border: none; background: none; display: flex; align-items: center; gap: 12px;
+        }
+        #cwd-page .ntv3-title { flex: 1; min-width: 0; text-align: left; display: flex; flex-direction: column; }
+        .m5-sh-t { font: 700 20px Sora, system-ui, sans-serif; letter-spacing: -0.015em; color: var(--ink); }
+        .m5-sh-s { font: 400 14px Onest, system-ui, sans-serif; color: var(--t2); margin-top: 2px; }
+        .m5-x {
+          width: 36px; height: 36px; border-radius: 12px; border: none; background: var(--chip); color: var(--t2);
+          align-items: center; justify-content: center; cursor: pointer; flex: none; padding: 0;
+        }
+        .m5-x svg { width: 18px; height: 18px; }
+        #cwd-page .ntv3-body { background: var(--surf); padding: 14px 16px 12px; gap: 0; }
+        #cwd-page .cwd-head { display: none; }
+        #cwd-page .mk-sec { font: 600 12px Onest, system-ui, sans-serif; color: var(--t3); letter-spacing: 0.04em; padding: 0 4px; margin: 14px 0 10px; }
+        #cwd-page .mk-sec:first-of-type { margin-top: 0; }
+        #cwd-page .mk-card { border: none; box-shadow: inset 0 0 0 1px var(--bd2); }
+        #cwd-page .mk-rtxt { display: flex; flex-direction: column-reverse; }
+        #cwd-page .mk-rname { font: 500 15px Onest, system-ui, sans-serif; color: var(--ink); }
+        #cwd-page .mk-rlbl { font: 400 13px Onest, system-ui, sans-serif; color: var(--t3); margin-top: 1px; text-transform: none; letter-spacing: 0; }
+        #cwd-page .mk-av { width: 36px; height: 36px; }
+        #cwd-page .mk-coin { font: 600 13px Onest, system-ui, sans-serif; color: var(--nav-coin-ink); background: none; padding: 0; }
+        #cwd-page .mk-days { display: flex; gap: 8px; }
+        #cwd-page .mk-day {
+          flex: none; height: 36px; padding: 0 14px; border-radius: 99px; border: none; box-shadow: inset 0 0 0 1px var(--bd4);
+          font: 500 13.5px Onest, system-ui, sans-serif; color: var(--ink);
+        }
+        #cwd-page .mk-day.on { background: var(--inkfill); color: #fff; box-shadow: none; font-weight: 600; }
+        #cwd-page .mk-day svg { display: none; }
+        #cwd-page .mk-sum { margin-top: 14px; background: var(--nav-coin-bg); border: none; padding: 10px 14px; color: var(--nav-coin-ink); font: 500 13.5px Onest, system-ui, sans-serif; }
+        #cwd-page .mk-sum b { font-weight: 500; }
+        #cwd-page .mk-sum-ico { width: 20px; height: 20px; background: var(--nav-coin-mark); color: #fff; font-size: 11px; }
+        #cwd-page .ntv3-foot { border-top: none; padding: 2px 16px calc(24px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))); }
+        #cwd-page .ntv3-submit { border-radius: 12px; font-size: 15.5px; }
+
+        /* Umumiy pastki oyna (makeSheet) — dizayn qoidasi: sarlavha chapda
+           (Sora 20), yopish o'ngda 36px, chiziqsiz, 16px chekka. */
+        .overlay:not(.cf-ov) > .sheet {
+          border-radius: 14px 14px 0 0; padding-top: 10px; max-height: calc(100% - var(--tg-safe-top) - 72px);
+          box-shadow: 0 -12px 40px -12px rgba(15, 23, 42, 0.35); font-family: Onest, system-ui, sans-serif;
+        }
+        .overlay:not(.cf-ov) > .sheet > .sheet-handle { width: 36px; height: 5px; border-radius: 9px; margin: 0 auto 14px; }
+        .overlay:not(.cf-ov) > .sheet > .sheet-hdr { padding: 0 16px; border-bottom: none; align-items: center; gap: 12px; }
+        .overlay:not(.cf-ov) .sheet-title { font: 700 20px Sora, system-ui, sans-serif; letter-spacing: -0.015em; color: var(--ink); }
+        .overlay:not(.cf-ov) .sheet-sub { font: 400 14px Onest, system-ui, sans-serif; color: var(--t2); margin-top: 2px; }
+        .overlay:not(.cf-ov) .sheet-close {
+          width: 36px; height: 36px; border-radius: 12px; background: var(--chip); color: var(--t2); font-size: 0; position: relative;
+        }
+        .overlay:not(.cf-ov) .sheet-close::before {
+          content: ""; position: absolute; inset: 9px; background: currentColor;
+          -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E") center/contain no-repeat;
+        }
+        .overlay:not(.cf-ov) > .sheet > .sheet-body { padding: 14px 16px calc(24px + var(--tg-safe-bottom, 0px)); }
+        /* Amallar ro'yxati (13) — kam ishlatiladigan amallar; xavflisi oxirida, qizil. */
+        .overlay:not(.cf-ov) .sheet-title.m5-small { font: 500 14px Onest, system-ui, sans-serif; color: var(--t2); letter-spacing: 0; }
+        /* Davrlar tarixi (14) — bitta karta, qatorlar chiziq bilan;
+           qarzli davr qizil fonda, amal shu qatorning o'zida. */
+        .sheet-body > .cycle-item { margin: 0; border: none; border-radius: 0; box-shadow: inset 1px 0 0 var(--bd2), inset -1px 0 0 var(--bd2); }
+        .sheet-body > .cycle-item:first-of-type { border-radius: 14px 14px 0 0; box-shadow: inset 0 1px 0 var(--bd2), inset 1px 0 0 var(--bd2), inset -1px 0 0 var(--bd2); }
+        .sheet-body > .cycle-item:last-of-type { border-radius: 0 0 14px 14px; box-shadow: inset 0 -1px 0 var(--bd2), inset 1px 0 0 var(--bd2), inset -1px 0 0 var(--bd2); }
+        .sheet-body > .cycle-item:only-of-type { border-radius: 14px; box-shadow: inset 0 0 0 1px var(--bd2); }
+        .sheet-body > .cycle-item + .cycle-item { border-top: 1px solid var(--bd1); }
+        .sheet-body > .cycle-item.debt .cycle-item-top { background: var(--red-bg); }
+        .sheet-body > .cycle-item.debt .cycle-item-sub { color: var(--t3); }
+        .sheet-body > .cycle-item .c-chev { display: none; }
+        .sheet-body .cycle-item-label { font: 500 15px Onest, system-ui, sans-serif; color: var(--ink); }
+        .sheet-body .cycle-item-sub { font-size: 13px; }
+
+        /* Yangi loyiha (15) — forma sheet: yorliq maydon ustida, fokus
+           halqasi, «Yaratish» pastda to'liq kenglikda. Rang telefonda
+           avtomatik (tanlagich yashirin), oldindan ko'rish ham yashirin. */
+        #np-overlay .np-ov-hdr { padding: 0 16px; border-bottom: none; gap: 12px; }
+        #np-overlay .np-ov-icon { display: none; }
+        #np-overlay .np-ov-title { font: 700 20px Sora, system-ui, sans-serif; letter-spacing: -0.015em; color: var(--ink); }
+        #np-overlay .np-ov-sub { font: 400 14px Onest, system-ui, sans-serif; color: var(--t2); margin-top: 2px; }
+        #np-overlay .np2-preview-col, #np-overlay .np2-color-sec, #np-overlay .np2-btn-outline { display: none !important; }
+        #np-overlay .np2-grid { display: block; }
+        #np-overlay .np-ov-body { padding: 14px 16px 8px; }
+        #np-overlay .np2-label { font: 400 13px Onest, system-ui, sans-serif; color: var(--t2); text-transform: none; letter-spacing: 0; margin-bottom: 6px; }
+        #np-overlay .np2-sub-hint { font-size: 12px; }
+        #np-overlay .np2-sec { margin-top: 16px; }
+        #np-overlay .np2-name-input {
+          height: 44px; border-radius: 12px; border: none; box-shadow: inset 0 0 0 1px var(--bd4); padding: 0 14px;
+          font: 400 15px Onest, system-ui, sans-serif; background: var(--surf); width: 100%;
+        }
+        #np-overlay .np2-name-input:focus { outline: none; box-shadow: inset 0 0 0 1.5px var(--brand), 0 0 0 3px rgba(47, 122, 185, 0.15); }
+        #np-overlay > .sheet { padding-top: 18px; }
+        #np-overlay .np2-chiprow.seg { display: flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--chip3); }
+        #np-overlay .np2-chiprow.seg .np2-chip {
+          flex: 1; height: 36px; border-radius: 9px; background: none; box-shadow: none; color: var(--t2); font: 500 14px Onest, system-ui, sans-serif;
+        }
+        #np-overlay .np2-chiprow.seg .np2-chip.on { background: var(--surf); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12); }
+        #np-overlay .np2-chiprow:not(.seg) .np2-chip {
+          height: 36px; padding: 0 14px; border-radius: 99px; border: none; background: var(--surf); box-shadow: inset 0 0 0 1px var(--bd4);
+          color: var(--ink); font: 500 13.5px Onest, system-ui, sans-serif;
+        }
+        #np-overlay .np2-chiprow:not(.seg) .np2-chip.on, #np-overlay .np2-chiprow:not(.seg) .np2-chip.vol-on { background: var(--inkfill); color: #fff; box-shadow: none; font-weight: 600; }
+        #np-overlay .np-ov-footer {
+          display: flex; flex-direction: column; align-items: stretch; gap: 12px;
+          padding: 12px 16px calc(24px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))); border-top: 1px solid var(--bd1);
+        }
+        #np-overlay .np-ov-footer > div[style*="flex:1"] { display: none; }
+        #np-overlay .np2-btn-primary { width: 100%; height: 52px; border-radius: 12px; font: 600 15.5px Onest, system-ui, sans-serif; }
+        #projects-body { padding: 0 !important; }
+        /* Qidiruv + chiplar (05) — kulrang fonda, sarlavha ostida. */
+        .m5-tools { padding: 16px 16px 12px; display: flex; flex-direction: column; gap: 12px; flex: none; background: var(--bg); }
+        .m5-search {
+          display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px; border-radius: 12px;
+          background: var(--surf); box-shadow: inset 0 0 0 1px var(--bd4); cursor: text;
+        }
+        .m5-search svg { width: 18px; height: 18px; color: var(--t3); flex: none; }
+        .m5-search input { flex: 1; min-width: 0; border: none; outline: none; background: none; font: 400 15px Onest, system-ui, sans-serif; color: var(--ink); padding: 0; }
+        .m5-search input::placeholder { color: var(--t4); }
+        .m5-chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
+        .m5-chips::-webkit-scrollbar { display: none; }
+        .m5-chip {
+          flex: none; height: 36px; padding: 0 14px; border-radius: 99px; border: none; cursor: pointer; white-space: nowrap;
+          background: var(--surf); box-shadow: inset 0 0 0 1px var(--bd4); font: 500 13.5px Onest, system-ui, sans-serif; color: var(--ink);
+        }
+        .m5-chip.on { background: var(--inkfill); color: #fff; box-shadow: none; font-weight: 600; }
       }
       /* Tasdiq oynasi (34) — hamma ekranda markazdagi karta. */
       .overlay.cf-ov { align-items: center !important; justify-content: center; padding: 16px; }
@@ -12926,6 +13129,18 @@
         .rb-toast button { font-size: 14px; }
         .more-coin svg { width: 18px; height: 18px; flex: none; }
       }
+      .m5-acts { background: var(--surf); border-radius: 14px; box-shadow: inset 0 0 0 1px var(--bd2); overflow: hidden; }
+      .m5-act {
+        width: 100%; display: flex; align-items: center; gap: 12px; padding: 11px 14px; border: none; background: none;
+        cursor: pointer; text-align: left; font: 500 15px Onest, system-ui, sans-serif; color: var(--ink);
+      }
+      .m5-act + .m5-act { border-top: 1px solid var(--bd1); }
+      .m5-act-ico { width: 36px; height: 36px; border-radius: 10px; background: var(--chip); color: var(--t2); display: flex; align-items: center; justify-content: center; flex: none; }
+      .m5-act-ico svg { width: 19px; height: 19px; }
+      .m5-act .m5-act-t { flex: 1; min-width: 0; }
+      .m5-act .m5-act-chev { width: 16px; height: 16px; color: var(--t4); flex: none; }
+      .m5-act.danger { color: var(--red); }
+      .m5-act.danger .m5-act-ico { background: var(--red-bg); color: var(--red); }
       /* Holat tegi (5 daraja + Bajarildi) — hamma joyda bir xil, doim matn bilan. */
       .m5-pill {
         display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 8px; flex: none;
@@ -12935,6 +13150,7 @@
       .m5-pill.st-mid { background: var(--st-mid-bg); color: var(--st-mid); }
       .m5-pill.st-onplan { background: var(--st-onplan-bg); color: var(--st-onplan); }
       .m5-pill.st-ahead, .m5-pill.st-done { background: var(--st-ahead-bg); color: var(--st-ahead); }
+      .m5-pill.st-none { background: var(--chip); color: var(--t2); }
     </style>
   </head>
   <body>
@@ -12973,19 +13189,22 @@
 
     <!-- ── LOYIHALAR ───────────────────────────────────────────────── -->
     <div class="screen" id="screen-projects">
-      <div class="hdr">
-        <div class="hdr-row">
+      <!-- Mobil dizayn 05: sarlavha (nom + «N ta faol» + qo'ng'iroq), keyin
+           qidiruv va holat chiplari kulrang fonda. Desktopda bu sarlavha
+           yashirin — u yerda pd4-hdr bor. -->
+      <div class="hdr m5-hdr">
+        <div style="flex: 1; min-width: 0">
           <div class="hdr-title">Loyihalar</div>
-          <div class="search-box">
-            <div class="search-ico"></div>
-            <input
-              id="proj-search"
-              placeholder="Qidirish"
-              oninput="renderProjectsScreen()"
-            />
-          </div>
+          <div class="hdr-sub" id="proj-sub"></div>
         </div>
-        <div class="chips" id="proj-chips"></div>
+        <button class="m5-bell d4-bell" onclick="ntfyToggle(this)" aria-label="Bildirishnomalar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20h4"/></svg></button>
+      </div>
+      <div class="m5-tools mobile-only">
+        <label class="m5-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="proj-search" placeholder="Loyiha nomi" oninput="renderProjectsScreen()" />
+        </label>
+        <div class="m5-chips" id="proj-chips"></div>
       </div>
       <div class="scroll" id="projects-body"></div>
       <button
@@ -15585,38 +15804,36 @@
         renderProjectsScreen();
       }
       function renderProjectsScreen() {
-        document.getElementById("projects-fab").style.display = isAdmin
-          ? "flex"
-          : "none";
-        const debtCount = projects.filter((p) => p.outstandingDebt).length;
+        // Yangi loyiha telefonda Boshqaruv → Loyihalar'da (dizayn 05/23).
+        document.getElementById("projects-fab").style.display = "none";
+        // Holat chiplari (mobil dizayn 05) — har biri soni bilan. «Ortda»
+        // ikkala darajani (Ortda + Jiddiy ortda) qamraydi.
+        const sanoq = (f) => projects.filter(f).length;
+        const rejali = (p) => p.hasPlan !== false;
         const chips = [
-          { key: "all", label: "Hammasi" },
-          { key: "debt", label: `Qarzdor ${debtCount}`, danger: true },
-          { key: "mine", label: "Mening" },
-          { key: "done", label: "Tugagan" },
-        ];
+          { key: "all", label: "Hammasi", n: projects.length },
+          { key: "debt", label: "Qarz", n: sanoq((p) => rejali(p) && projStatus(p) === "debt") },
+          { key: "behind", label: "Ortda", n: sanoq((p) => rejali(p) && ["mid", "behind"].includes(projStatus(p))) },
+          { key: "onplan", label: "Rejada", n: sanoq((p) => rejali(p) && projStatus(p) === "onplan") },
+          { key: "ahead", label: "Oldinda", n: sanoq((p) => rejali(p) && projStatus(p) === "ahead") },
+          { key: "done", label: "Bajarildi", n: sanoq((p) => rejali(p) && projStatus(p) === "done") },
+          { key: "noplan", label: "Rejasiz", n: sanoq((p) => !rejali(p)) },
+        ].filter((c) => c.key === "all" || c.n > 0 || projFilter === c.key);
         document.getElementById("proj-chips").innerHTML = chips
-          .map((c) => {
-            const cls =
-              "chip-btn" +
-              (projFilter === c.key ? " active" : c.danger ? " danger" : "");
-            return `<button class="${cls}" onclick="setProjFilter('${c.key}')">${c.label}</button>`;
-          })
+          .map((c) => `<button class="m5-chip${projFilter === c.key ? " on" : ""}" onclick="setProjFilter('${c.key}')">${c.label} · ${c.n}</button>`)
           .join("");
+        const faol = projects.filter(rejali).length;
+        const sub = document.getElementById("proj-sub");
+        if (sub) sub.textContent = `${faol} ta faol`;
 
         const body = document.getElementById("projects-body");
         const q = (document.getElementById("proj-search")?.value || "")
           .toLowerCase()
           .trim();
         let list = projects.filter((p) => !q || p.label.toLowerCase().includes(q));
-        if (projFilter === "debt") list = list.filter((p) => p.outstandingDebt);
-        // "Mening" — menga biriktirilgan loyihalar. Avval shart
-        // `isAdmin || ...` edi: admin uchun hamma loyiha o'tib ketardi
-        // va filtr "Hammasi"dan farq qilmasdi.
-        else if (projFilter === "mine")
-          list = list.filter((p) => (perms[currentUser] || []).includes(p.id));
-        else if (projFilter === "done")
-          list = list.filter((p) => projPct(p) >= 100);
+        const stOf = (p) => (p.hasPlan === false ? "noplan" : projStatus(p));
+        if (projFilter === "behind") list = list.filter((p) => ["mid", "behind"].includes(stOf(p)));
+        else if (projFilter !== "all") list = list.filter((p) => stOf(p) === projFilter);
 
         if (list.length === 0) {
           body.innerHTML =
@@ -15626,71 +15843,38 @@
           return;
         }
 
-        const today = todayDate();
-        // Rejasiz loyihalar alohida: ularda muddat ham, foiz ham yo'q.
-        const noPlan = list.filter((p) => p.hasPlan === false);
-        const planned = list.filter((p) => p.hasPlan !== false);
-        const overdue = sortByDebt(planned.filter((p) => p.outstandingDebt));
-        const active = planned.filter((p) => !p.outstandingDebt);
-        let html = `<div class="mobile-only">`;
-        if (overdue.length) {
-          html += `<div class="sec-upper">Muddati o'tgan · ${overdue.length}</div><div class="list-card" style="margin-bottom:20px">`;
-          html += overdue
-            .map((p) => {
-              const daysAgo = daysBetween(
-                parseISO(p.outstandingDebt.periodEnd),
-                today,
-              );
-              const rem =
-                p.outstandingDebt.remainingPosts +
-                p.outstandingDebt.remainingStories;
-              return `<div class="od-row" onclick="openTracker('${escArg(p.id)}')">
-                <div class="od-bar"></div>
-                <div style="flex:1;min-width:0">
-                  <div class="r-name">${escHtml(p.label)}</div>
-                  <div class="r-sub">${rem} vazifa qoldi</div>
-                </div>
-                <div class="od-days num">${daysAgo} kun</div>
+        // Mobil ro'yxat (dizayn 05): muammolilar birinchi, keyin foiz
+        // bo'yicha. Qatorda: belgi, nom, «mas'ul · N kun» (qarzda — «N kun
+        // qarz»), foiz, holat tegi. Rejasizda foiz va muddat yo'q.
+        const tartib = [...list].sort(
+          (a, b) =>
+            (a.hasPlan === false) - (b.hasPlan === false) ||
+            (D4_STATUS_ORDER[projStatus(a)] ?? 9) - (D4_STATUS_ORDER[projStatus(b)] ?? 9) ||
+            projPct(a) - projPct(b) ||
+            a.label.localeCompare(b.label),
+        );
+        let html = `<div class="mobile-only m5-page m5-page-tight"><div class="m5-card">`;
+        html += tartib
+          .map((p) => {
+            if (p.hasPlan === false) {
+              return `<div class="m5-row">
+                ${m5Badge(p)}
+                <span class="m5-row-txt"><b>${escHtml(p.label)}</b><span>${escHtml(projOwnerLabel(p))}</span></span>
+                <span class="m5-pill st-none">Rejasiz</span>
               </div>`;
-            })
-            .join("");
-          html += `</div>`;
-        }
-        if (active.length) {
-          html += `<div class="sec-upper">Faol · ${active.length}</div><div class="list-card">`;
-          html += active
-            .map((p) => {
-              const pc = projPct(p);
-              const dl = projDaysLeft(p);
-              return `<div class="pv-row" onclick="openTracker('${escArg(p.id)}')">
-                <div style="flex:1;min-width:0">
-                  <div class="r-name">${escHtml(p.label)}</div>
-                  <div class="r-sub">${dl >= 0 ? dl + " kun qoldi" : "muddat tugagan"}</div>
-                </div>
-                <div class="pv-bar-wrap">
-                  <div class="pv-bar-track"><div class="pv-bar-fill" style="width:${pc}%"></div></div>
-                  <div class="pv-pct num">${pc}%</div>
-                </div>
-              </div>`;
-            })
-            .join("");
-          html += `</div>`;
-        }
-        if (noPlan.length) {
-          html += `<div class="sec-upper" style="margin-top:20px">Kontent rejasiz · ${noPlan.length}</div><div class="list-card">`;
-          html += noPlan
-            .map(
-              (p) => `<div class="pv-row" onclick="setPdeskProject('${escArg(p.id)}')">
-                ${p.color ? `<span class="pv-dot" style="background:${escHtml(p.color)}"></span>` : ""}
-                <div style="flex:1;min-width:0">
-                  <div class="r-name">${escHtml(p.label)}</div>
-                  <div class="r-sub">${escHtml(projOwnerLabel(p))}</div>
-                </div>
-              </div>`,
-            )
-            .join("");
-          html += `</div>`;
-        }
+            }
+            const st = projStatus(p);
+            const d = projDaysInfo(p);
+            const muddat = d.late ? `${daysBetween(parseISO(p.outstandingDebt.periodEnd), todayDate())} kun qarz` : d.text;
+            return `<button type="button" class="m5-row" onclick="openTracker('${escArg(p.id)}')">
+              ${m5Badge(p)}
+              <span class="m5-row-txt"><b>${escHtml(p.label)}</b><span>${escHtml(projOwnerLabel(p))} · ${muddat}</span></span>
+              <span class="m5-pct">${projPct(p)}%</span>
+              <span class="m5-pill st-${st}">${PROJ_STATUS_LABEL[st]}</span>
+            </button>`;
+          })
+          .join("");
+        html += `</div>`;
         html += `</div>${buildProjectsDesktopHtml()}`;
         body.innerHTML = html;
         restorePdeskSearchFocus();
@@ -22741,14 +22925,26 @@
         trackerType = t;
         renderTracker();
       }
+      // Tracker menyusi (mobil dizayn 13): amallar ro'yxati, xavflisi
+      // (Arxivlash) oxirida qizil. Sarlavha — loyiha nomi, kichik.
+      function m5ActHtml(onclick, ico, title, danger) {
+        return `<button type="button" class="m5-act${danger ? " danger" : ""}" onclick="${onclick}">
+            <span class="m5-act-ico">${ico}</span><span class="m5-act-t">${title}</span>${danger ? "" : `<span class="m5-act-chev">${ICON.chevronRight}</span>`}
+          </button>`;
+      }
       function openTrackerMenu() {
         const p = projects.find((x) => x.id === trackerProjectId);
         if (!p) return;
         const { body } = makeSheet(escHtml(p.label));
-        body.innerHTML = `
-          <button class="btn btn-soft" style="margin-bottom:10px" onclick="document.querySelector('.overlay').remove();openProjectHistorySheet('${escArg(p.id)}','${escArg(p.label)}')">Davrlar tarixi</button>
-          ${isAdmin ? `<button class="btn btn-soft" style="margin-bottom:10px" onclick="document.querySelector('.overlay').remove();openProjectEditSheet('${escArg(p.id)}')">Loyihani tahrirlash</button>` : ""}
-          ${isAdmin ? `<button class="btn btn-danger" onclick="document.querySelector('.overlay').remove();archiveProject('${escArg(p.id)}','${escArg(p.label)}',null)">Arxivlash</button>` : ""}`;
+        body.closest(".sheet")?.querySelector(".sheet-title")?.classList.add("m5-small");
+        const yop = "document.querySelector('.overlay').remove();";
+        const tarixIco = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>`;
+        const arxivIco = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9M10 13h4"/></svg>`;
+        body.innerHTML = `<div class="m5-acts">
+            ${m5ActHtml(`${yop}openProjectHistorySheet('${escArg(p.id)}','${escArg(p.label)}')`, tarixIco, "Davrlar tarixi")}
+            ${isAdmin ? m5ActHtml(`${yop}openProjectEditSheet('${escArg(p.id)}')`, ICON.edit, "Loyihani tahrirlash") : ""}
+            ${isAdmin ? m5ActHtml(`${yop}archiveProject('${escArg(p.id)}','${escArg(p.label)}',null)`, arxivIco, "Arxivlash", true) : ""}
+          </div>`;
       }
       function renderTracker() {
         const p = projects.find((x) => x.id === trackerProjectId);
@@ -22867,6 +23063,76 @@
         // Kompyuterda — dizayn D09 tuzilishi (yuqoridagi telefon
         // tarkibi ustidan yoziladi).
         if (window.matchMedia("(min-width: 860px)").matches) renderTrackerDesk(p);
+        else renderTrackerM5(p);
+      }
+
+      // ── TRACKER · MOBIL DIZAYN (10, 11, 2026-11-13) ─────────────────
+      // Post/Stories — segment. «Bu hafta» kartasi, keyin kataklar 5
+      // ustunda: bajarilgani to'q ko'k (raqam + sana), keyingisi ramkada,
+      // qolgani oq. Asosiy amal — pastda bitta ko'k tugma («Post 5 ni
+      // belgilash»). Stories turi faqat katak rangida.
+      function renderTrackerM5(p) {
+        const qarzli = mkgIsDebt(p);
+        const tur = trackerType === "s" && p.s > 0 ? "s" : p.k > 0 ? "k" : "s";
+        const seg = p.k > 0 && p.s > 0
+          ? `<div class="m5-seg">
+              <button type="button" class="${tur === "k" ? "on" : ""}" onclick="setTrackerType('k')">Postlar ${p.doneK}/${p.k}</button>
+              <button type="button" class="${tur === "s" ? "on" : ""}" onclick="setTrackerType('s')">Stories ${p.doneS}/${p.s}</button>
+            </div>`
+          : "";
+        // Bu hafta — shu tur bo'yicha haftalik reja (computeWeeklyProgress).
+        let hafta = "";
+        if (p.hasPlan !== false && !qarzli) {
+          const { rows, current } = computeWeeklyProgress(p);
+          const r = rows[current] || { plannedK: 0, plannedS: 0, doneK: 0, doneS: 0 };
+          const reja = tur === "k" ? r.plannedK : r.plannedS;
+          const bajar = tur === "k" ? r.doneK : r.doneS;
+          const st = projStatus(p);
+          hafta = `<div class="m5-week">
+              <div class="m5-week-top"><b>Bu hafta</b><span class="m5-pill st-${st}">${PROJ_STATUS_LABEL[st]}</span></div>
+              <div class="m5-week-bar${tur === "s" ? " s" : ""}"><i style="width:${reja ? Math.min(100, Math.round((bajar / reja) * 100)) : 0}%"></i></div>
+              <div class="m5-week-note">Haftalik reja: ${reja} ta, bajarildi ${bajar}</div>
+            </div>`;
+        }
+        const jami = tur === "k" ? p.k : p.s;
+        const checks = p.checks || {};
+        const det = p.checkDetails || {};
+        const keyingi = mkgNextFree(p, tur);
+        let kataklar = "";
+        for (let i = 1; i <= jami; i++) {
+          const key = `${tur}-${i}`;
+          const on = !!checks[key];
+          const info = det[key] || {};
+          const kind = tur === "s" ? (info.storyKind === "atmospheric" ? " atm" : " info") : "";
+          const sana = on && info.workDate && tur === "k" ? ntfDayShort(String(info.workDate).slice(0, 10)) : "";
+          const cls = on ? `done${kind}` : i === keyingi ? "next" : qarzli ? "debt" : "";
+          const ost = on ? sana : i === keyingi && tur === "k" ? "keyingi" : "";
+          kataklar += `<button type="button" class="m5-cell ${cls}" onclick="openCheckModal('${escArg(p.id)}','${tur}',${i})"><span class="n">${i}</span>${ost ? `<span class="d">${escHtml(ost)}</span>` : ""}</button>`;
+        }
+        const legend = tur === "s"
+          ? `<div class="m5-legend"><span><i style="background:#7c3aed"></i>Atmosferali</span><span><i style="background:#c4b5fd"></i>Informatsion</span></div>`
+          : "";
+        document.getElementById("tracker-body").innerHTML = `<div class="m5-page m5-trk">
+            ${fbCardHtml(p)}
+            ${qarzli ? mkgDebtHtml(p) : ""}
+            ${seg}
+            ${hafta}
+            <div class="m5-cells">${kataklar}</div>
+            ${legend}
+          </div>`;
+        // Pastdagi asosiy tugma — keyingi bo'sh katak.
+        let bar = document.getElementById("trk-m5-bar");
+        if (!bar) {
+          bar = document.createElement("div");
+          bar.id = "trk-m5-bar";
+          bar.className = "m5-bottombar mobile-only";
+          document.getElementById("screen-tracker").appendChild(bar);
+        }
+        bar.innerHTML = keyingi
+          ? `<button type="button" class="m5-primary" onclick="openCheckModal('${escArg(p.id)}','${tur}',${keyingi})">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>${tur === "k" ? "Post" : "Stories"} ${keyingi} ni belgilash</button>`
+          : "";
+        bar.style.display = keyingi ? "" : "none";
       }
 
       // ── TRACKER · DESKTOP (dizayn D09) ───────────────────────────────
@@ -23456,11 +23722,16 @@
         ov.onclick = (e) => {
           if (e.target === ov) cwdClose();
         };
+        // Mobil dizayn 12 (2026-11-13): pastdan chiqadigan oyna — sarlavha
+        // chapda (nom + loyiha), yopish o'ngda. Avval «Yopish» chapda edi.
+        const loyihaNomi = (projects.find((x) => x.id === slug) || {}).label || "";
         ov.innerHTML = `<div class="ntv3">
-          <div class="ntv3-hdr">
-            <button type="button" class="ntv3-hbtn cancel" onclick="cwdClose()">Yopish</button>
-            <div class="ntv3-title">${escHtml(label)} ${num}</div>
-            <div class="ntv3-hbtn" aria-hidden="true"></div>
+          <div class="m5-grab mobile-only"></div>
+          <div class="ntv3-hdr m5-sheet-hdr">
+            <button type="button" class="ntv3-hbtn cancel desktop-only" onclick="cwdClose()">Yopish</button>
+            <div class="ntv3-title"><span class="m5-sh-t">${escHtml(label)} ${num}</span><span class="m5-sh-s mobile-only">${escHtml(loyihaNomi)}</span></div>
+            <button type="button" class="m5-x mobile-flex" onclick="cwdClose()" aria-label="Yopish"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+            <div class="ntv3-hbtn desktop-only" aria-hidden="true"></div>
           </div>
           <div class="ntv3-body" id="cwd-body">
             <div class="empty"><div class="empty-s">Yuklanmoqda…</div></div>
@@ -24975,7 +25246,7 @@
           return `<button type="button" class="np2-sw${c === tanlangan ? " on" : ""}${egasi ? " busy" : ""}" style="background:${c}"
               title="${egasi ? `Band: ${escHtml(egasi.label)}` : "Bo'sh"}" onclick="npPickColor('${c}')">${egasi ? escHtml(egasi.label.slice(0, 1).toUpperCase()) : ""}</button>`;
         }).join("");
-        return `<div class="np2-sec">
+        return `<div class="np2-sec np2-color-sec">
             <div class="np2-label">Rang <span class="np2-sub-hint">${npState.color ? "Qo'lda tanlandi" : "Avto tanlandi"} · ${bosh} ta bo'sh</span></div>
             <div class="np2-swatches">${kv}</div>
             <div class="np2-sub-hint" style="display:block;margin-top:7px">Band ranglarda loyiha harfi turadi va xira. Tizim mavjudlaridan eng uzoq rangni o'zi tanlaydi.</div>
@@ -25003,7 +25274,7 @@
 
               <div class="np2-sec">
                 <div class="np2-label">Loyiha turi</div>
-                <div class="np2-chiprow">
+                <div class="np2-chiprow seg">
                   <button type="button" class="np2-chip ${npState.hasPlan ? "on" : ""}" onclick="npSetHasPlan(true)">Kontent rejasi bilan</button>
                   <button type="button" class="np2-chip ${!npState.hasPlan ? "on" : ""}" onclick="npSetHasPlan(false)">Rejasiz</button>
                 </div>
@@ -30261,7 +30532,7 @@
               cyc.status === "active"
                 ? `<span class="d4-pill st-onplan">Joriy</span>`
                 : cyc.isDebt
-                  ? `<span class="cyc-debt-lbl">Qarz</span>`
+                  ? `<span class="cyc-debt-lbl">Qarzni yopish</span>`
                   : `<span class="d4-pill st-none">Tugagan</span>`;
             item.innerHTML = `
               <div class="cycle-item-top" onclick="document.getElementById('cyc-${cyc.cycleId}').classList.toggle('open')">
