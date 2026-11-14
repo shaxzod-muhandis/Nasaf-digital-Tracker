@@ -15205,11 +15205,13 @@
           ${stat("Qarz", debtList.length, "loyiha", debtList.length ? " bad" : "")}
         </div>`;
 
-        // Jadval — muammolilar birinchi, keyin foiz bo'yicha o'sib.
+        // Jadval — muammolilar birinchi, holat ichida foiz bo'yicha
+        // kamayib (2026-11-14, egasi so'radi; avval o'sib edi). Loyihalar
+        // sahifasi va telefondagi Bugun ro'yxati bilan bir xil.
         const sorted = [...list].sort(
           (a, b) =>
             D4_STATUS_ORDER[projStatus(a)] - D4_STATUS_ORDER[projStatus(b)] ||
-            projPct(a) - projPct(b) ||
+            projPct(b) - projPct(a) ||
             a.label.localeCompare(b.label),
         );
         const rows = sorted
@@ -15762,9 +15764,8 @@
         if (pdeskStatus !== "all" && !soni(pdeskStatus)) pdeskStatus = "all";
         // Tartib (D04 qarori, 2026-11-11): standart — muammolilar
         // birinchi (Bugun ekranidagidek). 2026-11-14: bir holat ichida
-        // foiz bo'yicha o'sib (eng kami tepada), Bugun jadvali bilan bir
-        // xil — avval alifbo tartibida edi va "Jiddiy ortda" ichida 15%
-        // 3% dan oldin chiqib, egasi filtrni noto'g'ri deb o'yladi. Ustun sarlavhasi bosilsa —
+        // foiz bo'yicha KAMAYIB (eng kattasi tepada) — egasi shunday
+        // so'radi; avval alifbo tartibida edi. Bugun jadvali ham shunday. Ustun sarlavhasi bosilsa —
         // Loyiha (A–Z), Bajarilish yoki Davr bo'yicha; qayta bosilsa
         // teskari. Rejasizlar doim oxirida, alohida guruhda.
         const davrKun = (p) => {
@@ -15782,7 +15783,7 @@
             ? (a, b) => solish(a, b) * pdeskSort.dir || a.label.localeCompare(b.label)
             : (a, b) =>
                 (D4_STATUS_ORDER[pd4Status(a)] ?? 9) - (D4_STATUS_ORDER[pd4Status(b)] ?? 9) ||
-                projPct(a) - projPct(b) ||
+                projPct(b) - projPct(a) ||
                 a.label.localeCompare(b.label),
         );
         const rejasiz = tanlangan.filter((p) => pd4Status(p) === "noplan").sort((a, b) => a.label.localeCompare(b.label));
