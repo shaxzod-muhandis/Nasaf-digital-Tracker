@@ -13697,6 +13697,24 @@
         #admin-body .m5-row .m5-row-txt b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       }
       @media (min-width: 860px) { .adm5-fab-l { display: none; } }
+
+      /* Boshqaruv — umumiy telefon bo'laklari (24+). */
+      @media (max-width: 859px) {
+        .adm5-sec { display: flex; align-items: center; gap: 8px; padding: 0 4px; margin: 4px 0 10px; font: 600 12px Onest, system-ui, sans-serif; color: var(--t3); letter-spacing: 0.04em; text-transform: uppercase; }
+        .adm5-sec > span { flex: 1; min-width: 0; }
+        .adm5-sec + .m5-card, #staff-tg-list { margin-bottom: 18px; }
+        .adm5-link { border: none; background: none; cursor: pointer; padding: 0; font: 600 13px Onest, system-ui, sans-serif; color: var(--brand); text-transform: none; letter-spacing: 0; }
+        .adm5-none { padding: 18px 14px; text-align: center; font-size: 13.5px; color: var(--t3); }
+        .adm5-urow { cursor: default; }
+        .adm5-av {
+          width: 36px; height: 36px; border-radius: 99px; flex: none; position: relative; overflow: hidden; background: #e9edf2; color: #374151;
+          display: flex; align-items: center; justify-content: center; font: 600 13px Onest, system-ui, sans-serif;
+        }
+        .adm5-av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        .adm5-dots { width: 32px; height: 32px; border: none; background: none; border-radius: 10px; color: var(--t3); cursor: pointer; flex: none; display: flex; align-items: center; justify-content: center; margin-right: -6px; }
+        .adm5-dots svg { width: 18px; height: 18px; }
+        #admin-body .m5-row .m5-row-txt span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      }
     </style>
   </head>
   <body>
@@ -26560,9 +26578,15 @@
         document.getElementById("admin-search-box").style.display = noSearch
           ? "none"
           : "flex";
-        // Faqat "Loyihalar" tabida yangi loyiha yaratish mantiqiy
-        document.getElementById("admin-fab").style.display =
-          tabName === "projects" ? "flex" : "none";
+        // Pastdagi asosiy tugma (telefon; kompyuterda yashirin): Loyihalar —
+        // yangi loyiha, Xodimlar — xodim qo'shish (dizayn 23/24).
+        const fab = document.getElementById("admin-fab");
+        const fabAmal = ADM5_FAB[tabName];
+        fab.style.display = fabAmal ? "flex" : "none";
+        if (fabAmal) {
+          fab.querySelector(".adm5-fab-l").textContent = fabAmal[0];
+          fab.onclick = fabAmal[1];
+        }
         const ph = {
           projects: "Loyiha qidirish",
           staff: "Xodim qidirish",
@@ -26581,6 +26605,52 @@
         renderAdminActiveTab();
         // Telefonda tablar gorizontal suriladi — tanlangani ko'rinsin.
         document.getElementById("atab-" + tabName)?.scrollIntoView?.({ block: "nearest", inline: "center" });
+      }
+      const ADM5_FAB = {
+        projects: ["Yangi loyiha", () => openNewProjectSheet()],
+        staff: ["Xodim qo'shish", () => adm5AddStaff()],
+      };
+      // Telegram'siz xodim (montajchi, mobilograf…) — telefonda pastdagi
+      // tugmadan oyna bilan. Maydon id'lari avvalgidek: addStaff o'zgarmaydi.
+      function adm5AddStaff() {
+        const { ov, body } = makeSheet("Xodim qo'shish");
+        ov.id = "adm5-staff-ov";
+        body.innerHTML = `<div class="f-group"><label class="f-label">Ism familiya</label><input class="f-input" id="staff-name" placeholder="Ism familiya" onblur="formatNameInputOnBlur(this)"/></div>
+          <div class="f-group"><label class="f-label">Lavozimi</label><select class="f-input" id="staff-position">${Object.keys(POSITION_LABELS).map((k) => `<option value="${k}">${POSITION_LABELS[k]}</option>`).join("")}</select></div>
+          <div class="f-hint" style="margin:-4px 0 14px">Telegram'dagi xodimlar bu yerda qo'shilmaydi — ular botga kirgach o'zi chiqadi.</div>
+          <button type="button" class="m5-primary" onclick="addStaff().then(()=>document.getElementById('adm5-staff-ov')?.remove())">Qo'shish</button>`;
+        setTimeout(() => document.getElementById("staff-name")?.focus(), 50);
+      }
+      // Xodim qatoridagi «⋯» — amallar oynasi.
+      function adm5UserMenu(un) {
+        const u = allUsers.find((x) => x.username === un);
+        if (!u) return;
+        const ism = u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : `@${u.username}`;
+        const { body } = makeSheet(escHtml(ism));
+        body.closest(".sheet")?.querySelector(".sheet-title")?.classList.add("m5-small");
+        const yop = "document.querySelector('.overlay').remove();";
+        const faolIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>';
+        body.innerHTML = `<div class="m5-acts">
+            ${m5ActHtml(`${yop}openUserEditSheet('${escArg(un)}')`, ICON.edit, "Tahrirlash")}
+            ${u.has_chat ? m5ActHtml(`${yop}openActivityUser('${escArg(un)}')`, faolIco, "Faolligi") : ""}
+            ${u.phone ? m5ActHtml(`${yop}navigator.clipboard?.writeText('${escArg(u.phone)}');showToast('Raqam nusxalandi')`, ICON.copy, `Raqamni nusxalash · ${escHtml(u.phone)}`) : ""}
+            ${isSuperAdmin && u.access_status !== "removed" ? m5ActHtml(`${yop}deleteTelegramUser('${escArg(un)}','${escArg(ism)}')`, ICON.trash, "Chiqarish", true) : ""}
+          </div>`;
+      }
+      function adm5StaffMenu(id) {
+        const st = staffList.find((x) => x.id === id);
+        if (!st) return;
+        const { body } = makeSheet(escHtml(st.fullName));
+        body.closest(".sheet")?.querySelector(".sheet-title")?.classList.add("m5-small");
+        const yop = "document.querySelector('.overlay').remove();";
+        body.innerHTML = `<div class="m5-acts">
+            ${m5ActHtml(`${yop}openStaffEdit('${escArg(id)}')`, ICON.edit, "Tahrirlash")}
+            ${m5ActHtml(`${yop}deleteStaff('${escArg(id)}','${escArg(st.fullName)}')`, ICON.trash, "O'chirish", true)}
+          </div>`;
+      }
+      const ADM5_DOTS = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
+      function adm5Av(text, url, bg) {
+        return `<span class="adm5-av"${bg ? ` style="background:${bg};color:#fff"` : ""}>${escHtml(text)}${url ? avatarImg(url) : ""}</span>`;
       }
       const ADMIN_PRIMARY = {
         // NShop'da tugma bo'limning o'z sarlavhasida (qidiruv va Arxiv
@@ -26686,6 +26756,23 @@
           });
         }
 
+        if (window.matchMedia("(max-width: 859px)").matches) {
+          // Telefon — mobil dizayn (24, 2026-11-14): bitta ro'yxat uslubi,
+          // holat tegi va «⋯»; qo'shish — pastdagi tugmada.
+          const qolda = staffList.filter((st) => !q || st.fullName.toLowerCase().includes(q));
+          c.innerHTML = `<div class="adm5-sec"><span>Telegram xodimlar</span><button type="button" class="adm5-link" onclick="exportStaffXlsx(this)">Excelga yuklash</button></div>
+            <div id="staff-tg-list"><div class="m5-card adm5-none">Yuklanmoqda…</div></div>
+            <div class="adm5-sec"><span>Boshqa xodimlar · Telegram'siz</span></div>
+            ${qolda.length
+              ? `<div class="m5-card">${qolda.map((st) => `<div class="m5-row adm5-urow">
+                  ${adm5Av(initials(st.fullName))}
+                  <span class="m5-row-txt"><b>${escHtml(st.fullName)}</b><span>${escHtml(POSITION_LABELS[st.position] || st.position)}</span></span>
+                  <button type="button" class="adm5-dots" aria-label="Amallar" onclick="adm5StaffMenu('${escArg(st.id)}')">${ADM5_DOTS}</button>
+                </div>`).join("")}</div>`
+              : `<div class="m5-card adm5-none">${q ? "Topilmadi" : "Hali yo'q — pastdagi tugma bilan qo'shing"}</div>`}`;
+          loadAndRenderTelegramStaff(q);
+          return;
+        }
         c.innerHTML = `
           <div class="staff-hdr">
             <div class="sec-upper" style="margin:0">Telegram xodimlar · avtomatik</div>
@@ -26810,6 +26897,25 @@
           })
           .join("");
 
+        if (window.matchMedia("(max-width: 859px)").matches) {
+          const qatorlar = filtered
+            .map((u) => {
+              const ism = u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : `@${u.username}`;
+              const [hol, cls] = st4Holat(u);
+              const teg = cls === "st-ahead" ? "ok" : cls === "st-debt" ? "bad" : cls === "st-mid" ? "warn" : "norm";
+              const lav = POSITION_LABELS[u.position] || u.job_title || "";
+              return `<div class="m5-row adm5-urow">
+                  ${adm5Av(u.first_name ? initials(ism) : u.username.slice(0, 2).toUpperCase(), u.avatar_url)}
+                  <span class="m5-row-txt"><b>${escHtml(ism)}</b><span>@${escHtml(u.username)}${lav ? ` · ${escHtml(lav)}` : ""}</span></span>
+                  <span class="m5-tag ${teg}">${hol === "Telegramsiz" ? "Kirish yo'q" : hol === "Profil to'ldirilmagan" ? "Profil yo'q" : hol}</span>
+                  <button type="button" class="adm5-dots" aria-label="Amallar" onclick="adm5UserMenu('${escArg(u.username)}')">${ADM5_DOTS}</button>
+                </div>`;
+            })
+            .join("");
+          wrap.className = "";
+          wrap.innerHTML = `<div class="m5-card">${qatorlar}</div>${toggleHtml}`;
+          return;
+        }
         wrap.className = ""; // .list-card emas — endi ikkala variant ham o'z konteynerini olib keladi
         wrap.innerHTML = `<div class="mobile-only list-card">${mobileRows}</div><div class="desktop-only">${st4TableHtml(filtered)}</div>${toggleHtml}`;
         void desktopCards;
