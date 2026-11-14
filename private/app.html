@@ -15761,7 +15761,10 @@
         const soni = (k) => qidiruv.filter((p) => pd4Status(p) === k).length;
         if (pdeskStatus !== "all" && !soni(pdeskStatus)) pdeskStatus = "all";
         // Tartib (D04 qarori, 2026-11-11): standart — muammolilar
-        // birinchi (Bugun ekranidagidek). Ustun sarlavhasi bosilsa —
+        // birinchi (Bugun ekranidagidek). 2026-11-14: bir holat ichida
+        // foiz bo'yicha o'sib (eng kami tepada), Bugun jadvali bilan bir
+        // xil — avval alifbo tartibida edi va "Jiddiy ortda" ichida 15%
+        // 3% dan oldin chiqib, egasi filtrni noto'g'ri deb o'yladi. Ustun sarlavhasi bosilsa —
         // Loyiha (A–Z), Bajarilish yoki Davr bo'yicha; qayta bosilsa
         // teskari. Rejasizlar doim oxirida, alohida guruhda.
         const davrKun = (p) => {
@@ -15779,6 +15782,7 @@
             ? (a, b) => solish(a, b) * pdeskSort.dir || a.label.localeCompare(b.label)
             : (a, b) =>
                 (D4_STATUS_ORDER[pd4Status(a)] ?? 9) - (D4_STATUS_ORDER[pd4Status(b)] ?? 9) ||
+                projPct(a) - projPct(b) ||
                 a.label.localeCompare(b.label),
         );
         const rejasiz = tanlangan.filter((p) => pd4Status(p) === "noplan").sort((a, b) => a.label.localeCompare(b.label));
