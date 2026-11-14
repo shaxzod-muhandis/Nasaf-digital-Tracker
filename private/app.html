@@ -13751,6 +13751,19 @@
         #admin-body .tb2-sub-b { height: 24px; border-radius: 8px; padding: 0 8px; background: var(--nav-coin-bg); color: var(--nav-coin-ink); font: 600 12px Onest, system-ui, sans-serif; display: inline-flex; align-items: center; gap: 4px; }
         #admin-body .tb2-st { font: 600 12.5px Onest, system-ui, sans-serif; }
       }
+
+      /* Mijoz fikri (27). */
+      @media (max-width: 859px) {
+        .adm5-hint { font-size: 13px; color: var(--t3); padding: 0 4px; margin: 0 0 10px; }
+        .fb5-r { width: 36px; height: 36px; border-radius: 12px; flex: none; display: flex; align-items: center; justify-content: center; font: 700 16px Onest, system-ui, sans-serif; }
+        .fb5-r.lg { width: 44px; height: 44px; font-size: 20px; }
+        .fb5-sh { display: flex; flex-direction: column; gap: 12px; }
+        .fb5-head { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+        .fb5-head b { display: block; font: 600 15px Onest, system-ui, sans-serif; color: var(--ink); }
+        .fb5-head small { font-size: 13px; color: var(--t3); }
+        .fb5-note { padding: 12px 14px; font-size: 14.5px; line-height: 1.55; color: var(--ink); white-space: pre-wrap; }
+        .fb5-sh .m5-btn { flex: none; width: 100%; }
+      }
     </style>
   </head>
   <body>
@@ -27845,6 +27858,7 @@
             }</div></div>`;
           return;
         }
+        if (window.matchMedia("(max-width: 859px)").matches) return fb5Render(c, items, kutilayotgan);
         const n = items.length;
         const ort = items.reduce((a, x) => a + x.rating, 0) / n;
         // «Mamnun» — faqat 4 (D24 qarori, 2026-11-12): 3 endi «O'rtacha»
@@ -27915,6 +27929,51 @@
             .map((x) => fbAnswerRowHtml(x))
             .join("")}</div>`;
       }
+      // ── MIJOZ FIKRI · MOBIL DIZAYN (27, 2026-11-14) ─────────────────
+      // Chiplar (Hammasi / Norozi / Izoh bor), javoblar ro'yxati: baho
+      // kvadratda (rangi bahoga qarab), loyiha, "Oy · baho nomi", "izoh
+      // bor" tegi. Bosilsa — javob oynasi (izoh va «Vazifa ochish»).
+      let fb5Filter = "all";
+      const FB5_TINT = { 4: ["var(--green-bg)", "var(--green)"], 3: ["var(--nav-act-bg)", "var(--nav-act-ink)"], 2: ["var(--nav-coin-bg)", "var(--nav-coin-ink)"], 1: ["var(--red-bg)", "var(--red)"] };
+      function fb5Render(c, items, kutilayotgan) {
+        const norozi = items.filter((x) => x.rating <= 2);
+        const izohli = items.filter((x) => x.note);
+        const list = (fb5Filter === "bad" ? norozi : fb5Filter === "note" ? izohli : items)
+          .slice()
+          .sort((a, b) => String(b.month).localeCompare(String(a.month)) || String(b.filledAt || "").localeCompare(String(a.filledAt || "")));
+        const chip = (k, l) => `<button type="button" class="m5-chip${fb5Filter === k ? " on" : ""}" onclick="fb5Filter='${k}';fbOverviewRender(document.getElementById('admin-body'))">${l}</button>`;
+        window.__fb5 = list;
+        c.innerHTML = `<div class="m5-chips" style="margin-bottom:12px">${chip("all", `Hammasi · ${items.length}`)}${chip("bad", `Norozi · ${norozi.length}`)}${chip("note", `Izoh bor · ${izohli.length}`)}</div>
+          ${kutilayotgan ? `<div class="adm5-hint">${kutilayotgan} ta havola yuborilgan, javob kutilmoqda</div>` : ""}
+          <div class="m5-card">${list
+            .map((x, i) => {
+              const [bg, fg] = FB5_TINT[x.rating] || FB5_TINT[3];
+              return `<button type="button" class="m5-row" onclick="fb5Open(${i})">
+                  <span class="fb5-r" style="background:${bg};color:${fg}">${x.rating}</span>
+                  <span class="m5-row-txt"><b>${escHtml(x.label)}</b><span>${escHtml(x.monthLabel)} · ${escHtml(x.ratingLabel)}</span></span>
+                  ${x.task ? `<span class="m5-tag info">Vazifa</span>` : x.note ? `<span class="m5-tag norm">izoh bor</span>` : ""}
+                  <span class="adm5-chev">${ICON.chevronRight}</span>
+                </button>`;
+            })
+            .join("") || `<div class="adm5-none">Bu bo'limda javob yo'q</div>`}</div>`;
+      }
+      function fb5Open(i) {
+        const x = (window.__fb5 || [])[i];
+        if (!x) return;
+        const [bg, fg] = FB5_TINT[x.rating] || FB5_TINT[3];
+        const { body } = makeSheet("", {
+          headerHtml: `<div style="flex:1;min-width:0"><div class="sheet-title">${escHtml(x.label)}</div><div class="sheet-sub">${escHtml(x.monthLabel)}</div></div>`,
+        });
+        body.innerHTML = `<div class="fb5-sh">
+            <div class="m5-card fb5-head"><span class="fb5-r lg" style="background:${bg};color:${fg}">${x.rating}</span><span><b>${escHtml(x.ratingLabel)}</b><small>4 balldan</small></span></div>
+            ${x.note ? `<div class="m5-card fb5-note">${escHtml(x.note)}</div>` : `<div class="adm5-hint">Mijoz izoh qoldirmagan</div>`}
+            ${x.task
+              ? `<button type="button" class="m5-btn" onclick="this.closest('.overlay').remove();ntfyGoTask('${escArg(x.task.id)}')">Vazifa · ${escHtml(TASK_STATUS_LABEL[x.task.status] || x.task.status)}</button>`
+              : x.id ? `<button type="button" class="m5-btn primary" onclick="this.closest('.overlay').remove();fbOpenTask('${escArg(x.id)}')">Vazifa ochish</button>` : ""}
+            <button type="button" class="m5-btn" onclick="this.closest('.overlay').remove();fbHistory('${escArg(x.project)}','${escArg(x.label)}')">Loyiha tarixi</button>
+          </div>`;
+      }
+
       // Javob qatori: baho, izoh va «Vazifa ochish» (D24, 2026-11-12).
       // Fikrdan ochilgan vazifa javobga bog'lanadi va holati shu yerda
       // ko'rinadi — norozi mijoz e'tiborsiz qolmaydi.
