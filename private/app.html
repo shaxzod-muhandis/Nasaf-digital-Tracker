@@ -13764,6 +13764,27 @@
         .fb5-note { padding: 12px 14px; font-size: 14.5px; line-height: 1.55; color: var(--ink); white-space: pre-wrap; }
         .fb5-sh .m5-btn { flex: none; width: 100%; }
       }
+
+      /* Guruhlar (28). */
+      @media (max-width: 859px) {
+        .tgg5-new { padding: 12px 14px; margin-bottom: 18px; box-shadow: inset 0 0 0 1.5px rgba(217, 119, 6, 0.45); overflow: visible; }
+        .tgg5-head { display: flex; align-items: center; gap: 10px; padding-bottom: 6px; }
+        .tgg5-head b { font-weight: 600 !important; }
+        .tgg5-f { display: flex; align-items: center; gap: 10px; min-height: 57px; padding: 8px 0; }
+        .tgg5-f + .tgg5-f { box-shadow: inset 0 1px 0 var(--bd1); }
+        .m5-card > .tgg5-f { padding: 8px 14px; }
+        .tgg5-f > span { width: 104px; flex: none; font: 500 13px Onest, system-ui, sans-serif; color: var(--t2); }
+        .tgg5-f select {
+          flex: 1; min-width: 0; height: 40px; border-radius: 12px; border: none; box-shadow: inset 0 0 0 1px var(--bd4); background: var(--surf);
+          padding: 0 12px; font: 500 14px Onest, system-ui, sans-serif; color: var(--ink);
+        }
+        .tgg5-save {
+          width: 100%; height: 44px; margin-top: 8px; border: none; border-radius: 12px; cursor: pointer;
+          background: var(--brand); color: #fff; font: 600 14.5px Onest, system-ui, sans-serif;
+        }
+        .tgg5-save:disabled { background: var(--chip); color: var(--t4); cursor: default; }
+        .tgg5-note { font-size: 12.5px; color: var(--t3); margin-top: 8px; }
+      }
     </style>
   </head>
   <body>
@@ -27723,6 +27744,7 @@
         );
         const xodimNomi = (x) =>
           [x.first_name, x.last_name].filter(Boolean).join(" ") || x.full_name || "@" + x.username;
+        if (window.matchMedia("(max-width: 859px)").matches) return tgg5Render(c, xodimlar, xodimNomi);
         c.innerHTML = tgGroups
           .map((g) => {
             const yangi = !g.kind;
@@ -27777,6 +27799,101 @@
              <b>admin</b> qilinishi, va quyidagilar belgilanishi — ichki guruh mavzulariga loyiha,
              mijoz guruhiga loyiha, uning mavzulariga vazifa.
              Tasdiqlay oladiganlar: adminlar va loyihaning SMM mas'uli.</div>`;
+      }
+
+      // ── GURUHLAR · MOBIL DIZAYN (28, 2026-11-14) ────────────────────
+      // Sozlanmagan guruh — eng tepada, to'liq ochiq: uch tanlagich bir
+      // ustunda, «Saqlash» tur va loyiha tanlangach yoqiladi (avval har tanlov
+      // darhol saqlanardi va yarim sozlangan guruh qolardi). Sozlanganlar
+      // — ixcham ro'yxat, bosilsa shu forma oynada ochiladi (mavzular bilan).
+      function tgg5FormHtml(g, xodimlar, xodimNomi) {
+        const loyihaKerak = !(g.isForum && g.kind !== "mijoz");
+        const qator = (l, sel) => `<div class="tgg5-f"><span>${l}</span>${sel}</div>`;
+        const sel = (f, opts) => `<select data-f="${f}" onchange="tgg5Check(this)">${opts}</select>`;
+        return `<div class="tgg5-form" data-chat="${escHtml(g.chatId)}" data-forum="${g.isForum ? 1 : 0}">
+            ${qator("Turi", sel("kind", `<option value="">Tanlang</option>${Object.entries(TGG_KIND).map(([k, v]) => `<option value="${k}"${g.kind === k ? " selected" : ""}>${v}</option>`).join("")}`))}
+            ${qator("Loyiha", sel("project", tgProjOptions(g.project).replace("Loyiha tanlanmagan", "Tanlang")) )}
+            ${qator("Standart mas'ul", sel("assignee", `<option value="">Tanlang</option>${xodimlar.map((x) => `<option value="${escHtml(x.id)}"${x.id === g.assigneeId ? " selected" : ""}>${escHtml(xodimNomi(x))}</option>`).join("")}`))}
+            <button type="button" class="tgg5-save" onclick="tgg5Save(this)" disabled>Saqlash</button>
+            ${loyihaKerak ? "" : `<div class="tgg5-note">Mavzuli guruhda loyiha har mavzuga alohida beriladi — shart emas.</div>`}
+          </div>`;
+      }
+      // Loyiha forum guruhida (mijozdan boshqa) shart emas.
+      function tgg5Check(el) {
+        const f = el.closest(".tgg5-form");
+        const v = (k) => f.querySelector(`[data-f="${k}"]`)?.value;
+        const forum = f.dataset.forum === "1";
+        const loyihaShart = !(forum && v("kind") && v("kind") !== "mijoz");
+        // Mas'ul ixtiyoriy: avval ham bo'sh qoldirish mumkin edi, uni
+        // majburlash mavjud guruhlarni tahrirlashni to'sib qo'yardi.
+        f.querySelector(".tgg5-save").disabled = !(v("kind") && (!loyihaShart || v("project")));
+      }
+      async function tgg5Save(btn) {
+        const f = btn.closest(".tgg5-form");
+        const v = (k) => f.querySelector(`[data-f="${k}"]`)?.value || null;
+        btn.disabled = true;
+        btn.textContent = "Saqlanmoqda…";
+        try {
+          const r = await apiFetch(`/api/tg/groups/${encodeURIComponent(f.dataset.chat)}`, {
+            method: "PATCH",
+            body: JSON.stringify({ kind: v("kind"), project: v("project"), assigneeId: v("assignee") }),
+          });
+          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Xato");
+          showToast("✅ Saqlandi");
+          btn.closest(".overlay")?.remove();
+          tgGroups = null;
+          renderAdminActiveTab();
+        } catch (e) {
+          showToast("⚠ " + e.message);
+          btn.disabled = false;
+          btn.textContent = "Saqlash";
+        }
+      }
+      function tgg5Render(c, xodimlar, xodimNomi) {
+        window.__tgg5 = { xodimlar, xodimNomi };
+        const yangi = tgGroups.filter((g) => !g.kind);
+        const tayyor = tgGroups.filter((g) => g.kind);
+        const av = (g, rang) => `<span class="adm5-av" style="background:${rang};color:#fff">${escHtml((g.title || "?").trim().slice(0, 1).toUpperCase())}</span>`;
+        const meta = (g) => `${g.msgCount} ta xabar${g.isForum ? " · mavzuli" : ""}${g.isActive ? "" : " · bot chiqarilgan"}`;
+        const yangiHtml = yangi
+          .map((g) => `<div class="m5-card tgg5-new">
+              <div class="tgg5-head">${av(g, "#9aa1ac")}<span class="m5-row-txt"><b>${escHtml(g.title || "Nomsiz guruh")}</b><span>${meta(g)}</span></span><span class="m5-tag warn">Sozlang</span></div>
+              ${tgg5FormHtml(g, xodimlar, xodimNomi)}
+            </div>`)
+          .join("");
+        const tayyorHtml = tayyor
+          .map((g) => {
+            const pr = projects.find((p) => p.id === g.project);
+            const mas = xodimlar.find((x) => x.id === g.assigneeId);
+            return `<button type="button" class="m5-row" onclick="tgg5Edit('${escArg(g.chatId)}')">
+                ${av(g, pr ? d4ProjColor(pr) : "var(--brand)")}
+                <span class="m5-row-txt"><b>${escHtml(g.title || "Nomsiz guruh")}</b><span>${escHtml([TGG_KIND[g.kind], mas ? xodimNomi(mas) : "mas'ul yo'q", meta(g)].join(" · "))}</span></span>
+                <span class="adm5-chev">${ICON.chevronRight}</span>
+              </button>`;
+          })
+          .join("");
+        c.innerHTML = `${yangi.length ? `<div class="adm5-sec"><span>Sozlash kerak · ${yangi.length}</span></div>${yangiHtml}` : ""}
+          ${tayyor.length ? `<div class="adm5-sec"><span>Sozlangan · ${tayyor.length}</span></div><div class="m5-card">${tayyorHtml}</div>` : ""}
+          <div class="adm5-hint" style="margin-top:14px">Guruhda <b>/task</b> bilan vazifa ochiladi. Montaj yoki Dizayn guruhidagi ishga 👍 — mijoz guruhiga yuboradi, 🔥 — Stories'ga.</div>`;
+      }
+      function tgg5Edit(chatId) {
+        const g = tgGroups.find((x) => x.chatId === chatId);
+        if (!g) return;
+        const { xodimlar, xodimNomi } = window.__tgg5;
+        const { body } = makeSheet("", {
+          headerHtml: `<div style="flex:1;min-width:0"><div class="sheet-title">${escHtml(g.title || "Nomsiz guruh")}</div><div class="sheet-sub">${g.msgCount} ta xabar${g.isForum ? " · mavzuli" : ""}</div></div>`,
+        });
+        const mavzular = g.isForum && g.topics.length
+          ? `<div class="m5-cap" style="margin:16px 0 8px">${g.kind === "mijoz" ? "Mavzular — tasdiqlangan ish qaysi mavzuga" : "Mavzular — loyihaga bog'lang"}</div>
+             <div class="m5-card">${g.topics.map((t) => `<div class="tgg5-f"><span>${escHtml(t.title || "Mavzu #" + t.threadId)}</span>
+               <select onchange="tgTopicSave('${escArg(g.chatId)}','${escArg(t.threadId)}', this)" data-f="${g.kind === "mijoz" ? "purpose" : "project"}">${
+                 g.kind === "mijoz"
+                   ? `<option value="">Vazifasi yo'q</option>` + Object.entries(TGG_PURPOSE).map(([k, v]) => `<option value="${k}"${t.purpose === k ? " selected" : ""}>${v}</option>`).join("")
+                   : tgProjOptions(t.project)
+               }</select></div>`).join("")}</div>`
+          : "";
+        body.innerHTML = `<div class="m5-card tgg5-new" style="box-shadow:inset 0 0 0 1px var(--bd2)">${tgg5FormHtml(g, xodimlar, xodimNomi)}</div>${mavzular}`;
+        body.querySelectorAll(".tgg5-form select").forEach((el) => tgg5Check(el));
       }
 
       async function tgGroupSave(chatId, el) {
