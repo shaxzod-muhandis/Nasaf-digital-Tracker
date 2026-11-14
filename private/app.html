@@ -13785,6 +13785,41 @@
         .tgg5-save:disabled { background: var(--chip); color: var(--t4); cursor: default; }
         .tgg5-note { font-size: 12.5px; color: var(--t3); margin-top: 8px; }
       }
+
+      /* Adminlar (29). */
+      @media (max-width: 859px) {
+        .adm5-lock, .adm5-x { width: 32px; height: 32px; flex: none; display: flex; align-items: center; justify-content: center; color: var(--t3); margin-right: -6px; }
+        .adm5-x { border: none; background: none; cursor: pointer; border-radius: 10px; }
+        .adm5-lock svg, .adm5-x svg { width: 17px; height: 17px; }
+        .adm5-add { margin-top: 16px; display: flex; flex-direction: column; gap: 6px; }
+        .adm5-add label { font: 500 13px Onest, system-ui, sans-serif; color: var(--t2); padding: 0 2px; }
+        .adm5-add > div { display: flex; gap: 10px; }
+        .adm5-add input { flex: 1; min-width: 0; height: 44px; border-radius: 12px; border: none; box-shadow: inset 0 0 0 1px var(--bd4); background: var(--surf); padding: 0 14px; font: 400 15px Onest, system-ui, sans-serif; }
+        .adm5-add button { height: 44px; padding: 0 18px; border-radius: 12px; border: none; cursor: pointer; background: var(--surf); box-shadow: inset 0 0 0 1px var(--bd4); font: 600 14.5px Onest, system-ui, sans-serif; color: var(--ink); flex: none; }
+      }
+
+      /* E'lon (30) — telefonda Telegram ko'rinishi ham chiqadi, «Yuborish ·
+         N kishi» pastdagi oq panelda (dizayn 30). */
+      @media (max-width: 859px) {
+        #admin-body .elon-grid { display: flex; flex-direction: column; gap: 4px; }
+        #admin-body .elon-prev.desktop-only { display: block !important; }
+        #admin-body .elon-prev > .f-label { font: 600 12px Onest, system-ui, sans-serif; color: var(--t3); letter-spacing: 0.04em; text-transform: uppercase; }
+        #admin-body .elon-chat { background: #e9edf2; padding: 12px; }
+        :root[data-theme="dark"] #admin-body .elon-chat { background: var(--chip3); }
+        #admin-body .elon-bubble { border-radius: 14px; }
+        #admin-body .seg { padding: 3px; border-radius: 12px; background: var(--chip3); gap: 2px; }
+        #admin-body .seg-btn { height: 36px; border-radius: 9px; font: 500 14px Onest, system-ui, sans-serif; }
+        #admin-body .seg-btn.active { font-weight: 600; }
+        #admin-body #announcement-message { border-radius: 12px; font: 400 15px Onest, system-ui, sans-serif; min-height: 120px; }
+        #announcement-send-btn {
+          position: fixed; left: 16px; right: 16px; width: auto; z-index: 151; height: 52px; border-radius: 12px; margin: 0;
+          bottom: calc(92px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))); font: 600 15.5px Onest, system-ui, sans-serif;
+        }
+        #screen-admin.active:has(#announcement-send-btn)::after {
+          content: ""; position: fixed; left: 0; right: 0; z-index: 150; height: 84px; background: var(--surf); border-top: 1px solid var(--bd1);
+          bottom: calc(76px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
+        }
+      }
     </style>
   </head>
   <body>
@@ -29211,6 +29246,19 @@
       }
 
       function renderAdminAdminsTab(c) {
+        if (window.matchMedia("(max-width: 859px)").matches) {
+          // Telefon — mobil dizayn (29, 2026-11-14): ro'yxat tepada,
+          // qo'shish maydoni pastda.
+          c.innerHTML = `<div id="admin-list"><div class="m5-card adm5-none">Yuklanmoqda…</div></div>
+            <div class="adm5-add">
+              <label for="new-admin-input">Admin qo'shish</label>
+              <div><input class="f-input" id="new-admin-input" placeholder="@username" autocapitalize="off" autocorrect="off"/>
+              <button type="button" onclick="addDynamicAdmin()">Qo'shish</button></div>
+            </div>`;
+          if (!allUsers.length) apiFetch("/api/users").then((r) => r.json()).then((d) => { allUsers = d.users || []; refreshAdminList(); }).catch(() => {});
+          refreshAdminList();
+          return;
+        }
         c.innerHTML = `
           <div style="max-width:640px">
             <div style="display:flex;gap:8px;margin-bottom:14px">
@@ -29231,6 +29279,25 @@
             .toLowerCase()
             .trim();
           const match = (u) => !q || u.toLowerCase().includes(q);
+          if (window.matchMedia("(max-width: 859px)").matches) {
+            const qator = (un, oxiri) => {
+              const u = allUsers.find((x) => x.username === un);
+              const ism = u && u.first_name ? `${u.first_name} ${u.last_name || ""}`.trim() : "@" + un;
+              return `<div class="m5-row adm5-urow">
+                  ${adm5Av(u && u.first_name ? initials(ism) : un.slice(0, 2).toUpperCase(), u?.avatar_url)}
+                  <span class="m5-row-txt"><b>${escHtml(ism)}</b><span>@${escHtml(un)}</span></span>
+                  ${oxiri}
+                </div>`;
+            };
+            const qulf = `<span class="adm5-lock" title="O'zgarmaydi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>`;
+            const sup = (d.superAdmins || []).filter(match);
+            const dyn = (d.dynamicAdmins || []).filter(match);
+            listEl.innerHTML = `<div class="adm5-sec"><span>Super admin</span></div>
+              <div class="m5-card">${sup.map((u) => qator(u, qulf)).join("") || `<div class="adm5-none">—</div>`}</div>
+              <div class="adm5-sec" style="margin-top:16px"><span>Adminlar · ${dyn.length}</span></div>
+              <div class="m5-card">${dyn.map((u) => qator(u, `<button type="button" class="adm5-x" aria-label="Adminlikdan olish" onclick="removeDynamicAdmin('${escArg(u)}',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>`)).join("") || `<div class="adm5-none">Hali qo'shilmagan</div>`}</div>`;
+            return;
+          }
           let html = `<div class="sec-upper">Super adminlar (o'zgarmas)</div>`;
           (d.superAdmins || []).filter(match).forEach((u) => {
             html += `<div class="m-item" style="opacity:.65">
