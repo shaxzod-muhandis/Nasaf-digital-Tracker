@@ -12828,7 +12828,59 @@
       }
 
 
-      /* ═══ MOBIL DIZAYN (Barcha ekranlar — mobil, 2026-11-13) ════════════
+            /* Boshqaruv → Guruhlar — kompyuter (2026-11-14): ro'yxat + panel. */
+      @media (min-width: 860px) {
+        .tgg4 { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 16px; align-items: start; }
+        .tgg4-list { padding: 0; overflow: hidden; }
+        .tgg4-head, .tgg4-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1.2fr) 110px; gap: 12px; align-items: center; padding: 0 18px; }
+        .tgg4-head { height: 40px; background: var(--tbl-hdr-bg); font: 600 11.5px Onest, system-ui, sans-serif; color: var(--t3); text-transform: uppercase; letter-spacing: 0.04em; }
+        .tgg4-head span:last-child, .tgg4-rp { text-align: right; justify-self: end; }
+        .tgg4-sec { padding: 14px 18px 6px; font: 600 12px Onest, system-ui, sans-serif; color: var(--t3); letter-spacing: 0.04em; text-transform: uppercase; border-top: 1px solid var(--bd2); }
+        .tgg4-sec.warn { color: var(--nav-coin-ink); }
+        .tgg4-head + .tgg4-sec { border-top: none; }
+        .tgg4-row { width: 100%; min-height: 60px; border: none; background: none; cursor: pointer; text-align: left; font: inherit; border-top: 1px solid var(--bd2); }
+        .tgg4-sec + .tgg4-row { border-top: none; }
+        .tgg4-row:hover { background: var(--chip2, var(--chip)); }
+        .tgg4-row.on { background: var(--nav-act-bg); box-shadow: inset 3px 0 0 var(--brand); }
+        .tgg4-row.on .d4-pill.st-onplan { background: var(--surf); }
+        .tgg4-row { grid-template-columns: 32px minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1.2fr) 110px; }
+        .tgg4-head { grid-template-columns: 32px minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1.2fr) 110px; }
+        .tgg4-head span:first-child { grid-column: 1 / 3; }
+        .tgg4-av { border-radius: 99px; color: #fff; flex: none; display: flex; align-items: center; justify-content: center; font: 600 13px Onest, system-ui, sans-serif; }
+        .tgg4-rt { min-width: 0; }
+        .tgg4-rt b { display: block; font: 600 14px Onest, system-ui, sans-serif; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tgg4-rt span, .tgg4-rc { font-size: 12.5px; color: var(--t3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tgg4-rc { color: var(--t2); font-size: 13px; }
+        .tgg4-side { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 16px; }
+        .tgg4-ed { padding: 18px; display: flex; flex-direction: column; gap: 4px; }
+        .tgg4-eh { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; margin-bottom: 4px; border-bottom: 1px solid var(--bd2); }
+        .tgg4-eh b { display: block; font: 700 16px Sora, system-ui, sans-serif; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tgg4-eh span { font-size: 12.5px; color: var(--t3); }
+        .tgg4-f { display: flex; flex-direction: column; gap: 6px; padding: 10px 0; }
+        .tgg4-f > span { font: 500 13px Onest, system-ui, sans-serif; color: var(--t2); }
+        .tgg4-f > span i { font-style: normal; color: var(--t4); }
+        .tgg4-f select { height: 40px; border-radius: 10px; border: none; box-shadow: inset 0 0 0 1px var(--bd4); background: var(--surf); padding: 0 12px; font: 500 14px Onest, system-ui, sans-serif; color: var(--ink); width: 100%; }
+        .tgg4-f select:focus { outline: none; box-shadow: inset 0 0 0 1.5px var(--brand); }
+        .tgg4-kind { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .tgg4-kind button { height: 38px; border-radius: 10px; border: none; cursor: pointer; background: var(--surf); box-shadow: inset 0 0 0 1px var(--bd4); font: 500 13.5px Onest, system-ui, sans-serif; color: var(--t2); }
+        .tgg4-kind button.on { background: var(--nav-act-bg); box-shadow: inset 0 0 0 1.5px var(--brand); color: var(--nav-act-ink); font-weight: 600; }
+        .tgg4-act { display: flex; align-items: center; gap: 12px; padding-top: 12px; }
+        .tgg4-act span { flex: 1; font-size: 12.5px; color: var(--t3); line-height: 1.45; }
+        .tgg4-act .tgg5-save:disabled { background: var(--chip); color: var(--t4); cursor: default; }
+        .tgg4 code { font: 600 12px ui-monospace, monospace; background: var(--chip); padding: 1px 5px; border-radius: 5px; color: var(--ink); }
+        .tgg4-sub { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--bd2); font: 600 12px Onest, system-ui, sans-serif; color: var(--t3); text-transform: uppercase; letter-spacing: 0.04em; }
+        .tgg4-topics .tgg4-f { flex-direction: row; align-items: center; gap: 10px; padding: 6px 0; }
+        .tgg4-topics .tgg4-f > span { flex: 1; min-width: 0; color: var(--ink); font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tgg4-topics .tgg4-f select { width: 180px; flex: none; }
+        .tgg4-empty, .tgg4-note { font-size: 12.5px; color: var(--t3); padding-top: 6px; }
+        .tgg4-help { padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+        .tgg4-help > b { font: 600 14px Onest, system-ui, sans-serif; color: var(--ink); }
+        .tgg4-help > div { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--t2); line-height: 1.5; }
+        .tgg4-help > div i { width: 44px; flex: none; font-style: normal; font: 600 12.5px Onest, system-ui, sans-serif; color: var(--ink); }
+        .tgg4-help small { font-size: 12px; color: var(--t3); line-height: 1.5; border-top: 1px solid var(--bd2); padding-top: 10px; }
+      }
+
+/* ═══ MOBIL DIZAYN (Barcha ekranlar — mobil, 2026-11-13) ════════════
          Manba: «Nasaf Tracker - Barcha ekranlar» (mobil), 390px kenglik.
          Bosqichma-bosqich ko'chirilmoqda: M-A — pastki menyu, «Ko'proq»
          oynasi, sarlavha 60px va «Bugun». Faqat <860px — desktopga
@@ -27790,6 +27842,7 @@
         const xodimNomi = (x) =>
           [x.first_name, x.last_name].filter(Boolean).join(" ") || x.full_name || "@" + x.username;
         if (window.matchMedia("(max-width: 859px)").matches) return tgg5Render(c, xodimlar, xodimNomi);
+        return tgg4Render(c, xodimlar, xodimNomi);
         c.innerHTML = tgGroups
           .map((g) => {
             const yangi = !g.kind;
@@ -27939,6 +27992,86 @@
           : "";
         body.innerHTML = `<div class="m5-card tgg5-new" style="box-shadow:inset 0 0 0 1px var(--bd2)">${tgg5FormHtml(g, xodimlar, xodimNomi)}</div>${mavzular}`;
         body.querySelectorAll(".tgg5-form select").forEach((el) => tgg5Check(el));
+      }
+
+      // ── GURUHLAR · KOMPYUTER (2026-11-14) ───────────────────────────
+      // Avval har guruh — uchta yalang'och tanlagichli quti va pastda uzun
+      // matn edi; egasi «bir ahvol» deb qaytardi. Endi chapda ro'yxat
+      // (sozlanmaganlar tepada), o'ngda tanlangan guruh paneli: turi —
+      // chiplar, loyiha va mas'ul — tanlagich, «Saqlash» (telefondagi
+      // tgg5 forma bilan bir xil mantiq), mavzular, va qisqa yo'riqnoma.
+      let tgg4Sel = null;
+      function tgg4Pick(chatId) {
+        tgg4Sel = chatId;
+        tgGroupsRender(document.getElementById("admin-body"));
+      }
+      function tgg4Kind(btn, k) {
+        const f = btn.closest(".tgg5-form");
+        f.querySelectorAll(".tgg4-kind button").forEach((b) => b.classList.toggle("on", b === btn));
+        const inp = f.querySelector('[data-f="kind"]');
+        inp.value = k;
+        tgg5Check(inp);
+      }
+      function tgg4Render(c, xodimlar, xodimNomi) {
+        const yangi = tgGroups.filter((g) => !g.kind);
+        const tayyor = tgGroups.filter((g) => g.kind);
+        if (!tgGroups.find((g) => g.chatId === tgg4Sel)) tgg4Sel = (yangi[0] || tayyor[0]).chatId;
+        const g = tgGroups.find((x) => x.chatId === tgg4Sel);
+        const rang = (x) => { const pr = projects.find((p) => p.id === x.project); return x.kind && pr ? d4ProjColor(pr) : "#9aa1ac"; };
+        const av = (x, sz) => `<span class="tgg4-av" style="background:${rang(x)};width:${sz}px;height:${sz}px">${escHtml((x.title || "?").trim().slice(0, 1).toUpperCase())}</span>`;
+        const meta = (x) => `${x.msgCount} ta xabar${x.isForum ? ` · ${x.topics.length} mavzu` : ""}${x.isActive ? "" : " · bot chiqarilgan"}`;
+        const qator = (x) => {
+          const pr = projects.find((p) => p.id === x.project);
+          const mas = xodimlar.find((u) => u.id === x.assigneeId);
+          return `<button type="button" class="tgg4-row${x.chatId === tgg4Sel ? " on" : ""}" onclick="tgg4Pick('${escArg(x.chatId)}')">
+              ${av(x, 32)}
+              <span class="tgg4-rt"><b>${escHtml(x.title || "Nomsiz guruh")}</b><span>${escHtml(meta(x))}</span></span>
+              <span class="tgg4-rc">${x.kind ? escHtml(pr ? pr.label : x.isForum ? "mavzular bo'yicha" : "—") : ""}</span>
+              <span class="tgg4-rc">${x.kind ? escHtml(mas ? xodimNomi(mas) : "—") : ""}</span>
+              <span class="tgg4-rp">${x.kind ? `<span class="d4-pill st-onplan">${TGG_KIND[x.kind]}</span>` : `<span class="d4-pill st-mid">Sozlang</span>`}</span>
+            </button>`;
+        };
+        const bolim = (t, list, warn) => list.length ? `<div class="tgg4-sec${warn ? " warn" : ""}">${t} · ${list.length}</div>${list.map(qator).join("")}` : "";
+
+        const loyihaKerak = !(g.isForum && g.kind !== "mijoz");
+        const mavzular = g.isForum
+          ? `<div class="tgg4-sub">${g.kind === "mijoz" ? "Mavzular — tasdiqlangan ish qaysi mavzuga tushadi" : "Mavzular — har birini loyihaga bog'lang"}</div>
+             ${g.topics.length ? `<div class="tgg4-topics">${g.topics.map((t) => `<div class="tgg4-f"><span>${escHtml(t.title || "Mavzu #" + t.threadId)}</span>
+               <select onchange="tgTopicSave('${escArg(g.chatId)}','${escArg(t.threadId)}', this)" data-f="${g.kind === "mijoz" ? "purpose" : "project"}">${
+                 g.kind === "mijoz"
+                   ? `<option value="">Vazifasi yo'q</option>` + Object.entries(TGG_PURPOSE).map(([k, v]) => `<option value="${k}"${t.purpose === k ? " selected" : ""}>${v}</option>`).join("")
+                   : tgProjOptions(t.project)
+               }</select></div>`).join("")}</div>` : `<div class="tgg4-empty">Mavzular hali ko'rinmadi — har mavzuga bitta xabar yozilsa paydo bo'ladi.</div>`}
+             <div class="tgg4-note">Mavzu tanlovi darhol saqlanadi.</div>`
+          : "";
+        const panel = `<div class="d4-card tgg4-ed">
+            <div class="tgg4-eh">${av(g, 40)}<div style="flex:1;min-width:0"><b>${escHtml(g.title || "Nomsiz guruh")}</b><span>${escHtml(meta(g))}</span></div>
+              ${g.kind ? `<span class="d4-pill st-onplan">${TGG_KIND[g.kind]}</span>` : `<span class="d4-pill st-mid">Sozlanmagan</span>`}</div>
+            <div class="tgg5-form tgg4-form" data-chat="${escHtml(g.chatId)}" data-forum="${g.isForum ? 1 : 0}">
+              <input type="hidden" data-f="kind" value="${escHtml(g.kind || "")}"/>
+              <div class="tgg4-f"><span>Turi</span><div class="tgg4-kind">${Object.entries(TGG_KIND).map(([k, v]) => `<button type="button" class="${g.kind === k ? "on" : ""}" onclick="tgg4Kind(this,'${k}')">${v}</button>`).join("")}</div></div>
+              <div class="tgg4-f"><span>Loyiha${loyihaKerak ? "" : " <i>(ixtiyoriy)</i>"}</span><select data-f="project" onchange="tgg5Check(this)">${tgProjOptions(g.project).replace("Loyiha tanlanmagan", "Tanlang")}</select></div>
+              <div class="tgg4-f"><span>Standart mas'ul <i>(ixtiyoriy)</i></span><select data-f="assignee" onchange="tgg5Check(this)"><option value="">Tanlang</option>${xodimlar.map((x) => `<option value="${escHtml(x.id)}"${x.id === g.assigneeId ? " selected" : ""}>${escHtml(xodimNomi(x))}${x.position ? " · " + escHtml(POSITION_LABELS[x.position] || x.position) : ""}</option>`).join("")}</select></div>
+              <div class="tgg4-act"><span><code>/task</code> bilan ochilgan vazifa shu loyiha va mas'ulga tushadi.</span><button type="button" class="d4-btn-primary tgg5-save" onclick="tgg5Save(this)" disabled>Saqlash</button></div>
+            </div>
+            ${mavzular}
+          </div>`;
+        const yordam = `<div class="d4-card tgg4-help">
+            <b>Qanday ishlaydi</b>
+            <div><i>/task</i><span>Guruhda <code>/task Banner kerak</code> — vazifa shu guruhning loyihasi va mas'uliga ochiladi.</span></div>
+            <div><i>👍</i><span>Montaj yoki Dizayn guruhidagi ishga — mijoz guruhining Kontent yoki Dizayn mavzusiga yuboriladi.</span></div>
+            <div><i>🔥</i><span>Stories mavzusiga yuboriladi. Reaksiya olib tashlansa, nusxa ham o'chadi.</span></div>
+            <small>Shart: bot ichki guruhda admin, mijoz guruhida ham bor. Tasdiqlay oladi: adminlar va loyiha SMM'i.</small>
+          </div>`;
+        c.innerHTML = `<div class="tgg4">
+            <div class="d4-card tgg4-list">
+              <div class="tgg4-head"><span>Guruh</span><span>Loyiha</span><span>Mas'ul</span><span>Turi</span></div>
+              ${bolim("Sozlash kerak", yangi, true)}${bolim("Sozlangan", tayyor)}
+            </div>
+            <div class="tgg4-side">${panel}${yordam}</div>
+          </div>`;
+        const f = c.querySelector(".tgg4-form [data-f='kind']");
+        if (f) tgg5Check(f);
       }
 
       async function tgGroupSave(chatId, el) {
