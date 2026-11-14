@@ -8315,6 +8315,16 @@
         display: none;
       }
       .pd-root { display: none; }
+      /* «Faol / Arxiv» chiplari telefonda ham ishlatiladi — uslubi faqat
+         desktop ichida edi va telefonda oddiy kulrang tugma bo'lib
+         chiqardi (2026-11-14). */
+      .pd4-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+      .pd4-chip {
+        height: 34px; padding: 0 14px; border-radius: 99px; border: none; cursor: pointer;
+        background: var(--surf); box-shadow: inset 0 0 0 1px var(--bd4);
+        font: 500 13px Onest, system-ui, sans-serif; color: var(--ink);
+      }
+      .pd4-chip.on { background: var(--ink); color: var(--surf); box-shadow: none; font-weight: 600; }
 
       /* ══ "BUGUN" SAHIFASI — v3 dizayni ═══════════════════════════ */
       /* Holat belgisi: qarz / ortda / rejada / oldinda. Nuqta ::before
