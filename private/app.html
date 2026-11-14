@@ -13820,6 +13820,15 @@
           bottom: calc(76px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
         }
       }
+
+      /* Boshqaruv → NShop (31). Ko'rinadi/yashirin — qatordagi tugma. */
+      @media (max-width: 859px) {
+        .adm5-prow { cursor: pointer; padding: 11px 14px; min-height: 67px; }
+        .adm5-sw { width: 44px; height: 26px; border-radius: 99px; border: none; padding: 3px; cursor: pointer; flex: none; background: var(--bd4); display: flex; transition: background 0.15s; }
+        .adm5-sw i { width: 20px; height: 20px; border-radius: 99px; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); transition: transform 0.15s; }
+        .adm5-sw.on { background: var(--brand); }
+        .adm5-sw.on i { transform: translateX(18px); }
+      }
     </style>
   </head>
   <body>
@@ -26714,6 +26723,7 @@
       const ADM5_FAB = {
         projects: ["Yangi loyiha", () => openNewProjectSheet()],
         staff: ["Xodim qo'shish", () => adm5AddStaff()],
+        nshop: ["Mahsulot qo'shish", () => openNShopProductSheet()],
       };
       // Telegram'siz xodim (montajchi, mobilograf…) — telefonda pastdagi
       // tugmadan oyna bilan. Maydon id'lari avvalgidek: addStaff o'zgarmaydi.
@@ -29419,6 +29429,22 @@
         const list = nshopAdminProducts.filter((p) => !q || p.name.toLowerCase().includes(q));
         const s = nshopAdminStats;
 
+        // Telefon — mobil dizayn (31, 2026-11-14): KPI 2 ta, ro'yxatda
+        // ko'rinadi/yashirin tugmasi qatorning o'zida; qo'shish — pastda.
+        if (window.matchMedia("(max-width: 859px)").matches) {
+          const qator = (p) => `<div class="m5-row adm5-prow" onclick="openNShopProductMenu('${escArg(p.id)}')">
+              ${nshopThumbHtml(p.image_url, "width:44px;height:44px;border-radius:12px;flex:none")}
+              <span class="m5-row-txt"><b${p.is_visible ? "" : ' style="color:var(--t3)"'}>${escHtml(p.name)}</b><span>${fmtNcoin(p.price)} N · ${p.stock > 0 ? `${p.stock} ta` : "Tugagan"}${p.category ? ` · ${escHtml(p.category)}` : ""}</span></span>
+              <button type="button" class="adm5-sw${p.is_visible ? " on" : ""}" role="switch" aria-checked="${p.is_visible}" aria-label="NShop'da ko'rinsin" onclick="event.stopPropagation();toggleNShopVisible('${escArg(p.id)}',${p.is_visible})"><i></i></button>
+            </div>`;
+          c.innerHTML = `${s ? `<div class="m5-kpis" style="margin-bottom:12px">
+                <div class="m5-kpi"><div class="m5-kpi-l">Mahsulot</div><div class="m5-kpi-v">${s.productCount}</div><div class="m5-kpi-s">${s.visibleCount} tasi ko'rinadi</div></div>
+                <div class="m5-kpi"><div class="m5-kpi-l">Oylik sotuv</div><div class="m5-kpi-v">${s.soldThisMonth}</div><div class="m5-kpi-s">${fmtNcoin(s.revenueThisMonth)} N aylanma</div></div>
+              </div>` : ""}
+            <div class="adm5-sec"><span>Mahsulotlar · ${list.length}</span><button type="button" class="adm5-link" onclick="openNShopArchivedSheet()">Arxiv</button><button type="button" class="adm5-link" onclick="openNcoinAdminHistory()">Ncoin tarixi</button></div>
+            <div class="m5-card">${list.map(qator).join("") || `<div class="adm5-none">Mahsulot yo'q — pastdagi tugma bilan qo'shing</div>`}</div>`;
+          return;
+        }
         const mobileHtml = `<div class="mobile-only">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
             <button class="btn btn-blue btn-sm" style="width:auto;padding:0 16px;margin:0" onclick="openNShopProductSheet()">+ Mahsulot qo'shish</button>
