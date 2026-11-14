@@ -13491,6 +13491,26 @@
         .nshop5-warn { font-size: 13px; color: var(--red); padding: 0 4px; margin-top: -4px; }
         .nshop5-foot { display: flex; gap: 10px; margin-top: 2px; }
       }
+
+      /* Tarix (09) — mobil dizayn, 2026-11-14. */
+      @media (max-width: 859px) {
+        #screen-history .hdr-row, #screen-history #hist-chips { display: none; }
+        #history-body { padding: 0; }
+        .m5-badge.sm { width: 28px; height: 28px; font-size: 11px; }
+        .hist5 .m5-row-txt b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .hist5-none { padding: 22px 14px; text-align: center; font-size: 13.5px; color: var(--t3); }
+        .hist5-open { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; overflow: visible; }
+        .hist5-oh {
+          display: flex; align-items: center; gap: 10px; width: 100%; padding: 0; border: none; background: none;
+          cursor: pointer; text-align: left; font: inherit;
+        }
+        .hist5-oh b { flex: 1; min-width: 0; font: 600 15px Onest, system-ui, sans-serif; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .hist5-meta { font-size: 13px; color: var(--t3); margin-top: -4px; }
+        .hist5-cap { font: 500 12.5px Onest, system-ui, sans-serif; color: var(--t2); }
+        .hist5-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .hist5-nil { font-size: 13px; color: var(--t3); }
+        .hist5-link { align-self: flex-start; border: none; background: none; padding: 2px 0; cursor: pointer; font: 600 13.5px Onest, system-ui, sans-serif; color: var(--brand); }
+      }
     </style>
   </head>
   <body>
@@ -13616,7 +13636,11 @@
 
     <!-- ── TARIX ───────────────────────────────────────────────────── -->
     <div class="screen" id="screen-history">
-      <div class="hdr">
+      <div class="hdr m5-hdr">
+        <div class="mobile-flex" style="flex: 1; min-width: 0; flex-direction: column">
+          <div class="hdr-title">Tarix</div>
+          <div class="hdr-sub">Barcha davrlar</div>
+        </div>
         <div class="hdr-row">
           <div>
             <div class="hdr-title">Tarix</div>
@@ -23237,6 +23261,84 @@
           </div>`;
       }
 
+      // ── TARIX · MOBIL DIZAYN (09, 2026-11-14) ───────────────────────
+      // Chiplar (Hammasi / Joriy / Qarz / Tugagan), davr satri: nishon,
+      // "Loyiha · N-davr", sana va foiz, o'ngda holat. Satr bosilsa
+      // ochiladi — alohida karta bo'lib, chiqqan ishlar teglari bilan.
+      function hist5Toggle(key) {
+        histState.m5open = histState.m5open === key ? null : key;
+        renderHistoryRows();
+      }
+      // Stories ko'p — har birini teg qilsak karta to'lib ketadi, shuning
+      // uchun ketma-ket raqamlar oraliq bo'lib yig'iladi ("Stories 1–15").
+      function hist5Oraliq(nums) {
+        const out = [];
+        nums.sort((a, b) => a - b).forEach((n) => {
+          const oxiri = out[out.length - 1];
+          if (oxiri && n === oxiri[1] + 1) oxiri[1] = n;
+          else out.push([n, n]);
+        });
+        return out.map(([a, b]) => (a === b ? `${a}` : `${a}–${b}`));
+      }
+      function hist5Tag(st) {
+        return st === "active" ? `<span class="m5-tag info">Joriy</span>` : st === "debt" ? `<span class="m5-tag bad">Qarz</span>` : `<span class="m5-tag norm">Tugagan</span>`;
+      }
+      function hist5Html() {
+        const rows = histState.rows;
+        const soni = (k) => rows.filter((r) => hist4Status(r.cycle) === k).length;
+        const list = rows
+          .filter((r) => histState.filter === "all" || hist4Status(r.cycle) === histState.filter)
+          .sort((a, b) => b.cycle.periodStart.localeCompare(a.cycle.periodStart) || a.project.label.localeCompare(b.project.label));
+        const chip = (k, label) => `<button type="button" class="m5-chip${histState.filter === k ? " on" : ""}" onclick="setHistFilter('${k}')">${label}</button>`;
+        const chips = `<div class="m5-chips">${chip("all", "Hammasi")}${chip("active", `Joriy · ${soni("active")}`)}${chip("debt", `Qarz · ${soni("debt")}`)}${chip("done", "Tugagan")}</div>`;
+        const satr = (r) => {
+          const c = r.cycle;
+          return `<button type="button" class="m5-row" onclick="hist5Toggle('${escArg(hist4Key(r))}')">
+              ${m5Badge(r.project)}
+              <span class="m5-row-txt"><b>${escHtml(r.project.label)} · ${c.cycleIndex}-davr</b><span>${hist4Range(c)} · ${projPct(c)}%</span></span>
+              ${hist5Tag(hist4Status(c))}
+            </button>`;
+        };
+        // Ochilgan satr ro'yxatni ikkiga bo'ladi va o'zi alohida karta.
+        const bloklar = [];
+        let joriy = [];
+        list.forEach((r) => {
+          if (hist4Key(r) === histState.m5open) {
+            if (joriy.length) bloklar.push(`<div class="m5-card">${joriy.join("")}</div>`);
+            joriy = [];
+            bloklar.push(hist5DetailHtml(r));
+          } else joriy.push(satr(r));
+        });
+        if (joriy.length) bloklar.push(`<div class="m5-card">${joriy.join("")}</div>`);
+        return `<div class="m5-page hist5">${chips}${bloklar.join("") || `<div class="m5-card hist5-none">Bu bo'limda davr yo'q</div>`}</div>`;
+      }
+      function hist5DetailHtml(r) {
+        const c = r.cycle;
+        const dates = c.checkDates || {};
+        const postlar = Object.keys(dates)
+          .filter((k) => k.startsWith("k-"))
+          .map((k) => Number(k.slice(2)))
+          .sort((a, b) => a - b)
+          .map((n) => {
+            const d = dates[`k-${n}`];
+            return `<span class="m5-tag info">Post ${n}${d && d.day ? ` · ${escHtml(ntfDayShort(String(d.day).slice(0, 10)))}` : ""}</span>`;
+          });
+        const stories = hist5Oraliq(Object.keys(dates).filter((k) => k.startsWith("s-")).map((k) => Number(k.slice(2))))
+          .map((x) => `<span class="m5-tag info">Stories ${x}</span>`);
+        const teglar = [...postlar, ...stories];
+        return `<div class="m5-card hist5-open">
+            <button type="button" class="hist5-oh" onclick="hist5Toggle('${escArg(hist4Key(r))}')">
+              <span class="m5-badge sm" style="background:${escHtml(d4ProjColor(r.project))}">${escHtml((r.project.label || "?").trim().slice(0, 1).toUpperCase())}</span>
+              <b>${escHtml(r.project.label)} · ${c.cycleIndex}-davr</b>
+              ${hist5Tag(hist4Status(c))}
+            </button>
+            <div class="hist5-meta">${hist4Range(c)} · ${projPct(c)}% · Post ${c.doneK}/${c.k} · Stories ${c.doneS}/${c.s}</div>
+            <div class="hist5-cap">Chiqqan ishlar</div>
+            <div class="hist5-tags">${teglar.join("") || `<span class="hist5-nil">Hali hech narsa chiqmagan</span>`}</div>
+            <button type="button" class="hist5-link" onclick="openProjectHistorySheet('${escArg(r.project.id)}','${escArg(r.project.label)}')">Davrlarni ko'rish</button>
+          </div>`;
+      }
+
       // ── TARIX (barcha loyihalarning davrlari) ─────────────────────
       function setHistFilter(k) {
         histState.filter = k;
@@ -23297,6 +23399,10 @@
             el?.focus();
             el?.setSelectionRange(el.value.length, el.value.length);
           }
+          return;
+        }
+        if (window.matchMedia("(max-width: 859px)").matches) {
+          body.innerHTML = hist5Html();
           return;
         }
         const q = String(histState.q || "").toLowerCase().trim();
