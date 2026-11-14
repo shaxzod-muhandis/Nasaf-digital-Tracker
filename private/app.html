@@ -13579,6 +13579,54 @@
         .nc5-amt { font: 700 15px Onest, system-ui, sans-serif; flex: none; white-space: nowrap; }
         .nc5-none { padding: 22px 14px; text-align: center; font-size: 13.5px; color: var(--t3); }
       }
+
+      /* Faollik (21–22) — mobil dizayn, 2026-11-14. Issiqlik — bitta
+         ko'k rangning 5 pog'onasi (brand shaffofligi bilan, qorong'i
+         temada ham o'qiladi). */
+      @media (max-width: 859px) {
+        .act5-hdr {
+          height: calc(60px + var(--tg-safe-top)); padding: var(--tg-safe-top) 8px 0 6px; display: flex; align-items: center; gap: 4px;
+          background: var(--surf); border-bottom: 1px solid var(--bd1); position: sticky; top: 0; z-index: 5;
+        }
+        .act5 { padding-top: 16px; }
+        .act5-week { width: 100%; border: none; cursor: pointer; text-align: left; font: inherit; padding: 12px 14px 10px; display: flex; flex-direction: column; gap: 10px; }
+        .act5-week:disabled { cursor: default; opacity: 0.6; }
+        .act5-wtop { display: flex; align-items: center; gap: 8px; }
+        .act5-wtop b { flex: 1; min-width: 0; font: 600 14px Onest, system-ui, sans-serif; color: var(--ink); }
+        .act5-wtop strong { font: 700 15px Onest, system-ui, sans-serif; color: var(--ink); }
+        .act5-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .act5-day { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .act5-day em { font: 500 11px Onest, system-ui, sans-serif; color: var(--t3); font-style: normal; }
+        .act5-c { display: block; width: 100%; height: 30px; border-radius: 8px; }
+        .act5-c.l0 { background: var(--chip3); }
+        .act5-c.l1 { background: rgba(47, 122, 185, 0.2); }
+        .act5-c.l2 { background: rgba(47, 122, 185, 0.45); }
+        .act5-c.l3 { background: rgba(47, 122, 185, 0.75); }
+        .act5-c.l4 { background: var(--brand); }
+        .act5-c.dim { opacity: 0.45; }
+        .act5-c.today { box-shadow: 0 0 0 2px var(--surf), 0 0 0 3.5px var(--ink); }
+        .act5-legend { display: flex; align-items: center; gap: 6px; font: 500 12px Onest, system-ui, sans-serif; color: var(--t3); padding: 0 4px; }
+        .act5-legend i { width: 14px; height: 14px; border-radius: 4px; display: block; }
+        .act5-legend i:first-of-type { margin-left: 4px; }
+        .act5-legend i:last-of-type { margin-right: 4px; }
+        .act5-legend i.l0 { background: var(--chip3); }
+        .act5-legend i.l1 { background: rgba(47, 122, 185, 0.2); }
+        .act5-legend i.l2 { background: rgba(47, 122, 185, 0.45); }
+        .act5-legend i.l3 { background: rgba(47, 122, 185, 0.75); }
+        .act5-legend i.l4 { background: var(--brand); }
+        .act5 .m5-kpi-v i { font-style: normal; font-size: 15px; color: var(--t3); font-weight: 600; }
+        .act5 .m5-kpi-v.warn { color: var(--nav-coin-ink); }
+        .act5-kun { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+        .act5-kun > b { font: 600 14.5px Onest, system-ui, sans-serif; color: var(--ink); }
+        .act5-wd, .act5-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .act5-wd span { text-align: center; font: 500 11px Onest, system-ui, sans-serif; color: var(--t3); }
+        .act5-grid .act5-c { height: 26px; border-radius: 7px; }
+        .act5-prow { cursor: default; }
+        .act5-prow .m5-row-txt b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .act5-bar { width: 64px; height: 6px; border-radius: 99px; background: var(--chip3); flex: none; overflow: hidden; }
+        .act5-bar i { display: block; height: 100%; border-radius: 99px; background: var(--brand); }
+        .act5-none { padding: 18px 14px; text-align: center; font-size: 13.5px; color: var(--t3); }
+      }
     </style>
   </head>
   <body>
@@ -22334,7 +22382,7 @@
         body.innerHTML =
           act.view === "week"
             ? `<div class="mobile-only">${actWeekPageHtml()}</div>`
-            : `<div class="mobile-only">${actMobileHtml()}</div><div class="desktop-only">${actDesktopHtml()}</div>`;
+            : `<div class="mobile-only">${actM5Html()}</div><div class="desktop-only">${actDesktopHtml()}</div>`;
         applyStaticIcons?.();
       }
       function actWeekLabel(i) {
@@ -22686,6 +22734,54 @@
           </div>`;
       }
 
+      // ── JAMOA FAOLLIGI · MOBIL DIZAYN (21, 2026-11-14) ──────────────
+      // Sarlavha: orqaga, nom + oy, ‹ › oy. Xodim chiplari, keyin har
+      // hafta alohida karta: "N-hafta · sana" va jami, ostida 7 kunlik
+      // issiqlik (5 pog'ona, actHeatLevel). Karta bosilsa — hafta
+      // tafsiloti (avvalgi actWeekPageHtml). Avvalgi oy kalendari va
+      // "top-3" kartasi o'rniga.
+      const ACT5_WD = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
+      function act5Hdr(back, title, sub, prevFn, nextFn, nextOn) {
+        return `<div class="act5-hdr">
+            <button type="button" class="m5-hbtn" onclick="${back}" aria-label="Orqaga">${ICON.chevronLeft}</button>
+            <div class="m5-hdr-txt"><div class="m5-hdr-t">${escHtml(title)}</div><div class="m5-hdr-s">${escHtml(sub)}</div></div>
+            <button type="button" class="m5-hbtn sm" onclick="${prevFn}" aria-label="Oldingi oy">${ICON.chevronLeft}</button>
+            <button type="button" class="m5-hbtn sm"${nextOn ? "" : " disabled"} onclick="${nextFn}" aria-label="Keyingi oy">${ICON.chevronRight}</button>
+          </div>`;
+      }
+      function act5Legend() {
+        return `<div class="act5-legend">Kam${[0, 1, 2, 3, 4].map((l) => `<i class="l${l}"></i>`).join("")}Ko'p</div>`;
+      }
+      function actM5Html() {
+        const stats = actAllWeekStats();
+        const dayMap = actDayCounts(actScoped());
+        const max = Math.max(0, ...Object.values(dayMap));
+        const keyingi = actShiftMonth(act.month, 1) <= actMonthKey(todayDate());
+        const users = actActiveUsers(act.items);
+        const chip = (un, label) => `<button type="button" class="m5-chip${(act.filter || "") === un ? " on" : ""}" onclick="actSetFilter('${escArg(un)}')">${escHtml(label)}</button>`;
+        const chips = `<div class="m5-chips">${chip("", "Hammasi")}${users.map((u) => chip(u.username, actShortName(u))).join("")}</div>`;
+        const kartalar = stats
+          .map((st, i) => {
+            const w = st.week;
+            const kataklar = w.days
+              .map((iso, k) => {
+                const ichida = actInMonth(iso, act.month);
+                const kelgusi = iso > act.today;
+                const n = dayMap[iso] || 0;
+                const cls = kelgusi || !ichida ? "l0 dim" : `l${actHeatLevel(n, max)}`;
+                return `<span class="act5-day"><i class="act5-c ${cls}${iso === act.today ? " today" : ""}" title="${n} ta"></i><em>${ACT5_WD[k]}</em></span>`;
+              })
+              .join("");
+            return `<button type="button" class="m5-card act5-week" onclick="actOpenWeek(${i})"${st.future ? " disabled" : ""}>
+                <span class="act5-wtop"><b>${i + 1}-hafta · ${escHtml(fmtRangeShort(w.start, w.end))}</b><strong>${st.future ? "—" : st.total}</strong></span>
+                <span class="act5-days">${kataklar}</span>
+              </button>`;
+          })
+          .join("");
+        return `${act5Hdr("actBack()", "Jamoa faolligi", actMonthLabel(act.month), "actSetMonth(-1)", "actSetMonth(1)", keyingi)}
+          <div class="m5-page act5">${chips}${kartalar}${act5Legend()}</div>`;
+      }
+
       // ── Telefon (23c): hafta tafsiloti sahifasi ──────────────────
       function actWeekPageHtml() {
         const weeks = actWeeks(act.month);
@@ -22898,6 +22994,65 @@
             ${kpi(`${faolKun}<i> / ${otgan}</i>`, "faol kun")}
             ${kpi(`${ozBajarilgan}<i> / ${ozReja}</i>`, "o'z loyihalari rejasi")}
           </div>`;
+
+        // Telefon — mobil dizayn (22, 2026-11-14): KPI 2×2, kunlar
+        // issiqligi, loyihalar kesimi (Post · Stories, rejaga nisbatan
+        // chiziq). Grafik dizaynda yo'q — kompyuterda qoladi.
+        if (window.matchMedia("(max-width: 859px)").matches) {
+          const zamena = barchaIshlar.filter((it) => actZamenaQildi(it, un)).length;
+          const kunMap = {};
+          barchaIsh.forEach((it) => (kunMap[it.day] = (kunMap[it.day] || 0) + 1));
+          const kMax = Math.max(0, ...Object.values(kunMap));
+          const birinchi = `${monthKey}-01`;
+          let kataklar = "";
+          for (let i = 0; i < kalWeekday(birinchi); i++) kataklar += `<span></span>`;
+          for (let d = 1; d <= kunlar; d++) {
+            const iso = `${monthKey}-${actPad(d)}`;
+            const n = kunMap[iso] || 0;
+            const cls = iso > act.today ? "l0 dim" : `l${actHeatLevel(n, kMax)}`;
+            kataklar += `<i class="act5-c ${cls}${iso === act.today ? " today" : ""}" title="${d}: ${n} ta"></i>`;
+          }
+          const lp = {};
+          barchaIshlar.forEach((it) => {
+            if (!it.project) return;
+            const x = (lp[it.project.slug] = lp[it.project.slug] || { slug: it.project.slug, label: it.project.label, post: 0, story: 0 });
+            if (it.kind === "post") x.post++;
+            else x.story++;
+          });
+          const lpList = Object.values(lp).sort((a, b) => b.post + b.story - (a.post + a.story));
+          const lpMax = Math.max(1, ...lpList.map((x) => x.post + x.story));
+          const lpRows = lpList
+            .map((x) => {
+              const pr = projects.find((q) => q.id === x.slug) || { label: x.label, id: x.slug };
+              const meta = act.projects.find((q) => q.slug === x.slug);
+              const reja = meta && meta.smm === un ? meta.plan || 0 : 0;
+              const ulush = Math.min(100, Math.round(((x.post + x.story) / (reja || lpMax)) * 100));
+              return `<div class="m5-row act5-prow">
+                  ${m5Badge(pr)}
+                  <span class="m5-row-txt"><b>${escHtml(x.label)}</b><span>Post ${x.post} · Stories ${x.story}</span></span>
+                  <span class="act5-bar" title="${reja ? `${x.post + x.story} / ${reja}` : `${x.post + x.story} ta`}"><i style="width:${ulush}%"></i></span>
+                </div>`;
+            })
+            .join("");
+          const kpi5 = (l, v, sub, cls = "") => `<div class="m5-kpi"><div class="m5-kpi-l">${l}</div><div class="m5-kpi-v${cls}">${v}</div><div class="m5-kpi-s">${sub}</div></div>`;
+          body.innerHTML = `${act5Hdr("actUserBack()", u.name || "@" + un, `${u.jobTitle || "Xodim"} · ${actMonthLabel(monthKey)}`, "actUserSetMonth(-1)", "actUserSetMonth(1)", keyingiOy)}
+            <div class="m5-page act5">
+              <div class="m5-kpis">
+                ${kpi5("Bajarildi", jami, "post va stories")}
+                ${kpi5("Zamena", zamena, "o'rniga qildi", zamena ? " warn" : "")}
+                ${kpi5("Faol kun", `${faolKun}<i> / ${otgan}</i>`, "shu oyda")}
+                ${kpi5("O'z loyihalari", `${ozBajarilgan}<i> / ${ozReja}</i>`, "rejadan")}
+              </div>
+              <div class="m5-card act5-kun">
+                <b>Kunlar</b>
+                <div class="act5-wd">${ACT5_WD.map((w) => `<span>${w}</span>`).join("")}</div>
+                <div class="act5-grid">${kataklar}</div>
+              </div>
+              ${act5Legend()}
+              <div class="m5-card">${lpRows || `<div class="act5-none">Bu oyda loyiha ishi yo'q</div>`}</div>
+            </div>`;
+          return;
+        }
 
         if (!barchaIsh.length) {
           body.innerHTML = `${header}<div class="act-empty big">Bu oyda hali ish yo'q</div>`;
