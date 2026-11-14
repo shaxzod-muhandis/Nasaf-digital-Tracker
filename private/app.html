@@ -13627,6 +13627,33 @@
         .act5-bar i { display: block; height: 100%; border-radius: 99px; background: var(--brand); }
         .act5-none { padding: 18px 14px; text-align: center; font-size: 13.5px; color: var(--t3); }
       }
+
+      /* Bildirishnomalar (32) — mobil dizayn, 2026-11-14: to'liq sahifa
+         (avvalgi tepadan ochiladigan karta o'rniga). */
+      @media (max-width: 859px) {
+        .ntfy-pop.m5 {
+          inset: 0 !important; top: 0 !important; left: 0 !important; right: 0 !important; max-height: none; border-radius: 0;
+          padding: 0; gap: 0; display: block; background: var(--bg); box-shadow: none; z-index: 1500;
+        }
+        .ntfy5 { padding-bottom: calc(24px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))); }
+        .ntfy5-all { border: none; background: none; cursor: pointer; height: 36px; padding: 0 8px; border-radius: 12px; font: 600 13.5px Onest, system-ui, sans-serif; color: var(--nav-act-ink); flex: none; }
+        .ntfy5-row {
+          width: 100%; display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; min-height: 62px;
+          border: none; background: none; text-align: left; cursor: pointer; font: inherit; color: inherit;
+        }
+        .ntfy5-row + .ntfy5-row { box-shadow: inset 0 1px 0 var(--bd1); }
+        .ntfy5-row.unread { background: rgba(47, 122, 185, 0.06); }
+        .ntfy5-ico { width: 36px; height: 36px; border-radius: 12px; flex: none; display: flex; align-items: center; justify-content: center; }
+        .ntfy5-ico svg { width: 18px; height: 18px; }
+        .ntfy5-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+        .ntfy5-top { display: flex; align-items: center; gap: 6px; font: 600 12px Onest, system-ui, sans-serif; color: var(--t3); }
+        .ntfy5-top span { flex: 1; min-width: 0; }
+        .ntfy5-top em { font-style: normal; font-weight: 400; }
+        .ntfy5-top i { width: 8px; height: 8px; border-radius: 99px; background: var(--brand); flex: none; }
+        .ntfy5-txt b { font: 500 14.5px Onest, system-ui, sans-serif; color: var(--ink); line-height: 1.38; }
+        .ntfy5-txt small { font-size: 13px; color: var(--t2); line-height: 1.45; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ntfy5-none { padding: 22px 14px; text-align: center; font-size: 13.5px; color: var(--t3); }
+      }
     </style>
   </head>
   <body>
@@ -15844,6 +15871,9 @@
         if (pop && !pop.contains(e.target) && !e.target.closest(".d4-bell")) ntfyClose();
       }
       function ntfyClose() {
+        // Telefonda to'liq sahifa — Telegram "orqaga" tugmasi ham yopadi.
+        const i = pageBackStack.indexOf(ntfyClose);
+        if (i !== -1) { pageBackStack.splice(i, 1); pageSyncBack(); }
         document.getElementById("ntfy-pop")?.remove();
         document.removeEventListener("mousedown", ntfyOutside);
         document.removeEventListener("keydown", ntfyKey);
@@ -15895,6 +15925,7 @@
         }
         const unread = ntfyUnread();
         const list = ntfyTab === "unread" ? ntfy.items.filter((x) => !x.read) : ntfy.items;
+        if (window.matchMedia("(max-width: 859px)").matches) return ntfyRenderM5(pop, list, unread);
         let guruh = "";
         const rows = list
           .map((x) => {
@@ -15927,6 +15958,50 @@
           pop.style.top = `${r.bottom + 8}px`;
           pop.style.left = `${Math.max(12, Math.min(window.innerWidth - 412, r.right - 400))}px`;
         }
+      }
+
+      // ── BILDIRISHNOMALAR · MOBIL DIZAYN (32, 2026-11-14) ────────────
+      // To'liq sahifa: sarlavha (orqaga, "N ta o'qilmagan", "Hammasini
+      // o'qish"), segment, kun guruhlari kartalarda. O'qilmagan — och ko'k
+      // fon va o'ngda nuqta; tur — rangli ikona; vaqt o'ngda.
+      function ntfyRenderM5(pop, list, unread) {
+        pop.classList.add("m5");
+        if (!pageBackStack.includes(ntfyClose)) { pageBackStack.push(ntfyClose); pageSyncBack(); }
+        const guruhlar = [];
+        list.forEach((x) => {
+          const g = ntfyGuruh(x.createdAt);
+          const oxiri = guruhlar[guruhlar.length - 1];
+          if (oxiri && oxiri.g === g) oxiri.list.push(x);
+          else guruhlar.push({ g, list: [x] });
+        });
+        const qator = (x) => {
+          const k = NTFY_KIND[x.type] || NTFY_KIND.vazifa;
+          return `<button type="button" class="ntfy5-row${x.read ? "" : " unread"}" onclick="ntfyGo('${escArg(x.id)}')">
+              <span class="ntfy5-ico" style="background:${k.bg};color:${k.fg}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${k.ico}</svg></span>
+              <span class="ntfy5-txt">
+                <span class="ntfy5-top"><span>${k.label}</span><em>${ntfyGuruh(x.createdAt) === "Bugun" || ntfyGuruh(x.createdAt) === "Kecha" ? fmtTime(new Date(x.createdAt)) : ntfyWhen(x.createdAt)}</em>${x.read ? "" : "<i></i>"}</span>
+                <b>${escHtml(x.title)}</b>${x.body ? `<small>${escHtml(x.body.split("\n")[0])}</small>` : ""}
+              </span>
+            </button>`;
+        };
+        const holat = ntfy.err && !ntfy.items.length
+          ? d4ErrHtml("ntfyLoad()")
+          : `<div class="m5-card ntfy5-none">${ntfy.loading && !ntfy.items.length ? "Yuklanmoqda…" : ntfyTab === "unread" ? "Hammasi o'qilgan" : "Bildirishnoma yo'q"}</div>`;
+        pop.innerHTML = `<div class="act5-hdr">
+            <button type="button" class="m5-hbtn" onclick="ntfyClose()" aria-label="Orqaga">${ICON.chevronLeft}</button>
+            <div class="m5-hdr-txt"><div class="m5-hdr-t">Bildirishnomalar</div><div class="m5-hdr-s">${unread ? `${unread > 99 ? "99+" : unread} ta o'qilmagan` : "Hammasi o'qilgan"}</div></div>
+            ${unread ? `<button type="button" class="ntfy5-all" onclick="ntfyMarkAll()">Hammasini o'qish</button>` : ""}
+          </div>
+          <div class="m5-page ntfy5">
+            <div class="m5-seg">
+              <button type="button" class="${ntfyTab === "all" ? "on" : ""}" onclick="ntfySetTab('all')">Hammasi</button>
+              <button type="button" class="${ntfyTab === "unread" ? "on" : ""}" onclick="ntfySetTab('unread')">O'qilmagan${unread ? ` · ${unread > 99 ? "99+" : unread}` : ""}</button>
+            </div>
+            ${guruhlar.length
+              ? guruhlar.map((g) => `<div class="m5-cap">${escHtml(g.g)}</div><div class="m5-card">${g.list.map(qator).join("")}</div>`).join("")
+              : holat}
+            ${ntfy.next ? `<button type="button" class="m5-sbtn" onclick="ntfyLoad(true)">${ntfy.loading ? "Yuklanmoqda…" : "Yana ko'rsatish"}</button>` : ""}
+          </div>`;
       }
 
       // ── HOLATLAR (desktop dizayn D31): bo'sh va xato ──────────────────
