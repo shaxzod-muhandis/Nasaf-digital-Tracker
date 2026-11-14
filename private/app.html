@@ -13654,6 +13654,49 @@
         .ntfy5-txt small { font-size: 13px; color: var(--t2); line-height: 1.45; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .ntfy5-none { padding: 22px 14px; text-align: center; font-size: 13.5px; color: var(--t3); }
       }
+
+      /* Boshqaruv (23–31) — mobil dizayn, 2026-11-14: sarlavha 60px,
+         tagi chiziqli tablar (gorizontal suriladi), qidiruv kulrang fonda,
+         asosiy amal — pastdagi oq panelda keng tugma (FAB o'rniga). */
+      @media (max-width: 859px) {
+        #screen-admin { background: var(--bg); }
+        #admin-hdr { padding: 0 !important; background: var(--bg); border: none; display: flex; flex-direction: column; gap: 0; box-shadow: none; }
+        #admin-hdr .hdr-title {
+          height: calc(60px + var(--tg-safe-top)); padding: var(--tg-safe-top) 20px 0; display: flex; align-items: center; background: var(--surf);
+          font: 700 18px Sora, system-ui, sans-serif; letter-spacing: -0.015em; color: var(--ink);
+        }
+        #admin-hdr .atabs {
+          margin: 0; padding: 0 16px; gap: 20px; background: var(--surf); border-radius: 0; border-bottom: 1px solid var(--bd1);
+          scrollbar-width: none; flex: none;
+        }
+        #admin-hdr .atabs::-webkit-scrollbar { display: none; }
+        #admin-hdr .atab {
+          flex: none; min-width: 0; height: 44px; padding: 0; border-radius: 0; background: none; box-shadow: none;
+          font: 500 14px Onest, system-ui, sans-serif; color: var(--t2); border-bottom: none;
+        }
+        #admin-hdr .atab.active { color: var(--ink); font-weight: 600; background: none; box-shadow: inset 0 -2px 0 var(--brand); }
+        #admin-hdr .search-box {
+          margin: 16px 16px 0; height: 44px; border-radius: 12px; background: var(--surf); box-shadow: inset 0 0 0 1px var(--bd4); border: none; width: auto;
+        }
+        #admin-hdr .search-box input { font: 400 15px Onest, system-ui, sans-serif; }
+        #admin-body { padding: 16px 16px calc(180px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))) !important; }
+        #admin-fab {
+          left: 16px; right: 16px; width: auto; height: 52px; border-radius: 12px; font-size: 0; gap: 7px;
+          bottom: calc(92px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
+          box-shadow: none; z-index: 151;
+        }
+        /* Tugma ostidagi oq panel — faqat tugma ko'rinib turganda. */
+        #screen-admin.active:has(#admin-fab:not([style*="none"]))::after {
+          content: ""; position: fixed; left: 0; right: 0; z-index: 150; height: 84px; background: var(--surf); border-top: 1px solid var(--bd1);
+          bottom: calc(76px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
+        }
+        #admin-fab::before { width: 20px; height: 20px; }
+        .adm5-fab-l { font: 600 15.5px Onest, system-ui, sans-serif; color: #fff; }
+        .adm5-chev { color: var(--t4); display: flex; flex: none; margin-right: -4px; }
+        .adm5-chev svg { width: 18px; height: 18px; }
+        #admin-body .m5-row .m5-row-txt b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      }
+      @media (min-width: 860px) { .adm5-fab-l { display: none; } }
     </style>
   </head>
   <body>
@@ -13862,7 +13905,7 @@
         style="padding-bottom: calc(168px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)))"
       ></div>
       <button class="fab" id="admin-fab" onclick="openNewProjectSheet()">
-        +
+        <span class="adm5-fab-l">Yangi loyiha</span>
       </button>
     </div>
 
@@ -24010,6 +24053,22 @@
             <span class="m5-act-ico">${ico}</span><span class="m5-act-t">${title}</span>${danger ? "" : `<span class="m5-act-chev">${ICON.chevronRight}</span>`}
           </button>`;
       }
+      // Boshqaruv → Loyihalar (telefon): qator bosilganda amallar.
+      function adm5ProjMenu(id) {
+        const p = projects.find((x) => x.id === id);
+        if (!p) return;
+        const { body } = makeSheet(escHtml(p.label));
+        body.closest(".sheet")?.querySelector(".sheet-title")?.classList.add("m5-small");
+        const yop = "document.querySelector('.overlay').remove();";
+        const tarixIco = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>`;
+        const arxivIco = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9M10 13h4"/></svg>`;
+        body.innerHTML = `<div class="m5-acts">
+            ${m5ActHtml(`${yop}openTracker('${escArg(p.id)}')`, ICON.folder, "Loyihani ochish")}
+            ${m5ActHtml(`${yop}openProjectEditSheet('${escArg(p.id)}')`, ICON.edit, "Tahrirlash")}
+            ${m5ActHtml(`${yop}openProjectHistorySheet('${escArg(p.id)}','${escArg(p.label)}')`, tarixIco, "Davrlar tarixi")}
+            ${m5ActHtml(`${yop}archiveProject('${escArg(p.id)}','${escArg(p.label)}',null)`, arxivIco, "Arxivlash", true)}
+          </div>`;
+      }
       function openTrackerMenu() {
         const p = projects.find((x) => x.id === trackerProjectId);
         if (!p) return;
@@ -26520,6 +26579,8 @@
           if (amal) pb.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>${amal.label}`;
         }
         renderAdminActiveTab();
+        // Telefonda tablar gorizontal suriladi — tanlangani ko'rinsin.
+        document.getElementById("atab-" + tabName)?.scrollIntoView?.({ block: "nearest", inline: "center" });
       }
       const ADMIN_PRIMARY = {
         // NShop'da tugma bo'limning o'z sarlavhasida (qidiruv va Arxiv
@@ -27830,6 +27891,22 @@
           c.innerHTML = `<div class="empty"><div class="empty-t">Loyihalar yo'q</div></div>`;
           return;
         }
+        // Telefon — mobil dizayn (23, 2026-11-14): nishon, nom, oylik
+        // reja, holat tegi; bosilsa amallar oynasi.
+        const m5Rows = list
+          .map((p) => {
+            const teg = p.outstandingDebt
+              ? `<span class="m5-tag bad">Qarz</span>`
+              : p.hasPlan === false
+                ? `<span class="m5-tag norm">Rejasiz</span>`
+                : `<span class="m5-tag ok">Faol</span>`;
+            return `<button type="button" class="m5-row" onclick="adm5ProjMenu('${escArg(p.id)}')">
+                ${m5Badge(p)}
+                <span class="m5-row-txt"><b>${escHtml(p.label)}</b><span>${p.hasPlan === false ? "Kontent rejasiz" : `${p.k} post · ${p.s} stories / oy`}</span></span>
+                ${teg}<span class="adm5-chev">${ICON.chevronRight}</span>
+              </button>`;
+          })
+          .join("");
         const mobileRows = list
           .map(
             (p) => `<div class="m-item">
@@ -27884,7 +27961,8 @@
           )
           .join("");
 
-        c.innerHTML = `${apSegHtml()}<div class="mobile-only">${mobileRows}</div><div class="desktop-only">
+        void mobileRows; // eski telefon kartalari — endi m5Rows (2026-11-14)
+        c.innerHTML = `${apSegHtml()}<div class="mobile-only"><div class="m5-card">${m5Rows}</div></div><div class="desktop-only">
           <div class="d4-card pd4-table">
             <div class="ap4-row ap4-head"><span>Loyiha</span><span>Reja / oy</span><span>Mas'ul</span><span>Holat</span><span></span></div>
             ${desktopRows}
