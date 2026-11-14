@@ -13567,6 +13567,18 @@
         #screen-profile .pf-savebar-actions { gap: 8px; }
         #screen-profile .pf-savebar-actions .btn { height: 44px; border-radius: 12px; width: auto !important; flex: none !important; padding: 0 16px; font: 600 14.5px Onest, system-ui, sans-serif; }
       }
+
+      /* Ncoin tarixi (20) — mobil dizayn, 2026-11-14. */
+      @media (max-width: 859px) {
+        .nc5 { display: flex; flex-direction: column; gap: 14px; }
+        .nc5-row { display: flex; align-items: center; gap: 12px; padding: 11px 14px; min-height: 60px; }
+        .nc5-row + .nc5-row { box-shadow: inset 0 1px 0 var(--bd1); }
+        .nc5-ico { width: 36px; height: 36px; border-radius: 12px; flex: none; display: flex; align-items: center; justify-content: center; }
+        .nc5-ico svg { width: 18px; height: 18px; }
+        .nc5 .m5-row-txt b, .nc5 .m5-row-txt span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .nc5-amt { font: 700 15px Onest, system-ui, sans-serif; flex: none; white-space: nowrap; }
+        .nc5-none { padding: 22px 14px; text-align: center; font-size: 13.5px; color: var(--t3); }
+      }
     </style>
   </head>
   <body>
@@ -30757,6 +30769,32 @@
 
         const emptyLabel =
           filter === "earned" ? "Hali coin topilmagan" : filter === "spent" ? "Hali xarajat yo'q" : "Hali harakat yo'q";
+
+        // Telefon (20, 2026-11-14): segment Hammasi/Tushgan/Ketgan va
+        // ro'yxat — ikona 36px, sabab, sana, o'ngda summa. Stories uchun
+        // binafsha rang saqlanadi (ncoinHistoryRowHtml izohiga qarang).
+        if (window.matchMedia("(max-width: 859px)").matches) {
+          const seg = [["all", "Hammasi"], ["earned", "Tushgan"], ["spent", "Ketgan"]]
+            .map(([f, l]) => `<button type="button" class="${filter === f ? "on" : ""}" onclick="setNcoinHistoryFilter('${f}')">${l}</button>`)
+            .join("");
+          const qator = (t) => {
+            const plus = t.amount > 0;
+            const st = plus && NCOIN_STORY_REASONS.has(t.reason);
+            const bg = st ? "var(--purple-bg)" : plus ? "var(--green-bg)" : "var(--red-bg)";
+            const rang = st ? "var(--purple)" : plus ? "var(--green)" : "var(--red)";
+            const d = new Date(t.at);
+            return `<div class="nc5-row">
+                <span class="nc5-ico" style="background:${bg};color:${rang}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${plus ? '<path d="M12 19V5M6 11l6-6 6 6"/>' : '<path d="M12 5v14M6 13l6 6 6-6"/>'}</svg></span>
+                <span class="m5-row-txt"><b>${escHtml(t.detail || NCOIN_REASON_LABEL[t.reason] || t.reason)}</b><span>${d.getDate()}-${MONTHS[d.getMonth()].toLowerCase()}${t.detail ? ` · ${escHtml(NCOIN_REASON_LABEL[t.reason] || t.reason)}` : `, ${fmtTime(d)}`}</span></span>
+                <span class="nc5-amt" style="color:${rang}">${plus ? "+" : "−"}${fmtNcoin(Math.abs(t.amount))}</span>
+              </div>`;
+          };
+          body.innerHTML = `<div class="nc5">
+              <div class="m5-seg">${seg}</div>
+              ${shown.length ? `<div class="m5-card">${shown.map(qator).join("")}</div>` : `<div class="m5-card nc5-none">${emptyLabel}</div>`}
+            </div>`;
+          return;
+        }
 
         body.innerHTML = `
           ${summaryHtml}
