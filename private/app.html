@@ -12565,6 +12565,10 @@
           gap: 14px; padding: 0 16px; min-height: 58px; align-items: center;
         }
         .ap4-row + .ap4-row { border-top: 1px solid var(--bd2); }
+        /* Arxiv: «Arxivlangan · 13-noy» tegi va «Qaytarish» sig'ishi kerak —
+           umumiy 90px ustunda teg kesilib, tugma ustiga chiqardi. */
+        .ap4-row.arx { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) 160px 100px; }
+        .ap4-row.arx .d4-pill { white-space: nowrap; }
         .ap4-head {
           min-height: 40px; background: var(--surf2);
           font: 600 11.5px Onest, system-ui, sans-serif; color: var(--t3); letter-spacing: 0.04em; text-transform: uppercase;
@@ -12767,6 +12771,37 @@
         .kal-d4 .kal-ev-s { font: 400 11.5px Onest, system-ui, sans-serif; }
       }
 
+
+      /* Boshqaruv → Arxiv — telefon ko'rinishi (2026-11-14). */
+      @media (max-width: 859px) {
+        /* Boshqaruv → Loyihalar → Arxiv (23) — telefonda ro'yxat: nom va
+           oxirgi davr, o'ngda «Qaytarish»; ostida holat tegi va mas'ul.
+           Avval desktop jadvali uslubsiz chiqib, matnlar yopishib qolardi. */
+        #admin-body .pd4-table { background: var(--surf); border-radius: 14px; box-shadow: inset 0 0 0 1px var(--bd2); overflow: hidden; }
+        #admin-body .ap4-head { display: none !important; }
+        #admin-body .ap4-row.arx {
+          display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "nom amal" "mas teg";
+          gap: 8px 12px; padding: 11px 14px; align-items: center; font-family: Onest, system-ui, sans-serif;
+        }
+        #admin-body .ap4-row.arx + .ap4-row.arx { border-top: 1px solid var(--bd1); }
+        #admin-body .ap4-row.arx > :nth-child(1) { grid-area: nom; }
+        #admin-body .ap4-row.arx > :nth-child(2) { display: none; }
+        #admin-body .ap4-row.arx > :nth-child(3) { grid-area: mas; padding-left: 48px; font-size: 13px; color: var(--t3); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #admin-body .ap4-row.arx > :nth-child(3)::before { content: "Mas'ul: "; }
+        #admin-body .ap4-row.arx > :nth-child(4) { grid-area: teg; justify-self: end; }
+        #admin-body .ap4-row.arx > :nth-child(5) { grid-area: amal; justify-self: end; }
+        #admin-body .ap4-row.arx .d4-tname { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        #admin-body .ap4-row.arx .d4-pbadge {
+          width: 36px; height: 36px; border-radius: 10px; flex: none; display: flex; align-items: center; justify-content: center;
+          color: #fff; font: 700 14px Onest, system-ui, sans-serif;
+        }
+        #admin-body .ap4-row.arx .d4-tname-txt { display: flex; flex-direction: column; min-width: 0; }
+        #admin-body .ap4-row.arx .d4-t1 { font: 500 15px Onest, system-ui, sans-serif; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #admin-body .ap4-row.arx .d4-t2 { font-size: 13px; color: var(--t3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #admin-body .ap4-row.arx .d4-pill { white-space: nowrap; }
+        #admin-body .ap4-row.arx .btn { height: 34px; border-radius: 10px; }
+        #admin-body { padding-bottom: calc(170px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))) !important; }
+      }
     </style>
   </head>
   <body>
@@ -26173,13 +26208,20 @@
         if (!list.length) return `<div class="d4-empty" style="padding:22px">${q ? `«${escHtml(q)}» bo'yicha loyiha topilmadi` : "Arxivda loyiha yo'q"}</div>`;
         return list
           .map(
-            (p) => `<div class="ap4-row">
-              <span class="d4-tname">${d4ProjBadge(p)}<span class="d4-t1">${escHtml(p.label)}</span></span>
+            (p) => {
+              // Ikkinchi qator — oxirgi davr tugagan sana: bir xil nomli
+              // loyihalar (Beruniy Anhor ×2) shu bilan ajraladi.
+              const od = p.lastPeriodEnd ? parseISO(p.lastPeriodEnd) : null;
+              const oxirgi = od ? `Oxirgi davr: ${od.getDate()}-${MONTHS_SHORT[od.getMonth()]} ${od.getFullYear()}` : p.hasPlan ? "Davr ochilmagan" : "";
+              const sana = p.archivedAt ? (() => { const d = new Date(p.archivedAt); return `${d.getDate()}-${MONTHS_SHORT[d.getMonth()]}`; })() : "";
+              return `<div class="ap4-row arx">
+              <span class="d4-tname">${d4ProjBadge(p)}<span class="d4-tname-txt"><span class="d4-t1">${escHtml(p.label)}</span>${oxirgi ? `<span class="d4-t2">${escHtml(oxirgi)}</span>` : ""}</span></span>
               <span class="pd4-own">${p.hasPlan ? "Kontent rejasi bilan" : "Kontent rejasiz"}</span>
-              <span class="pd4-own">—</span>
-              <span><span class="d4-pill st-none">Arxivlangan${p.archivedAt ? ` · ${escHtml(fmtDay(new Date(p.archivedAt)))}` : ""}</span></span>
+              <span class="pd4-own">${escHtml(p.owner || "—")}</span>
+              <span><span class="d4-pill st-none" title="${p.archivedAt ? escHtml(fmtDay(new Date(p.archivedAt))) + " arxivlangan" : "Arxivlangan sanasi yozilmagan (eski arxiv)"}">Arxivlangan${sana ? ` · ${escHtml(sana)}` : ""}</span></span>
               <span class="ap4-acts"><button type="button" class="btn btn-soft btn-sm" style="width:auto;padding:0 12px" onclick="apRestore('${escArg(p.id)}','${escArg(p.label)}')">Qaytarish</button></span>
-            </div>`,
+            </div>`;
+            },
           )
           .join("");
       }
@@ -26189,7 +26231,7 @@
           .trim();
         if (apArxiv) {
           c.innerHTML = `${apSegHtml()}<div class="d4-card pd4-table">
-              <div class="ap4-row ap4-head"><span>Loyiha</span><span>Reja</span><span>Mas'ul</span><span>Holat</span><span></span></div>
+              <div class="ap4-row ap4-head arx"><span>Loyiha</span><span>Reja</span><span>Mas'ul</span><span>Holat</span><span></span></div>
               ${apArxivHtml(q)}
             </div>`;
           return;

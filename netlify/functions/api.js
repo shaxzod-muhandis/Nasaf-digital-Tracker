@@ -6000,7 +6000,22 @@ app.delete("/api/projects/:slug", auth, async (req, res) => {
 app.get("/api/projects/archived", auth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
-    const r = await db.query(`select * from projects where is_active = false order by label`);
+    // Mas'ul (SMM, bo'lmasa birinchi biriktirilgan xodim) va oxirgi davr —
+    // arxiv ro'yxatida «—» o'rniga kim yuritgani va qachongacha ishlagani
+    // ko'rinsin. Bir xil nomli loyihalar (masalan qayta ochilgan) shu
+    // bilan ajraladi (2026-11-13).
+    const r = await db.query(
+      `select p.*,
+              (select coalesce(nullif(trim(concat_ws(' ', u.first_name, u.last_name)), ''), '@' || u.username)
+                 from permissions pm join users u on u.id = pm.user_id
+                where pm.project_id = p.id
+                order by (pm.role = 'smm') desc, u.first_name nulls last
+                limit 1) as masul,
+              (select pc.period_end from project_cycles pc
+                where pc.project_id = p.id order by pc.period_end desc limit 1) as oxirgi_davr
+         from projects p where p.is_active = false
+        order by coalesce(p.archived_at, 'epoch'::timestamptz) desc, p.label`,
+    );
     res.json({
       projects: r.rows.map((p) => ({
         id: p.slug,
@@ -6008,6 +6023,8 @@ app.get("/api/projects/archived", auth, async (req, res) => {
         color: p.color || null,
         hasPlan: p.has_plan !== false,
         archivedAt: p.archived_at || null,
+        owner: p.masul || null,
+        lastPeriodEnd: p.oxirgi_davr ? (p.oxirgi_davr instanceof Date ? p.oxirgi_davr.toISOString() : String(p.oxirgi_davr)).slice(0, 10) : null,
       })),
     });
   } catch (e) {
