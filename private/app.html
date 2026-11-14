@@ -13511,6 +13511,62 @@
         .hist5-nil { font-size: 13px; color: var(--t3); }
         .hist5-link { align-self: flex-start; border: none; background: none; padding: 2px 0; cursor: pointer; font: 600 13.5px Onest, system-ui, sans-serif; color: var(--brand); }
       }
+
+      /* Profil (19) — mobil dizayn, 2026-11-14. */
+      @media (max-width: 859px) {
+        #screen-profile { background: var(--bg); }
+        #screen-profile .pf-hdr {
+          height: calc(60px + var(--tg-safe-top)); padding: var(--tg-safe-top) 16px 0 6px; gap: 6px;
+          background: var(--surf); border-bottom: 1px solid var(--bd1); display: flex; align-items: center;
+        }
+        #screen-profile .pf-back {
+          width: 40px; height: 40px; border-radius: 12px; border: none; background: none; color: var(--ink); font-size: 0; flex: none;
+          display: flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+        #screen-profile .pf-back::before {
+          content: ""; width: 20px; height: 20px; background: currentColor;
+          -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m14 6-6 6 6 6'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m14 6-6 6 6 6'/%3E%3C/svg%3E") center/contain no-repeat;
+        }
+        #screen-profile .pf-hdr-title { font: 700 18px Sora, system-ui, sans-serif; letter-spacing: -0.015em; color: var(--ink); }
+        #screen-profile .pf-hdr-sub, #screen-profile .pf-dark-switch-lbl { display: none; }
+        #screen-profile .pf-dark-switch { padding: 0; background: none; border: none; }
+        #profile-body { padding: 0; }
+        .pf5 { padding-bottom: calc(110px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))); }
+        .pf5-me { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+        .pf5-me-row { display: flex; align-items: center; gap: 14px; }
+        .pf5-av { width: 64px !important; height: 64px !important; font-size: 22px !important; flex: none; border-radius: 99px !important; background: var(--brand) !important; color: #fff !important; }
+        .pf5-me-row b { display: block; font: 700 18px Sora, system-ui, sans-serif; letter-spacing: -0.015em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pf5-me-row span { display: block; font-size: 13px; color: var(--t3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pf5-btn {
+          height: 36px; padding: 0 14px; border-radius: 12px; border: none; cursor: pointer; background: var(--surf);
+          box-shadow: inset 0 0 0 1px var(--bd4); color: var(--ink); font: 600 13.5px Onest, system-ui, sans-serif;
+        }
+        .pf5-btn.sm { flex: none; }
+        .pf5-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .pf5-f { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+        .pf5-f > label { font: 500 13px Onest, system-ui, sans-serif; color: var(--t2); }
+        .pf5 .f-input { height: 44px; border-radius: 12px; border: none; box-shadow: inset 0 0 0 1px var(--bd4); background: var(--surf); font: 400 15px Onest, system-ui, sans-serif; color: var(--ink); padding: 0 14px; }
+        .pf5 .f-input:focus { box-shadow: inset 0 0 0 1.5px var(--brand); outline: none; }
+        .pf5-hint { font-size: 12.5px; color: var(--t3); margin: -6px 4px 0; line-height: 1.45; }
+        .pf5-coin { display: flex; align-items: center; gap: 12px; padding: 14px 14px 14px 16px; }
+        .pf5-coin-l { flex: 1; min-width: 0; font: 500 14px Onest, system-ui, sans-serif; color: var(--t2); display: flex; align-items: center; gap: 6px; }
+        .pf5-dot { width: 8px; height: 8px; border-radius: 99px; background: var(--red); display: inline-block; }
+        .pf5-link { padding: 12px 14px; }
+        .pf5-ico { width: 36px; height: 36px; border-radius: 12px; flex: none; display: flex; align-items: center; justify-content: center; }
+        .pf5-ico svg { width: 19px; height: 19px; }
+        .pf5-chev { color: var(--t4); display: flex; flex: none; }
+        .pf5-chev svg { width: 18px; height: 18px; }
+        .pf5 .pf-card { border-radius: 14px; border: none; box-shadow: inset 0 0 0 1px var(--bd2); }
+        /* Saqlash paneli (19) — matn chapda, tugmalar o'ngda, menyu ustida. */
+        #screen-profile .pf-savebar { padding: 12px 16px calc(12px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))); border-top: 1px solid var(--bd1); box-shadow: none; z-index: 700; }
+        #screen-profile .pf-savebar-inner { display: flex; align-items: center; gap: 10px; }
+        #screen-profile .pf-savebar-row { flex: 1; min-width: 0; margin: 0; }
+        #screen-profile .pf-savebar-dot, #pf-savebar-fields { display: none; }
+        #screen-profile .pf-savebar-text { font: 500 13.5px Onest, system-ui, sans-serif; color: var(--t2); }
+        #screen-profile .pf-savebar-actions { gap: 8px; }
+        #screen-profile .pf-savebar-actions .btn { height: 44px; border-radius: 12px; width: auto !important; flex: none !important; padding: 0 16px; font: 600 14.5px Onest, system-ui, sans-serif; }
+      }
     </style>
   </head>
   <body>
@@ -13813,7 +13869,7 @@
         <div class="pf-savebar-inner">
           <div class="pf-savebar-row">
             <span class="pf-savebar-dot"></span>
-            <span class="pf-savebar-text">Saqlanmagan o'zgarish: <b id="pf-savebar-fields" style="color: var(--ink); font-weight: 600"></b></span>
+            <span class="pf-savebar-text">Saqlanmagan o'zgarish<span class="desktop-only-inline">: </span><b id="pf-savebar-fields" style="color: var(--ink); font-weight: 600"></b></span>
           </div>
           <div class="pf-savebar-actions">
             <button type="button" class="btn btn-soft" style="width: 96px" onclick="pfCancelChanges()">Bekor</button>
@@ -29517,7 +29573,9 @@
         document.getElementById("pf-toggle-track").classList.toggle("on", getTheme() === "dark");
 
         const c = document.getElementById("profile-body");
-        c.innerHTML = `
+        if (window.matchMedia("(max-width: 859px)").matches) {
+          c.innerHTML = pfM5Html(p, fullName, username);
+        } else c.innerHTML = `
           <div class="pf-grid">
             <div class="pf-col-left" style="display:flex;flex-direction:column;gap:18px">
               <div class="pf-card">
@@ -29595,6 +29653,59 @@
         pfInitSoundTrimmer();
         if (isAdmin) pfLoadGiftUserOptions();
       }
+      // ── PROFIL · MOBIL DIZAYN (19, 2026-11-14) ──────────────────────
+      // Tepada rasm + ism + "lavozim · @username" va "Rasm yuklash",
+      // keyin maydonlar (Ism/Familiya yonma-yon), Ncoin kartasi va
+      // bo'limlar ro'yxati. Dizaynda yo'q, lekin ilovada bor narsalar
+      // (email, tug'ilgan sana, kalendar havolasi, tabrik ovozi, admin
+      // sovg'asi) pastda qoladi — funksiya yo'qolmasin. Maydon id'lari
+      // kompyuterdagi bilan bir xil: pfCollectValues/pfSaveProfile o'zgarmaydi.
+      function pfM5Html(p, fullName, username) {
+        const maydon = (id, label, val, attrs = "") =>
+          `<div class="pf5-f"><label for="${id}">${label}</label><input class="f-input" id="${id}" value="${escHtml(val || "")}" ${attrs}/></div>`;
+        const sub = [p.jobTitle, "@" + username].filter(Boolean).map(escHtml).join(" · ");
+        const PF5_ICO = { ...ICON, faollik: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>' };
+        const qator = (onclick, ico, bg, color, title, sub2 = "") =>
+          `<button type="button" class="m5-row pf5-link" onclick="${onclick}">
+            <span class="pf5-ico" style="background:${bg};color:${color}">${PF5_ICO[ico]}</span>
+            <span class="m5-row-txt"><b>${title}</b>${sub2 ? `<span>${sub2}</span>` : ""}</span>
+            <span class="pf5-chev">${ICON.chevronRight}</span>
+          </button>`;
+        return `<div class="m5-page pf5">
+            <div class="m5-card pf5-me">
+              <div class="pf5-me-row">
+                <div class="pf-avatar pf5-av">${initials(fullName)}${avatarImg(p.avatarUrl)}</div>
+                <div style="flex:1;min-width:0"><b>${escHtml(fullName)}</b><span>${sub}</span></div>
+              </div>
+              <button type="button" class="pf5-btn" onclick="pfUploadAvatarStub()">Rasm yuklash</button>
+            </div>
+            <div class="pf5-two">
+              ${maydon("pf-first", "Ism", p.firstName, 'onblur="formatNameInputOnBlur(this)" oninput="pfCheckDirty()"')}
+              ${maydon("pf-last", "Familiya", p.lastName, 'onblur="formatNameInputOnBlur(this)" oninput="pfCheckDirty()"')}
+            </div>
+            ${maydon("pf-phone", "Telefon", p.phone, 'placeholder="+998 90 123 45 67" inputmode="tel" oninput="formatPhoneInput(this);pfCheckDirty()"')}
+            <div class="m5-card pf5-coin">
+              <span class="m5-coin">${m5CoinHtml(pfNcoinData?.balance || 0)}</span>
+              <span class="pf5-coin-l">Ncoin balansi${pfNcoinData?.hasUnseen ? `<i class="pf5-dot" id="pf-ncoin-badge"></i>` : ""}</span>
+              <button type="button" class="pf5-btn sm" onclick="openNcoinHistorySheet()">Tarix</button>
+            </div>
+            <div class="m5-card">
+              ${qator("pfGoToActivity()", "faollik", "var(--nav-act-bg)", "var(--brand)", "Mening faolligim")}
+              ${qator("pfGoToNShop()", "shoppingBag", "var(--nav-coin-bg)", "var(--nav-coin-ink)", "NShop")}
+              ${qator("pfGoToHistory()", "clock", "var(--chip)", "var(--t2)", "Tarix")}
+              ${isAdmin ? qator("closeProfilePage();showTab('admin')", "settings", "var(--chip)", "var(--t2)", "Boshqaruv", "Faqat admin") : ""}
+            </div>
+            <div class="m5-cap">Qo'shimcha ma'lumotlar</div>
+            ${maydon("pf-job", "Lavozimi", p.jobTitle, 'placeholder="SMM manager" oninput="pfCheckDirty()"')}
+            ${maydon("pf-email", "Email", p.email, 'type="email" inputmode="email" autocapitalize="off" autocorrect="off" placeholder="ism@gmail.com" oninput="pfCheckDirty()"')}
+            <div class="pf5-hint">Kalendardagi rejalaringiz shu pochtaga taklifnoma bo'lib boradi.</div>
+            <div class="pf5-f"><label>Tug'ilgan sana</label>${renderDateFieldHtml("pf-birth", p.birthDate ? String(p.birthDate).slice(0, 10) : "", "Sana tanlang", 'onchange="pfCheckDirty()"')}</div>
+            ${pfCalendarCardHtml()}
+            ${pfCelebrationSoundCardHtml()}
+            ${isAdmin ? pfNcoinGiftCardHtml() : ""}
+          </div>`;
+      }
+
       // ── TABRIK OVOZI ────────────────────────────────────────────────
       // Devor ekranida (TV) xodimning ishi bajarilgani haqida tabrik
       // chiqqanda ijro etiladigan ovoz. Xodim TO'LIQ qo'shiq yuklaydi
