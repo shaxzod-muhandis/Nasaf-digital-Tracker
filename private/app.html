@@ -13355,6 +13355,96 @@
       .m5-pill.st-onplan { background: var(--st-onplan-bg); color: var(--st-onplan); }
       .m5-pill.st-ahead, .m5-pill.st-done { background: var(--st-ahead-bg); color: var(--st-ahead); }
       .m5-pill.st-none { background: var(--chip); color: var(--t2); }
+
+      /* Kalendar (02–04) — mobil dizayn, 2026-11-14. Ekran balandligi
+         aniq (#screen-kalendar 100dvh), shuning uchun oy sahifasi o'zi
+         suriladi, hafta/kunda esa faqat karta ichidagi vaqt to'ri. */
+      @media (max-width: 859px) {
+        #screen-kalendar { background: var(--bg); font-family: Onest, system-ui, sans-serif; }
+        .kal5-sub { display: flex; align-items: center; gap: 8px; white-space: nowrap; min-width: 0; }
+        .kal5-sub > span { overflow: hidden; text-overflow: ellipsis; }
+        .kal5-today { flex: none; }
+        .kal5-grid .kal-allday { min-height: 32px; }
+        .kal5-grid .kal-allday-lbl { font-size: 9.5px; line-height: 1.15; padding: 5px 6px 0 0; }
+        .kal5-today {
+          border: none; background: var(--nav-act-bg); color: var(--nav-act-ink); cursor: pointer;
+          height: 20px; padding: 0 8px; border-radius: 99px; font: 600 11.5px Onest, system-ui, sans-serif;
+        }
+        .kal5-add {
+          display: inline-flex; align-items: center; gap: 6px; flex: none; height: 36px; padding: 0 14px 0 11px;
+          border: none; border-radius: 12px; background: var(--brand); color: #fff; cursor: pointer;
+          font: 600 13.5px Onest, system-ui, sans-serif; margin-left: 2px;
+        }
+        .kal5-add svg { width: 17px; height: 17px; }
+        #screen-kalendar .m5-hdr .m5-ibtn { width: 36px; height: 36px; }
+        #screen-kalendar .m5-hdr .m5-ibtn svg { width: 19px; height: 19px; }
+        .kal5-page, .kal5-gwrap {
+          position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px;
+          padding: 16px 16px calc(92px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px)));
+        }
+        .kal5-page { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .kal5-page > .m5-cap { margin-top: 0; }
+        .kal5-month { padding: 10px 10px 12px; flex: none; }
+        .kal5-month .m5-cal-w span { font-weight: 600; }
+        .kal5-mg { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 2px; }
+        .kal5-d {
+          height: 42px; margin: 0 1px; border: none; background: none; border-radius: 12px; cursor: pointer; padding: 0;
+          display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+          font: 500 14px Onest, system-ui, sans-serif; color: var(--ink);
+        }
+        .kal5-d.today { background: var(--brand); color: #fff; font-weight: 700; }
+        .kal5-d.sel { box-shadow: inset 0 0 0 1.5px var(--brand); font-weight: 600; }
+        .kal5-dots { display: flex; gap: 2px; height: 5px; }
+        .kal5-dots b { width: 5px; height: 5px; border-radius: 99px; display: block; }
+        .kal5-d.today .kal5-dots b { background: #fff !important; }
+        .kal5-ev {
+          width: 100%; display: flex; align-items: center; gap: 12px; padding: 11px 14px; min-height: 60px;
+          border: none; background: none; text-align: left; cursor: pointer; font: inherit; color: inherit;
+        }
+        .kal5-ev + .kal5-ev { box-shadow: inset 0 1px 0 var(--bd1); }
+        .kal5-ev > i { width: 4px; align-self: stretch; min-height: 37px; border-radius: 9px; flex: none; }
+        .kal5-ev-tm { width: 44px; flex: none; font: 600 13.5px Onest, system-ui, sans-serif; color: var(--ink); white-space: nowrap; }
+        .kal5-ev-tx { flex: 1; min-width: 0; }
+        .kal5-ev-tx b { display: block; font: 500 15px Onest, system-ui, sans-serif; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .kal5-ev-tx span { display: block; font-size: 13px; color: var(--t3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .kal5-none { padding: 18px 14px; font-size: 13.5px; color: var(--t3); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .kal5-addrow {
+          width: 100%; height: 48px; margin-top: 12px; border: none; border-radius: 12px; cursor: pointer;
+          background: var(--surf); box-shadow: inset 0 0 0 1px var(--bd4); color: var(--ink);
+          display: flex; align-items: center; justify-content: center; gap: 8px; font: 600 14.5px Onest, system-ui, sans-serif;
+        }
+        .kal5-addrow svg { width: 18px; height: 18px; }
+        /* Hafta/Kun — vaqt to'ri karta ichida. */
+        .kal5-gwrap { padding-bottom: calc(88px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))); }
+        .kal5-grid { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+        .kal5-grid .kal-body { padding-bottom: 0; }
+        .kal5-grid .kal-head { border-bottom: 1px solid var(--bd1); }
+        .kal5-grid .kal-hd { border-left: none; padding: 8px 2px 8px; }
+        .kal5-grid .kal-hd.we { background: none; }
+        .kal5-grid .kal-hd-w { font: 500 11px Onest, system-ui, sans-serif; color: var(--t3); }
+        .kal5-grid .kal-hd-n { width: 28px; height: 28px; margin-top: 2px; font: 600 14px Onest, system-ui, sans-serif; color: var(--ink); }
+        .kal5-grid .kal-hd-n.today { color: #fff; }
+        .kal5-grid .kal-head-pad, .kal5-grid .kal-hours, .kal5-grid .kal-allday-lbl { border-right-color: var(--bd1); }
+        .kal5-grid .kal-allday { border-bottom-color: var(--bd1); }
+        .kal5-strip { flex: none; }
+        .kal5-strip .kal-strip { border-bottom: none; padding: 6px; }
+        .kal5-strip .kal-sd-w { font: 500 11px Onest, system-ui, sans-serif; color: var(--t3); }
+        .kal5-strip .kal-sd-n { font: 600 15px Onest, system-ui, sans-serif; color: var(--ink); }
+        .kal5-strip .kal-sd.on .kal-sd-w, .kal5-strip .kal-sd.on .kal-sd-n { color: #fff; }
+        /* Xodim filtri (sheet). */
+        .kal5-fl {
+          width: 100%; display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 14px;
+          border: none; background: none; cursor: pointer; text-align: left; font: 500 15px Onest, system-ui, sans-serif; color: var(--t3);
+        }
+        .kal5-fl + .kal5-fl { box-shadow: inset 0 1px 0 var(--bd1); }
+        .kal5-fl.on { color: var(--ink); }
+        .kal5-fl > i { width: 10px; height: 10px; border-radius: 99px; flex: none; }
+        .kal5-fl:not(.on) > i { opacity: 0.35; }
+        .kal5-fl > span:nth-of-type(1) { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .kal5-fl-ck { width: 22px; height: 22px; border-radius: 7px; flex: none; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 0 1.5px var(--bd4); }
+        .kal5-fl.on .kal5-fl-ck { background: var(--brand); box-shadow: none; color: #fff; }
+        .kal5-fl-ck svg { width: 15px; height: 15px; }
+      }
     </style>
   </head>
   <body>
@@ -20419,19 +20509,8 @@
         //   ‹ › bosilgan (to'r allaqachon turibdi) — tepada ingichka
         //     chiziq, chunki butun to'rni almashtirish ko'zni urardi.
         const birinchiYuk = kal.loading && !kal.items.length;
-        if (!mobil) {
-          host.innerHTML = kalDeskHtml(birinchiYuk);
-        } else host.innerHTML = `
-          <div class="kal-wrap">
-            ${mobil ? "" : `<div class="kal-side">${kalSideHtml()}</div>`}
-            <div class="kal-main">
-              ${kal.loading && !birinchiYuk ? `<div class="kal-bar"></div>` : ""}
-              ${kalTopHtml(mobil)}
-              ${mobil ? kalStripHtml() + kalChipsHtml() : ""}
-              ${birinchiYuk ? kalSkeletonHtml(mobil) : kal.view === "oy" ? kalMonthHtml() : kalGridHtml()}
-            </div>
-          </div>
-          ${mobil ? `<button class="kal-fab" onclick="kalOpenForm({})" aria-label="Yangi reja">+</button>` : ""}`;
+        // Telefon — mobil dizayn (02–04, 2026-11-14), kalM5Html izohiga qarang.
+        host.innerHTML = mobil ? kalM5Html(birinchiYuk) : kalDeskHtml(birinchiYuk);
 
         if (kal.scrolled && eskiScroll != null) {
           const yangi = document.getElementById("kal-body");
@@ -20445,6 +20524,151 @@
         kalNowTimer = setInterval(() => {
           if (document.getElementById("screen-kalendar")?.classList.contains("active")) kalPaintNow();
         }, 60000);
+      }
+
+      // ── KALENDAR · MOBIL DIZAYN (02–04, 2026-11-14) ─────────────────
+      // Sarlavha 60px: "Kalendar" + davr, o'ngda "+ Reja" (avval o'ng
+      // pastdagi FAB edi). Kun/Hafta/Oy — to'liq kenglikdagi segment.
+      // Oy — karta ichida kalendar, ostida tanlangan kun rejalari; kun
+      // bosilsa o'sha kun rejalari pastdan sheet bo'lib chiqadi (04).
+      // Hafta/Kun — avvalgi vaqt to'ri, endi karta ichida. Xodim filtri
+      // (avval chiplar qatori, dizaynda yo'q) sarlavhadagi tugma ortida.
+      const KAL5_ICO = {
+        plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+        filter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.5a3 3 0 0 1 0 5.6M18 14.2a5.4 5.4 0 0 1 2.5 4.8"/></svg>',
+        left: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>',
+        right: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg>',
+      };
+      // Joriy kun/hafta ko'rinib turibdimi — "Bugun" tugmasi faqat
+      // boshqa davrga o'tilganda chiqadi.
+      function kalM5IsCurrent() {
+        const b = kalToday();
+        if (kal.view === "kun") return kal.anchor === b;
+        if (kal.view === "hafta") return kalWeekStart(kal.anchor) === kalWeekStart(b);
+        return kal.anchor.slice(0, 7) === b.slice(0, 7);
+      }
+      function kalM5Html(birinchiYuk) {
+        // Kun ko'rinishida hafta tasmasi kunni ko'rsatib turadi — sarlavha
+        // ostiga faqat qisqa sana (to'liq hafta kuni sig'masdi).
+        const [, am, ad] = kal.anchor.split("-").map(Number);
+        const sub = kal.view === "oy" ? "" : kal.view === "kun" ? `${ad}-${MONTHS[am - 1].toLowerCase()}` : kalDeskSub();
+        const nav = kal.view === "oy" ? "" : `
+            <button type="button" class="m5-hbtn sm" onclick="kalStep(-1)" aria-label="Oldingi">${KAL5_ICO.left}</button>
+            <button type="button" class="m5-hbtn sm" onclick="kalStep(1)" aria-label="Keyingi">${KAL5_ICO.right}</button>`;
+        const bugunBtn = kalM5IsCurrent() ? "" : `<button type="button" class="kal5-today" onclick="kalGoToday()">Bugun</button>`;
+        const filtr = kal.users.length
+          ? `<button type="button" class="m5-ibtn mobile-flex" onclick="kalM5Filter()" aria-label="Xodimlar filtri">${KAL5_ICO.filter}<span class="m5-ibtn-dot"${kal.hidden.size ? ' style="display:block"' : ""}></span></button>`
+          : "";
+        const seg = `<div class="m5-seg">${["kun", "hafta", "oy"].map((v) => `<button type="button" class="${kal.view === v ? "on" : ""}" onclick="kalSetView('${v}')">${v === "kun" ? "Kun" : v === "hafta" ? "Hafta" : "Oy"}</button>`).join("")}</div>`;
+        const hdr = `<div class="hdr m5-hdr">
+            <div style="flex:1;min-width:0">
+              <div class="hdr-title">Kalendar</div>
+              ${sub || bugunBtn ? `<div class="hdr-sub kal5-sub">${sub ? `<span>${escHtml(sub)}</span>` : ""}${bugunBtn}</div>` : ""}
+            </div>
+            ${nav}${filtr}
+            <button type="button" class="kal5-add" onclick="kalOpenForm({})">${KAL5_ICO.plus}Reja</button>
+          </div>`;
+        const bar = kal.loading && !birinchiYuk ? `<div class="kal-bar"></div>` : "";
+        if (kal.view === "oy") {
+          return `${hdr}<div class="kal5-page" id="kal5-page">${bar}${seg}
+              ${birinchiYuk ? kalSkeletonHtml(true) : kalM5MonthHtml()}
+            </div>`;
+        }
+        return `${hdr}<div class="kal5-gwrap">${bar}${seg}
+            ${kal.view === "kun" ? `<div class="m5-card kal5-strip">${kalStripHtml()}</div>` : ""}
+            <div class="m5-card kal5-grid">${birinchiYuk ? kalSkeletonHtml(true) : kalGridHtml()}</div>
+          </div>`;
+      }
+      function kalM5MonthHtml() {
+        const [y, m] = kal.anchor.split("-").map(Number);
+        const birinchi = `${kal.anchor.slice(0, 7)}-01`;
+        const bosh = kalWeekday(birinchi);
+        const kunlar = new Date(Date.UTC(y, m, 0)).getUTCDate();
+        const bugun = kalToday();
+        let kat = "";
+        for (let i = 0; i < bosh; i++) kat += `<span></span>`;
+        for (let d = 1; d <= kunlar; d++) {
+          const iso = `${kal.anchor.slice(0, 7)}-${String(d).padStart(2, "0")}`;
+          const ranglar = [...new Set(kalDayItems(iso).map(kalEvColor))].slice(0, 3);
+          const cls = iso === bugun ? " today" : iso === kal.anchor ? " sel" : "";
+          kat += `<button type="button" class="kal5-d${cls}" onclick="kalM5Pick('${iso}')">
+              <span>${d}</span><i class="kal5-dots">${ranglar.map((c) => `<b style="background:${c}"></b>`).join("")}</i>
+            </button>`;
+        }
+        const tanlangan = kalDayItems(kal.anchor);
+        const [, sm, sd] = kal.anchor.split("-").map(Number);
+        return `<div class="m5-card kal5-month">
+            <div class="m5-cal-h"><button type="button" onclick="kalStep(-1)" aria-label="Oldingi oy">${KAL5_ICO.left}</button><b>${MONTHS[m - 1]} ${y}</b><button type="button" onclick="kalStep(1)" aria-label="Keyingi oy">${KAL5_ICO.right}</button></div>
+            <div class="m5-cal-w">${KAL_WD.map((w) => `<span>${w}</span>`).join("")}</div>
+            <div class="kal5-mg">${kat}</div>
+          </div>
+          <div class="m5-cap">${sd}-${MONTHS[sm - 1].toLowerCase()}, ${WEEKDAYS_FULL[kalWeekday(kal.anchor)]}</div>
+          ${kal.error
+            ? `<div class="m5-card kal5-none"><span style="color:var(--red)">${escHtml(kal.error)}</span><button type="button" class="m5-sbtn" onclick="kalLoad()">Qayta urinish</button></div>`
+            : tanlangan.length
+              ? `<div class="m5-card">${tanlangan.map(kalM5EvRow).join("")}</div>`
+              : `<div class="m5-card kal5-none">${kal.hidden.size ? "Tanlangan xodimlarda bu kunda reja yo'q" : "Bu kunda reja yo'q"}</div>`}`;
+      }
+      function kalM5EvRow(ev) {
+        const c = kalEvColor(ev);
+        const izoh = [kalShortNames(ev), ev.place].filter(Boolean).join(" · ");
+        return `<button type="button" class="kal5-ev" onclick="kalM5Open(event,'${escArg(ev.id)}','${escArg(ev.occurrence_start)}')">
+            <i style="background:${c}"></i>
+            <span class="kal5-ev-tm">${ev.all_day ? "Kun bo'yi" : kalHHMM(ev.start)}</span>
+            <span class="kal5-ev-tx"><b>${escHtml(ev.title)}</b>${izoh ? `<span>${escHtml(izoh)}</span>` : ""}</span>
+          </button>`;
+      }
+      // Oy ko'rinishida kun bosilsa — tanlanadi (ro'yxat pastda
+      // yangilanadi) va rejalari sheet bo'lib ochiladi (04).
+      function kalM5Pick(d) {
+        const sc = document.getElementById("kal5-page")?.scrollTop;
+        kal.anchor = d;
+        kalWriteUrl();
+        kalRender();
+        const pg = document.getElementById("kal5-page");
+        if (pg && sc != null) pg.scrollTop = sc;
+        kalM5DaySheet(d);
+      }
+      function kalM5DaySheet(d) {
+        document.getElementById("kal5-day-ov")?.remove();
+        const list = kalDayItems(d);
+        const [, m, dd] = d.split("-").map(Number);
+        const { ov, body } = makeSheet("", {
+          headerHtml: `<div style="flex:1;min-width:0"><div class="sheet-title">${dd}-${MONTHS[m - 1].toLowerCase()}, ${WEEKDAYS_FULL[kalWeekday(d)]}</div><div class="sheet-sub">${list.length ? `${list.length} ta reja` : "Reja yo'q"}</div></div>`,
+        });
+        ov.id = "kal5-day-ov";
+        body.innerHTML = `${list.length ? `<div class="m5-card">${list.map(kalM5EvRow).join("")}</div>` : ""}
+          <button type="button" class="kal5-addrow" onclick="document.getElementById('kal5-day-ov')?.remove();kalOpenForm({date:'${d}'})">${KAL5_ICO.plus}Reja qo'shish</button>`;
+      }
+      function kalM5Open(e, id, occ) {
+        document.getElementById("kal5-day-ov")?.remove();
+        kalOpenDetail(e, id, occ);
+      }
+      // Xodim filtri — avvalgi chiplar qatori o'rniga sheet.
+      function kalM5Filter() {
+        document.getElementById("kal5-flt-ov")?.remove();
+        const { ov, body } = makeSheet("", {
+          headerHtml: `<div style="flex:1;min-width:0"><div class="sheet-title">Kimning rejalari</div><div class="sheet-sub">Belgilanmaganlar kalendarda ko'rinmaydi</div></div>`,
+        });
+        ov.id = "kal5-flt-ov";
+        body.id = "kal5-flt-body";
+        kalM5FilterRender();
+      }
+      function kalM5FilterRender() {
+        const el = document.getElementById("kal5-flt-body");
+        if (!el) return;
+        const qator = (id, nom, rang) => {
+          const on = !kal.hidden.has(id);
+          return `<button type="button" class="kal5-fl${on ? " on" : ""}" onclick="kalToggleUser('${escArg(id)}');kalM5FilterRender()">
+              <i style="background:${rang}"></i><span>${escHtml(nom)}</span>
+              <span class="kal5-fl-ck">${on ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>' : ""}</span>
+            </button>`;
+        };
+        el.innerHTML = `<div class="m5-card">
+            ${qator("team", "Jamoa rejalari", "#475569")}
+            ${kal.users.map((u) => qator(String(u.id), kalUserName(u), kalUserColor(u))).join("")}
+          </div>
+          ${kal.hidden.size ? `<button type="button" class="kal5-addrow" onclick="kalClearFilter();kalM5FilterRender()">Hammasini ko'rsatish</button>` : ""}`;
       }
 
       // ── KOMPYUTER (desktop dizayn D02/D03) ─────────────────────────
