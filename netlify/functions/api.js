@@ -7172,6 +7172,13 @@ app.delete("/api/tasks/:id", auth, async (req, res) => {
 // pg-types.js'da hal qilingani kabi, bu yerda ham `price`ni har doim
 // aniq Number'ga o'tkazamiz, front-end tasodifiy JS coercion'iga
 // tayanib qolmasin deb.
+// NShop toifasi (0040): bo'sh joylar yig'iladi, bo'sh qator — toifasiz
+// (null), 40 belgidan uzuni kesiladi (bazadagi check bilan bir xil).
+function nshopToifa(v) {
+  const t = String(v == null ? "" : v).replace(/\s+/g, " ").trim().slice(0, 40);
+  return t || null;
+}
+
 function normalizeProduct(row) {
   return row && { ...row, price: Number(row.price) };
 }
@@ -7276,7 +7283,7 @@ app.post("/api/ncoin/ack", auth, async (req, res) => {
 app.get("/api/ncoin/products", auth, async (req, res) => {
   try {
     const r = await db.query(
-      `select id, name, description, price, stock, image_url from ncoin_products
+      `select id, name, description, price, stock, image_url, category from ncoin_products
        where is_visible = true and is_archived = false order by price asc, name asc`,
     );
     res.json({ ok: true, products: r.rows.map(normalizeProduct) });
@@ -7413,10 +7420,11 @@ app.post("/api/ncoin/admin/products", auth, async (req, res) => {
     const stock = Math.max(0, parseInt(req.body.stock, 10) || 0);
     const isVisible = req.body.isVisible !== false;
     const imageUrl = req.body.imageUrl ? String(req.body.imageUrl).trim() : null;
+    const category = nshopToifa(req.body.category);
     const r = await db.query(
-      `insert into ncoin_products (name, description, price, stock, stock_capacity, is_visible, image_url)
-       values ($1,$2,$3,$4,$4,$5,$6) returning *`,
-      [name, description, price, stock, isVisible, imageUrl],
+      `insert into ncoin_products (name, description, price, stock, stock_capacity, is_visible, image_url, category)
+       values ($1,$2,$3,$4,$4,$5,$6,$7) returning *`,
+      [name, description, price, stock, isVisible, imageUrl, category],
     );
     res.json({ ok: true, product: normalizeProduct(r.rows[0]) });
   } catch (e) {
@@ -7430,7 +7438,8 @@ app.patch("/api/ncoin/admin/products/:id", auth, async (req, res) => {
   try {
     const sets = [];
     const values = [];
-    const fieldMap = { name: "name", description: "description", price: "price", stock: "stock", isVisible: "is_visible", isArchived: "is_archived", imageUrl: "image_url" };
+    const fieldMap = { name: "name", description: "description", price: "price", stock: "stock", isVisible: "is_visible", isArchived: "is_archived", imageUrl: "image_url", category: "category" };
+    if (typeof req.body.category !== "undefined") req.body.category = nshopToifa(req.body.category);
     let stockPlaceholder = null;
     Object.entries(fieldMap).forEach(([bodyKey, col]) => {
       if (typeof req.body[bodyKey] === "undefined") return;
