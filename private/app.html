@@ -1826,10 +1826,21 @@
         font-size: 12.5px; color: var(--t3); text-align: center; margin-top: 2px;
       }
       .rb-empty.warn { border-color: rgba(220,38,38,.45); color: var(--red); cursor: pointer; }
+      /* «Qo'shish» — xodim qatorlari bilan bir xil: 36px, 4px chekka, avatar
+         o'rnida uzuq chiziqli «+» doira. Avval matn kartaning chetiga
+         yopishib, ustiga borganda tugma fon ichida «osilib» qolardi
+         (2026-11-14, egasi qaytardi). */
       .rb-add {
-        margin-top: 10px; width: 100%; height: 32px; border: 0; background: none;
+        margin-top: 6px; width: 100%; height: 36px; border: 0; background: none; padding: 0 4px;
+        display: flex; align-items: center; gap: 8px;
         font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 9px; text-align: left;
+        -webkit-appearance: none; appearance: none; box-shadow: none; min-height: 0; line-height: 1;
       }
+      .rb-add-ico {
+        width: 26px; height: 26px; border-radius: 99px; flex: none; display: flex; align-items: center; justify-content: center;
+        border: 1.5px dashed currentColor; opacity: 0.85;
+      }
+      .rb-add-ico svg { width: 13px; height: 13px; }
       .rb-add:hover { background: rgba(255,255,255,.5); }
       :root[data-theme="dark"] .rb-add:hover { background: rgba(255,255,255,.06); }
 
@@ -12800,6 +12811,21 @@
         #admin-body .ap4-row.arx .d4-t2 { font-size: 13px; color: var(--t3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         #admin-body .ap4-row.arx .d4-pill { white-space: nowrap; }
         #admin-body .ap4-row.arx .btn { height: 34px; border-radius: 10px; }
+        /* Ruxsatlar (26) — Loyihalar/Xodimlar segmenti to'liq kenglikda,
+           chiplar ilovadagi boshqa chiplar kabi (pill, tanlangani to'q). */
+        .rb-bar { flex-direction: column; align-items: stretch; gap: 12px; }
+        .rb-tabs { width: 100%; padding: 3px; border-radius: 12px; background: var(--chip3); }
+        .rb-tab { flex: 1; height: 36px; border-radius: 9px; font: 500 14px Onest, system-ui, sans-serif; color: var(--t2); }
+        .rb-tab.on { font-weight: 600; color: var(--ink); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12); }
+        .rb-chips { gap: 8px; }
+        .rb-chip {
+          height: 36px; padding: 0 14px; border-radius: 99px; border: none; background: var(--surf);
+          box-shadow: inset 0 0 0 1px var(--bd4); font: 500 13.5px Onest, system-ui, sans-serif; color: var(--ink);
+        }
+        .rb-chip.on { background: var(--inkfill); color: #fff; box-shadow: none; font-weight: 600; }
+        .rb-chip.warn { background: var(--surf); color: var(--red); box-shadow: inset 0 0 0 1px var(--red-bd); }
+        .rb-chip.warn.on { background: var(--red); color: #fff; box-shadow: none; }
+        .rb-soft { padding: 4px 4px 0; }
         #admin-body { padding-bottom: calc(170px + max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom, 0px))) !important; }
       }
     </style>
@@ -26477,7 +26503,12 @@
                 : ""
             }
           </div>
-          <div class="rb-hint">Qo'shish: kartadagi «Qo'shish» yoki o'ng paneldan kartaga sudrang. Chiqarish: ism yonidagi ×. Rolni o'zgartirish: ismni bosing.</div>`;
+          <div class="rb-hint"${rbView === "projects" ? "" : ' style="display:none"'}>${
+            // Telefonda o'ng panel (sudrash) yo'q — yo'riqnoma ham shunga mos.
+            window.matchMedia("(min-width: 860px)").matches
+              ? "Qo'shish: kartadagi «Qo'shish» yoki o'ng paneldan kartaga sudrang. Chiqarish: ism yonidagi ×. Rolni o'zgartirish: ismni bosing."
+              : "Qo'shish — kartadagi «Qo'shish». Chiqarish — ism yonidagi ×. Rolni o'zgartirish — ismni bosing."
+          }</div>`;
       }
       function rbSetView(v) {
         rbView = v;
@@ -26559,7 +26590,7 @@
               ${teg}
             </div>
             <div class="rb-rows">${qatorlar}${bosh}${yumshoq}</div>
-            <button type="button" class="rb-add" style="color:${escHtml(p.color)}" onclick="rbOpenAdd('${escArg(p.id)}')">+ Qo'shish</button>
+            <button type="button" class="rb-add" style="color:${escHtml(p.color)}" onclick="rbOpenAdd('${escArg(p.id)}')"><span class="rb-add-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>Qo'shish</button>
             <div class="rb-drop"><span></span></div>
           </div>`;
       }
