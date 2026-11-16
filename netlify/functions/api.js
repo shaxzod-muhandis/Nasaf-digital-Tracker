@@ -75,9 +75,15 @@ const TASK_STATUS_LABEL_UZ = {
 // Vazifa "Bajarildi" deb tasdiqlanganda beriladigan standart Ncoin
 // miqdori — ba'zi lavozimlar uchun boshqacha (masalan Grafik Dizayner
 // alohida loyiha-tsikliga bog'liq emas, faqat vazifalar orqali ishlaydi,
-// shu sabab standart 0.2 o'rniga 0.5 belgilangan). job_title matni
-// profildagi qiymat bilan AYNAN bir xil bo'lishi kerak.
-const TASK_NCOIN_AMOUNT_BY_JOB_TITLE = { "Grafik Dizyayner": 0.5 };
+// shu sabab standart 0.2 o'rniga 0.5 belgilangan).
+// Dizaynerni lavozim matnidan taniymiz. Lavozim profilda erkin matn,
+// shuning uchun aniq nom bilan solishtirish ("Grafik Dizyayner") imlo
+// farqida jimgina 0.2 berib yuborardi: "Grafik Dizayner", "dizayner",
+// "Designer" ham shu yerga tushadi.
+function isDesignerJob(jobTitle) {
+  return /diz(a|ya)yn|design/i.test(String(jobTitle || ""));
+}
+const TASK_NCOIN_DESIGNER_AMOUNT = 0.5;
 const TASK_NCOIN_DEFAULT_AMOUNT = 0.2;
 // Vazifani biriktirgan (yaratgan) odamga — bajaruvchiga coin berilganda
 // — qo'shimcha beriladigan qat'iy miqdor. Lavozimga bog'liq emas
@@ -7044,7 +7050,7 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
         if (before.status === "review" && task.status === "done" && req.body.awardNcoin === true) {
           try {
             const jtR = await db.query(`select job_title from users where id = $1`, [existing.assignee_user_id]);
-            const amount = TASK_NCOIN_AMOUNT_BY_JOB_TITLE[jtR.rows[0]?.job_title] ?? TASK_NCOIN_DEFAULT_AMOUNT;
+            const amount = isDesignerJob(jtR.rows[0]?.job_title) ? TASK_NCOIN_DESIGNER_AMOUNT : TASK_NCOIN_DEFAULT_AMOUNT;
             await awardNcoin(db, {
               userId: existing.assignee_user_id,
               amount,

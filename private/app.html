@@ -17057,14 +17057,21 @@
         no_priority: "Ustuvorlik yo'q",
       };
       const TASK_PRIORITY_RANK = { urgent: 0, high: 1, medium: 2, low: 3, no_priority: 4 };
-      // Backenddagi TASK_NCOIN_AMOUNT_BY_JOB_TITLE bilan bir xil — faqat
+      // Backenddagi isDesignerJob bilan bir xil — faqat
       // tasdiqlash so'rovi/toast matnida to'g'ri miqdorni ko'rsatish uchun
       // (haqiqiy berish backendda hisoblanadi, bu shunchaki ko'rsatish oynasi).
-      const TASK_NCOIN_AMOUNT_BY_JOB_TITLE = { "Grafik Dizyayner": 0.5 };
+      // Dizaynerni lavozim matnidan taniymiz. Lavozim profilda erkin matn,
+      // shuning uchun aniq nom bilan solishtirish ("Grafik Dizyayner") imlo
+      // farqida jimgina 0.2 berib yuborardi: "Grafik Dizayner", "dizayner",
+      // "Designer" ham shu yerga tushadi.
+      function isDesignerJob(jobTitle) {
+        return /diz(a|ya)yn|design/i.test(String(jobTitle || ""));
+      }
+      const TASK_NCOIN_DESIGNER_AMOUNT = 0.5;
       const TASK_NCOIN_DEFAULT_AMOUNT = 0.2;
       const TASK_CREATOR_NCOIN_AMOUNT = 0.2;
       function taskNcoinAmount(t) {
-        return TASK_NCOIN_AMOUNT_BY_JOB_TITLE[t?.assigneeJobTitle] ?? TASK_NCOIN_DEFAULT_AMOUNT;
+        return isDesignerJob(t?.assigneeJobTitle) ? TASK_NCOIN_DESIGNER_AMOUNT : TASK_NCOIN_DEFAULT_AMOUNT;
       }
       // Doskadagi 5 ustun — dizayn asosida, mavjud 7 statusning VIZUAL
       // guruhlanishi (bazadagi statuslar o'zgarmaydi): Backlog+Boshlanmagan
