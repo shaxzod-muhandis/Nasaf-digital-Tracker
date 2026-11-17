@@ -10588,7 +10588,7 @@
       }
       .kal-mini-b:hover { background: var(--chip2); color: var(--marker); }
       .kal-mini { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-      .kal-mini-wd { font-size: 10.5px; font-weight: 600; color: var(--v3-t4); text-align: center; padding-bottom: 2px; }
+      .kal-mc-wd { font-size: 10.5px; font-weight: 600; color: var(--v3-t4); text-align: center; padding-bottom: 2px; }
       .kal-mini-d {
         height: 26px;
         border: 0;
@@ -12764,6 +12764,33 @@
         .kal-d4-warn { flex: none; }
 
         /* O'ng ustun (faqat oy) */
+        .kal-d4-left { width: 248px; flex: none; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+        .kal-mc { padding: 14px 12px 12px; }
+        .kal-mc-h { display: flex; align-items: center; gap: 2px; padding: 0 4px 10px; font: 600 14px Onest, system-ui, sans-serif; color: var(--ink); }
+        .kal-mc-h > span { flex: 1; }
+        .kal-mc-h i { font-style: normal; color: var(--t3); font-weight: 500; }
+        .kal-mc-nav { width: 28px; height: 28px; border: 0; border-radius: 8px; background: transparent; color: var(--t2); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+        .kal-mc-nav:hover { background: var(--chip); color: var(--ink); }
+        .kal-mc-nav svg { width: 16px; height: 16px; }
+        .kal-mc-wd, .kal-mc-g { display: grid; grid-template-columns: repeat(7, 1fr); }
+        .kal-mc-wd span { text-align: center; font: 500 11px Onest, system-ui, sans-serif; color: var(--t3); padding-bottom: 4px; }
+        .kal-mc-g { row-gap: 2px; }
+        .kal-mc-g button {
+          height: 30px; border: 0; background: transparent; padding: 0; cursor: pointer;
+          font: 500 12.5px Onest, system-ui, sans-serif; color: var(--ink); font-variant-numeric: tabular-nums;
+          display: flex; align-items: center; justify-content: center; position: relative; z-index: 0;
+        }
+        /* Raqam doirada: fon ::before'da, shunda hafta chizig'i ustida ham markazda qoladi. */
+        .kal-mc-g button::before { content: ""; position: absolute; width: 28px; height: 28px; border-radius: 50%; z-index: -1; }
+        .kal-mc-g button:hover::before { background: var(--chip); }
+        .kal-mc-g button.out { color: var(--t3); opacity: 0.55; }
+        .kal-mc-g button.today { color: var(--brand); font-weight: 700; }
+        .kal-mc-g button.wk { background: var(--chip); }
+        .kal-mc-g button.wk-s { border-radius: 99px 0 0 99px; }
+        .kal-mc-g button.wk-e { border-radius: 0 99px 99px 0; }
+        .kal-mc-g button.sel, .kal-mc-g button.today.sel { color: #fff; font-weight: 700; }
+        .kal-mc-g button.sel::before { background: var(--brand); }
+        .kal-mc-g button.today:not(.sel)::before { box-shadow: inset 0 0 0 1.5px var(--brand); }
         .kal-d4-side { width: 340px; flex: none; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
         .kal-d4-pad { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
         .kal-d4-ch { display: flex; align-items: center; gap: 10px; font: 600 15px Onest, system-ui, sans-serif; color: var(--ink); }
@@ -20919,6 +20946,7 @@
         if (kalNeedsLoad()) kalLoad();
       }
       function kalStep(dir) {
+        kal.miniOy = null;
         if (kal.view === "kun") kal.anchor = kalAddDays(kal.anchor, dir);
         else if (kal.view === "hafta") kal.anchor = kalAddDays(kal.anchor, dir * 7);
         else {
@@ -20933,6 +20961,7 @@
       function kalGoToday() { kalGoDate(kalToday()); }
       function kalGoDate(dateStr, view) {
         kal.anchor = dateStr;
+        kal.miniOy = null;
         if (view) { kal.view = view; localStorage.setItem("kal-view", view); }
         kal.scrolled = false;
         kalWriteUrl();
@@ -21211,6 +21240,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg></button>`;
         const tor = birinchiYuk ? kalSkeletonHtml(false) : kal.view === "oy" ? kalMonthHtml() : kalGridHtml();
         const ong = kal.view === "oy" ? `<div class="kal-d4-side">${kalDaySideHtml()}${kalBusyHtml()}</div>` : "";
+        // Chapdagi kichik oy kalendari (macOS Calendar kabi) — Kun/Hafta
+        // ko'rinishida boshqa sanaga tez o'tish uchun. Oy ko'rinishida
+        // katta to'rning o'zi oy, shuning uchun takrorlanmaydi.
+        const chap = kal.view === "oy" ? "" : `<div class="kal-d4-left">${kalMiniHtml()}</div>`;
         return `<div class="kal-d4">
             <div class="kal-d4-hdr">
               <div class="kal-d4-ttl"><span class="kal-d4-h1">Kalendar</span><span class="kal-d4-sub">${kalDeskSub()}</span>${filtr}</div>
@@ -21233,6 +21266,7 @@
             <div class="kal-d4-body">
               ${kal.view === "oy" ? "" : kalConflictHtml()}
               <div class="kal-d4-row">
+                ${chap}
                 <div class="kal-d4-card kal-main">
                   ${kal.loading && !birinchiYuk ? `<div class="kal-bar"></div>` : ""}
                   ${tor}
@@ -21241,6 +21275,48 @@
               </div>
             </div>
           </div>`;
+      }
+
+      // Mini kalendar o'z oyini alohida varaqlaydi (kal.miniOy): asosiy
+      // ko'rinishni o'zgartirmasdan boshqa oyni ko'rib, kun tanlash mumkin.
+      // Kun bosilganda shu sanaga o'tiladi va mini kalendar o'sha oyga qaytadi.
+      function kalMiniHtml() {
+        const oy = kal.miniOy || kal.anchor.slice(0, 7);
+        const [y, m] = oy.split("-").map(Number);
+        const birinchi = `${oy}-01`;
+        const boshi = kalAddDays(birinchi, -kalWeekday(birinchi));
+        const bugun = kalToday();
+        const haftaBoshi = kal.view === "hafta" ? kalWeekStart(kal.anchor) : null;
+        let kunlar = "";
+        for (let i = 0; i < 42; i++) {
+          const d = kalAddDays(boshi, i);
+          const cls = [
+            d.slice(0, 7) !== oy ? "out" : "",
+            d === bugun ? "today" : "",
+            kal.view === "kun" && d === kal.anchor ? "sel" : "",
+            haftaBoshi && kalWeekStart(d) === haftaBoshi ? "wk" : "",
+            haftaBoshi && d === haftaBoshi ? "wk-s" : "",
+            haftaBoshi && d === kalAddDays(haftaBoshi, 6) ? "wk-e" : "",
+          ].filter(Boolean).join(" ");
+          kunlar += `<button class="${cls}" onclick="kalMiniPick('${d}')">${Number(d.slice(8))}</button>`;
+        }
+        const strelka = (dir, dd, label) => `<button class="kal-mc-nav" onclick="kalMiniStep(${dir})" aria-label="${label}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${dd}"/></svg></button>`;
+        return `<div class="kal-d4-card kal-mc">
+            <div class="kal-mc-h"><span>${MONTHS[m - 1]} <i>${y}</i></span>${strelka(-1, "m14 6-6 6 6 6", "Oldingi oy")}${strelka(1, "m10 6 6 6-6 6", "Keyingi oy")}</div>
+            <div class="kal-mc-wd">${KAL_WD.map((w) => `<span>${w}</span>`).join("")}</div>
+            <div class="kal-mc-g">${kunlar}</div>
+          </div>`;
+      }
+      function kalMiniStep(dir) {
+        const [y, m] = (kal.miniOy || kal.anchor.slice(0, 7)).split("-").map(Number);
+        kal.miniOy = new Date(Date.UTC(y, m - 1 + dir, 1)).toISOString().slice(0, 7);
+        const el = document.querySelector(".kal-d4-left");
+        if (el) el.innerHTML = kalMiniHtml();
+      }
+      function kalMiniPick(d) {
+        kal.miniOy = null;
+        kalGoDate(d);
       }
 
       function kalToggleSearch() {
@@ -21471,7 +21547,7 @@
               <button class="kal-mini-b" onclick="kalStepMini(1)">›</button>
             </div>
             <div class="kal-mini">
-              ${KAL_WD.map((w) => `<div class="kal-mini-wd">${w}</div>`).join("")}
+              ${KAL_WD.map((w) => `<div class="kal-mc-wd">${w}</div>`).join("")}
               ${kunlar}
             </div>
           </div>
