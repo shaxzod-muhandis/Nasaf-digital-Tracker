@@ -12223,7 +12223,9 @@
         body.sidebar-collapsed #screen-tasks .hdr { padding-left: 28px; }
         #screen-tasks .tb-filters { padding: 20px 28px 0; gap: 8px; }
         .tb4-search { width: 220px; flex: none; }
-        #screen-tasks .tb-seg { background: var(--chip); border-radius: 12px; padding: 4px; }
+        /* Balandlik 40 = 32px tugma + 2×4px: umumiy .tb-seg 28px bo‘lib qolsa,
+           tugmalar qutidan pastga chiqib ketadi va qator qiyshayadi. */
+        #screen-tasks .tb-seg { background: var(--chip); border-radius: 12px; padding: 4px; height: 40px; }
         #screen-tasks .tb-seg-btn { height: 32px; padding: 0 12px; border-radius: 9px; font: 500 13px Onest, system-ui, sans-serif; }
         #screen-tasks .tb-chip { height: 40px; border-radius: 12px; border-style: solid; font: 500 13px Onest, system-ui, sans-serif; background: var(--surf); }
         #screen-tasks .tb-board { padding: 16px 28px 24px; gap: 16px; }
