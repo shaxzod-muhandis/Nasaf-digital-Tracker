@@ -493,7 +493,7 @@
       }
       .more-grab { width: 36px; height: 5px; border-radius: 9px; background: var(--bd4); align-self: center; }
       .more-me { display: flex; align-items: center; gap: 12px; padding: 4px 2px; border: none; background: none; text-align: left; cursor: pointer; color: inherit; }
-      .more-me .av { width: 48px; height: 48px; border-radius: 99px; background: var(--brand); color: #fff; font: 600 17px Onest, system-ui, sans-serif; display: flex; align-items: center; justify-content: center; flex: none; overflow: hidden; }
+      .more-me .av { position: relative; width: 48px; height: 48px; border-radius: 99px; background: var(--brand); color: #fff; font: 600 17px Onest, system-ui, sans-serif; display: flex; align-items: center; justify-content: center; flex: none; overflow: hidden; }
       .more-me .av img { width: 100%; height: 100%; object-fit: cover; }
       .more-me b { display: block; font: 700 17px Sora, system-ui, sans-serif; color: var(--ink); }
       .more-me span { display: block; font-size: 13px; color: var(--t3); margin-top: 1px; }
@@ -3670,6 +3670,13 @@
       .av-img.ok {
         opacity: 1;
       }
+      /* .av-img absolute — ota element joylashtirilgan bo'lmasa, rasm eng
+         yaqin fixed/absolute ajdodga yoyiladi (2026-11-17: «Ko'proq»
+         oynasida avatar butun oynani qoplab olgan). Har bir avatar
+         idishi alohida esdan chiqmasligi uchun umumiy qoida: :where —
+         nol aniqlik, shuning uchun o'zi absolute/fixed bo'lgan idishga
+         tegmaydi. */
+      :where(:has(> .av-img)) { position: relative; }
       .avatar {
         width: 32px;
         height: 32px;
