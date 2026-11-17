@@ -32839,10 +32839,11 @@
         // ishlamaydi, faqat vazifalar orqali ishlaydi — shu sabab
         // "Bugun" (tracker) va "Loyihalar" bo'limlari uning uchun
         // ko'rinmaydi (NShop/Tarix — coin sarflash/tarixini ko'rish
-        // uchun qoladi). Lavozim matni profildagi qiymat bilan AYNAN
-        // bir xil bo'lishi kerak (TASK_NCOIN_AMOUNT_BY_JOB_TITLE'dagi
-        // bilan bir joydan keladi).
-        const isDesignerOnlyNav = myProfile?.jobTitle === "Grafik Dizyayner";
+        // uchun qoladi). Coin bilan bir xil isDesignerJob orqali
+        // taniladi, shunda lavozim qanday yozilmasin ikkalasi mos keladi.
+        // Admin dizayner bo'lsa ham bo'limlar yashirilmaydi — u loyihalarni
+        // boshqaradi.
+        const isDesignerOnlyNav = !isAdmin && isDesignerJob(myProfile?.jobTitle);
         document.getElementById("nav-today").style.display = isDesignerOnlyNav ? "none" : "flex";
         document.getElementById("nav-projects").style.display = isDesignerOnlyNav ? "none" : "flex";
         document.getElementById("sidebar-nav-today").style.display = isDesignerOnlyNav ? "none" : "flex";
