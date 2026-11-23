@@ -6168,7 +6168,11 @@
         color: var(--body-text, #2b3340);
         max-width: 60ch;
         margin-top: 10px;
-        flex: 1;
+        /* `flex: 1` edi: flex ota-ona ichida u `ntfAutoGrow` yozgan
+           balandlikni e'tiborsiz qoldirar va maydon ~110px qutichada
+           ichkaridan aylanardi — matn o'smasdi (2026-11-23). Endi maydon
+           matn bilan birga o'sadi, sahifa esa o'zi aylanadi. */
+        flex: none;
         min-height: 96px;
       }
       .ntf-title-in::placeholder { color: var(--v3-t3); font-weight: 500; }
@@ -12484,23 +12488,20 @@
         body.td-drawer #td-body { padding: 16px 18px 28px; }
         body.td-drawer #td-body .task-detail-grid.two-col { grid-template-columns: minmax(0, 1fr); gap: 14px; }
 
-        /* D15 — yangi vazifa: 760 px modal */
-        #ntf-page.ntf-ov {
-          inset: auto; left: 50%; top: 50%; transform: translate(-50%, -50%);
-          width: min(760px, calc(100vw - 48px)); max-height: min(88vh, 860px); height: auto;
-          padding-top: 0; z-index: 900; border-radius: 16px; overflow: hidden;
-          box-shadow: 0 0 0 100vmax rgba(15, 23, 42, 0.32), 0 24px 60px rgba(15, 23, 42, 0.25);
-        }
-        body.sidebar-collapsed #ntf-page.ntf-ov { left: 50%; }
+        /* D15 — yangi vazifa avval 760 px modal edi. 2026-11-23 egasi
+           qaytardi: yana TO'LIQ SAHIFA (yon menyuning o'ng tomonida,
+           yuqoridagi `.ntf-ov` qoidasi). Modal markazda `translate(-50%)`
+           bilan turgani uchun tavsif yozilayotganda har harfda balandligi
+           o'zgarib, oyna yuqoriga-pastga "dirillardi". Sahifa balandligi
+           qat'iy — matn ichkarida o'sadi, oyna joyidan qimirlamaydi.
+           Pastdagi z-index'lar qoldi: tanlagichlar baribir sahifa ustida
+           ochilishi kerak. */
         /* Modal ichidan ochiladigan tanlagichlar (xodim, loyiha, teg, sana,
            soat) modal USTIDA bo'lishi kerak. Avval ularning z-index'i
            (860/870) modalnikidan (900) past edi — ro'yxat modal orqasida
            ochilib, chetidan ko'rinib qolardi (2026-11-12, egasi qaytardi). */
         .ntf-pop { z-index: 960; }
         .ntf-sheet-ov { z-index: 970; }
-        #ntf-page .ntf-hdr { height: 64px; min-height: 64px; padding: 0 22px; }
-        #ntf-page .ntf-h1 { font-size: 19px; }
-        #ntf-page .ntf-wrap { max-width: none; padding: 16px 18px; grid-template-columns: minmax(0, 1fr) 300px; }
         #ntf-page .ntf-main { min-height: 320px; }
 
         /* D05 — saralash, Kanban/Ro'yxat */
@@ -19512,7 +19513,11 @@
             ntf[el === titleEl ? "title" : "desc"] = el.value;
             ntfAutoGrow(el);
             ntf.touched = true;
-            ntfRender();
+            // Faqat pastki qator (majburiy maydonlar, tugma) yangilanadi.
+            // Avval har harfda butun o'ng panel ham qayta chizilardi —
+            // avatarlar qayta yuklanib, sahifa miltillab turardi.
+            const foot = document.getElementById("ntf-foot");
+            if (foot) foot.innerHTML = ntfFootHtml();
             ntfQueueDraft();
           });
           el.addEventListener("blur", ntfSaveDraft);
@@ -19538,9 +19543,18 @@
       }
       // Yozuv maydoni matn bilan birga o'sadi — hech qayerda fiks
       // balandlik yo'q (TZ 04).
+      // Avval balandlik avval "auto"ga tushirilib, keyin qayta o'rnatilardi:
+      // shu bir lahzada sahifa qisqarib, aylantirish joyi sakrardi va matn
+      // har harfda "dirillardi" (2026-11-23). Endi aylantirish joyi
+      // saqlanadi va balandlik faqat haqiqatan o'zgarganda yoziladi.
       function ntfAutoGrow(el) {
+        const sc = el.closest(".ntf-scroll");
+        const top = sc ? sc.scrollTop : 0;
+        const eski = el.style.height;
         el.style.height = "auto";
-        el.style.height = el.scrollHeight + "px";
+        const yangi = el.scrollHeight + "px";
+        el.style.height = yangi === eski ? eski : yangi;
+        if (sc && sc.scrollTop !== top) sc.scrollTop = top;
       }
       function ntfClose() {
         document.querySelector(".ntf-sheet-ov")?.remove();
