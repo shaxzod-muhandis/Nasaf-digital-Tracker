@@ -18294,8 +18294,24 @@
         if (e.key === "ArrowDown" || e.key === "j") { e.preventDefault(); stepTaskDetail(1); }
         if (e.key === "ArrowUp" || e.key === "k") { e.preventDefault(); stepTaskDetail(-1); }
       }
+      // Yopish ostidagi ekranni serverdan QAYTA YUKLAMAYDI (2026-11-23):
+      // ilgari showTab() orqali /api/tasks qayta so'ralar, doska
+      // "Yuklanmoqda…" bilan qayta chizilib, scroll joyi yo'qolardi.
+      // Drawer'da (kompyuter) orqadagi ekran butun vaqt faol — vazifa
+      // o'zgarishlari refreshAllViews() orqali unga allaqachon yetib
+      // boradi. Telefonda Vazifalar ekrani yashirin turgan, shuning
+      // uchun u qo'ldagi tasksList'dan (so'rovsiz) qayta chiziladi.
       function closeTaskDetailScreen() {
+        const drawer = document.body.classList.contains("td-drawer");
         tdDrawerOff();
+        if (drawer || activeTab === "tasks") {
+          document.getElementById("screen-taskdetail").classList.remove("active");
+          document.getElementById("screen-" + activeTab)?.classList.add("active");
+          document.getElementById("bottom-nav").style.display = "";
+          if (tg()?.BackButton) tg().BackButton.hide();
+          if (!drawer) renderTasksBody();
+          return;
+        }
         showTab(activeTab);
       }
       function isTaskDetailScreenOpen() {
