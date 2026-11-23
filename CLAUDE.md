@@ -159,6 +159,19 @@ xatolardagi javoblar `tgHandleTask` izohlarida batafsil yozilgan.
 Bot sintaksisini o'zgartirsangiz, bot guruhda belgilanganda chiqadigan
 yo'riqnomani (`tgHandleEslatma`) va bo'sh `/task` javobini ham yangilang.
 
+**Bot simulyatori** (`test/bot-sim/`, `npm run bot:sim`) — botni haqiqiy
+Telegram'siz sinaydi: soxta Telegram (u ham buzuq HTML, 4096+ belgi,
+/start bosmagan odamga xabarni rad etadi) va 9 ta rol nomidan bir ish
+kuni. Faqat LOKAL bazada ishlaydi, chunki jadvallarni tozalaydi. Bot
+mantig'ini o'zgartirishdan oldin va keyin yurgizib, transkriptni
+(`test/bot-sim/natija/transkript.txt`) solishtiring.
+
+Sana qoidasi: yilsiz sana o'tib ketgan bo'lsa va 60 kundan yaqin bo'lsa —
+xato (odam deyarli har doim adashgan), uzoqroq bo'lsa — keyingi yil.
+Mijoz guruhida (`kind = mijoz`) bot ichki tafsilotni ko'rsatmaydi:
+`/task` ga qisqa "Qabul qilindi", batafsil tasdiq va xatolar yozgan
+xodimga shaxsiy; begona odamga javob berilmaydi.
+
 ## Kod uslubi
 
 - **Izohlar o'zbekcha va "NIMA UCHUN"ni tushuntiradi** — ayniqsa avval

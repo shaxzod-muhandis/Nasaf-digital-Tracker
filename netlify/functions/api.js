@@ -45,6 +45,8 @@ const {
   notifyNcoinChange,
   projectPct,
   buildPacingMessage,
+  htmldanMatn,
+  htmlXatosimi,
 } = require("./lib/notify");
 const { yozBildirishnoma } = require("./lib/inbox");
 const { getBalance, awardNcoin, reverseNcoin } = require("./lib/ncoin");
@@ -2227,7 +2229,7 @@ app.post("/api/permissions/notify", auth, async (req, res) => {
       if (!row || !row.telegram_chat_id) continue;
       await sendMsg(
         db, row.telegram_chat_id,
-        `📁 <b>Sizga @${req.user.username} tomonidan «${project.label}» loyihasiga ruxsat berildi.</b>\nRolingiz: ${POSITION_LABEL_UZ[row.role] || row.role}`,
+        `📁 <b>Sizga @${req.user.username} tomonidan «${escHtmlTg(project.label)}» loyihasiga ruxsat berildi.</b>\nRolingiz: ${POSITION_LABEL_UZ[row.role] || row.role}`,
         { replyMarkup: appOpenButton() },
       );
       yuborildi.push(uname);
@@ -3059,7 +3061,7 @@ app.post("/api/events", auth, async (req, res) => {
       evRescheduleReminders(id),
       evSendInvites(id, "REQUEST"),
       evNotify(id, boshqalar,
-        `📅 <b>Yangi reja:</b> ${v.title}\n${evFmtRange(v.start_at, v.end_at, v.all_day)}${joyLine}\nQo'shdi: @${req.user.username}`),
+        `📅 <b>Yangi reja:</b> ${escHtmlTg(v.title)}\n${evFmtRange(v.start_at, v.end_at, v.all_day)}${joyLine}\nQo'shdi: @${req.user.username}`),
     ]).then((r) => r.forEach((x) => x.status === "rejected" && console.error("[reja yaratildi, yon ish xato]", x.reason)));
 
     const r = await db.query(`${EV_SELECT} where e.id = $1`, [id]);
@@ -3158,7 +3160,7 @@ app.patch("/api/events/:id", auth, async (req, res) => {
       || new Date(ev.end_at).getTime() !== new Date(v.end_at).getTime();
     const joyOzgardi = (ev.place || "") !== (v.place || "");
     if (vaqtOzgardi || joyOzgardi) {
-      const qatorlar = [`✏️ <b>Reja o'zgardi:</b> ${v.title}`];
+      const qatorlar = [`✏️ <b>Reja o'zgardi:</b> ${escHtmlTg(v.title)}`];
       if (vaqtOzgardi) {
         qatorlar.push(`Avval: ${evFmtRange(ev.start_at, ev.end_at, ev.all_day)}`);
         qatorlar.push(`Endi: ${evFmtRange(v.start_at, v.end_at, v.all_day)}`);
@@ -3170,11 +3172,11 @@ app.patch("/api/events/:id", auth, async (req, res) => {
     const qoshilgan = v.participants.filter((u) => !eski.has(String(u)) && String(u) !== String(req.user.id));
     if (qoshilgan.length) {
       await evNotify(ev.id, qoshilgan,
-        `📅 <b>Siz rejaga qo'shildingiz:</b> ${v.title}\n${evFmtRange(v.start_at, v.end_at, v.all_day)}`);
+        `📅 <b>Siz rejaga qo'shildingiz:</b> ${escHtmlTg(v.title)}\n${evFmtRange(v.start_at, v.end_at, v.all_day)}`);
     }
     const chiqarilgan = [...eski].filter((u) => !yangi.has(u) && String(u) !== String(req.user.id));
     if (chiqarilgan.length) {
-      await evNotify(ev.id, chiqarilgan, `➖ Siz «${v.title}» rejasidan chiqarildingiz`);
+      await evNotify(ev.id, chiqarilgan, `➖ Siz «${escHtmlTg(v.title)}» rejasidan chiqarildingiz`);
     }
     res.json({ ok: true, scope: "all" });
   } catch (e) {
@@ -3220,7 +3222,7 @@ app.delete("/api/events/:id", auth, async (req, res) => {
     await db.query(`delete from event_reminders where event_id = $1 and sent_at is null`, [ev.id]);
     const pr = await db.query(`select user_id from event_participants where event_id = $1`, [ev.id]);
     await evNotify(ev.id, pr.rows.map((x) => x.user_id).filter((u) => String(u) !== String(req.user.id)),
-      `❌ <b>Reja bekor qilindi:</b> ${ev.title}\n${evFmtRange(ev.start_at, ev.end_at, ev.all_day)}`);
+      `❌ <b>Reja bekor qilindi:</b> ${escHtmlTg(ev.title)}\n${evFmtRange(ev.start_at, ev.end_at, ev.all_day)}`);
     res.json({ ok: true, scope: "all" });
   } catch (e) {
     serverError(res, e, "DELETE /api/events/:id", req);
@@ -3311,7 +3313,7 @@ async function evSendDueReminders() {
         : daqiqa >= 60 ? `${Math.round(daqiqa / 60)} soatdan`
         : `${daqiqa} daqiqadan`;
       await evNotify(ev.id, [row.user_id],
-        `⏰ <b>${qachon ? qachon + " keyin" : "Hozir boshlanadi"}:</b> ${ev.title}\n${evFmtRange(occ.toISOString(), new Date(occ.getTime() + davomiylik).toISOString(), ev.all_day)}${ev.place ? `\n📍 ${ev.place}` : ""}`);
+        `⏰ <b>${qachon ? qachon + " keyin" : "Hozir boshlanadi"}:</b> ${escHtmlTg(ev.title)}\n${evFmtRange(occ.toISOString(), new Date(occ.getTime() + davomiylik).toISOString(), ev.all_day)}${ev.place ? `\n📍 ${escHtmlTg(ev.place)}` : ""}`);
       sent++;
     }
     return sent;
@@ -3599,7 +3601,7 @@ app.post("/api/events/digest/run", async (req, res) => {
         const d = new Date(new Date(iso).getTime() + 5 * 3600000);
         return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
       };
-      const qatorlar = list.map((x) => `• ${x.all_day ? "butun kun" : soat(x.start)} — ${x.title}${x.place ? ` (${x.place})` : ""}`);
+      const qatorlar = list.map((x) => `• ${x.all_day ? "butun kun" : soat(x.start)} — ${escHtmlTg(x.title)}${x.place ? ` (${escHtmlTg(x.place)})` : ""}`);
       await sendMsg(db, u.telegram_chat_id,
         `📅 <b>Bugungi rejalaringiz: ${list.length} ta</b>\n${qatorlar.join("\n")}`,
         { replyMarkup: appOpenButton("kalendar") });
@@ -3895,12 +3897,23 @@ async function tgReply(chatId, text, { replyTo, threadId, replyMarkup } = {}) {
     if (replyTo) body.reply_parameters = { message_id: replyTo, allow_sending_without_reply: true };
     if (threadId) body.message_thread_id = threadId;
     if (replyMarkup) body.reply_markup = replyMarkup;
-    const r = await fetch(TG_API("sendMessage"), {
+    const yubor = (x) => fetch(TG_API("sendMessage"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify(x),
     });
-    const b = await r.json().catch(() => ({}));
+    let r = await yubor(body);
+    let b = await r.json().catch(() => ({}));
+    // HTML buzuq bo'lsa — sof matn bilan qayta (lib/notify.js → sendMsg
+    // dagi izohga qarang). Guruhda javobsiz qolish undan ham yomon:
+    // odam vazifa ochildimi-yo'qmi bilmay qoladi.
+    if (!r.ok && htmlXatosimi(r.status, b)) {
+      console.error("tgReply HTML xato, sof matn bilan qayta:", JSON.stringify(b));
+      const sof = { ...body, text: htmldanMatn(text) };
+      delete sof.parse_mode;
+      r = await yubor(sof);
+      b = await r.json().catch(() => ({}));
+    }
     if (!r.ok) {
       console.error("tgReply xato:", r.status, JSON.stringify(b));
       return null;
@@ -3935,10 +3948,13 @@ async function tgBotUsername() {
 
 // Tugma bosilganda Telegram javob kutadi — busiz tugma ustida
 // aylanuvchi belgi qolib ketadi.
-async function tgAnswerCallback(callbackQueryId, text) {
+async function tgAnswerCallback(callbackQueryId, text, url) {
   try {
     const body = { callback_query_id: callbackQueryId };
     if (text) { body.text = text; body.show_alert = false; }
+    // `t.me/<bot>?start=…` — Telegram tugma bosgan odamga bot bilan
+    // shaxsiy chatni o'zi ochib beradi (guruhga hech narsa yozilmaydi).
+    if (url) body.url = url;
     await fetch(TG_API("answerCallbackQuery"), {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
     });
@@ -3952,13 +3968,21 @@ async function tgAnswerCallback(callbackQueryId, text) {
 // xabarlar bilan to'lib ketardi.
 async function tgEditMessage(chatId, messageId, text, replyMarkup) {
   try {
-    const r = await fetch(TG_API("editMessageText"), {
+    const tahrir = (x) => fetch(TG_API("editMessageText"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: chatId, message_id: messageId, text, parse_mode: "HTML", reply_markup: replyMarkup }),
+      body: JSON.stringify(x),
     });
+    const body = { chat_id: chatId, message_id: messageId, text, parse_mode: "HTML", reply_markup: replyMarkup };
+    let r = await tahrir(body);
+    let b = r.ok ? {} : await r.json().catch(() => ({}));
+    if (!r.ok && htmlXatosimi(r.status, b)) {
+      const sof = { ...body, text: htmldanMatn(text) };
+      delete sof.parse_mode;
+      r = await tahrir(sof);
+      b = r.ok ? {} : await r.json().catch(() => ({}));
+    }
     if (!r.ok) {
-      const b = await r.json().catch(() => ({}));
       // "message is not modified" — bir xil ekranni qayta bosish;
       // bu xato emas, e'tiborsiz qoldiriladi.
       if (!String(b.description || "").includes("not modified")) {
@@ -4004,8 +4028,15 @@ async function tgFindUser(from) {
   if (!from) return null;
   let r = await db.query(`select * from users where telegram_user_id = $1`, [String(from.id)]);
   if (r.rows[0]) return r.rows[0];
+  // Username bo'yicha — FAQAT hali hech qaysi Telegram hisobiga
+  // bog'lanmagan xodim uchun. Aks holda xodim Telegram'da username'ini
+  // o'zgartirsa, o'sha bo'shagan nomni olgan begona odam bot orqali uning
+  // vazifalari va loyihalarini ko'ra olardi (2026-11-20, simulyator).
   if (from.username) {
-    r = await db.query(`select * from users where lower(username) = lower($1)`, [from.username]);
+    r = await db.query(
+      `select * from users where lower(username) = lower($1) and telegram_user_id is null`,
+      [from.username],
+    );
     if (r.rows[0]) return r.rows[0];
   }
   return null;
@@ -4045,18 +4076,53 @@ async function tgLogMessage(m, user) {
 // qilib `/task`. Ixtiyoriy sana: `/task 05.11 Banner kerak`.
 // Sanasiz vazifa "backlog"ka tushadi — noto'g'ri muddat qo'yishdan
 // ko'ra muddatsiz qo'ygan yaxshi.
+// Natija: `{ iso }` — to'g'ri sana, `{ xato }` — sanaga o'xshaydi, lekin
+// ishlatib bo'lmaydi (odamga aytiladi), `null` — umuman sana emas.
+//
+// 2026-11-20 gacha ikki xato bor edi (bot simulyatorida topildi):
+//   • "31.02" — Postgres rad etardi va odam faqat "xatolik yuz berdi"
+//     degan javobni olardi, nima noto'g'riligini bilmasdi;
+//   • "01.11" (20-noyabrda) — jim ravishda 2027-yil 1-noyabrga
+//     aylanardi. Vazifa bir yilga "yo'qolar", eslatma ham kelmasdi.
+//     Odam deyarli har doim xato yozgan bo'ladi (01.12 demoqchi edi).
+// Endi yaqin o'tmishdagi sana (60 kungacha) — xato, so'raladi; uzoqroq
+// o'tmish esa avvalgidek keyingi yil (dekabrda "05.01" — yanvar).
 function tgParseDate(token) {
   const m = /^(\d{1,2})\.(\d{1,2})(?:\.(\d{4}))?$/.exec(token || "");
   if (!m) return null;
   const bugun = todayTashkent();
-  const yil = m[3] ? Number(m[3]) : Number(bugun.slice(0, 4));
+  let yil = m[3] ? Number(m[3]) : Number(bugun.slice(0, 4));
   const oy = Number(m[2]), kun = Number(m[1]);
   if (oy < 1 || oy > 12 || kun < 1 || kun > 31) return null;
-  const iso = `${yil}-${String(oy).padStart(2, "0")}-${String(kun).padStart(2, "0")}`;
-  // Yilsiz kiritilgan sana o'tib ketgan bo'lsa — keyingi yil nazarda
-  // tutilgan (dekabrda "05.01" deyilsa, yanvar).
-  if (!m[3] && iso < bugun) return `${yil + 1}-${String(oy).padStart(2, "0")}-${String(kun).padStart(2, "0")}`;
-  return iso;
+  const qur = (y) => `${y}-${String(oy).padStart(2, "0")}-${String(kun).padStart(2, "0")}`;
+  // Kalendarda bormi: 31.02, 31.04 kabi sanalar Date'da keyingi oyga
+  // "oqib" ketadi — shuni tekshiramiz.
+  const d = new Date(Date.UTC(yil, oy - 1, kun));
+  if (d.getUTCMonth() !== oy - 1) return { xato: `${token} — bunday sana yo'q.` };
+  let iso = qur(yil);
+  if (iso < bugun) {
+    const otgan = dayDiff(iso, bugun);
+    if (m[3] || otgan <= 60) {
+      return { xato: `${token} — bu sana o'tib ketgan (bugun ${bugun.slice(8, 10)}.${bugun.slice(5, 7)}). Kelgusi sanani yozing.` };
+    }
+    yil += 1;
+    if (new Date(Date.UTC(yil, oy - 1, kun)).getUTCMonth() !== oy - 1) return { xato: `${token} — bunday sana yo'q.` };
+    iso = qur(yil);
+  }
+  return { iso };
+}
+
+// "2026-11-25" → "25-noyabr, chorshanba". Botda sanalar avval ISO
+// shaklida chiqardi, odamlar esa `25.11` deb yozadi va "25-noyabr" deb
+// gapiradi — tasdiqni o'qib, to'g'ri kun tushganini darhol ko'rish uchun.
+const TG_OYLAR = ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr"];
+const TG_HAFTA = ["yakshanba", "dushanba", "seshanba", "chorshanba", "payshanba", "juma", "shanba"];
+function tgSanaKorinish(iso, { hafta = true } = {}) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ""));
+  if (!m) return String(iso || "");
+  const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  const yil = m[1] !== todayTashkent().slice(0, 4) ? ` ${m[1]}` : "";
+  return `${+m[3]}-${TG_OYLAR[+m[2] - 1]}${yil}` + (hafta ? `, ${TG_HAFTA[d.getUTCDay()]}` : "");
 }
 
 const TG_DARAJA_NOMI = { high: "Yuqori", medium: "O'rta", low: "Past", urgent: "Shoshilinch" };
@@ -4115,7 +4181,7 @@ function tgTahrirMasofasi(a, b) {
 // xato ham boshqa loyihaga aylantirib yuborishi mumkin.
 const tgRuxsatXato = (n) => (n <= 3 ? 0 : n <= 5 ? 1 : n <= 9 ? 2 : 3);
 
-async function tgLoyihaTop(xom) {
+async function tgLoyihaTop(xom, { royxat = true } = {}) {
   const r = await db.query(`select id, slug, label from projects where is_active order by label`);
   const kalit = tgLoyihaNorm(xom);
   const variantlar = r.rows.map((p) => ({
@@ -4163,16 +4229,48 @@ async function tgLoyihaTop(xom) {
     }
   }
   return {
-    xato: `+${escHtmlTg(xom)} — bunday loyiha topilmadi.\nLoyihalar: ${royxatOf(variantlar)}.\n` +
+    // To'liq ro'yxat faqat ichki guruhda: turi belgilanmagan guruh
+    // mijozniki bo'lishi mumkin, u yerda boshqa mijozlar nomi chiqmasin.
+    xato: `+${escHtmlTg(xom)} — bunday loyiha topilmadi.\n` +
+      (royxat ? `Loyihalar: ${royxatOf(variantlar)}.\n` : "Loyihalar ro'yxati — ilovada.\n") +
       "Vazifa ochilmadi, to'g'rilab qayta yuboring.",
   };
 }
 
+// Ichki guruh — faqat jamoa o'tiradigan guruh. Mijoz guruhi va hali
+// turi belgilanmagan guruh (u ham mijozniki bo'lib chiqishi mumkin)
+// ichki EMAS: u yerda bot jamoaning ichki ma'lumotini ko'rsatmasligi
+// kerak.
+const TG_ICHKI_TURLAR = new Set(["montaj", "dizayn", "video", "jamoa"]);
+const tgIchkiGuruhmi = (group) => !!group && TG_ICHKI_TURLAR.has(group.kind);
+
 async function tgHandleTask(m, group, user) {
-  const javob = (t) => tgReply(m.chat.id, t, { replyTo: m.message_id, threadId: m.message_thread_id });
+  const ichki = tgIchkiGuruhmi(group);
+  const mijozGuruhi = group && group.kind === "mijoz";
+  // Mijoz guruhida xato va izohlar guruhga EMAS, yozgan xodimga shaxsiy
+  // boradi. Avval "+xyz — bunday loyiha topilmadi. Loyihalar: …" degan
+  // javob agentlikning BARCHA mijozlari ro'yxatini boshqa mijozning
+  // ko'z oldida chiqarardi (2026-11-20, simulyator).
+  const javob = async (t) => {
+    if (mijozGuruhi) {
+      const r = user && user.telegram_chat_id
+        ? await sendMsg(db, user.telegram_chat_id, `<i>«${escHtmlTg(group.title || "Mijoz guruhi")}» dagi /task:</i>\n\n${t}`)
+        : { ok: false };
+      if (r.ok) return null;
+      return tgReply(m.chat.id, "Vazifa ochilmadi. Tafsilotni shaxsiy yubora olmadim — botga /start yozing.", {
+        replyTo: m.message_id, threadId: m.message_thread_id,
+      });
+    }
+    return tgReply(m.chat.id, t, { replyTo: m.message_id, threadId: m.message_thread_id });
+  };
 
   if (!user || !user.is_active || user.access_status !== "active") {
-    return javob("Sizni xodimlar ro'yxatidan topa olmadim. Avval ilovani bir marta oching.");
+    // Mijoz yoki begona odam `/task` yozsa — jim. "Ilovani oching"
+    // degan ichki ko'rsatma ularga tushunarsiz va keraksiz edi.
+    if (!ichki) return;
+    return tgReply(m.chat.id, "Sizni xodimlar ro'yxatidan topa olmadim. Avval ilovani bir marta oching.", {
+      replyTo: m.message_id, threadId: m.message_thread_id,
+    });
   }
   // Guruh turi endi SHART EMAS: vazifa har qanday guruhda ochiladi.
   // Avval faqat `dizayn` guruhida ishlardi, ya'ni montaj yoki video
@@ -4205,7 +4303,7 @@ async function tgHandleTask(m, group, user) {
   // tanilardi va "!o’rta" darajaga aylanmay, matnda qolib ketardi.
   const tutuq = (x) => x.replace(/[’‘ʻʼ`´]/g, "'");
 
-  let sana = null, soat = null, korsatilgan = null, daraja = null, xomLoyiha = null;
+  let sana = null, soat = null, korsatilgan = null, daraja = null, xomLoyiha = null, sanaXato = null;
   const xomTeglar = [];
 
   // Bo'lak belgimi — QIYMATNI YOZMASDAN tekshiradi. Qator faqat
@@ -4235,7 +4333,10 @@ async function tgHandleTask(m, group, user) {
   // harakat saqlandi).
   function qolla(b, yumshoq) {
     let x;
-    if (!sana && (x = BELGI.sana(b, yumshoq))) { sana = x; return true; }
+    if (!sana && !sanaXato && (x = BELGI.sana(b, yumshoq))) {
+      if (x.xato) sanaXato = x.xato; else sana = x.iso;
+      return true;
+    }
     if (!soat && (x = BELGI.soat(b))) { soat = `${x[1].padStart(2, "0")}:${x[2]}`; return true; }
     if ((x = BELGI.masul(b))) {
       // Botning o'zi belgilansa — e'tiborsiz qoldiriladi.
@@ -4296,6 +4397,11 @@ async function tgHandleTask(m, group, user) {
     .trim();
   const sarlavha = qolgan.join(" ").trim();
 
+  // Sana noto'g'ri bo'lsa vazifa OCHILMAYDI: noto'g'ri muddat bilan
+  // ochilgan vazifani keyin hech kim sezmasligi mumkin, qayta yuborish
+  // esa bir soniya (loyiha nomi xatosidagi kabi qoida).
+  if (sanaXato) return javob(`${escHtmlTg(sanaXato)}\nVazifa ochilmadi, to'g'rilab qayta yuboring.`);
+
   // Teglar MAVJUDLARI ichidan topiladi — chatdan yangi teg yaratish
   // ro'yxatni tezda axlatga to'ldirardi. Tanilmagani javobda aytiladi.
   let tegIdlari = [];
@@ -4318,6 +4424,10 @@ async function tgHandleTask(m, group, user) {
   const manbaMatn = manba ? (manba.text || manba.caption || "").trim() : "";
   const izoh = [ozTavsif, manbaMatn].filter(Boolean).join("\n\n").slice(0, 2000) || null;
   const yakuniySarlavha = sarlavha || (izoh ? izoh.split("\n")[0].slice(0, 120) : "");
+  // Sarlavha javob berilgan xabardan olingan va xabar bir qatorli bo'lsa,
+  // tavsif sarlavhaning AYNAN takrori bo'lib qolardi — bildirishnomada
+  // bir gap ikki marta chiqardi.
+  const tavsif = izoh && izoh.trim() !== yakuniySarlavha.trim() ? izoh : null;
   if (!yakuniySarlavha) {
     return javob(
       "Vazifani yozing, eng oxiriga buyruqni qo'shing:\n\n" +
@@ -4349,7 +4459,7 @@ async function tgHandleTask(m, group, user) {
   // loyihaga bog'lanmagan bo'lsa (umumiy jamoa guruhi), vazifa
   // avval loyihasiz ochilardi va ilovada qo'lda biriktirilardi.
   if (xomLoyiha) {
-    const topildi = await tgLoyihaTop(xomLoyiha);
+    const topildi = await tgLoyihaTop(xomLoyiha, { royxat: ichki || mijozGuruhi });
     if (topildi.xato) return javob(topildi.xato);
     projectId = topildi.id;
     if (topildi.taxmin) loyihaTaxmin = xomLoyiha;
@@ -4378,7 +4488,10 @@ async function tgHandleTask(m, group, user) {
   if (!masul && group.assignee_id) masul = group.assignee_id;
   // 4. Guruh turiga mos loyiha roli.
   if (!masul && projectId) {
-    const ROL = { montaj: "montajchi", video: "mobilograf", dizayn: "dizayner" };
+    // Mijoz guruhida so'rov odatda kontent haqida — loyihaning SMM'i.
+    // Avval bu yerda `mijoz` yo'q edi va mijozning har bir so'rovi
+    // mas'ulsiz backlog'ga tushib, hech kimning ro'yxatida chiqmasdi.
+    const ROL = { montaj: "montajchi", video: "mobilograf", dizayn: "dizayner", mijoz: "smm" };
     const rol = ROL[group.kind];
     if (rol) {
       const pr = await db.query(
@@ -4415,7 +4528,7 @@ async function tgHandleTask(m, group, user) {
        returning id`,
       // Soat sanasiz ma'nosiz (u muddatning soati), shuning uchun
       // faqat sana bilan birga yoziladi.
-      [projectId, yakuniySarlavha.slice(0, 200), izoh, sana, sana ? soat : null,
+      [projectId, yakuniySarlavha.slice(0, 200), tavsif, sana, sana ? soat : null,
        user.id, sana && masul ? "todo" : "backlog", daraja || "no_priority",
        m.chat.id, m.message_id],
     );
@@ -4430,7 +4543,9 @@ async function tgHandleTask(m, group, user) {
     const r = await db.query(`${TASK_ROW_SQL} where t.id = $1`, [taskId]);
     const [task] = await attachTags([shapeTaskRow(r.rows[0])]);
     // Mas'ulga shaxsiy xabar — ilovadagi oddiy vazifa bilan bir xil.
-    if (masul) {
+    // O'ziga o'zi ochgan bo'lsa — yo'q: tasdiqni hozirgina ko'rdi,
+    // "Sizga @o'zingiz tomonidan vazifa biriktirildi" ortiqcha takror.
+    if (masul && masul !== user.id) {
       notifyTaskAssigned(db, { assigneeUserId: masul, task, actorUsername: user.username })
         .catch((e) => console.error("tgHandleTask notify:", e.message));
     }
@@ -4438,7 +4553,7 @@ async function tgHandleTask(m, group, user) {
     // Tasdiq ataylab batafsil: kim, qaysi loyiha, qaysi muddat —
     // noto'g'ri biriktirish darhol ko'rinib tursin.
     const kim = task.assignees && task.assignees[0] ? task.assignees[0].name : null;
-    const tasdiq = await javob(
+    const batafsil =
       `✅ Vazifa ochildi — <b>${escHtmlTg(yakuniySarlavha.slice(0, 120))}</b>\n` +
         (kim
           ? `Mas'ul: ${escHtmlTg(kim)}\n`
@@ -4449,7 +4564,7 @@ async function tgHandleTask(m, group, user) {
             // olsin, noto'g'ri tushgan bo'lsa ilovada bir bosishda tuzatadi.
             (loyihaTaxmin ? ` <i>(«+${escHtmlTg(loyihaTaxmin)}» deb yozilgan edi)</i>` : "") + "\n"
           : "Loyiha: <b>belgilanmadi</b> — keyingi safar <code>+Anhor</code> kabi yozing\n") +
-        (sana ? `Muddat: ${sana}${soat ? " " + soat : ""}\n` : "Muddat qo'yilmagan (backlog)\n") +
+        (sana ? `Muddat: ${tgSanaKorinish(sana)}${soat ? ", " + soat : ""}\n` : "Muddat qo'yilmagan (backlog)\n") +
         (soat && !sana ? "Soat sanasiz saqlanmadi — sanani ham yozing\n" : "") +
         (daraja ? `Daraja: ${TG_DARAJA_NOMI[daraja]}\n` : "") +
         // Nomi bilan: "2 ta" deyilsa, to'g'ri teg tushganini bilib bo'lmasdi.
@@ -4457,8 +4572,19 @@ async function tgHandleTask(m, group, user) {
         (tanilmaganTeglar.length
           ? `Tanilmagan teg: ${tanilmaganTeglar.map((x) => "#" + escHtmlTg(x)).join(", ")}\n`
           : "") +
-        `Ilovada: Vazifalar bo'limi`,
-    );
+        `Ilovada: Vazifalar bo'limi`;
+    // Mijoz guruhida — faqat qisqa tasdiq. Kim mas'ul, qaysi muddat,
+    // "belgilanmadi — ilovada biriktiring" kabi ichki ish mijozga
+    // ko'rinmasligi kerak; batafsil tasdiq yozgan xodimga shaxsiy keladi.
+    let tasdiq;
+    if (mijozGuruhi) {
+      tasdiq = await tgReply(m.chat.id, "✅ Qabul qilindi — jamoa ishga oldi.", {
+        replyTo: m.message_id, threadId: m.message_thread_id,
+      });
+      await javob(batafsil);
+    } else {
+      tasdiq = await javob(batafsil);
+    }
     // Shu xabarga javob yozilsa izoh bo'lib tushadi — quyidagi
     // tgHandleIzoh shu id bo'yicha vazifani topadi.
     if (tasdiq && tasdiq.message_id) {
@@ -4480,7 +4606,7 @@ async function tgHandleTask(m, group, user) {
 //
 // Ruxsat ilovadagi bilan bir xil (canCommentOnTask): admin yoki
 // vazifaning mas'uli.
-async function tgHandleIzoh(m, user) {
+async function tgHandleIzoh(m, user, group) {
   const manba = m.reply_to_message;
   if (!manba) return false;
   const matn = (m.text || m.caption || "").trim();
@@ -4495,6 +4621,9 @@ async function tgHandleIzoh(m, user) {
 
   const javob = (t) => tgReply(m.chat.id, t, { replyTo: m.message_id, threadId: m.message_thread_id });
   if (!user || !user.is_active || user.access_status !== "active") {
+    // Mijoz botning "Qabul qilindi" xabariga javob yozsa — bu oddiy
+    // suhbat, unga ichki ko'rsatma yozilmaydi.
+    if (!tgIchkiGuruhmi(group)) return false;
     await javob("Sizni xodimlar ro'yxatidan topa olmadim. Avval ilovani bir marta oching.");
     return true;
   }
@@ -4556,6 +4685,27 @@ async function tgVazifalarniOl(userIds) {
   return r.rows;
 }
 
+// Mas'ulsiz ochiq vazifalar. Guruhda `/task` mas'ulni topa olmasa
+// vazifa egasiz ochiladi va ilovada biriktirilishi kerak — lekin bot
+// ro'yxatlari faqat `task_assignees` orqali qurilgani uchun bunday
+// vazifa admin menyusida HAM, `/vazifalar hamma` da HAM ko'rinmasdi.
+// Ya'ni eng ko'p e'tibor kerak bo'lgan ish eng ko'rinmas edi
+// (2026-11-20, simulyator).
+async function tgMasulsizOl() {
+  const r = await db.query(
+    `select '0' as user_id, 'Mas''ulsiz — biriktirish kerak' as kim,
+            t.title, t.status, t.due_date, p.label as project_label
+       from tasks t
+       left join projects p on p.id = t.project_id
+      where t.status = any($1::text[])
+        and t.assignee_staff_id is null
+        and not exists (select 1 from task_assignees ta where ta.task_id = t.id)
+      order by (t.due_date is null), t.due_date, t.created_at desc`,
+    [TG_OCHIQ_HOLATLAR],
+  );
+  return r.rows;
+}
+
 // Telegram xabari 4096 belgidan oshmasligi kerak, shuning uchun har
 // odamga ko'pi bilan 12 ta ish va umumiy uzunlikka ham chegara.
 const TG_MAX_ISH = 12;
@@ -4576,7 +4726,7 @@ function tgVazifalarMatn(rows, bugun) {
     const kech = o.ishlar.filter((t) => t.due_date && t.due_date < bugun).length;
     const qatorlar = o.ishlar.slice(0, TG_MAX_ISH).map((t) => {
       const muddat = t.due_date
-        ? (t.due_date < bugun ? `⚠ ${t.due_date}` : t.due_date)
+        ? (t.due_date < bugun ? `⚠ ${tgSanaKorinish(t.due_date, { hafta: false })} (o'tgan)` : tgSanaKorinish(t.due_date, { hafta: false }))
         : "muddatsiz";
       const loyiha = t.project_label ? ` · ${escHtmlTg(t.project_label)}` : "";
       return `• ${escHtmlTg(t.title)}\n   ${muddat} · ${TG_HOLAT_NOMI[t.status] || t.status}${loyiha}`;
@@ -4705,12 +4855,24 @@ async function tgEkran(kod, user) {
     const tugmalar = odamlar.slice(0, 20).map((o) => [
       { text: `${o.kim} — ${o.n} ta`, callback_data: `x:${o.user_id}` },
     ]);
+    const masulsiz = await tgMasulsizOl();
+    if (masulsiz.length) tugmalar.unshift([{ text: `❔ Mas'ulsiz — ${masulsiz.length} ta`, callback_data: "x:0" }]);
     tugmalar.push([TG_ORQAGA("m")]);
     return {
-      text: odamlar.length
+      text: odamlar.length || masulsiz.length
         ? "<b>👥 Xodimlar vazifalari</b>\n\nKimni ko'ramiz?"
         : "<b>👥 Xodimlar vazifalari</b>\n\nHech kimda ochiq ish yo'q.",
       markup: { inline_keyboard: tugmalar },
+    };
+  }
+
+  if (kod === "x:0" && admin) {
+    const rows = await tgMasulsizOl();
+    return {
+      text: "<b>❔ Mas'ulsiz vazifalar</b>\n\n" +
+        (tgVazifalarMatn(rows, bugun) || "Hammasi biriktirilgan.") +
+        (rows.length ? "\n\n<i>Ilovada Vazifalar bo'limida mas'ul tanlang.</i>" : ""),
+      markup: { inline_keyboard: [[TG_ORQAGA("x")], [{ text: "« Bosh menyu", callback_data: "m" }]] },
     };
   }
 
@@ -5015,7 +5177,7 @@ async function tgNashrniQaytar(mr, emoji) {
   await tgNashrniOchir(pub, user, chatId, mr.message_id);
 }
 
-async function tgNashrniOchir(pub, user, javobChat, javobMsg) {
+async function tgNashrniOchir(pub, user, javobChat, javobMsg, { jim = false } = {}) {
   const och = await tgDeleteMessage(pub.dst_chat_id, pub.dst_message_id);
   await db.query(
     `update tg_publications set revoked_at = now(), revoked_by = $2 where id = $1`,
@@ -5026,6 +5188,9 @@ async function tgNashrniOchir(pub, user, javobChat, javobMsg) {
     [javobChat, javobMsg],
   );
   const threadId = (msg.rows[0] && msg.rows[0].thread_id) || null;
+  // Tugma orqali qaytarilganda natija o'sha tugmali xabarning o'zida
+  // yoziladi — alohida javob ikkinchi, takroriy xabar bo'lardi.
+  if (jim) return och.ok;
   await tgReply(
     javobChat,
     och.ok
@@ -5042,10 +5207,12 @@ async function tgHandleCallback(cq) {
   if (!user || !user.is_active || user.access_status !== "active") {
     return tgAnswerCallback(cq.id, "Sizni xodimlar ro'yxatidan topa olmadim.");
   }
-  // Avval javob — aks holda tugma aylanaveradi.
-  await tgAnswerCallback(cq.id);
-  if (!cq.message || !cq.message.chat) return;
+  if (!cq.message || !cq.message.chat) return tgAnswerCallback(cq.id);
   const chat = cq.message.chat;
+  const guruhda = chat.type === "group" || chat.type === "supergroup";
+  // Avval javob — aks holda tugma aylanaveradi. Guruhdagi menyu tugmasi
+  // bundan mustasno: unga javob natijaga qarab pastda beriladi.
+  if (!guruhda || String(cq.data || "").startsWith("np:")) await tgAnswerCallback(cq.id);
 
   // Nashrni qaytarib olish. Menyu ekranlaridan OLDIN tekshiriladi:
   // bu tugma guruhda turadi va natijasi ham guruhda ko'rinishi kerak,
@@ -5057,13 +5224,18 @@ async function tgHandleCallback(cq) {
     if (!pub) return;
     if (pub.revoked_at) return;
     if (!(await tgTasdiqlayOladimi(user, pub.project_id))) return;
-    await tgNashrniOchir(pub, user, pub.src_chat_id, pub.src_message_id);
+    const ochdi = await tgNashrniOchir(pub, user, pub.src_chat_id, pub.src_message_id, { jim: true });
     // Tugma bir martalik: bosilgandan keyin olib tashlanadi.
     // `cq.message.text` — belgilashsiz, SOF matn (Telegram teglarni
     // ajratib beradi). Uni HTML sifatida qaytarsak, loyiha nomidagi
     // `&` yoki `<` butun xabarni buzib yuborardi.
     await tgEditMessage(chat.id, cq.message.message_id,
-      escHtmlTg(cq.message.text || "") + "\n\n\u21A9\uFE0F Qaytarib olindi.", null);
+      escHtmlTg(cq.message.text || "") +
+        (ochdi
+          ? "\n\n\u21A9\uFE0F Qaytarib olindi — mijoz guruhidan o'chirildi."
+          : "\n\n⚠️ Belgi olib tashlandi, lekin mijoz guruhidan o'chira olmadim " +
+            "(48 soatdan oshgan bo'lishi mumkin) — xabarni qo'lda o'chiring."),
+      null);
     return;
   }
   // Huquq har bosishda qayta tekshiriladi: callback_data foydalanuvchi
@@ -5075,17 +5247,18 @@ async function tgHandleCallback(cq) {
   // qancha ish borligi va qaysi loyiha qarzdaligi butun guruhga,
   // shu jumladan mijozlarga ko'rinib qolardi. Shuning uchun guruhda
   // natija FAQAT shaxsiy yuboriladi, guruhdagi karta o'zgarmaydi.
-  if (chat.type === "group" || chat.type === "supergroup") {
+  if (guruhda) {
     const yuborildi = user.telegram_chat_id
       ? await sendMsg(db, user.telegram_chat_id, ekran.text, { replyMarkup: ekran.markup })
       : { ok: false };
-    if (!yuborildi.ok) {
-      await tgReply(chat.id, "Shaxsiy xabar yubora olmadim — avval botga shaxsiy <code>/start</code> yozing.", {
-        replyTo: cq.message.message_id,
-        threadId: cq.message.message_thread_id,
-      });
-    }
-    return;
+    if (yuborildi.ok) return tgAnswerCallback(cq.id, "📩 Shaxsiy xabarda yubordim");
+    // Bot bu odamga hali yoza olmaydi (u botga /start bosmagan). Avval
+    // guruhga "avval /start yozing" degan xabar tushardi — guruh
+    // shovqini, odam esa botni qidirib topishi kerak edi. Endi Telegram
+    // bot bilan shaxsiy chatni o'zi ochadi, /start bosilgach chat id
+    // saqlanadi va keyingi safar ro'yxat to'g'ridan-to'g'ri keladi.
+    const bot = await tgBotUsername();
+    return tgAnswerCallback(cq.id, bot ? null : "Avval botga shaxsiy /start yozing", bot ? `https://t.me/${bot}?start=menu` : null);
   }
 
   await tgEditMessage(chat.id, cq.message.message_id, ekran.text, ekran.markup);
@@ -5093,19 +5266,51 @@ async function tgHandleCallback(cq) {
 
 async function tgHandleShaxsiy(m) {
   const user = await tgFindUser(m.from);
-  if (!user || !user.is_active || user.access_status !== "active") {
-    return tgReply(m.chat.id, "Sizni xodimlar ro'yxatidan topa olmadim. Avval ilovani bir marta oching.");
+  // Uch xil holat, uch xil javob. Avval hammasiga bitta "Avval ilovani
+  // bir marta oching" yozilardi: mijoz ilovani ocha olmaydi, ishdan
+  // ketgan xodim esa ochsa ham kira olmaydi — ikkalasi ham chalg'irdi.
+  if (user && (!user.is_active || user.access_status !== "active")) {
+    return tgReply(m.chat.id, "Sizning tizimga kirishingiz yopilgan. Savolingiz bo'lsa, rahbaringizga murojaat qiling.");
   }
+  if (!user) {
+    return tgReply(
+      m.chat.id,
+      "Bu bot — Nasaf Digital jamoasining ichki yordamchisi.\n\n" +
+        "Jamoa a'zosi bo'lsangiz, rahbaringizdan sizni tizimga qo'shishini so'rang, " +
+        "keyin shu yerga /start yozing.",
+    );
+  }
+  // Botga yozgan xodimning shaxsiy chati saqlanadi. Bildirishnomalar
+  // shu `telegram_chat_id` ga yuboriladi, u esa avval FAQAT ilova
+  // ochilganda yozilardi: botga /start bosib, ilovani hali ochmagan
+  // xodimga vazifa xabarlari umuman bormasdi (2026-11-20, simulyator).
+  await db
+    .query(
+      `update users set telegram_chat_id = $1, telegram_user_id = coalesce(telegram_user_id, $2::bigint)
+        where id = $3 and (telegram_chat_id is distinct from $1 or telegram_user_id is null)`,
+      [String(m.chat.id), String(m.from.id), user.id],
+    )
+    .catch((e) => console.error("telegram_chat_id yozilmadi:", e.message));
+
   const matn = (m.text || "").trim();
   const kod = /^\/(vazifalar|tasks)(@\S+)?(\s|$)/i.test(matn) ? "v" : "m";
   const ekran = await tgEkran(kod, user);
-  await sendMsg(db, m.chat.id, ekran.text, { replyMarkup: ekran.markup });
+  // Buyruq bo'lmagan oddiy gap ("bugun kechroq kelaman") botga yozilsa,
+  // odam uni kimdir o'qiydi deb o'ylaydi. Jim menyu ko'rsatish o'rniga
+  // ochiq aytamiz: bu xabar hech kimga yetmaydi.
+  const oddiyGap = matn && !matn.startsWith("/");
+  const ogoh = oddiyGap
+    ? "<i>Bu yerga yozilgan xabar hech kimga yetib bormaydi — men faqat botman. " +
+      "Rahbaringiz yoki jamoaga to'g'ridan-to'g'ri yozing.</i>\n\n"
+    : "";
+  await sendMsg(db, m.chat.id, ogoh + ekran.text, { replyMarkup: ekran.markup });
 }
 
 async function tgHandleVazifalar(m, group, user) {
   const javob = (t) => tgReply(m.chat.id, t, { replyTo: m.message_id, threadId: m.message_thread_id });
 
   if (!user || !user.is_active || user.access_status !== "active") {
+    if (!tgIchkiGuruhmi(group)) return;
     return javob("Sizni xodimlar ro'yxatidan topa olmadim. Avval ilovani bir marta oching.");
   }
 
@@ -5137,6 +5342,7 @@ async function tgHandleVazifalar(m, group, user) {
   }
 
   const rows = await tgVazifalarniOl(userIds);
+  if (userIds === null) rows.unshift(...(await tgMasulsizOl()));
   const matn = tgVazifalarMatn(rows, todayTashkent());
   const toliq = `<b>${sarlavha}</b>\n\n` + (matn || "Ochiq ish yo'q.");
 
@@ -5147,8 +5353,16 @@ async function tgHandleVazifalar(m, group, user) {
   if (yuborildi.ok) {
     await javob("📋 Ro'yxatni shaxsiy xabarda yubordim.");
   } else {
-    await javob(
-      "Shaxsiy xabar yubora olmadim — avval botga shaxsiy <code>/start</code> yozing, keyin qayta urinib ko'ring.",
+    const bot = await tgBotUsername();
+    await tgReply(
+      m.chat.id,
+      "Ro'yxatni shaxsiy yubora olmadim — siz hali botni ochmagansiz.\n" +
+        "Pastdagi tugmani bosing, <b>Start</b>ni bosing va <code>/vazifalar</code> ni qayta yuboring.",
+      {
+        replyTo: m.message_id,
+        threadId: m.message_thread_id,
+        replyMarkup: bot ? { inline_keyboard: [[{ text: "🤖 Botni ochish", url: `https://t.me/${bot}?start=menu` }]] } : undefined,
+      },
     );
   }
 }
@@ -5371,7 +5585,7 @@ async function tgWebhookIshla(u) {
   // Izoh eslatmadan OLDIN: botning tasdiq xabariga javob yozilganda,
   // matnda `@bot` ham bo'lsa, u izoh bo'lishi kerak — yo'riqnoma
   // kartasi emas.
-  else if (await tgHandleIzoh(m, user)) {
+  else if (await tgHandleIzoh(m, user, group)) {
     // izoh qo'shildi (yoki ruxsat yo'qligi aytildi)
   } else if (matn && (await tgEslatmaBormi(matn))) await tgHandleEslatma(m, group, user);
 }
@@ -6321,7 +6535,7 @@ app.patch("/api/checks", auth, async (req, res) => {
             userId: videographerUserId,
             amount: 1,
             reason: "post_video",
-            text: `"${project.label}" loyihasida post uchun video olganingiz uchun 1 Ncoin qo'shildi.`,
+            text: `"${escHtmlTg(project.label)}" loyihasida post uchun video olganingiz uchun 1 Ncoin qo'shildi.`,
           });
         }
         if (editorUserId) {
@@ -6329,7 +6543,7 @@ app.patch("/api/checks", auth, async (req, res) => {
             userId: editorUserId,
             amount: 1,
             reason: "post_edit",
-            text: `"${project.label}" loyihasida post uchun video montaj qilganingiz uchun 1 Ncoin qo'shildi.`,
+            text: `"${escHtmlTg(project.label)}" loyihasida post uchun video montaj qilganingiz uchun 1 Ncoin qo'shildi.`,
           });
         }
         smmRows.forEach((r) =>
@@ -6337,7 +6551,7 @@ app.patch("/api/checks", auth, async (req, res) => {
             userId: r.user_id,
             amount: 1,
             reason: "post_smm",
-            text: `"${project.label}" loyihasida yangi post chiqdi — 1 Ncoin qo'shildi.`,
+            text: `"${escHtmlTg(project.label)}" loyihasida yangi post chiqdi — 1 Ncoin qo'shildi.`,
           }),
         );
       } else if (storyKind === "atmospheric") {
@@ -6346,7 +6560,7 @@ app.patch("/api/checks", auth, async (req, res) => {
             userId: videographerUserId,
             amount: 0.1,
             reason: "story_video",
-            text: `"${project.label}" loyihasida atmosferali stories uchun video olganingiz uchun 0.1 Ncoin qo'shildi.`,
+            text: `"${escHtmlTg(project.label)}" loyihasida atmosferali stories uchun video olganingiz uchun 0.1 Ncoin qo'shildi.`,
           });
         }
         if (editorUserId) {
@@ -6354,7 +6568,7 @@ app.patch("/api/checks", auth, async (req, res) => {
             userId: editorUserId,
             amount: 0.1,
             reason: "story_edit",
-            text: `"${project.label}" loyihasida atmosferali stories uchun video montaj qilganingiz uchun 0.1 Ncoin qo'shildi.`,
+            text: `"${escHtmlTg(project.label)}" loyihasida atmosferali stories uchun video montaj qilganingiz uchun 0.1 Ncoin qo'shildi.`,
           });
         }
       } else {
@@ -6363,7 +6577,7 @@ app.patch("/api/checks", auth, async (req, res) => {
             userId: r.user_id,
             amount: 0.2,
             reason: "story_smm",
-            text: `"${project.label}" loyihasida yangi stories chiqdi — 0.2 Ncoin qo'shildi.`,
+            text: `"${escHtmlTg(project.label)}" loyihasida yangi stories chiqdi — 0.2 Ncoin qo'shildi.`,
           }),
         );
       }
@@ -6815,9 +7029,9 @@ app.post("/api/tasks", auth, async (req, res) => {
       const overviewText =
         `📋 <b>@${req.user.username}</b> yangi vazifa yaratdi` +
         (task.assignees.length
-          ? ` — <b>${task.assignees.map((a) => a.name).join(", ")}</b>ga`
+          ? ` — <b>${escHtmlTg(task.assignees.map((a) => a.name).join(", "))}</b>ga`
           : "") +
-        `\n${task.title}` +
+        `\n${escHtmlTg(task.title)}` +
         (task.dueDate ? `\n📅 Muddat: ${task.dueDate}` : "");
       notifyTaskEvent(db, {
         actorUserId: req.user.id,
@@ -7013,10 +7227,10 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
       if (req.body.notifyTelegram !== false) {
         const statusLine =
           `${TASK_STATUS_LABEL_UZ[before.status] || before.status} → ${TASK_STATUS_LABEL_UZ[task.status] || task.status}`;
-        const personalText = `🔄 <b>Vazifangiz holati o'zgardi</b>\n${task.title}\n${statusLine}`;
+        const personalText = `🔄 <b>Vazifangiz holati o'zgardi</b>\n${escHtmlTg(task.title)}\n${statusLine}`;
         const overviewText =
-          `🔄 <b>@${req.user.username}</b>: <b>${task.title}</b>\n${statusLine}` +
-          (task.assignees.length ? `\n👤 ${task.assignees.map((a) => a.name).join(", ")}` : "");
+          `🔄 <b>@${req.user.username}</b>: <b>${escHtmlTg(task.title)}</b>\n${statusLine}` +
+          (task.assignees.length ? `\n👤 ${escHtmlTg(task.assignees.map((a) => a.name).join(", "))}` : "");
         notifyTaskEvent(db, {
           actorUserId: req.user.id,
           assigneeUserId: existing.assignee_user_id,
@@ -7062,7 +7276,7 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
               db,
               existing.assignee_user_id,
               amount,
-              `Siz "${task.title}" vazifasini bajarganingiz uchun ${amount} Ncoin ishlab topdingiz.`,
+              `Siz "${escHtmlTg(task.title)}" vazifasini bajarganingiz uchun ${amount} Ncoin ishlab topdingiz.`,
             );
           } catch (e) {
             console.error("Ncoin berish xatosi:", e.message);
@@ -7085,7 +7299,7 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
                 db,
                 existing.created_by,
                 TASK_CREATOR_NCOIN_AMOUNT,
-                `Siz biriktirgan "${task.title}" vazifasi bajarilgani uchun ${TASK_CREATOR_NCOIN_AMOUNT} Ncoin ishlab topdingiz.`,
+                `Siz biriktirgan "${escHtmlTg(task.title)}" vazifasi bajarilgani uchun ${TASK_CREATOR_NCOIN_AMOUNT} Ncoin ishlab topdingiz.`,
               );
             } catch (e) {
               console.error("Vazifa biriktiruvchiga Ncoin berish xatosi:", e.message);
@@ -7138,7 +7352,7 @@ app.patch("/api/tasks/:id", auth, async (req, res) => {
       });
       // Yangi mas'ul allaqachon shaxsiy xabar oldi (yuqorida) — bu esa
       // faqat yaratuvchi va adminlar uchun nazorat xabari.
-      const overviewText = `👤 <b>@${req.user.username}</b>: <b>${task.title}</b> vazifasi ${task.assigneeName || "boshqa xodim"}ga qayta biriktirildi`;
+      const overviewText = `👤 <b>@${req.user.username}</b>: <b>${escHtmlTg(task.title)}</b> vazifasi ${escHtmlTg(task.assigneeName || "boshqa xodim")}ga qayta biriktirildi`;
       notifyTaskEvent(db, {
         actorUserId: req.user.id,
         createdByUserId: existing.created_by,
@@ -7991,13 +8205,13 @@ app.post("/api/cycles/rollover", async (req, res) => {
       for (const closed of closedNow) {
         events.push({ project: project.label, cycleIndex: closed.cycle_index, isDebt: closed.is_debt });
         const text = closed.is_debt
-          ? `⚠️ <b>${project.label}</b> — ${closed.cycle_index}-davr yakunlandi, lekin TO'LIQ bajarilmadi (qarz qoldi).`
-          : `✅ <b>${project.label}</b> — ${closed.cycle_index}-davr to'liq bajarilgan holda yakunlandi! 🎉`;
+          ? `⚠️ <b>${escHtmlTg(project.label)}</b> — ${closed.cycle_index}-davr yakunlandi, lekin TO'LIQ bajarilmadi (qarz qoldi).`
+          : `✅ <b>${escHtmlTg(project.label)}</b> — ${closed.cycle_index}-davr to'liq bajarilgan holda yakunlandi! 🎉`;
         const recipients = await resolveRecipients(db, "__system__", project.id);
         await Promise.allSettled(recipients.map((r) => sendMsg(db, r.chatId, text, { replyMarkup: appOpenButton() })));
       }
       if (closedNow.length > 0) {
-        const newText = `🆕 <b>${project.label}</b> — yangi davr boshlandi (${cycle.period_start} – ${cycle.period_end}).`;
+        const newText = `🆕 <b>${escHtmlTg(project.label)}</b> — yangi davr boshlandi (${cycle.period_start} – ${cycle.period_end}).`;
         const recipients = await resolveRecipients(db, "__system__", project.id);
         await Promise.allSettled(recipients.map((r) => sendMsg(db, r.chatId, newText, { replyMarkup: appOpenButton() })));
       }
@@ -8105,10 +8319,10 @@ app.post("/api/reminder/run", async (req, res) => {
         .map((it) => {
           const daysLeft = dayDiff(today, it.due_date); // musbat = hali oldinda, manfiy = o'tib ketgan
           if (daysLeft < 0)
-            return `❗ <b>${it.title}</b> — muddati (${it.due_date}) o'tib ketdi. Nima sababdan bajarilmadi? Vazifani yoping yoki uning holatini aniqlang.`;
-          if (daysLeft === 0) return `📌 <b>${it.title}</b> — bugun tugaydi. Iltimos, bajarib qo'ying.`;
-          if (daysLeft === 1) return `⏰ <b>${it.title}</b> — ertaga tugaydi.`;
-          return `⏰ <b>${it.title}</b> — muddatiga ${daysLeft} kun qoldi.`;
+            return `❗ <b>${escHtmlTg(it.title)}</b> — muddati (${it.due_date}) o'tib ketdi. Nima sababdan bajarilmadi? Vazifani yoping yoki uning holatini aniqlang.`;
+          if (daysLeft === 0) return `📌 <b>${escHtmlTg(it.title)}</b> — bugun tugaydi. Iltimos, bajarib qo'ying.`;
+          if (daysLeft === 1) return `⏰ <b>${escHtmlTg(it.title)}</b> — ertaga tugaydi.`;
+          return `⏰ <b>${escHtmlTg(it.title)}</b> — muddatiga ${daysLeft} kun qoldi.`;
         })
         .join("\n");
       const name = items[0]?.first_name;
@@ -8140,7 +8354,7 @@ app.post("/api/reminder/run", async (req, res) => {
         .map((row) => {
           const overdueDays = -dayDiff(today, row.due_date);
           const empName = row.first_name || row.username;
-          return `📵 <b>${row.title}</b> — ${empName} (@${row.username}), muddatidan ${overdueDays} kun o'tdi (${row.due_date}). Shaxsan bog'laning.`;
+          return `📵 <b>${escHtmlTg(row.title)}</b> — ${empName} (@${row.username}), muddatidan ${overdueDays} kun o'tdi (${row.due_date}). Shaxsan bog'laning.`;
         })
         .join("\n");
       const adminText = `🚨 <b>E'tibor: ${escalated.length} ta vazifa 2+ kundan beri kechikmoqda</b>\n─────────────────\n\n${escLines}`;

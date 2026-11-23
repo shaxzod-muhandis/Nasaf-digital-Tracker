@@ -29,6 +29,34 @@ function appOpenButton(path = "") {
   return { inline_keyboard: [[{ text: "📱 Ilovani ochish", web_app: { url } }]] };
 }
 
+// Matndagi `<`, `>` va `&` ni Telegram HTML'i uchun xavfsiz qiladi.
+// Vazifa nomi, loyiha nomi kabi odam yozgan har qanday qiymat xabarga
+// shu orqali qo'shilishi kerak.
+function escHtml(t) {
+  return String(t == null ? "" : t).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+}
+
+// HTML belgilashni olib tashlab, sof matnga aylantiradi — zaxira yo'l.
+function htmldanMatn(t) {
+  return String(t || "")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, "&");
+}
+
+// Telegram HTML'ni tahlil qila olmasa (vazifa nomida `<1 daqiqa>` yoki
+// `<yangi>` kabi belgi bo'lsa) BUTUN xabarni rad etadi va xodimga hech
+// narsa yetib bormaydi. 2026-11-20 bot simulyatorida aniqlandi: nomida
+// `<` bor vazifa haqidagi biriktirish, holat o'zgarishi va eslatma
+// xabarlarining HAMMASI jim yo'qolardi. Qiymatlar endi manbada
+// eskeyp qilinadi, lekin bitta joy unutilsa ham xabar yo'qolmasligi
+// uchun — rad etilsa, o'sha matn belgilashsiz qayta yuboriladi.
+function htmlXatosimi(status, b) {
+  return status === 400 && /parse entities|unsupported start tag|can't find end/i.test(String((b && b.description) || ""));
+}
+
 async function sendMsg(db, chatId, text, opts = {}) {
   const botToken = process.env.BOT_TOKEN || "";
   if (!botToken || !chatId) return { ok: false, reason: "no_token_or_chatid" };
@@ -36,12 +64,20 @@ async function sendMsg(db, chatId, text, opts = {}) {
   try {
     const body = { chat_id: chatId, text, parse_mode: "HTML" };
     if (opts.replyMarkup) body.reply_markup = opts.replyMarkup;
-    const r = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    const yubor = (b) => fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify(b),
     });
-    const b = await r.json().catch(() => ({}));
+    let r = await yubor(body);
+    let b = await r.json().catch(() => ({}));
+    if (!r.ok && htmlXatosimi(r.status, b)) {
+      console.error(`TG HTML xato (${chatId}), sof matn bilan qayta yuborildi:`, JSON.stringify(b));
+      const sof = { ...body, text: htmldanMatn(text) };
+      delete sof.parse_mode;
+      r = await yubor(sof);
+      b = await r.json().catch(() => ({}));
+    }
     if (!r.ok) {
       console.error(`TG xato (${chatId}) [${r.status}]:`, JSON.stringify(b));
       result = { ok: false, chatId, status: r.status, body: b };
@@ -124,8 +160,8 @@ async function notifyCheckChange(db, { actorUserId, actorUsername, project, cycl
   ];
 
   const text =
-    `👤 <b>@${actorUsername}</b>\n` +
-    `📁 <b>${project.label}</b>\n` +
+    `👤 <b>@${escHtml(actorUsername)}</b>\n` +
+    `📁 <b>${escHtml(project.label)}</b>\n` +
     `${actionLine}\n` +
     `📊 Qoldi: ${remParts.join(", ")}`;
 
@@ -166,7 +202,9 @@ async function notifyNcoinChange(db, userId, amountSigned, text) {
     await yozBildirishnoma(db, userId, {
       type: "ncoin",
       title: `${Number(amountSigned) < 0 ? "−" : "+"}${f} Ncoin`,
-      body: String(text || "").replace(/<[^>]+>/g, ""),
+      // Matn Telegram HTML'i: teglar olinadi va `&lt;` kabi belgilar
+      // qaytariladi (avval faqat teglar olinardi).
+      body: htmldanMatn(text),
     });
   }
   if (!process.env.BOT_TOKEN) return;
@@ -206,9 +244,9 @@ async function notifyTaskAssigned(db, { assigneeUserId, task, actorUsername }) {
   if (!chatId) return { attempted: false, ok: false, reason: "no_chat_id" };
   const byLine = actorUsername ? ` @${actorUsername} tomonidan` : "";
   const dueLine = task.dueDate ? `\n📅 Muddat: ${task.dueDate}` : "";
-  const projLine = task.projectLabel ? `\n📁 ${task.projectLabel}` : "";
-  const descLine = task.description ? `\n\n📝 ${task.description}` : "";
-  const text = `🆕 <b>Sizga${byLine} yangi vazifa biriktirildi</b>\n${task.title}${projLine}${dueLine}${descLine}`;
+  const projLine = task.projectLabel ? `\n📁 ${escHtml(task.projectLabel)}` : "";
+  const descLine = task.description ? `\n\n📝 ${escHtml(task.description)}` : "";
+  const text = `🆕 <b>Sizga${byLine} yangi vazifa biriktirildi</b>\n${escHtml(task.title)}${projLine}${dueLine}${descLine}`;
   const result = await sendMsg(db, chatId, text, { replyMarkup: appOpenButton(`?openTask=${task.id}`) });
   return { attempted: true, ok: result.ok, reason: result.ok ? null : result.error || "send_failed" };
 }
@@ -304,7 +342,7 @@ async function notifyProjectAssigned(db, { assigneeUserId, actorUsername, projec
   const chatId = ur.rows[0]?.telegram_chat_id;
   if (!chatId) return;
   const byLine = actorUsername ? ` @${actorUsername} tomonidan` : "";
-  const text = `📁 <b>Sizga${byLine} loyihaga ruxsat berildi</b>\n${projectLabel}`;
+  const text = `📁 <b>Sizga${byLine} loyihaga ruxsat berildi</b>\n${escHtml(projectLabel)}`;
   await sendMsg(db, chatId, text, { replyMarkup: appOpenButton() });
 }
 
@@ -353,6 +391,9 @@ function buildPacingMessage(stats) {
 
 module.exports = {
   APP_URL,
+  escHtml,
+  htmldanMatn,
+  htmlXatosimi,
   appOpenButton,
   sendMsg,
   resolveRecipients,
