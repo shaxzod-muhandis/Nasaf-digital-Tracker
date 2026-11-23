@@ -19318,7 +19318,21 @@
         if (x) x.click();
         else top.remove();
       }
+      // ✕ ni yashirib ham bo'lmaydi (Telegram API'da bunday imkon yo'q).
+      // Eng yaqini — oyna yoki vazifa paneli ochiq turganda ✕ bosilsa,
+      // Telegram avval "Yopilsinmi?" deb so'raydi; tasodifan bosilgan
+      // ✕ ilovani yopib yubormaydi. Oyna yopilgach — odatdagi holat.
+      let closeConfirmOn = false;
+      function syncCloseConfirm() {
+        const w = tg();
+        if (!w?.enableClosingConfirmation) return;
+        const on = !!document.querySelector("body > .overlay, #td-scrim");
+        if (on === closeConfirmOn) return;
+        closeConfirmOn = on;
+        on ? w.enableClosingConfirmation() : w.disableClosingConfirmation();
+      }
       new MutationObserver(() => {
+        syncCloseConfirm();
         const on = !!document.querySelector("body > .overlay");
         const i = pageBackStack.indexOf(overlayCloseTop);
         if (on && i === -1) {
