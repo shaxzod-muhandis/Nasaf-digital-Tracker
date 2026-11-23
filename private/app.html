@@ -15650,12 +15650,20 @@
           // Ustida to'liq sahifa (vazifa formasi, belgilash sahifasi)
           // ochiq bo'lsa, orqaga tugmasi avval o'shani yopadi —
           // ostidagi ekran joyida qoladi.
-          tg().BackButton.onClick(() => {
-            if (pageBackStack.length) return;
-            onBack();
-          });
+          // Bitta doimiy handler — har ochilishda yangisini qo'shish
+          // oldingi ekranlarning yopuvchilarini ham ishga tushirardi.
+          subScreenBack = onBack;
+          if (!subScreenBackBound) {
+            subScreenBackBound = true;
+            tg().BackButton.onClick(() => {
+              if (pageBackStack.length) return;
+              subScreenBack?.();
+            });
+          }
         }
       }
+      let subScreenBack = null;
+      let subScreenBackBound = false;
 
       // ── BUGUN ─────────────────────────────────────────────────────
       // ── "BUGUN" SAHIFASI — UMUMIY YORDAMCHILAR (v3 dizayni) ────────
@@ -19293,6 +19301,44 @@
       function pageOnKey(e) {
         if (e.key === "Escape") pageOnBack();
       }
+
+      // Oynalar (makeSheet: o'ngdan chiqadigan panel / pastki sheet)
+      // va Telegram tugmalari (2026-11-23). Telegram'ning o'ng tepadagi
+      // ✕ tugmasini Mini App ushlay olmaydi — u doim ilovani yopadi.
+      // Shuning uchun oyna ochiq turganda Telegram'ning "←" (orqaga)
+      // tugmasi chiqadi va u eng ustidagi oynani yopadi; oyna yo'q
+      // bo'lsa tugma avvalgi holiga qaytadi. Kompyuterda Esc ham shunday.
+      function overlayCloseTop() {
+        const all = document.querySelectorAll("body > .overlay");
+        const top = all[all.length - 1];
+        if (!top) return;
+        // O'z yopish tugmasi bo'lsa — o'sha (ba'zi oynalar yopilishda
+        // qo'shimcha ish qiladi), bo'lmasa shunchaki olib tashlanadi.
+        const x = top.querySelector(".sheet-close");
+        if (x) x.click();
+        else top.remove();
+      }
+      new MutationObserver(() => {
+        const on = !!document.querySelector("body > .overlay");
+        const i = pageBackStack.indexOf(overlayCloseTop);
+        if (on && i === -1) {
+          pageBackStack.push(overlayCloseTop);
+          pageSyncBack();
+        } else if (!on && i !== -1) {
+          pageBackStack.splice(i, 1);
+          pageSyncBack();
+        }
+      }).observe(document.body, { childList: true });
+      window.addEventListener(
+        "keydown",
+        (e) => {
+          if (e.key !== "Escape" || pageBackStack[pageBackStack.length - 1] !== overlayCloseTop) return;
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          overlayCloseTop();
+        },
+        true,
+      );
 
       // Bosilganda o'z sahifasini ochadigan maydon qatori. Vazifa
       // formasi ham, belgilash sahifasi ham shundan foydalanadi —
