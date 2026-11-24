@@ -4061,12 +4061,29 @@ async function tgLogMessage(m, user) {
   );
   // Forum mavzusi birinchi marta ko'rinsa — ro'yxatga olamiz, admin
   // keyin uni loyihaga bog'laydi.
-  if (m.message_thread_id) {
+  //
+  // Nom (2026-11-25): avval birinchi ko'ringan xabar boshqa xabarga
+  // javob bo'lsa, nom kelmasdi va `do nothing` tufayli mavzu abadiy
+  // "Mavzu #27" bo'lib qolardi. Endi nom keyingi har qanday xabardan
+  // to'ldiriladi; mavzu yaratilgani yoki qayta nomlangani (servis
+  // xabarlar) ham nomni yangilaydi.
+  if (m.message_thread_id && m.chat.is_forum) {
+    const nom =
+      (m.forum_topic_edited && m.forum_topic_edited.name) ||
+      (m.forum_topic_created && m.forum_topic_created.name) ||
+      (m.reply_to_message && m.reply_to_message.forum_topic_created &&
+        m.reply_to_message.forum_topic_created.name) ||
+      null;
+    // Qayta nomlash eski nomning USTIDAN yozadi; oddiy xabardagi nom
+    // esa faqat bo'sh joyni to'ldiradi (u mavzu yaratilgandagi nom).
+    const ustidan = !!(m.forum_topic_edited && m.forum_topic_edited.name);
     await db.query(
       `insert into tg_topics (chat_id, thread_id, title)
-       values ($1, $2, $3) on conflict (chat_id, thread_id) do nothing`,
-      [m.chat.id, m.message_thread_id, (m.reply_to_message && m.reply_to_message.forum_topic_created &&
-        m.reply_to_message.forum_topic_created.name) || null],
+       values ($1, $2, $3)
+       on conflict (chat_id, thread_id) do update
+         set title = case when $4 then excluded.title
+                          else coalesce(tg_topics.title, excluded.title) end`,
+      [m.chat.id, m.message_thread_id, nom, ustidan],
     );
   }
 }
