@@ -18279,21 +18279,15 @@
         if (!nav.some((x) => x.id === id)) nav = sortTasksForBoard(tasksList);
         taskDetailNav = { ids: nav.map((x) => x.id), index: nav.findIndex((x) => x.id === id) };
         taskDetailTab = "comments";
+        // Ostidagi ekran yashirinadi va qaytishda qayta chiziladi —
+        // ustunlar va sahifaning scroll joyi shu yerda eslab qolinadi.
+        if (!isTaskDetailScreenOpen()) tdScrollSaqla();
         openSubScreen("screen-taskdetail", closeTaskDetailScreen);
-        // Kompyuterda — o'ngdan drawer (D14, 2026-11-11): orqadagi
-        // sahifa (kanban) ko'rinib turadi, keyingi vazifaga o'tish oson.
-        // Telefonda avvalgidek to'liq sahifa.
-        if (window.matchMedia("(min-width: 860px)").matches) {
-          document.getElementById("screen-" + activeTab)?.classList.add("active");
-          document.body.classList.add("td-drawer");
-          if (!document.getElementById("td-scrim")) {
-            const sc = document.createElement("div");
-            sc.id = "td-scrim";
-            sc.onclick = closeTaskDetailScreen;
-            document.body.appendChild(sc);
-          }
-          document.addEventListener("keydown", tdDrawerKey);
-        }
+        // Kompyuterda ham TO'LIQ SAHIFA (2026-11-25, egasi): avval o'ngdan
+        // 480 px drawer edi (D14) — uzun tavsifni o'qish noqulay bo'lib,
+        // tahrir sahifasi bilan ham ustma-ust tushardi. Klaviatura
+        // (Esc — yopish, ↑/↓ yoki K/J — oldingi/keyingi) saqlanadi.
+        document.addEventListener("keydown", tdDrawerKey);
         renderTaskDetailSheet(t);
       }
       function tdDrawerOff() {
@@ -18304,7 +18298,7 @@
       // Esc — yopish; ↑/↓ yoki K/J — oldingi/keyingi vazifa (D14).
       // Matn yozilayotganda (izoh, checklist) tugmalar ushlanmaydi.
       function tdDrawerKey(e) {
-        if (!document.body.classList.contains("td-drawer")) return;
+        if (!isTaskDetailScreenOpen()) return;
         if (pageBackStack.length || document.querySelector(".overlay, #confirm-modal")) return;
         const yoz = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
         if (e.key === "Escape") { e.preventDefault(); closeTaskDetailScreen(); return; }
@@ -18328,9 +18322,38 @@
           document.getElementById("bottom-nav").style.display = "";
           if (tg()?.BackButton) tg().BackButton.hide();
           if (!drawer) renderTasksBody();
+          tdScrollQaytar();
           return;
         }
         showTab(activeTab);
+      }
+      // Vazifalar doskasining scroll joylari (sahifa + har bir ustun).
+      // Doska qayta chizilganda tuzilish o'zgarmaydi, shuning uchun
+      // tartib raqami bo'yicha qaytariladi.
+      let tdScroll = null;
+      function tdScrollElementlari() {
+        const sc = document.getElementById("screen-tasks");
+        if (!sc) return [];
+        return [document.scrollingElement, sc, ...sc.querySelectorAll("*")].filter((e) => {
+          if (!e || e === document.scrollingElement) return !!e;
+          const o = getComputedStyle(e);
+          return /auto|scroll/.test(o.overflowY + o.overflowX);
+        });
+      }
+      function tdScrollSaqla() {
+        if (activeTab !== "tasks") { tdScroll = null; return; }
+        tdScroll = tdScrollElementlari().map((e) => [e.scrollTop, e.scrollLeft]);
+      }
+      function tdScrollQaytar() {
+        const saqlangan = tdScroll;
+        tdScroll = null;
+        if (!saqlangan || activeTab !== "tasks") return;
+        const els = tdScrollElementlari();
+        els.forEach((e, i) => {
+          if (!saqlangan[i]) return;
+          e.scrollTop = saqlangan[i][0];
+          e.scrollLeft = saqlangan[i][1];
+        });
       }
       function isTaskDetailScreenOpen() {
         return !!document.getElementById("screen-taskdetail")?.classList.contains("active");
