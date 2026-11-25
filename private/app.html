@@ -11286,6 +11286,9 @@
          Sinf nomi ataylab alohida: ilovada umumiy `.empty` qoidasi
          bor (40px padding) va u bu yerga tushib, avatarni 82px ga
          cho'zib yuborardi. */
+      /* Avatar doirasidagi ikonka (masalan stories turi) — o'lchamsiz SVG
+         butun doirani egallab, chetidan chiqib ketardi. */
+      .mk-av > svg { width: 18px; height: 18px; flex: none; }
       .mk-av-empty {
         background: var(--chip2);
         color: var(--v3-t4);
@@ -25183,6 +25186,9 @@
       function cwdRoleIsSub(role) {
         const asg = cwdRoleAssigned(role);
         const cur = cwdRoleCurrent(role);
+        // Stories'ni loyihaning o'z mobilografi montaj qilsa — zamena
+        // emas, sabab so'ralmaydi (backend bilan bir xil qoida).
+        if (role === "montajchi" && cwd.type === "s" && cur && cwd.mobAssignedId && String(cur) === String(cwd.mobAssignedId)) return false;
         return !!asg && !!cur && String(cur) !== String(asg);
       }
       // Montaj/video tanlovi faqat postda va "atmosferali" storiesda

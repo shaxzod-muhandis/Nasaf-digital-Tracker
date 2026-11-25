@@ -3630,7 +3630,7 @@ app.get("/api/projects", auth, async (req, res) => {
     const assigneesByProject = {};
     if (projectIds.length) {
       const assigneesR = await db.query(
-        `select p.project_id, p.role, u.id as user_id, u.username, u.full_name, u.first_name, u.last_name
+        `select p.project_id, p.role, u.id as user_id, u.username, u.full_name, u.first_name, u.last_name, u.avatar_url
            from permissions p
            join users u on u.id = p.user_id
           where p.project_id = any($1::uuid[])
@@ -3645,6 +3645,10 @@ app.get("/api/projects", auth, async (req, res) => {
           fullName: row.full_name,
           firstName: row.first_name,
           lastName: row.last_name,
+          // Rasm ham — avval yo'q edi va loyiha jamoasi ko'rsatiladigan
+          // joylarda (belgilash oynasi, Jamoa kartasi) bir odam goh
+          // rasm, goh harf bilan chiqardi.
+          avatarUrl: row.avatar_url || null,
           role: row.role,
         });
       });
@@ -6430,7 +6434,16 @@ app.patch("/api/checks", auth, async (req, res) => {
     // "hozirgi ruxsatlar" bilan solishtirib topilardi — ya'ni rol
     // almashgach o'tgan oylarning hisobi ham o'zgarib ketardi.
     const mobilografAssignedId = rolMuhri.mobilograf || null;
-    const montajchiAssignedId = rolMuhri.montajchi || null;
+    // Stories'ni loyihaning O'Z mobilografi montaj qilsa — bu zamena
+    // emas (2026-11-25, egasi: videograf stories'ni o'zi ham montaj
+    // qiladi). Shunda "rejadagi montajor" sifatida o'sha mobilograf
+    // muhrlanadi — tabel va tarix ham zamena ko'rsatmaydi, sabab
+    // so'ralmaydi. Postda qoida o'zgarmagan.
+    const montajchiAssignedId =
+      type === "s" && editorUserId && mobilografAssignedId &&
+      String(editorUserId) === String(mobilografAssignedId)
+        ? mobilografAssignedId
+        : rolMuhri.montajchi || null;
     const performerId = performerIdRaw || req.user.id;
     const isSubstitution = !!assigneeId && String(performerId) !== String(assigneeId);
     // Mobilograf/montajor zamenasi — maydonda ko'rsatilgan xodim
