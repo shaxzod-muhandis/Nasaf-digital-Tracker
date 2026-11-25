@@ -8453,6 +8453,104 @@ app.post("/api/birthdays/run", async (req, res) => {
   }
 });
 
+// ── JAMOA GURUHIGA "BUGUNGI ISHLAR" (2026-11-25, egasi) ───────────────
+// Har kuni 08:00 da (kunlik cron bilan) «Nasaf Digital | Team» guruhining
+// «Muhokama» mavzusiga — muddati AYNAN BUGUN bo'lgan ochiq vazifalar,
+// xodimlar bo'yicha. Kechikkanlar kirmaydi (egasi tanlovi), yakshanba
+// yuborilmaydi, bugungi vazifa bo'lmasa — jim.
+//
+// Manzil hozircha shu yerda (TEAM_DIGEST_CHAT / TEAM_DIGEST_THREAD bilan
+// almashtirsa bo'ladi). Guruhlar bo'limi qayta ko'rib chiqilganda u
+// yerdagi sozlamaga ko'chiriladi.
+const TEAM_DIGEST_CHAT = process.env.TEAM_DIGEST_CHAT || "-1003234932333";
+const TEAM_DIGEST_THREAD = Number(process.env.TEAM_DIGEST_THREAD || 4);
+// Sinov hisobi — real xodim emas, jamoa ro'yxatida chiqmasin.
+const TEAM_DIGEST_SKIP = new Set(["nasafdigital_manager"]);
+
+async function teamDigestMatn(today) {
+  const r = await db.query(
+    `select t.id, t.title, t.due_time, p.label as project,
+            u.username, u.first_name, u.last_name, ast.full_name as staff_name
+       from tasks t
+       left join projects p on p.id = t.project_id
+       left join task_assignees ta on ta.task_id = t.id
+       left join users u on u.id = ta.user_id
+       left join staff ast on ast.id = t.assignee_staff_id
+      where t.due_date = $1
+        and t.status not in ('review', 'done', 'failed', 'cancelled')
+      order by t.due_time nulls last, t.created_at`,
+    [today],
+  );
+  // vazifa -> mas'ullar; xodim -> vazifalar (bir vazifa bir nechta
+  // mas'ulda bo'lsa, har birining ro'yxatida chiqadi).
+  const odamlar = new Map();
+  const korildi = new Set();
+  for (const x of r.rows) {
+    if (x.username && TEAM_DIGEST_SKIP.has(x.username)) continue;
+    // Eski usul: mas'ul `staff` jadvalidagi xodim (Telegram'siz).
+    const kalit = x.username || (x.staff_name ? "staff:" + x.staff_name : "");
+    if (!odamlar.has(kalit)) {
+      const ism = x.username
+        ? [x.first_name, x.last_name ? x.last_name.slice(0, 1) + "." : ""].filter(Boolean).join(" ") || "@" + x.username
+        : x.staff_name || "Mas'ulsiz";
+      odamlar.set(kalit, { ism, vazifalar: [] });
+    }
+    odamlar.get(kalit).vazifalar.push(x);
+    korildi.add(x.id);
+  }
+  if (!korildi.size) return null;
+
+  // Mas'ulsizlar oxirida, qolganlar ism bo'yicha.
+  const tartib = [...odamlar.entries()].sort(([a, x], [b, y]) =>
+    !a ? 1 : !b ? -1 : x.ism.localeCompare(y.ism),
+  );
+  const qatorlar = [];
+  for (const [, o] of tartib) {
+    qatorlar.push(`\n👤 <b>${escHtmlTg(o.ism)}</b> — ${o.vazifalar.length} ta`);
+    for (const v of o.vazifalar) {
+      const soat = v.due_time ? String(v.due_time).slice(0, 5) : "";
+      const qism = [v.project, soat].filter(Boolean).map(escHtmlTg).join(" · ");
+      qatorlar.push(` • ${escHtmlTg(v.title.slice(0, 120))}${qism ? ` <i>(${qism})</i>` : ""}`);
+    }
+  }
+  let matn =
+    `📋 <b>Bugungi ishlar — ${tgSanaKorinish(today)}</b>\n` +
+    qatorlar.join("\n") +
+    `\n\nJami: ${korildi.size} ta vazifa · Ilovada: Vazifalar`;
+  // Telegram chegarasi 4096 — juda uzun kunda ro'yxat qisqartiriladi.
+  if (matn.length > 3900) matn = matn.slice(0, 3850).replace(/\n[^\n]*$/, "") + "\n…\n\nTo'liq ro'yxat — ilovada.";
+  return matn;
+}
+
+app.post("/api/team-digest/run", async (req, res) => {
+  const access = await resolveCronOrAdminCaller(req, { requireSuper: true });
+  if (!access.ok) return res.status(access.status).json({ error: access.error });
+  try {
+    const today = todayTashkent();
+    // ?force=1 — qo'lda sinash uchun (yakshanba va "bugun yuborilgan"
+    // tekshiruvini chetlab o'tadi). Faqat super admin / cron.
+    const force = req.query.force === "1";
+    if (!force && new Date(today).getUTCDay() === 0) return res.json({ ok: true, skipped: "yakshanba" });
+    // Cron ikki marta ishlab qolsa — bir kunda bitta xabar.
+    if (!force) {
+      const s = await db.query(`select value #>> '{}' as d from app_settings where key = 'team_digest_last'`);
+      if (s.rows[0] && s.rows[0].d === today) return res.json({ ok: true, skipped: "bugun yuborilgan" });
+    }
+    const matn = await teamDigestMatn(today);
+    if (!matn) return res.json({ ok: true, skipped: "bugun vazifa yo'q" });
+    const yuborildi = await tgReply(TEAM_DIGEST_CHAT, matn, { threadId: TEAM_DIGEST_THREAD });
+    if (!yuborildi) return res.status(502).json({ ok: false, error: "Telegram xabarni qabul qilmadi" });
+    await db.query(
+      `insert into app_settings (key, value, updated_at) values ('team_digest_last', to_jsonb($1::text), now())
+       on conflict (key) do update set value = excluded.value, updated_at = now()`,
+      [today],
+    );
+    res.json({ ok: true, sent: true });
+  } catch (e) {
+    serverError(res, e, "POST /api/team-digest/run", req);
+  }
+});
+
 // ── KUNLIK CRON (Vercel Cron Jobs) ────────────────────────────────────
 // Ilgari alohida `api/cron-daily.js` Vercel funksiyasi edi — bitta
 // Express ilovaga ko'chirildi, chunki Vercel'da `api/[...path].js`
@@ -8481,6 +8579,8 @@ app.all("/api/cron-daily", async (req, res) => {
     // Kalendar: kunlik xulosa va vaqti kelgan eslatmalar.
     "/api/events/digest/run",
     "/api/events/reminders/run",
+    // Jamoa guruhiga "Bugungi ishlar" (Muhokama mavzusi).
+    "/api/team-digest/run",
   ];
   const results = [];
 
