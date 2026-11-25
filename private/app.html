@@ -12113,7 +12113,8 @@
           font-family: inherit;
         }
         .trk-d4-grid.k .trk-d4-cell { height: 84px; }
-        .trk-d4-grid.s .trk-d4-cell { height: 56px; border-radius: 10px; }
+        .trk-d4-grid.s .trk-d4-cell { height: 62px; border-radius: 10px; }
+        .trk-d4-grid.s .trk-d4-cell .d { font-size: 11px; }
         .trk-d4-cell .n { font: 600 20px Onest, system-ui, sans-serif; line-height: 1.1; }
         .trk-d4-grid.s .trk-d4-cell .n { font-size: 15px; }
         .trk-d4-cell .d { font: 500 12px Onest, system-ui, sans-serif; opacity: 0.9; }
@@ -13058,6 +13059,8 @@
         .m5-cell.done.atm { background: #7c3aed; }
         .m5-cell.done.info { background: #c4b5fd; }
         .m5-cell.done.info .n { color: #4c1d95; }
+        .m5-cell.done.info .d { color: #5b21b6; }
+        .m5-cell.done.atm .d { color: #ede9fe; }
         .m5-cell.next { background: var(--nav-act-bg); box-shadow: inset 0 0 0 1.5px var(--brand); }
         .m5-cell.next .n, .m5-cell.next .d { color: var(--nav-act-ink); font-weight: 700; }
         .m5-cell.next .d { font-weight: 600; }
@@ -24621,7 +24624,7 @@
           const on = !!checks[key];
           const info = det[key] || {};
           const kind = tur === "s" ? (info.storyKind === "atmospheric" ? " atm" : " info") : "";
-          const sana = on && info.workDate && tur === "k" ? ntfDayShort(String(info.workDate).slice(0, 10)) : "";
+          const sana = on && info.workDate ? ntfDayShort(String(info.workDate).slice(0, 10)) : "";
           const cls = on ? `done${kind}` : i === keyingi ? "next" : qarzli ? "debt" : "";
           const ost = on ? sana : i === keyingi && tur === "k" ? "keyingi" : "";
           kataklar += `<button type="button" class="m5-cell ${cls}" onclick="openCheckModal('${escArg(p.id)}','${tur}',${i})"><span class="n">${i}</span>${ost ? `<span class="d">${escHtml(ost)}</span>` : ""}</button>`;
@@ -24710,8 +24713,10 @@
           const kind = type === "s" ? (info.storyKind === "atmospheric" ? " atm" : " info") : "";
           const sana = on && info.workDate ? ntfDayShort(String(info.workDate).slice(0, 10)) : "";
           const cls = on ? `done${kind}` : i === keyingi ? "next" : qarzli ? "debt" : "";
-          const ost = type === "k" ? (on ? sana : i === keyingi ? "keyingi" : "") : "";
-          kataklar += `<button type="button" class="trk-d4-cell ${cls}" onclick="openCheckModal('${escArg(p.id)}','${type}',${i})"${type === "s" && sana ? ` title="${escHtml(sana)}"` : ""}>
+          // Stories ham sanasini ko'rsatadi (2026-11-25) — avval faqat
+          // sichqoncha olib borilganda (title) ko'rinardi.
+          const ost = on ? sana : i === keyingi && type === "k" ? "keyingi" : "";
+          kataklar += `<button type="button" class="trk-d4-cell ${cls}" onclick="openCheckModal('${escArg(p.id)}','${type}',${i})">
               <span class="n">${i}</span>${ost ? `<span class="d">${escHtml(ost)}</span>` : ""}
             </button>`;
         }
