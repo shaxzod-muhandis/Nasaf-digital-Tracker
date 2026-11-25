@@ -12478,6 +12478,13 @@
       @media (min-width: 860px) {
         /* D14 — vazifa detali o'ngdan drawer, kanban ko'rinib turadi */
         #td-scrim { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.28); z-index: 640; }
+        /* Drawer'dan «Tahrirlash» (2026-11-25): tahrir sahifasi (.ntf-ov,
+           odatda z-index 80) drawer (650) OSTIDA qolib, vazifa oynasi
+           sahifa ustida ochiq turardi. Endi sahifa drawer ustida; xira
+           fon esa yashiriladi — yon menyu ishlab tursin. Saqlash yoki
+           bekor qilishdan keyin drawer (yangilangan holda) qaytadi. */
+        body.td-drawer .ntf-ov { z-index: 700; }
+        body.td-drawer:has(#ntf-page) #td-scrim { display: none; }
         body.td-drawer #screen-taskdetail.screen {
           position: fixed; top: 0; right: 0; bottom: 0; width: 480px; margin-left: 0;
           z-index: 650; background: var(--bg); box-shadow: -12px 0 40px rgba(15, 23, 42, 0.18);
