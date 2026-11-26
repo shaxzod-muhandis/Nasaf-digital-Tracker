@@ -5342,7 +5342,7 @@ async function tgHandleVazifalar(m, group, user) {
   }
 
   const arg = (m.text || m.caption || "")
-    .replace(/^\/(vazifalar|tasks)(@\S+)?\s*/i, "")
+    .replace(/^\/(vazifalar|tasks|menu)(@\S+)?\s*/i, "")
     .trim();
   const admin = isAdminRole(user.role);
 
@@ -5557,12 +5557,20 @@ app.post("/api/tg/webhook", async (req, res) => {
 
 // Webhook mantig'i alohida funksiyada — ichkarida erta `return`'lar bor
 // va ular javobni yuborishga xalal bermasligi kerak.
+// GURUHDA BOT FAQAT IKKI ISH QILADI (2026-11-26, egasi): `/task` — vazifa
+// ochish, `/vazifalar` (yoki `/menu`) — vazifalar ro'yxati. Qolgan
+// guruh imkoniyatlari — 👍/🔥 bilan ishni mijoz guruhiga ko'chirish,
+// botning tasdig'iga javob = izoh, guruhdagi eslatmalar — vaqtincha
+// O'CHIQ; egasi bilan qadamma-qadam qayta ko'rib chiqiladi. Kod
+// joyida, qaytarish uchun shu kalitni `true` qilish yetadi.
+const TG_GURUH_QOSHIMCHA = false;
+
 async function tgWebhookIshla(u) {
   // Xabarga reaksiya qo'yildi yoki olib tashlandi. Bu yangilanish
   // TURI SO'RALGANDA va bot guruhda ADMIN bo'lgandagina keladi —
   // ikkalasi ham Telegram'ning sharti.
   if (u.message_reaction) {
-    await tgHandleReaction(u.message_reaction);
+    if (TG_GURUH_QOSHIMCHA) await tgHandleReaction(u.message_reaction);
     return;
   }
 
@@ -5608,7 +5616,9 @@ async function tgWebhookIshla(u) {
   // Diqqat: `/task` shabloni `/tasks` ga MOS KELMAYDI (keyin `@`, probel
   // yoki satr oxiri kutiladi), shuning uchun tartib muhim emas.
   if (TASK_BUYRUQ.test(matn)) await tgHandleTask(m, group, user);
-  else if (/^\/(vazifalar|tasks)(@\S+)?(\s|$)/i.test(matn)) await tgHandleVazifalar(m, group, user);
+  // `/menu` ham ro'yxatni ochadi — guruhda odamlar uni ham yozadi.
+  else if (/^\/(vazifalar|tasks|menu)(@\S+)?(\s|$)/i.test(matn)) await tgHandleVazifalar(m, group, user);
+  else if (!TG_GURUH_QOSHIMCHA) return;
   // Izoh eslatmadan OLDIN: botning tasdiq xabariga javob yozilganda,
   // matnda `@bot` ham bo'lsa, u izoh bo'lishi kerak — yo'riqnoma
   // kartasi emas.
