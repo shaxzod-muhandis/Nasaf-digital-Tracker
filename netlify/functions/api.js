@@ -4106,8 +4106,11 @@ async function tgLogMessage(m, user) {
 //   • "01.11" (20-noyabrda) — jim ravishda 2027-yil 1-noyabrga
 //     aylanardi. Vazifa bir yilga "yo'qolar", eslatma ham kelmasdi.
 //     Odam deyarli har doim xato yozgan bo'ladi (01.12 demoqchi edi).
-// Endi yaqin o'tmishdagi sana (60 kungacha) — xato, so'raladi; uzoqroq
-// o'tmish esa avvalgidek keyingi yil (dekabrda "05.01" — yanvar).
+// Yaqin o'tmishdagi sana (60 kungacha) QABUL QILINADI — vazifa
+// kechikkan bo'lib ochiladi, tasdiqda ogohlantiriladi (2026-11-26,
+// egasi: 20-noyabrdagi "xato, qayta yuboring" qoidasi kechagi sana bilan
+// yozilgan TZ'ni ochmay qo'yardi). Uzoqroq o'tmish: yil yozilgan
+// bo'lsa — xato, yozilmagan bo'lsa — keyingi yil (dekabrda "05.01").
 function tgParseDate(token) {
   const m = /^(\d{1,2})\.(\d{1,2})(?:\.(\d{4}))?$/.exec(token || "");
   if (!m) return null;
@@ -4123,8 +4126,9 @@ function tgParseDate(token) {
   let iso = qur(yil);
   if (iso < bugun) {
     const otgan = dayDiff(iso, bugun);
-    if (m[3] || otgan <= 60) {
-      return { xato: `${token} — bu sana o'tib ketgan (bugun ${bugun.slice(8, 10)}.${bugun.slice(5, 7)}). Kelgusi sanani yozing.` };
+    if (otgan <= 60) return { iso, otgan };
+    if (m[3]) {
+      return { xato: `${token} — bu sana ancha o'tib ketgan (bugun ${bugun.slice(8, 10)}.${bugun.slice(5, 7)}). Sanani tekshiring.` };
     }
     yil += 1;
     if (new Date(Date.UTC(yil, oy - 1, kun)).getUTCMonth() !== oy - 1) return { xato: `${token} — bunday sana yo'q.` };
@@ -4585,7 +4589,9 @@ async function tgHandleTask(m, group, user) {
             // olsin, noto'g'ri tushgan bo'lsa ilovada bir bosishda tuzatadi.
             (loyihaTaxmin ? ` <i>(«+${escHtmlTg(loyihaTaxmin)}» deb yozilgan edi)</i>` : "") + "\n"
           : "Loyiha: <b>belgilanmadi</b> — keyingi safar <code>+Anhor</code> kabi yozing\n") +
-        (sana ? `Muddat: ${tgSanaKorinish(sana)}${soat ? ", " + soat : ""}\n` : "Muddat qo'yilmagan (backlog)\n") +
+        (sana ? `Muddat: ${tgSanaKorinish(sana)}${soat ? ", " + soat : ""}` +
+            (sana < todayTashkent() ? ` — <b>⚠️ o'tib ketgan</b>, vazifa kechikkan bo'lib ochildi` : "") + "\n"
+          : "Muddat qo'yilmagan (backlog)\n") +
         (soat && !sana ? "Soat sanasiz saqlanmadi — sanani ham yozing\n" : "") +
         (daraja ? `Daraja: ${TG_DARAJA_NOMI[daraja]}\n` : "") +
         // Nomi bilan: "2 ta" deyilsa, to'g'ri teg tushganini bilib bo'lmasdi.

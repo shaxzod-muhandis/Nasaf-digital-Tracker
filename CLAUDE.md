@@ -166,8 +166,10 @@ kuni. Faqat LOKAL bazada ishlaydi, chunki jadvallarni tozalaydi. Bot
 mantig'ini o'zgartirishdan oldin va keyin yurgizib, transkriptni
 (`test/bot-sim/natija/transkript.txt`) solishtiring.
 
-Sana qoidasi: yilsiz sana o'tib ketgan bo'lsa va 60 kundan yaqin bo'lsa —
-xato (odam deyarli har doim adashgan), uzoqroq bo'lsa — keyingi yil.
+Sana qoidasi (2026-11-26): o'tgan sana 60 kungacha bo'lsa — QABUL
+qilinadi, vazifa kechikkan bo'lib ochiladi va tasdiqda "⚠️ o'tib ketgan"
+deyiladi (egasi kechagi sana bilan ham TZ ochadi). Uzoqroq o'tmish:
+yil yozilgan bo'lsa — xato, yozilmagan bo'lsa — keyingi yil.
 Mijoz guruhida (`kind = mijoz`) bot ichki tafsilotni ko'rsatmaydi:
 `/task` ga qisqa "Qabul qilindi", batafsil tasdiq va xatolar yozgan
 xodimga shaxsiy; begona odamga javob berilmaydi.
