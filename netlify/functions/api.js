@@ -1356,6 +1356,9 @@ const TABEL_ROLES = [
   { key: "smm", label: "SMM manager", rule: "Reja: post + barcha stories" },
   { key: "mobilograf", label: "Mobilograf", rule: "Reja: post + atmosferali stories" },
   { key: "montajchi", label: "Montajor", rule: "Reja: post + atmosferali stories" },
+  // 2026-11-28: dizayner tayyorlagan karusel/dizayn post (checks.post_kind
+  // = 'design'). Bunday post mobilograf va montajorning rejasiga kirmaydi.
+  { key: "dizayner", label: "Dizayner", rule: "Reja: dizayn postlar (karusel)" },
 ];
 const TABEL_ROLE_KEYS = TABEL_ROLES.map((r) => r.key);
 
@@ -1533,7 +1536,8 @@ async function buildTabelRaw(month) {
           `select cycle_id, type, seq_number, work_date, story_kind,
                   performer_id, assignee_id, substitution_reason, substitution_note,
                   videographer_user_id, mobilograf_assigned_id, mobilograf_reason, mobilograf_reason_note,
-                  editor_user_id, montajchi_assigned_id, montajchi_reason, montajchi_reason_note
+                  editor_user_id, montajchi_assigned_id, montajchi_reason, montajchi_reason_note,
+                  post_kind, designer_user_id
              from checks where cycle_id = any($1::uuid[])`,
           [cycleIds],
         )
@@ -1569,6 +1573,10 @@ async function buildTabelRaw(month) {
                            reason: ch.mobilograf_reason, note: ch.mobilograf_reason_note }),
     montajchi: (ch) => ({ doer: ch.editor_user_id, assigned: ch.montajchi_assigned_id,
                           reason: ch.montajchi_reason, note: ch.montajchi_reason_note }),
+    // Dizaynerning belgilash paytidagi muhri saqlanmaydi — rejadagi
+    // dizayner bugungi ruxsatlardan olinadi (`assignedNow`).
+    dizayner: (ch, assignedNow) => ({ doer: ch.designer_user_id, assigned: assignedNow,
+                                      reason: null, note: null }),
   };
 
   const cells = [];
@@ -1585,6 +1593,9 @@ async function buildTabelRaw(month) {
         const ch = markedBy.get(`${type}-${seq}`);
         const label = `${type === "k" ? "Post" : "Stories"} ${seq}`;
         if (!ch) {
+          // Belgilanmagan post qaysi turda bo'lishi noma'lum — dizayner
+          // rejasiga faqat belgilangan dizayn post kiradi.
+          if (role === "dizayner") return;
           items.push({ label, type, seq, status: "open" });
           return;
         }
@@ -1592,7 +1603,12 @@ async function buildTabelRaw(month) {
         // umuman ishtirok etmaydi — bunday birlik ularning
         // rejasiga kirmaydi.
         if (role !== "smm" && type === "s" && ch.story_kind !== "atmospheric") return;
-        const f = rolMaydoni[role](ch);
+        // Dizayn post — faqat dizayner (va SMM) rejasida; video post va
+        // stories dizayner rejasiga kirmaydi.
+        const dizaynPost = type === "k" && ch.post_kind === "design";
+        if ((role === "mobilograf" || role === "montajchi") && dizaynPost) return;
+        if (role === "dizayner" && !dizaynPost) return;
+        const f = rolMaydoni[role](ch, permBy.get(`${pid}:${role}`) || null);
         const doer = f.doer ? String(f.doer) : null;
         const asg = f.assigned ? String(f.assigned) : null;
         const status = !doer ? (role === "smm" ? "open" : "unknown") : asg && doer !== asg ? "sub" : "self";
@@ -1614,6 +1630,8 @@ async function buildTabelRaw(month) {
         push("s", i);
       }
 
+      // Dizayn posti yo'q loyihada dizayner qatori bo'sh — ko'rsatilmaydi.
+      if (role === "dizayner" && !items.length) return;
       cells.push({
         project: proj.slug,
         role,
