@@ -25199,6 +25199,7 @@
         sana: "Qaysi kuni chiqdi?",
         montaj: "Kim montaj qildi?",
         video: "Kim video oldi?",
+        dizayn: "Kim dizayn qildi?",
       };
       let cwd = null;
       let cwdCal = null;
@@ -25236,7 +25237,11 @@
       // so'raladi — gapirib beriladigan storiesda montaj ham, suratga
       // olish ham bo'lmaydi.
       function cwdShowPickers() {
-        return cwd.type === "k" || cwd.storyKind === "atmospheric";
+        return (cwd.type === "k" && cwd.postKind !== "design") || (cwd.type === "s" && cwd.storyKind === "atmospheric");
+      }
+      // Dizayn post — "Dizayn qildi" so'raladi (video/montaj o'rniga).
+      function cwdIsDesign() {
+        return cwd.type === "k" && cwd.postKind === "design";
       }
 
       // `davr` — o'tgan (yopilgan) davrga belgilash (D12, 2026-11-11):
@@ -25284,6 +25289,8 @@
           periodEnd: dEnd,
           cycleIndex: davr ? davr.cycleIndex : p.cycleIndex,
           storyKind: info.storyKind || "info",
+          postKind: info.postKind === "design" ? "design" : "video",
+          designerUserId: info.designerUserId || (!already && rolAsg("dizayner") ? rolAsg("dizayner").userId : null),
           assigneeUsername: assignee ? assignee.username : null,
           performerId: info.performerUsername || (assignee ? assignee.username : currentUser),
           reason: info.substitutionReason || null,
@@ -25311,7 +25318,8 @@
           // yo'q, mavjud belgida esa tur allaqachon ma'lum.
           // Bajarilgan katak bosilsa forma emas, TAFSILOT ochiladi.
           // Yangi stories belgilanayotganda esa avval turi so'raladi.
-          step: already ? "detail" : type === "s" ? "kind" : "form",
+          // Post uchun ham (2026-11-28): video yoki dizayn (karusel).
+          step: already ? "detail" : "kind",
         };
 
         const ov = document.createElement("div");
@@ -25477,7 +25485,7 @@
       function mkRecent(role) {
         const p = projects.find((x) => x.id === cwd.slug) || {};
         const det = p.checkDetails || {};
-        const maydon = role === "montajchi" ? "editorUserId" : role === "mobilograf" ? "videographerUserId" : "performerUsername";
+        const maydon = role === "montajchi" ? "editorUserId" : role === "mobilograf" ? "videographerUserId" : role === "dizayner" ? "designerUserId" : "performerUsername";
         const sanalar = Object.keys(det)
           .map((k) => ({ k, d: det[k] }))
           .filter((x) => x.d && x.d[maydon])
@@ -25492,14 +25500,14 @@
       }
 
       function mkOptsHtml(key) {
-        if (key === "montaj" || key === "video") {
-          const role = key === "montaj" ? "montajchi" : "mobilograf";
-          const cur = key === "montaj" ? cwd.editorUserId : cwd.videographerUserId;
+        if (key === "montaj" || key === "video" || key === "dizayn") {
+          const role = key === "montaj" ? "montajchi" : key === "dizayn" ? "dizayner" : "mobilograf";
+          const cur = key === "montaj" ? cwd.editorUserId : key === "dizayn" ? cwd.designerUserId : cwd.videographerUserId;
           const oxirgi = mkRecent(role);
           const opts = cwdRoleOptions(role).filter((o) => mkMatch(o.name, o.sub));
           if (!opts.length) return `<div class="mk-empty">Topilmadi</div>`;
           // Mos lavozim birinchi guruhda; qolganlari ikkinchi guruhda.
-          const roleLbl = role === "montajchi" ? "Montajchilar" : "Mobilograflar";
+          const roleLbl = role === "montajchi" ? "Montajchilar" : role === "dizayner" ? "Dizaynerlar" : "Mobilograflar";
           const mos = opts.filter((o) => o.roleMatch);
           const qolgan = opts.filter((o) => !o.roleMatch);
           const chiz = (o) => {
@@ -25546,10 +25554,12 @@
         post: { video: 1, montaj: 1, smm: 1 },
         atmospheric: { video: 0.1, montaj: 0.1, smm: 0 },
         info: { video: 0, montaj: 0, smm: 0.2 },
+        // Dizayn post (karusel) — 2026-11-28, egasi: dizayner +1, SMM +1.
+        design: { video: 0, montaj: 0, dizayn: 1, smm: 1 },
       };
       function mkKind() {
         if (!cwd) return "post";
-        if (cwd.type === "k") return "post";
+        if (cwd.type === "k") return cwd.postKind === "design" ? "design" : "post";
         return cwd.storyKind === "atmospheric" ? "atmospheric" : "info";
       }
       function mkCoins() {
@@ -25586,22 +25596,34 @@
       // bo'ladi: atmosferalida syomka va montaj bor, gapirib
       // beriladiganda yo'q.
       const MK_KIND_ICO = {
+        post: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2.5"/><path d="m22 8-6 4 6 4Z"/></svg>`,
+        design: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="13" height="13" rx="2"/><path d="M8 21h11a2 2 0 0 0 2-2V8"/><circle cx="7.5" cy="7.5" r="1.5"/><path d="m16 12-3-3-7 7"/></svg>`,
         atmospheric: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2.5"/><path d="m22 8-6 4 6 4Z"/></svg>`,
         info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3.5"/></svg>`,
       };
+      const MK_KIND_MATN = {
+        atmospheric: ["Atmosferali", "Syomka va montaj qilingan qisqa video"],
+        info: ["Gapirib beriladigan", "SMM o'zi tayyorlaydi, montaj va syomka yo'q"],
+        post: ["Video post", "Mobilograf oladi, montajchi montaj qiladi"],
+        design: ["Dizayn post (karusel)", "Dizayner tayyorlaydi, video va montaj yo'q"],
+      };
       function mkKindCardHtml(kind) {
-        const on = (cwd.storyKind || "info") === kind;
+        const on = cwd.type === "k"
+          ? (cwd.postKind === "design" ? "design" : "post") === kind
+          : (cwd.storyKind || "info") === kind;
         const c = MK_COIN[kind];
         const qatorlar =
-          kind === "atmospheric"
+          kind === "atmospheric" || kind === "post"
             ? [["Video olgan", c.video], ["Montajchi", c.montaj], ["SMM — chiqaradi", c.smm]]
-            : [["SMM — tayyorlaydi va chiqaradi", c.smm]];
+            : kind === "design"
+              ? [["Dizayner", c.dizayn], ["SMM — chiqaradi", c.smm]]
+              : [["SMM — tayyorlaydi va chiqaradi", c.smm]];
         return `<button type="button" class="mk-kind${on ? " on" : ""}" onclick="mkPickKind('${kind}')">
             <span class="mk-kind-top">
               <span class="mk-kind-ico">${MK_KIND_ICO[kind]}</span>
               <span class="mk-kind-txt">
-                <span class="mk-kind-t">${kind === "atmospheric" ? "Atmosferali" : "Gapirib beriladigan"}</span>
-                <span class="mk-kind-s">${kind === "atmospheric" ? "Syomka va montaj qilingan qisqa video" : "SMM o'zi tayyorlaydi, montaj va syomka yo'q"}</span>
+                <span class="mk-kind-t">${MK_KIND_MATN[kind][0]}</span>
+                <span class="mk-kind-s">${MK_KIND_MATN[kind][1]}</span>
               </span>
               <span class="mk-kind-tick">${on ? ICON.check : ""}</span>
             </span>
@@ -25612,7 +25634,8 @@
       }
       function mkPickKind(kind) {
         if (!cwd) return;
-        cwd.storyKind = kind;
+        if (cwd.type === "k") cwd.postKind = kind === "design" ? "design" : "video";
+        else cwd.storyKind = kind;
         ntv3Haptic();
         cwdRender();
       }
@@ -25750,6 +25773,7 @@
           if (cwd.videographerUserId && c.video) olganlar.push(c.video);
           if (cwd.editorUserId && c.montaj) olganlar.push(c.montaj);
         }
+        if (cwdIsDesign() && cwd.designerUserId && c.dizayn) olganlar.push(c.dizayn);
         if (c.smm) olganlar.push(c.smm);
         if (!olganlar.length) {
           return `<div class="mk-sum"><span class="mk-sum-ico">N</span><span>Bu turda Ncoin berilmaydi</span></div>`;
@@ -25788,6 +25812,17 @@
             username: mon ? mon.username : "",
             avatarUrl: mon ? mon.avatarUrl : "",
             coin: c.montaj,
+          });
+        }
+        if (cwdIsDesign()) {
+          const diz = cwdRoleOpt("dizayner", fromInfo ? info.designerUserId : cwd.designerUserId);
+          out.push({
+            rol: "dizayn",
+            label: "Dizayn qildi",
+            name: (diz && diz.name) || info.designerUserName || "",
+            username: diz ? diz.username : "",
+            avatarUrl: diz ? diz.avatarUrl : "",
+            coin: c.dizayn,
           });
         }
         const smmUser =
@@ -26021,10 +26056,9 @@
               <span class="cwd-chip">${escHtml(cwd.label)} ${cwd.num}</span>
               <span class="cwd-sub">${escHtml(cwd.projectLabel)}</span>
             </div>
-            <div style="font-size:19px;font-weight:700;color:var(--marker);margin:14px 0 4px">Stories ${cwd.num} — qanday stories?</div>
+            <div style="font-size:19px;font-weight:700;color:var(--marker);margin:14px 0 4px">${cwd.type === "k" ? `Post ${cwd.num} — qanday post?` : `Stories ${cwd.num} — qanday stories?`}</div>
             <div class="mk-hint" style="margin:0 0 16px">Tanlovga qarab keyingi qadamda kimlar so'ralishi o'zgaradi</div>
-            ${mkKindCardHtml("atmospheric")}
-            ${mkKindCardHtml("info")}`;
+            ${cwd.type === "k" ? mkKindCardHtml("post") + mkKindCardHtml("design") : mkKindCardHtml("atmospheric") + mkKindCardHtml("info")}`;
           if (foot) foot.innerHTML = `<button type="button" class="ntv3-submit" onclick="mkKindNext()">Davom etish</button>`;
           applyStaticIcons?.();
           return;
@@ -26065,8 +26099,20 @@
               onclick: "openCwdPick('montaj')",
             })
           : "";
+        const dizayn = cwdIsDesign()
+          ? mkRowHtml({
+              label: "Dizayn qildi",
+              name: cwdRoleName("dizayner", cwd.designerUserId),
+              username: cwdRoleUsername("dizayner", cwd.designerUserId),
+              avatarUrl: cwdRoleAvatar("dizayner", cwd.designerUserId),
+              placeholder: "Dizaynerni tanlang",
+              required: true,
+              coin: c.dizayn,
+              onclick: "openCwdPick('dizayn')",
+            })
+          : "";
         const smm = mkRowHtml({
-          label: pickers ? "Chiqardi (SMM)" : "SMM manager",
+          label: pickers || cwdIsDesign() ? "Chiqardi (SMM)" : "SMM manager",
           name: smmName,
           username: cwd.performerId,
           avatarUrl: smmUser.avatarUrl || smmUser.avatar_url,
@@ -26077,17 +26123,15 @@
           onclick: "openCwdPick('kim')",
         });
 
-        const turBlok =
-          cwd.type === "s"
-            ? `<div class="mk-sec">Stories turi</div>
+        const turKey = mkKind();
+        const turBlok = `<div class="mk-sec">${cwd.type === "s" ? "Stories turi" : "Post turi"}</div>
                <div class="mk-card">
                  <button type="button" class="mk-row" onclick="mkKindBack()">
-                   <span class="mk-av" style="background:var(--chip2);color:var(--brand)">${MK_KIND_ICO[mkKind() === "atmospheric" ? "atmospheric" : "info"]}</span>
-                   <span class="mk-rtxt"><span class="mk-rname">${mkKind() === "atmospheric" ? "Atmosferali" : "Gapirib beriladigan"}</span></span>
+                   <span class="mk-av" style="background:var(--chip2);color:var(--brand)">${MK_KIND_ICO[turKey]}</span>
+                   <span class="mk-rtxt"><span class="mk-rname">${MK_KIND_MATN[turKey][0]}</span></span>
                    <span class="mk-coin nil">O'zgartirish</span>${MK_CHEV}
                  </button>
-               </div>`
-            : "";
+               </div>`;
 
         host.innerHTML = `
           <div class="cwd-head">
@@ -26095,10 +26139,11 @@
             <span class="cwd-sub">${escHtml(cwd.projectLabel)}</span>
           </div>
           ${turBlok}
-          <div class="mk-sec">${pickers ? "Kimlar ishladi" : "Kim tayyorladi"}</div>
+          <div class="mk-sec">${pickers || cwdIsDesign() ? "Kimlar ishladi" : "Kim tayyorladi"}</div>
           <div class="mk-card">
             ${video}${mobSub ? mkSubHtml("mobilograf") : ""}
             ${montaj}${monSub ? mkSubHtml("montajchi") : ""}
+            ${dizayn}
             ${smm}${isSub ? mkSubHtml("smm") : ""}
           </div>
           ${!pickers ? `<div class="mk-hint">Bu turda montaj va video olgan so'ralmaydi</div>` : ""}
@@ -26188,7 +26233,7 @@
             </div>`;
         }
         // Xodim tanlash: tepada qidiruv, ostida guruhlangan ro'yxat.
-        const ph = key === "montaj" ? "Montajchini qidirish" : key === "video" ? "Mobilografni qidirish" : "Ism bo'yicha qidirish";
+        const ph = key === "montaj" ? "Montajchini qidirish" : key === "video" ? "Mobilografni qidirish" : key === "dizayn" ? "Dizaynerni qidirish" : "Ism bo'yicha qidirish";
         return `${mkSearchHtml(ph)}<div id="mk-list">${mkOptsHtml(key)}</div>
           ${key === "kim" && !isAdmin ? `<div class="mk-foot-note">Loyihadan tashqari xodimni faqat admin qo'ya oladi</div>` : ""}`;
       }
@@ -26201,6 +26246,12 @@
             cwd.reason = null;
             cwd.note = "";
           }
+          ntv3Haptic();
+          closeCwdPick();
+          return;
+        }
+        if (key === "dizayn") {
+          cwd.designerUserId = value;
           ntv3Haptic();
           closeCwdPick();
           return;
@@ -26285,6 +26336,7 @@
         if (isSub && cwd.reason === "other" && !(cwd.note || "").trim()) {
           return cwdShowErr("«Sabab» — «Boshqa» tanlandi, qisqacha izoh yozing.");
         }
+        if (cwdIsDesign() && !cwd.designerUserId) return cwdShowErr("«Dizayn qildi» — dizaynerni tanlang.");
         if (pickers && !cwd.editorUserId) return cwdShowErr("«Montaj» — montaj qilgan xodimni tanlang.");
         if (pickers && !cwd.videographerUserId) return cwdShowErr("«Video olgan» — videoni olgan xodimni tanlang.");
         const mobSub = pickers && cwdRoleIsSub("mobilograf");
@@ -26309,6 +26361,8 @@
             videographerUserId: pickers ? cwd.videographerUserId : null,
             workDate: cwd.workDate,
             storyKind: cwd.type === "s" ? cwd.storyKind : undefined,
+            postKind: cwd.type === "k" ? cwd.postKind : undefined,
+            designerUserId: cwdIsDesign() ? cwd.designerUserId : null,
             performerUsername: cwd.performerId,
             substitutionReason: isSub ? cwd.reason : null,
             substitutionNote: isSub && cwd.reason === "other" ? cwd.note : null,
@@ -31783,6 +31837,7 @@
         check_reversed: "Belgi bekor qilindi",
         post_video: "Video olish (post)",
         post_edit: "Video montaj (post)",
+        post_design: "Dizayn post (karusel)",
         post_smm: "Post joylandi (SMM)",
         story_smm: "Stories (ma'lumot beruvchi)",
         story_video: "Video olish (stories)",

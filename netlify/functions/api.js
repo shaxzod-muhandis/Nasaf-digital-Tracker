@@ -3686,7 +3686,8 @@ app.get("/api/projects", auth, async (req, res) => {
       const summary = await getProjectCycleSummary(db, project);
       const checksR = await db.query(
         `select c.type, c.seq_number, c.work_date, c.editor_id, c.videographer_id,
-                c.editor_user_id, c.videographer_user_id, c.story_kind,
+                c.editor_user_id, c.videographer_user_id, c.story_kind, c.post_kind, c.designer_user_id,
+                coalesce(nullif(trim(concat(du.first_name, ' ', du.last_name)), ''), du.full_name, du.username) as designer_user_name,
                 c.assignee_id, c.performer_id, c.substitution_reason, c.substitution_note,
                 c.mobilograf_assigned_id, c.mobilograf_reason, c.mobilograf_reason_note,
                 c.montajchi_assigned_id, c.montajchi_reason, c.montajchi_reason_note,
@@ -3702,6 +3703,7 @@ app.get("/api/projects", auth, async (req, res) => {
            left join staff v on v.id = c.videographer_id
            left join users eu on eu.id = c.editor_user_id
            left join users vu on vu.id = c.videographer_user_id
+           left join users du on du.id = c.designer_user_id
            left join users pf on pf.id = c.performer_id
            left join users mb on mb.id = c.marked_by
           where c.cycle_id = $1`,
@@ -3724,6 +3726,10 @@ app.get("/api/projects", auth, async (req, res) => {
           videographerUserId: c.videographer_user_id,
           videographerUserName: c.videographer_user_name,
           storyKind: c.story_kind,
+          // Post turi: "design" — dizayner tayyorlagan; null/"video" — video post.
+          postKind: c.post_kind || (c.type === "k" ? "video" : null),
+          designerUserId: c.designer_user_id,
+          designerUserName: c.designer_user_name,
           // TABEL: kim mas'ul edi va kim bajardi
           assigneeId: c.assignee_id,
           performerId: c.performer_id,
@@ -6315,8 +6321,13 @@ app.patch("/api/checks", auth, async (req, res) => {
     // tanlov — Ncoin shu ikkalasiga (va SMM roliga) qarab beriladi.
     const editorId = req.body.editorId || null;
     const videographerId = req.body.videographerId || null;
-    const editorUserId = req.body.editorUserId || null;
-    const videographerUserId = req.body.videographerUserId || null;
+    // Post turi (2026-11-28): "design" — dizayner tayyorlagan karusel/
+    // dizayn post. Unda video olgan va montajchi bo'lmaydi.
+    const postKind = type === "k" ? (req.body.postKind === "design" ? "design" : "video") : null;
+    const isDesignPost = postKind === "design";
+    const designerUserId = isDesignPost ? req.body.designerUserId || null : null;
+    const editorUserId = isDesignPost ? null : req.body.editorUserId || null;
+    const videographerUserId = isDesignPost ? null : req.body.videographerUserId || null;
     const workDate = req.body.workDate || null;
     // TABEL: ishni amalda kim bajargani. Berilmasa — eski xulq-atvor
     // saqlanadi (belgilagan kishining o'zi bajargan deb olinadi).
@@ -6543,6 +6554,11 @@ app.patch("/api/checks", auth, async (req, res) => {
       if (monSabab.reason === "other" && !monSabab.note) {
         return res.status(422).json({ error: "Montajor uchun «Boshqa» — izoh yozing" });
       }
+      // Dizayn post — kim tayyorlagani yozilmasa, Ncoin ham, hisobot
+      // ham egasiz qoladi (yangi oqimda forma buni majburlaydi).
+      if (isDesignPost && performerIdRaw && !designerUserId) {
+        return res.status(422).json({ error: "«Dizayn qildi» — dizaynerni tanlang" });
+      }
       // TZ'da "yopilgan oy faqat o'qish uchun" deyilgan, lekin bu
       // yerda ataylab qilingan mavjud imkoniyat bor: yopilgan davrga
       // qaytib QARZNI YOPISH (yuqoridagi `cycleId` shoxiga qarang).
@@ -6575,7 +6591,24 @@ app.patch("/api/checks", auth, async (req, res) => {
           ? (await db.query(`select user_id from permissions where project_id = $1 and role = 'smm'`, [project.id])).rows
           : [];
       const recipients = [];
-      if (type === "k") {
+      if (type === "k" && isDesignPost) {
+        if (designerUserId) {
+          recipients.push({
+            userId: designerUserId,
+            amount: 1,
+            reason: "post_design",
+            text: `"${escHtmlTg(project.label)}" loyihasida dizayn post (karusel) tayyorlaganingiz uchun 1 Ncoin qo'shildi.`,
+          });
+        }
+        smmRows.forEach((r) =>
+          recipients.push({
+            userId: r.user_id,
+            amount: 1,
+            reason: "post_smm",
+            text: `"${escHtmlTg(project.label)}" loyihasida yangi post chiqdi — 1 Ncoin qo'shildi.`,
+          }),
+        );
+      } else if (type === "k") {
         if (videographerUserId) {
           recipients.push({
             userId: videographerUserId,
@@ -6633,8 +6666,9 @@ app.patch("/api/checks", auth, async (req, res) => {
                              assignee_id, performer_id, substitution_reason, substitution_note, marked_by,
                              mobilograf_assigned_id, montajchi_assigned_id,
                              mobilograf_reason, mobilograf_reason_note,
-                             montajchi_reason, montajchi_reason_note)
-         values ($1,$2,$3,$4,$5,$6, coalesce($7::date, $8::date), $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+                             montajchi_reason, montajchi_reason_note,
+                             post_kind, designer_user_id)
+         values ($1,$2,$3,$4,$5,$6, coalesce($7::date, $8::date), $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
          on conflict (cycle_id, type, seq_number) do update
            set editor_id           = excluded.editor_id,
                videographer_id     = excluded.videographer_id,
@@ -6653,7 +6687,9 @@ app.patch("/api/checks", auth, async (req, res) => {
                mobilograf_reason      = excluded.mobilograf_reason,
                mobilograf_reason_note = excluded.mobilograf_reason_note,
                montajchi_reason       = excluded.montajchi_reason,
-               montajchi_reason_note  = excluded.montajchi_reason_note
+               montajchi_reason_note  = excluded.montajchi_reason_note,
+               post_kind              = excluded.post_kind,
+               designer_user_id       = excluded.designer_user_id
          returning (xmax = 0) as inserted`,
         [
           cycle.id,
@@ -6681,6 +6717,8 @@ app.patch("/api/checks", auth, async (req, res) => {
           isMobSub && mobSabab.reason === "other" ? mobSabab.note : null,
           isMonSub ? monSabab.reason : null,
           isMonSub && monSabab.reason === "other" ? monSabab.note : null,
+          postKind,
+          designerUserId,
         ],
       );
       stateChanged = !!insR.rows[0]?.inserted;
