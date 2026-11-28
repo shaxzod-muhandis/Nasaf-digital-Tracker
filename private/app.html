@@ -11291,6 +11291,7 @@
       /* Avatar doirasidagi ikonka (masalan stories turi) — o'lchamsiz SVG
          butun doirani egallab, chetidan chiqib ketardi. */
       .mk-av > svg { width: 18px; height: 18px; flex: none; }
+      .mk-turlar .mk-day svg { width: 17px; height: 17px; flex: none; }
       .mk-av-empty {
         background: var(--chip2);
         color: var(--v3-t4);
@@ -25320,7 +25321,7 @@
           // Bajarilgan katak bosilsa forma emas, TAFSILOT ochiladi.
           // Yangi stories belgilanayotganda esa avval turi so'raladi.
           // Post uchun ham (2026-11-28): video yoki dizayn (karusel).
-          step: already ? "detail" : "kind",
+          step: already ? "detail" : "form",
         };
 
         const ov = document.createElement("div");
@@ -26124,15 +26125,19 @@
           onclick: "openCwdPick('kim')",
         });
 
+        // Tur — formaning o'zida, «Qaysi kuni chiqdi» uslubidagi tugmalar
+        // (2026-11-28, egasi: alohida katta kartali qadam yangi dizayndan
+        // ajralib turardi). Almashtirilsa «Kimlar ishladi» va Ncoin
+        // xulosasi darhol o'zgaradi.
         const turKey = mkKind();
+        const turlar = cwd.type === "k"
+          ? [["post", "Video post"], ["design", "Dizayn post"]]
+          : [["atmospheric", "Atmosferali"], ["info", "Gapirib beriladigan"]];
         const turBlok = `<div class="mk-sec">${cwd.type === "s" ? "Stories turi" : "Post turi"}</div>
-               <div class="mk-card">
-                 <button type="button" class="mk-row" onclick="mkKindBack()">
-                   <span class="mk-av" style="background:var(--chip2);color:var(--brand)">${MK_KIND_ICO[turKey]}</span>
-                   <span class="mk-rtxt"><span class="mk-rname">${MK_KIND_MATN[turKey][0]}</span></span>
-                   <span class="mk-coin nil">O'zgartirish</span>${MK_CHEV}
-                 </button>
-               </div>`;
+               <div class="mk-days mk-turlar">
+                 ${turlar.map(([k, nom]) => `<button type="button" class="mk-day${turKey === k ? " on" : ""}" onclick="mkPickKind('${k}')">${MK_KIND_ICO[k]}${nom}</button>`).join("")}
+               </div>
+               <div class="mk-hint" style="margin-top:8px">${escHtml(MK_KIND_MATN[turKey][1])}</div>`;
 
         host.innerHTML = `
           <div class="cwd-head">
@@ -26147,7 +26152,6 @@
             ${dizayn}
             ${smm}${isSub ? mkSubHtml("smm") : ""}
           </div>
-          ${!pickers ? `<div class="mk-hint">Bu turda montaj va video olgan so'ralmaydi</div>` : ""}
           ${cwd.assignee ? "" : `<div class="mk-hint">Bu loyihada rejadagi mas'ul belgilanmagan — Ruxsatlar bo'limidan «SMM» roli beriladi.</div>`}
           <div class="mk-sec">Qaysi kuni chiqdi</div>
           ${mkDatesHtml()}
