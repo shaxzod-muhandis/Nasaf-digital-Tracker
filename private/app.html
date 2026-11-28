@@ -7770,6 +7770,7 @@
       /* Tahrirlash / Nusxalash / O'chirish (2026-11-25, egasi): avval
          12 px kulrang matn edi — ko'rinmasdi va bosish qiyin edi. Endi
          ikonkali, teng kenglikdagi 44 px tugmalar; o'chirish — qizil. */
+      a.tlink { color: var(--brand); text-decoration: underline; text-underline-offset: 2px; word-break: break-all; }
       .td-bottom-actions {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -14915,6 +14916,41 @@
           .replace(/>/g, "&gt;")
           .replace(/"/g, "&quot;");
       }
+      // Matndagi havolalarni bosiladigan qiladi (2026-11-28, egasi: tavsifga
+      // qo'yilgan link oddiy matn bo'lib qolardi). Avval matn bo'laklarga
+      // bo'linadi, HAR bo'lak alohida ekranlanadi — havola atributiga
+      // xom matn tushmaydi. Oxiridagi tinish belgisi havolaga kirmaydi.
+      const LINK_RE = /\b((?:https?:\/\/|www\.|t\.me\/)[^\s<>"']+)/gi;
+      function linkHtml(text) {
+        const s = String(text ?? "");
+        let out = "", last = 0, m;
+        LINK_RE.lastIndex = 0;
+        while ((m = LINK_RE.exec(s))) {
+          let url = m[1];
+          const dum = /[.,;:!?)\]»"']+$/.exec(url);
+          if (dum) url = url.slice(0, -dum[0].length);
+          out += escHtml(s.slice(last, m.index));
+          const href = /^https?:\/\//i.test(url) ? url : "https://" + url;
+          out += `<a class="tlink" href="${escHtml(href)}" target="_blank" rel="noopener noreferrer">${escHtml(url)}</a>`;
+          last = m.index + url.length;
+          LINK_RE.lastIndex = last;
+        }
+        return out + escHtml(s.slice(last));
+      }
+      // Telegram ichida havola Telegram'ning o'z usuli bilan ochiladi:
+      // t.me — Telegram'ning o'zida, qolgani — brauzerda (Mini App
+      // ichidagi oddiy <a> ba'zi qurilmalarda umuman ochilmaydi).
+      document.addEventListener("click", (e) => {
+        const a = e.target.closest?.("a.tlink");
+        if (!a) return;
+        const w = window.Telegram?.WebApp;
+        const url = a.href;
+        if (!w || !w.initData) return; // oddiy brauzer — standart xatti-harakat
+        e.preventDefault();
+        if (/^https:\/\/t\.me\//i.test(url) && w.openTelegramLink) w.openTelegramLink(url);
+        else if (w.openLink) w.openLink(url);
+        else window.open(url, "_blank");
+      });
       function escArg(s) {
         return String(s ?? "")
           .replace(/\\/g, "\\\\")
@@ -18554,7 +18590,7 @@
         const vaqt = a.createdAt ? activityTimestamp(a.createdAt) : "";
         return `<div class="m5-cm"><span class="m5-cm-av">${escHtml(ini)}</span><div class="m5-cm-b">
             <div class="m5-cm-n">${escHtml(nom)}${vaqt ? ` <span>· ${vaqt}</span>` : ""}</div>
-            <div class="m5-cm-t">${escHtml(a.body || "")}</div></div></div>`;
+            <div class="m5-cm-t">${linkHtml(a.body || "")}</div></div></div>`;
       }
       function buildTaskDetailMobileHtml(t, canChangeStatus) {
         const isOpen = !["done", "failed", "cancelled"].includes(t.status);
@@ -18578,7 +18614,12 @@
         return `<div class="mobile-only m5-page m5-td">
           ${pills}
           ${reasonHtml}
-          ${t.description ? `<div class="m5-box"><div class="m5-desc">${escHtml(t.description)}</div></div>` : ""}
+          ${t.description ? `<div class="m5-box"><div class="m5-desc">${linkHtml(t.description)}</div></div>` : ""}
+          ${canManageTask(t) ? `<div class="td-bottom-actions" style="margin:12px 0 4px">
+            <button type="button" class="td-bottom-link primary" onclick="openEditTaskSheet('${escArg(t.id)}')">${ICON.edit}Tahrirlash</button>
+            <button type="button" class="td-bottom-link" onclick="duplicateTask('${escArg(t.id)}')">${ICON.copy}Nusxalash</button>
+            <button type="button" class="td-bottom-link danger" onclick="deleteTask('${escArg(t.id)}','${escArg(t.title)}')">${ICON.trash}O'chirish</button>
+          </div>` : ""}
           <div class="m5-box" id="tdm-checklist" style="display:none"></div>
           <div class="m5-cap" id="tdm-comments-cap">Izohlar</div>
           <div class="m5-cms" id="tdm-comments"><div class="m5-cm-empty">Yuklanmoqda…</div></div>
@@ -18681,7 +18722,7 @@
                 ${badgesHtml}
                 <div class="td-title">${escHtml(t.title)}</div>
                 ${tagsRowHtml}
-                ${t.description ? `<div style="height:1px;background:var(--bd1);margin:18px 0 16px"></div><div class="detail-desc">${escHtml(t.description)}</div>` : ""}
+                ${t.description ? `<div style="height:1px;background:var(--bd1);margin:18px 0 16px"></div><div class="detail-desc">${linkHtml(t.description)}</div>` : ""}
               </div>
               <div class="td-card">
                 <div class="td-checklist" id="td-checklist"></div>
@@ -18929,7 +18970,7 @@
             <div class="avatar avatar-sm" style="background:${c.bg};color:${c.ink}">${escHtml(name.slice(0, 1).toUpperCase())}</div>
             <div style="flex:1;min-width:0">
               <div class="activity-comment-meta"><span class="name">${escHtml(name)}</span><span class="activity-time">${activityTimestamp(a.createdAt)}</span></div>
-              <div class="activity-comment-body">${escHtml(a.body || "")}</div>
+              <div class="activity-comment-body">${linkHtml(a.body || "")}</div>
             </div>
           </div>`;
         }
